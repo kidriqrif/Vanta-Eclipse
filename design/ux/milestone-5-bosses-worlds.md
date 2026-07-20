@@ -1,6 +1,6 @@
 # Milestone 5 UX Spec — Boss Battles, World Progression & Unlocks
 
-Author: ux-designer · Status: draft for Phase 1 review
+Author: ux-designer · Status: revised after Phase 1c review round 1
 Serves: `design/player-journey.md` Stage 6 (First Boss) and Stage 7
 (World Unlock).
 
@@ -73,6 +73,11 @@ CombatManager.enemy_level advances to 10 (a boss gate)
    │  · the upgrade shop panel is open                            │
    │  · the gameplay scene is not current / a transition is live  │
    │ The spawn simply holds (empty combat area) until clear.       │
+   │ Mechanism (fully specified in §4E): overlays announce their   │
+   │ own open/close on the EventBus; CombatManager counts them     │
+   │ and tracks the current scene from the existing transition     │
+   │ signals. When the count hits zero on the gameplay scene, any  │
+   │ held boss entry proceeds.                                     │
    └─────────────────────────────────────────────────────────────┘
         │ screen clear
         ▼
@@ -196,7 +201,7 @@ FARM MODE:
         ▼                                               │
   Player taps CHALLENGE BOSS (their choice, their       │
   timing — free, unlimited):                            │
-    farm enemy withdraws (~0.35s, same micro-state)     │
+    farm enemy withdraws (~0.4s, same micro-state)      │
     → BOSS ENTRANCE replays exactly as in 2A            │
     (~1.1s tap-to-ticking — snappy enough to never      │
     make retrying feel like a chore)                    │
@@ -288,7 +293,10 @@ y≈1844 └──────────────────────�
   `HealthLabel` already established, so the two bars read as siblings:
   *their* resource above, *your* resource below. Works identically for
   any tuned duration: `max_value` = whatever the balancing sim picks, the
-  label formats any value, no layout depends on digit count. Bar, label:
+  label formats any value, no layout depends on digit count. The label is
+  **28px** — above the 24px accessibility floor and a step past
+  `HealthLabel`'s 26px, because these numerals are the load-bearing
+  urgency signal (§5) and the densest glyphs on the HUD. Bar, label:
   `mouse_filter = IGNORE` (explicit).
 - **Urgency state** (final stretch): when remaining time ≤
   `min(10s, duration / 3)` — 10s on a 30s timer, ~7s on a 20s timer — the
@@ -550,7 +558,8 @@ the sky palette (color — never alone), and the enemy roster (shape).
   holds until the win. Farm mode survives shop visits, menu round-trips,
   app restarts, and offline periods (§6).
 - **Retry:** tapping CHALLENGE BOSS despawns the current farm enemy via
-  the same withdraw micro-state (~0.35s, no reward — it leaves, it isn't
+  the same withdraw micro-state (~0.4s, matching the boss withdraw
+  exactly — one micro-state, one duration; no reward — it leaves, it isn't
   killed; awarding a free kill here would teach players to fish for
   retries) and replays the full entrance of §4A. Tap-to-ticking is
   ~1.1s. Retries are free and unlimited; the entrance is kept identical
@@ -607,6 +616,14 @@ the sky palette (color — never alone), and the enemy roster (shape).
   world's palette and applies it instantly before the scene fades in.
   Transitions are for live unlocks only — the exact principle M4
   established for the unlock toast (celebrations never replay on load).
+- **Engineering note — per-instance shader material:** the
+  `VoidBackground` scene's ShaderMaterial is a shared sub-resource; as
+  shipped, tweening the gameplay instance's uniforms would recolor the
+  main menu's cached copy too, breaking §4D's "menu keeps the brand
+  palette." The material must be made per-instance
+  (`resource_local_to_scene = true` on the ShaderMaterial, or the
+  world-tinting code operates on a runtime `duplicate()` assigned to the
+  gameplay instance only).
 
 ### 4D. Ongoing world identity
 
@@ -653,6 +670,24 @@ a named manager owner:
   `_spawn_enemy`/`_apply_damage` internals so taps, auto-attack, crits,
   and every existing signal work unmodified. Mid-fight state (remaining
   time, boss HP) is deliberately **not** saved — see §6.
+- **The unobstructed-screen check's inputs, mechanized.** Two sources,
+  neither an upward call:
+  1. *Overlay presence:* the EventBus gains a pair of presentation
+     signals, `ui_overlay_opened` / `ui_overlay_closed`, emitted by the
+     shop panel (open/close) and by every Centered Modal Dialog
+     (`_ready`/exit). `CombatManager` maintains a simple counter from
+     them. These carry no game state — they are presentation facts
+     announced on the bus, the same direction UI already reports taps.
+  2. *Current scene:* `CombatManager` tracks
+     `scene_transition_started`/`finished` (existing EventBus signals)
+     to know whether the gameplay scene is current. So the comparison
+     constant is legal downward, the autoload order changes this
+     milestone: `SceneManager` moves ABOVE `WorldManager` and
+     `CombatManager` (new order: ... PlayerStats, SceneManager,
+     WorldManager, CombatManager, IdleManager). Every direct call in
+     the codebase remains strictly downward under the new order; the
+     engineer must re-verify the M4 connect-ordering comment in
+     IdleManager still holds (it does — IdleManager stays last).
 - **`IdleManager`** is unchanged in role; its offline rate computation
   gains one input: it prices kills at `CombatManager`'s *effective farm
   level* (gate−1 whenever the player is at a wall) instead of raw
@@ -661,9 +696,11 @@ a named manager owner:
 - **UI (`gameplay.gd`, BossPlate, TimerBar, ChallengeBossButton, the
   banners, the World Unlock modal, `VoidBackground`)** owns nothing: it
   renders manager state and EventBus signals, polls the timer read-only,
-  and reports exactly two inputs — the CHALLENGE BOSS tap
+  and reports exactly two *actions* — the CHALLENGE BOSS tap
   (→ `CombatManager.request_boss_challenge()`) and the modal's ENTER
-  (→ dismiss + `WorldManager.acknowledge_unlock_celebration()`).
+  (→ dismiss + `WorldManager.acknowledge_unlock_celebration()`) — plus
+  the passive overlay open/close announcements described above, which
+  are presentation facts, not decisions.
   `_render_current_state()` grows branches for boss-fight and farm-mode
   so re-entering the scene mid-state renders correctly, exactly as it
   already does for the badge and enemy state.
@@ -791,6 +828,17 @@ from Milestone 4's review pass.
   screen the modal re-presents (the IdleManager pending-presentation
   idiom exactly), against a sky that already wears the new palette —
   the ceremony is late, the facts never are. Cleared only by ENTER.
+- **Two pending modals on the same arrival (offline rewards + unlock
+  celebration).** Both present on `scene_transition_finished`, and both
+  are blocking layer-60 dialogs — they must never stack. The gameplay
+  scene owns a one-at-a-time presentation queue: when multiple modal
+  presentations are pending on the same arrival, the **offline-rewards
+  modal presents first** (chronology: it reports the past away-period),
+  and the **World Unlock modal presents on its dismissal** (it
+  announces the go-forward state). Each modal's `confirmed`/exit hands
+  off to the next queued presentation; nothing else may present while
+  the queue is non-empty. The same queue rule covers any future
+  must-acknowledge moment landing on an arrival.
 - **MENU navigation mid-fight.** Leaving the gameplay scene voids the
   attempt silently (no fail banner into a dying screen, no farm-mode
   entry from a first attempt): `CombatManager` cancels the countdown
@@ -801,16 +849,24 @@ from Milestone 4's review pass.
   level forever; world gates every 50th. Frozen Ruins' first boss is
   level 60, its world boss 100. All flows above are world-agnostic;
   only the data (roster, palette, names, multiplier) changes.
-- **Save migration.** Existing saves predate farm mode and worlds. A
-  save at level ≤ 50 loads into Dark Forest with everything derivable
-  from `enemy_level` (no save-version drama: absent flags default to
-  "not in farm mode", world derived from level). The simulation team's
-  tuning may move players' effective difficulty, but no existing save
-  can be *past* a wall it never fought: current builds cap out well
-  below level 50 in practice, and a player whose old save sits exactly
-  on a gate level simply meets that boss on next launch — the
-  auto-enter rule handles it with zero migration code. Flagged for the
-  engineer to confirm against real save telemetry.
+- **Save migration — grandfather everything at or below the save's
+  level.** Existing saves predate farm mode and worlds, and per
+  `docs/ARCHITECTURE.md`'s own pacing (level 50 at ~8 min active,
+  level 60 at ~19 min, plus M4 idle/offline pushing further), saves
+  *above* level 50 are the norm among real players, not an edge. The
+  rule, stated completely:
+  - World: derived as `floor((enemy_level − 1) / 50)` — a level-63 save
+    loads directly into Frozen Ruins at level 63, with every world at
+    or below that index recorded unlocked. Progress is never taken
+    away, and no retroactive wall is ever inserted behind a player.
+  - Bosses: every gate strictly below `enemy_level` counts as beaten
+    (they were "passed" before walls existed). A save sitting exactly
+    ON a gate level meets that boss on next launch via the normal
+    auto-enter rule.
+  - Absent flags default safely: not in farm mode, no pending
+    celebrations — a grandfathered world unlock arrives silently, like
+    M4's silent auto-attack migration; celebrations are for live
+    crossings only.
 
 ---
 
@@ -822,8 +878,8 @@ from Milestone 4's review pass.
 minigames (Milestone 9+), timed ad-bonus windows, any future "do X
 before T" mechanic.
 **Behavior:** a full-width horizontal bar that drains smoothly from a
-configured duration to zero, with a centered `M:SS` label rendered
-*inside* the bar — the established HealthBar + HealthLabel
+configured duration to zero, with a centered `M:SS` label at 28px
+rendered *inside* the bar — the established HealthBar + HealthLabel
 label-inside-bar idiom, so paired bars read as siblings. Parameterized:
 `max_value` is whatever the feature configures; no layout or copy
 depends on the duration. Urgency state at ≤ `min(10s, duration/3)`
