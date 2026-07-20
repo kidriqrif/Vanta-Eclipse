@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=18 format=3]
+[gd_resource type="Theme" load_steps=20 format=3]
 
 [ext_resource type="FontFile" path="res://fonts/cinzel-latin-700-normal.woff2" id="1"]
 
@@ -212,6 +212,32 @@ corner_radius_bottom_left = 20
 shadow_color = Color(0.02, 0.01, 0.05, 0.6)
 shadow_size = 24
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_boss_pb_bg"]
+bg_color = Color(0.07, 0.05, 0.11, 0.92)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.761, 0.255, 0.047, 0.9)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_boss_pb_fill"]
+bg_color = Color(0.73, 0.2, 0.34, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.761, 0.255, 0.047, 0.9)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0.941, 0.337, 0.165, 0.3)
+shadow_size = 10
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pb_bg"]
 bg_color = Color(0.07, 0.05, 0.11, 0.92)
 border_width_left = 1
@@ -249,6 +275,9 @@ Button/styles/normal = SubResource("StyleBoxFlat_btn_normal")
 Button/styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
 BadgePanel/base_type = &"PanelContainer"
 BadgePanel/styles/panel = SubResource("StyleBoxFlat_badge")
+BossHealthBar/base_type = &"ProgressBar"
+BossHealthBar/styles/background = SubResource("StyleBoxFlat_boss_pb_bg")
+BossHealthBar/styles/fill = SubResource("StyleBoxFlat_boss_pb_fill")
 CelebrationToast/base_type = &"PanelContainer"
 CelebrationToast/styles/panel = SubResource("StyleBoxFlat_toast")
 CheckButton/colors/font_color = Color(0.906, 0.886, 0.973, 1)

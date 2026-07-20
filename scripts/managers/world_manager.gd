@@ -17,6 +17,10 @@ var highest_unlocked_index: int = 0
 ## World id whose unlock celebration hasn't been acknowledged yet ("" = none).
 var unlock_celebration_pending: String = ""
 
+## The payout shown by the celebration — persisted so a killed app can
+## re-present the modal with the true number.
+var unlock_celebration_payout: float = 0.0
+
 var _worlds: Array[WorldDefinition] = []
 
 
@@ -38,12 +42,14 @@ func get_save_data() -> Dictionary:
 	return {
 		"highest_unlocked_index": highest_unlocked_index,
 		"unlock_celebration_pending": unlock_celebration_pending,
+		"unlock_celebration_payout": unlock_celebration_payout,
 	}
 
 
 func load_save_data(data: Dictionary) -> void:
 	highest_unlocked_index = maxi(0, int(data.get("highest_unlocked_index", 0)))
 	unlock_celebration_pending = str(data.get("unlock_celebration_pending", ""))
+	unlock_celebration_payout = maxf(0.0, float(data.get("unlock_celebration_payout", 0.0)))
 
 
 # --- Public API --------------------------------------------------------------
@@ -103,12 +109,13 @@ func get_pending_unlock_world() -> WorldDefinition:
 ## Called by the UI when the World Unlock modal's ENTER is tapped.
 func acknowledge_unlock_celebration() -> void:
 	unlock_celebration_pending = ""
+	unlock_celebration_payout = 0.0
 
 
 # --- Internals ---------------------------------------------------------------
 
 
-func _on_boss_fight_won(level: int, _payout: float, is_world_boss: bool) -> void:
+func _on_boss_fight_won(level: int, payout: float, is_world_boss: bool) -> void:
 	if not is_world_boss:
 		return
 	var next_index: int = world_index_for_level(level) + 1
@@ -120,6 +127,7 @@ func _on_boss_fight_won(level: int, _payout: float, is_world_boss: bool) -> void
 		return
 	highest_unlocked_index = next_index
 	unlock_celebration_pending = String(_worlds[next_index].id)
+	unlock_celebration_payout = payout
 	# Permanent the moment it happens — no crash can take it back.
 	SaveManager.save_game()
 	EventBus.world_unlocked.emit(_worlds[next_index])

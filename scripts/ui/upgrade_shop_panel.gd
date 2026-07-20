@@ -44,6 +44,7 @@ func open() -> void:
 		return
 	_is_open = true
 	visible = true
+	EventBus.ui_overlay_opened.emit()
 	_animate_to(OPEN_TOP, OPEN_BOTTOM)
 
 
@@ -51,6 +52,7 @@ func close() -> void:
 	if not _is_open:
 		return
 	_is_open = false
+	EventBus.ui_overlay_closed.emit()
 	_animate_to(CLOSED_TOP, CLOSED_BOTTOM)
 	_slide_tween.chain().tween_callback(hide)
 

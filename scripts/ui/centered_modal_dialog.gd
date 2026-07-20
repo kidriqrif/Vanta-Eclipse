@@ -24,6 +24,10 @@ var _closing: bool = false
 
 
 func _ready() -> void:
+	# Announce the blocking overlay so managers can defer moments that
+	# need an unobstructed screen (M5 spec §4E). Closed is emitted only
+	# when the scrim is truly gone (the free callback).
+	EventBus.ui_overlay_opened.emit()
 	# Connected before the entrance tween starts: the button is usable
 	# immediately, the animation never gates the dismiss (Enhanced tier).
 	_confirm_button.pressed.connect(_on_confirm_pressed)
@@ -49,4 +53,9 @@ func _on_confirm_pressed() -> void:
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 	tween.tween_property(_card, "modulate:a", 0.0, 0.18)
 	tween.tween_property(_scrim, "modulate:a", 0.0, 0.2)
-	tween.chain().tween_callback(queue_free)
+	tween.chain().tween_callback(_finish_close)
+
+
+func _finish_close() -> void:
+	EventBus.ui_overlay_closed.emit()
+	queue_free()

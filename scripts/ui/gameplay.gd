@@ -10,14 +10,32 @@ const AUTO_ATTACK_TOAST_SCENE: PackedScene = preload("res://scenes/gameplay/auto
 const OFFLINE_REWARDS_MODAL_SCENE: PackedScene = preload(
 	"res://scenes/gameplay/offline_rewards_modal.tscn"
 )
+const RESULT_BANNER_SCENE: PackedScene = preload("res://scenes/common/result_banner.tscn")
+const WORLD_UNLOCK_MODAL_SCENE: PackedScene = preload(
+	"res://scenes/gameplay/world_unlock_modal.tscn"
+)
+const BOSS_SKULL_TEXTURE: Texture2D = preload("res://sprites/ui/boss_skull_icon.svg")
 
 ## Where the last tap landed, so its damage number spawns under the finger.
 var _last_tap_position: Vector2 = Vector2.ZERO
 var _has_tap_position: bool = false
 var _essence_pop_tween: Tween
 var _badge_pulse_tween: Tween
+## One-at-a-time blocking-modal presentation queue (M5 UX spec §6).
+var _modal_queue: Array[Callable] = []
+var _modal_active: bool = false
+var _unlock_presentation_queued: bool = false
+## Depth-1 banner queue so layer-50 transients never stack.
+var _active_banner: ResultBanner
+var _queued_banner: ResultBanner
 
 @onready var _auto_attack_badge: PanelContainer = %AutoAttackBadge
+@onready var _world_label: Label = %WorldLabel
+@onready var _boss_plate: HBoxContainer = %BossPlate
+@onready var _boss_name_label: Label = %BossNameLabel
+@onready var _timer_bar: ProgressBar = %TimerBar
+@onready var _challenge_boss_button: Button = %ChallengeBossButton
+@onready var _nebula_rect: ColorRect = $VoidBackground/NebulaRect
 @onready var _essence_display: HBoxContainer = %EssenceDisplay
 @onready var _essence_label: Label = %EssenceLabel
 @onready var _upgrades_button: Button = %UpgradesButton
@@ -41,9 +59,16 @@ func _ready() -> void:
 	EventBus.currency_changed.connect(_on_currency_changed)
 	EventBus.auto_attack_unlocked.connect(_on_auto_attack_unlocked)
 	EventBus.offline_rewards_ready.connect(_on_offline_rewards_ready)
+	EventBus.boss_fight_started.connect(_on_boss_fight_started)
+	EventBus.boss_fight_won.connect(_on_boss_fight_won)
+	EventBus.boss_fight_failed.connect(_on_boss_fight_failed)
+	EventBus.world_unlocked.connect(_on_world_unlocked)
+	EventBus.scene_transition_finished.connect(_on_scene_transition_finished)
 	_combat_area.gui_input.connect(_on_combat_area_input)
 	_menu_button.pressed.connect(_on_menu_pressed)
 	_upgrades_button.pressed.connect(_shop_panel.toggle)
+	_challenge_boss_button.pressed.connect(_on_challenge_boss_pressed)
+	_apply_world_palette()
 
 	_session_label.text = "Session #%d" % GameManager.launch_count
 	_essence_label.text = NumberFormat.format(
@@ -75,9 +100,15 @@ func _on_combat_area_input(event: InputEvent) -> void:
 
 
 func _on_enemy_spawned(definition: EnemyDefinition, level: int, max_hp: float) -> void:
-	_enemy_name_label.text = definition.display_name
-	_stage_label.text = "Enemy Lv. %d" % level
 	_update_health(max_hp, max_hp)
+	if definition.is_boss:
+		return  # the boss_fight_started handler owns the boss dressing
+	_enemy_name_label.text = definition.display_name
+	_enemy_name_label.visible = true
+	if CombatManager.state == CombatManager.State.FARM_MODE:
+		_stage_label.text = "Enemy Lv. %d · Boss at Lv. %d" % [level, CombatManager.enemy_level]
+	else:
+		_stage_label.text = "Enemy Lv. %d" % level
 
 
 func _on_enemy_damaged(amount: float, is_crit: bool, hp: float, max_hp: float) -> void:
@@ -104,10 +135,70 @@ func _on_offline_rewards_ready(_amount: float, _seconds: int, _capped: bool) -> 
 	var data: Dictionary = IdleManager.consume_pending_offline_rewards()
 	if data.is_empty():
 		return
-	var modal: OfflineRewardsModal = OFFLINE_REWARDS_MODAL_SCENE.instantiate()
-	modal.setup(data["amount"], data["seconds_away"], data["was_capped"])
-	add_child(modal)
-	SettingsManager.vibrate(15)
+	_enqueue_modal(func() -> Node:
+		var modal: OfflineRewardsModal = OFFLINE_REWARDS_MODAL_SCENE.instantiate()
+		modal.setup(data["amount"], data["seconds_away"], data["was_capped"])
+		add_child(modal)
+		SettingsManager.vibrate(15)
+		return modal
+	)
+
+
+func _on_boss_fight_started(
+	definition: EnemyDefinition, level: int, _max_hp: float, _duration: float
+) -> void:
+	_boss_name_label.text = definition.display_name.to_upper()
+	_boss_plate.visible = true
+	_enemy_name_label.visible = false
+	_challenge_boss_button.visible = false
+	var prefix: String = "World Boss" if WorldManager.is_world_boss_gate(level) else "Boss"
+	_stage_label.text = "%s · Lv. %d" % [prefix, level]
+	_dress_health_bar(true)
+	SettingsManager.vibrate(50)
+
+
+func _on_boss_fight_won(_level: int, payout: float, is_world_boss: bool) -> void:
+	_undress_boss()
+	SettingsManager.vibrate(60)
+	if is_world_boss:
+		return  # the World Unlock modal is the celebration — never both
+	var banner: ResultBanner = RESULT_BANNER_SCENE.instantiate()
+	banner.setup(
+		BOSS_SKULL_TEXTURE, "BOSS FELLED",
+		"+%s Essence — the path ahead is open." % NumberFormat.format(payout), true
+	)
+	_show_banner(banner)
+
+
+func _on_boss_fight_failed(_level: int) -> void:
+	_undress_boss()
+	# No haptic: haptics mark rewards and impacts, never failures.
+	var banner: ResultBanner = RESULT_BANNER_SCENE.instantiate()
+	banner.setup(
+		BOSS_SKULL_TEXTURE, "THE BOSS ENDURES",
+		"Farm essence, grow stronger — challenge again anytime.", false
+	)
+	_show_banner(banner)
+	_challenge_boss_button.visible = true
+	_challenge_boss_button.disabled = false
+
+
+func _on_challenge_boss_pressed() -> void:
+	# Disabled until resolution so double-taps cannot double-enter.
+	_challenge_boss_button.disabled = true
+	CombatManager.request_boss_challenge()
+
+
+func _on_world_unlocked(_world: WorldDefinition) -> void:
+	# Live unlock: give the death-and-payout beat its moment, then queue.
+	get_tree().create_timer(0.6).timeout.connect(_enqueue_unlock_presentation)
+
+
+func _on_scene_transition_finished(scene_path: String) -> void:
+	# Re-present an unacknowledged unlock on arrival (UX spec §6).
+	if scene_path == SceneManager.SCENE_GAMEPLAY \
+			and WorldManager.has_pending_unlock_celebration():
+		_enqueue_unlock_presentation()
 
 
 func _on_currency_changed(currency: StringName, balance: float) -> void:
@@ -131,6 +222,23 @@ func _render_current_state() -> void:
 	_auto_attack_badge.visible = IdleManager.auto_attack_unlocked
 	if IdleManager.auto_attack_unlocked:
 		_start_badge_pulse()
+	_world_label.text = WorldManager.get_world_for_level(
+		CombatManager.enemy_level
+	).display_name.to_upper()
+	var in_farm_mode: bool = CombatManager.state == CombatManager.State.FARM_MODE
+	_challenge_boss_button.visible = in_farm_mode
+	_challenge_boss_button.disabled = false
+	var mid_boss_fight: bool = CombatManager.state == CombatManager.State.BOSS_FIGHT \
+		and CombatManager.is_enemy_alive()
+	_boss_plate.visible = mid_boss_fight
+	_enemy_name_label.visible = not mid_boss_fight
+	_dress_health_bar(mid_boss_fight)
+	if mid_boss_fight:
+		var definition: EnemyDefinition = CombatManager.get_enemy_definition()
+		_boss_name_label.text = definition.display_name.to_upper()
+		var world_gate: bool = WorldManager.is_world_boss_gate(CombatManager.enemy_level)
+		var prefix: String = "World Boss" if world_gate else "Boss"
+		_stage_label.text = "%s · Lv. %d" % [prefix, CombatManager.enemy_level]
 	if CombatManager.is_enemy_alive():
 		var definition: EnemyDefinition = CombatManager.get_enemy_definition()
 		_enemy_name_label.text = definition.display_name
@@ -147,6 +255,104 @@ func _update_health(hp: float, max_hp: float) -> void:
 	_health_bar.max_value = max_hp
 	_health_bar.value = hp
 	_health_label.text = "%s / %s" % [NumberFormat.format(hp), NumberFormat.format(max_hp)]
+
+
+func _dress_health_bar(boss: bool) -> void:
+	_health_bar.theme_type_variation = &"BossHealthBar" if boss else &""
+	_health_bar.custom_minimum_size.y = 60 if boss else 46
+
+
+func _undress_boss() -> void:
+	_boss_plate.visible = false
+	_enemy_name_label.visible = true
+	_dress_health_bar(false)
+
+
+## Depth-1 banner queue: layer-50 transients never stack (pattern §7.2).
+func _show_banner(banner: ResultBanner) -> void:
+	if _active_banner != null and is_instance_valid(_active_banner):
+		_queued_banner = banner
+		return
+	_active_banner = banner
+	banner.tree_exited.connect(_on_banner_exited)
+	add_child(banner)
+
+
+func _on_banner_exited() -> void:
+	_active_banner = null
+	if _queued_banner != null and is_instance_valid(_queued_banner):
+		var next_banner: ResultBanner = _queued_banner
+		_queued_banner = null
+		_show_banner(next_banner)
+
+
+## One-at-a-time blocking-modal queue (UX spec §6: offline first, unlock
+## on its dismissal; generalized for future must-acknowledge moments).
+func _enqueue_modal(spawner: Callable) -> void:
+	_modal_queue.append(spawner)
+	if not _modal_active:
+		_present_next_modal()
+
+
+func _present_next_modal() -> void:
+	if _modal_queue.is_empty():
+		_modal_active = false
+		return
+	_modal_active = true
+	var spawner: Callable = _modal_queue.pop_front()
+	var modal: Node = spawner.call()
+	if modal == null:
+		_present_next_modal()
+		return
+	modal.tree_exited.connect(_present_next_modal)
+
+
+func _enqueue_unlock_presentation() -> void:
+	if _unlock_presentation_queued or not WorldManager.has_pending_unlock_celebration():
+		return
+	_unlock_presentation_queued = true
+	_enqueue_modal(func() -> Node:
+		var world: WorldDefinition = WorldManager.get_pending_unlock_world()
+		if world == null:
+			_unlock_presentation_queued = false
+			return null
+		var modal: WorldUnlockModal = WORLD_UNLOCK_MODAL_SCENE.instantiate()
+		modal.setup(world, WorldManager.unlock_celebration_payout)
+		modal.confirmed.connect(_on_unlock_acknowledged.bind(world))
+		add_child(modal)
+		# The sky recolors behind the scrim once the card settles (§4C).
+		get_tree().create_timer(0.45).timeout.connect(_tween_world_palette.bind(world))
+		SettingsManager.vibrate(50)
+		return modal
+	)
+
+
+func _on_unlock_acknowledged(world: WorldDefinition) -> void:
+	_unlock_presentation_queued = false
+	WorldManager.acknowledge_unlock_celebration()
+	_world_label.text = world.display_name.to_upper()
+	_world_label.pivot_offset = _world_label.size * 0.5
+	_world_label.scale = Vector2(1.15, 1.15)
+	create_tween().tween_property(_world_label, "scale", Vector2.ONE, 0.25) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## Instant palette apply for the current world (cold loads and scene
+## entries — transitions are for live unlocks only, §4C).
+func _apply_world_palette() -> void:
+	var world: WorldDefinition = WorldManager.get_world_for_level(CombatManager.enemy_level)
+	var material: ShaderMaterial = _nebula_rect.material
+	material.set_shader_parameter("deep_color", world.deep_color)
+	material.set_shader_parameter("nebula_color", world.nebula_color)
+	material.set_shader_parameter("accent_color", world.accent_color)
+
+
+func _tween_world_palette(world: WorldDefinition) -> void:
+	var material: ShaderMaterial = _nebula_rect.material
+	var tween: Tween = create_tween().set_parallel(true)
+	tween.tween_property(material, "shader_parameter/deep_color", world.deep_color, 0.8)
+	tween.tween_property(material, "shader_parameter/nebula_color", world.nebula_color, 0.8)
+	tween.tween_property(material, "shader_parameter/accent_color", world.accent_color, 0.8)
 
 
 ## One-time badge pop-in at the unlock moment (UX spec §4A).

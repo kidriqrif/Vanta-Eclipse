@@ -1,0 +1,59 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/countdown_timer_bar.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_track"]
+bg_color = Color(0.07, 0.05, 0.11, 0.92)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.22, 0.45, 0.9)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fill_normal"]
+bg_color = Color(0.51, 0.44, 0.72, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fill_urgent"]
+bg_color = Color(0.941, 0.337, 0.165, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0.941, 0.337, 0.165, 0.35)
+shadow_size = 10
+
+[node name="CountdownTimerBar" type="ProgressBar"]
+custom_minimum_size = Vector2(0, 40)
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_track")
+theme_override_styles/fill = SubResource("StyleBoxFlat_fill_normal")
+max_value = 30.0
+value = 30.0
+show_percentage = false
+script = ExtResource("1")
+normal_fill = SubResource("StyleBoxFlat_fill_normal")
+urgent_fill = SubResource("StyleBoxFlat_fill_urgent")
+
+[node name="TimeLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.95, 0.93, 1, 1)
+theme_override_colors/font_outline_color = Color(0.06, 0.03, 0.12, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 28
+text = "0:30"
+horizontal_alignment = 1
+vertical_alignment = 1

@@ -11,6 +11,9 @@ const FLASH_COLOR: Color = Color(2.2, 1.9, 3.0)
 
 var _idle_tween: Tween
 var _hit_tween: Tween
+## Bosses render larger (EnemyDefinition.view_scale); every transform
+## animation works relative to this base.
+var _base_scale: Vector2 = Vector2.ONE
 
 @onready var _sprite_holder: Control = %SpriteHolder
 @onready var _sprite: TextureRect = %EnemySprite
@@ -21,6 +24,7 @@ func _ready() -> void:
 	EventBus.enemy_spawned.connect(_on_enemy_spawned)
 	EventBus.enemy_damaged.connect(_on_enemy_damaged)
 	EventBus.enemy_died.connect(_on_enemy_died)
+	EventBus.enemy_withdrawn.connect(_on_enemy_withdrawn)
 
 	# The scene may open mid-fight (e.g. returning from the menu), so render
 	# whatever the CombatManager currently has.
@@ -39,10 +43,10 @@ func _on_enemy_spawned(definition: EnemyDefinition, _level: int, _max_hp: float)
 	_kill_tween(_hit_tween)
 	_show_enemy(definition)
 
-	_sprite_holder.scale = Vector2(0.5, 0.5)
+	_sprite_holder.scale = _base_scale * 0.5
 	_sprite_holder.modulate.a = 0.0
 	var spawn_tween: Tween = create_tween().set_parallel(true)
-	spawn_tween.tween_property(_sprite_holder, "scale", Vector2.ONE, 0.3) \
+	spawn_tween.tween_property(_sprite_holder, "scale", _base_scale, 0.3) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	spawn_tween.tween_property(_sprite_holder, "modulate:a", 1.0, 0.2)
 	spawn_tween.chain().tween_callback(_start_idle)
@@ -75,10 +79,23 @@ func _on_enemy_died(_level: int, _total_kills: int) -> void:
 	_death_particles.restart()
 
 	var death_tween: Tween = create_tween().set_parallel(true)
-	death_tween.tween_property(_sprite_holder, "scale", Vector2(0.05, 0.05), 0.3) \
+	death_tween.tween_property(_sprite_holder, "scale", _base_scale * 0.05, 0.3) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	death_tween.tween_property(_sprite_holder, "modulate:a", 0.0, 0.3)
 	death_tween.tween_property(_sprite_holder, "rotation", 0.3, 0.3)
+
+
+## The withdraw micro-state (M5 UX spec §4B): the enemy LEAVES — no
+## particles, no rotation, pointedly not the death animation.
+func _on_enemy_withdrawn() -> void:
+	_kill_tween(_idle_tween)
+	_kill_tween(_hit_tween)
+	_sprite.scale = Vector2.ONE
+	_sprite.rotation = 0.0
+	var withdraw_tween: Tween = create_tween().set_parallel(true)
+	withdraw_tween.tween_property(_sprite_holder, "scale", _base_scale * 0.7, 0.4) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	withdraw_tween.tween_property(_sprite_holder, "modulate:a", 0.0, 0.4)
 
 
 # --- Internals ---------------------------------------------------------------
@@ -88,7 +105,8 @@ func _show_enemy(definition: EnemyDefinition) -> void:
 	_sprite.texture = definition.texture
 	_sprite.modulate = Color.WHITE
 	_death_particles.color = definition.glow_color
-	_sprite_holder.scale = Vector2.ONE
+	_base_scale = Vector2.ONE * definition.view_scale
+	_sprite_holder.scale = _base_scale
 	_sprite_holder.rotation = 0.0
 	_sprite_holder.position = Vector2.ZERO
 	_sprite_holder.modulate = Color.WHITE
