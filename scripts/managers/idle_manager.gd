@@ -26,22 +26,30 @@ var _attack_timer: Timer
 ## Granted-but-not-yet-presented offline reward:
 ## {} or {"amount": float, "seconds_away": int, "was_capped": bool}
 var _pending_offline_rewards: Dictionary = {}
+## Guards the RESUMED notification, which some Android versions also fire
+## during app startup, before the save has loaded.
+var _cold_launch_check_done: bool = false
 
 
 func _ready() -> void:
+	# Auto-attack is live gameplay, not an offline system: a future pause
+	# menu should genuinely stop it (absence is compensated by offline pay).
+	process_mode = Node.PROCESS_MODE_PAUSABLE
 	_attack_timer = Timer.new()
 	_attack_timer.wait_time = AUTO_ATTACK_INTERVAL
 	_attack_timer.timeout.connect(_on_attack_tick)
 	add_child(_attack_timer)
 	SaveManager.register_saveable("idle", self)
 	EventBus.game_loaded.connect(_on_game_loaded)
+	EventBus.scene_transition_finished.connect(_on_scene_transition_finished)
+	# Deliberately NOT connecting enemy_spawned here — see _on_game_loaded.
 
 
 func _notification(what: int) -> void:
-	# Android foreground-return. Safe even if the OS also fires this at
-	# startup: before the save loads, auto_attack_unlocked is still false
-	# and the check exits immediately.
-	if what == NOTIFICATION_APPLICATION_RESUMED:
+	# Android/iOS foreground-return (never fires on desktop — there the
+	# game keeps running unfocused, so cold launch is the only offline
+	# path, by design).
+	if what == NOTIFICATION_APPLICATION_RESUMED and _cold_launch_check_done:
 		_check_offline_rewards()
 
 
@@ -86,16 +94,32 @@ func get_live_essence_rate() -> float:
 
 func _on_game_loaded(is_new_game: bool) -> void:
 	# A save already past the threshold unlocks silently — the celebration
-	# only ever plays on a live crossing (UX spec §2A).
+	# only ever plays on a live crossing (UX spec §2A). This also silently
+	# migrates pre-Milestone-4 saves, which have no "idle" section at all.
 	if not auto_attack_unlocked and CombatManager.enemy_level >= AUTO_ATTACK_UNLOCK_LEVEL:
 		auto_attack_unlocked = true
 	if auto_attack_unlocked:
 		_attack_timer.start()
-	# Connected only now, so the enemy spawned during load can never route
-	# into the live-unlock celebration path below.
+	# Connected only now: CombatManager's load-time enemy_spawned fires
+	# earlier in the game_loaded connection list, so the first spawn this
+	# handler sees is a genuine live one. Reordering the autoload list or
+	# moving this connect() silently breaks the no-celebration-on-load rule.
 	EventBus.enemy_spawned.connect(_on_enemy_spawned)
 	if not is_new_game:
 		_check_offline_rewards()
+	_cold_launch_check_done = true
+
+
+func _on_scene_transition_finished(scene_path: String) -> void:
+	# Deferred-presentation path (UX spec §2B): a reward granted while no
+	# gameplay screen was there to show it is re-announced the moment the
+	# gameplay scene finishes fading in.
+	if scene_path == SceneManager.SCENE_GAMEPLAY and has_pending_offline_rewards():
+		EventBus.offline_rewards_ready.emit(
+			_pending_offline_rewards["amount"],
+			_pending_offline_rewards["seconds_away"],
+			_pending_offline_rewards["was_capped"],
+		)
 
 
 func _on_enemy_spawned(_definition: EnemyDefinition, level: int, _max_hp: float) -> void:
@@ -104,8 +128,8 @@ func _on_enemy_spawned(_definition: EnemyDefinition, level: int, _max_hp: float)
 	auto_attack_unlocked = true
 	_attack_timer.start()
 	EventBus.auto_attack_unlocked.emit()
-	SettingsManager.vibrate(50)
 	# Persist immediately so a crash can't replay the celebration.
+	# (Haptics for this moment live in the UI layer, with the other calls.)
 	SaveManager.save_game()
 
 
@@ -120,7 +144,9 @@ func _check_offline_rewards() -> void:
 	var last_save: int = SaveManager.last_save_unix
 	if last_save <= 0:
 		return
-	var elapsed: int = int(Time.get_unix_time_from_system()) - last_save
+	# Wall-clock time (user-adjustable): clamp so a backwards-set clock can
+	# never go negative. Clock-forward cheating is bounded by the cap.
+	var elapsed: int = maxi(0, int(Time.get_unix_time_from_system()) - last_save)
 	if elapsed < MIN_OFFLINE_SECONDS:
 		return
 	var was_capped: bool = elapsed > OFFLINE_CAP_SECONDS

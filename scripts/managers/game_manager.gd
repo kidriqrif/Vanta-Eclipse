@@ -58,6 +58,22 @@ func set_game_paused(paused: bool) -> void:
 	get_tree().paused = paused
 
 
+## Coarse duration for "you were away" copy, deliberately without seconds
+## (UX spec design/ux/milestone-4-idle-offline.md §4C):
+## 42m · 3h 42m · 2d 5h.
+@warning_ignore("integer_division")
+static func format_duration_rough(seconds: int) -> String:
+	var minutes: int = seconds / 60
+	if minutes < 1:
+		return "moments"
+	if minutes < 60:
+		return "%dm" % minutes
+	var hours: int = minutes / 60
+	if hours < 24:
+		return "%dh %dm" % [hours, minutes % 60]
+	return "%dd %dh" % [hours / 24, hours % 24]
+
+
 ## Format a duration in seconds as a short human-readable string,
 ## e.g. 4325.0 -> "1h 12m 05s".
 @warning_ignore("integer_division")

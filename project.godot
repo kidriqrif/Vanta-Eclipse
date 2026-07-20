@@ -30,8 +30,8 @@ CurrencyManager="*res://scripts/managers/currency_manager.gd"
 UpgradeManager="*res://scripts/managers/upgrade_manager.gd"
 PlayerStats="*res://scripts/managers/player_stats.gd"
 CombatManager="*res://scripts/managers/combat_manager.gd"
-IdleManager="*res://scripts/managers/idle_manager.gd"
 SceneManager="*res://scripts/managers/scene_manager.gd"
+IdleManager="*res://scripts/managers/idle_manager.gd"
 
 [debug]
 
@@ -44,6 +44,10 @@ window/size/viewport_height=1920
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=1
+
+[gui]
+
+theme/custom="res://ui/theme/main_theme.tres"
 
 [rendering]
 

@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=15 format=3]
+[gd_resource type="Theme" load_steps=18 format=3]
 
 [ext_resource type="FontFile" path="res://fonts/cinzel-latin-700-normal.woff2" id="1"]
 
@@ -158,6 +158,60 @@ corner_radius_bottom_left = 18
 shadow_color = Color(0.545, 0.361, 0.965, 0.2)
 shadow_size = 8
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_badge"]
+content_margin_left = 22.0
+content_margin_top = 6.0
+content_margin_right = 26.0
+content_margin_bottom = 6.0
+bg_color = Color(0.04, 0.12, 0.11, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.051, 0.58, 0.533, 0.8)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+shadow_color = Color(0.176, 0.831, 0.749, 0.22)
+shadow_size = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_toast"]
+content_margin_left = 32.0
+content_margin_top = 16.0
+content_margin_right = 32.0
+content_margin_bottom = 16.0
+bg_color = Color(0.075, 0.055, 0.12, 0.94)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.176, 0.831, 0.749, 0.9)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+shadow_color = Color(0.176, 0.831, 0.749, 0.3)
+shadow_size = 18
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_modal_card"]
+content_margin_left = 28.0
+content_margin_top = 26.0
+content_margin_right = 28.0
+content_margin_bottom = 26.0
+bg_color = Color(0.075, 0.055, 0.12, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.29, 0.22, 0.44, 0.8)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+shadow_color = Color(0.02, 0.01, 0.05, 0.6)
+shadow_size = 24
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pb_bg"]
 bg_color = Color(0.07, 0.05, 0.11, 0.92)
 border_width_left = 1
@@ -193,6 +247,10 @@ Button/styles/focus = SubResource("StyleBoxEmpty_focus")
 Button/styles/hover = SubResource("StyleBoxFlat_btn_hover")
 Button/styles/normal = SubResource("StyleBoxFlat_btn_normal")
 Button/styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
+BadgePanel/base_type = &"PanelContainer"
+BadgePanel/styles/panel = SubResource("StyleBoxFlat_badge")
+CelebrationToast/base_type = &"PanelContainer"
+CelebrationToast/styles/panel = SubResource("StyleBoxFlat_toast")
 CheckButton/colors/font_color = Color(0.906, 0.886, 0.973, 1)
 CheckButton/font_sizes/font_size = 34
 HSlider/styles/grabber_area = SubResource("StyleBoxFlat_slider_fill")
@@ -204,6 +262,8 @@ HeaderLabel/font_sizes/font_size = 30
 HeaderLabel/fonts/font = ExtResource("1")
 Label/colors/font_color = Color(0.906, 0.886, 0.973, 1)
 Label/font_sizes/font_size = 34
+ModalCard/base_type = &"PanelContainer"
+ModalCard/styles/panel = SubResource("StyleBoxFlat_modal_card")
 PanelContainer/styles/panel = SubResource("StyleBoxFlat_panel")
 PrimaryButton/base_type = &"Button"
 PrimaryButton/colors/font_color = Color(0.98, 0.97, 1, 1)

@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/gameplay.gd" id="1"]
 [ext_resource type="Theme" path="res://ui/theme/main_theme.tres" id="2"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/gameplay/enemy_view.tscn" id="4"]
 [ext_resource type="Texture2D" path="res://sprites/ui/essence_icon.svg" id="5"]
 [ext_resource type="PackedScene" path="res://scenes/gameplay/upgrade_shop_panel.tscn" id="6"]
+[ext_resource type="Texture2D" path="res://sprites/ui/auto_attack_icon.svg" id="7"]
 
 [node name="Gameplay" type="Control"]
 layout_mode = 3
@@ -56,6 +57,32 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.62, 0.57, 0.75, 1)
 theme_override_font_sizes/font_size = 26
 text = "Enemy Lv. 1"
+
+[node name="AutoAttackBadge" type="PanelContainer" parent="MarginContainer/GameplayVBox/TopBar/WorldVBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+theme_type_variation = &"BadgePanel"
+
+[node name="BadgeHBox" type="HBoxContainer" parent="MarginContainer/GameplayVBox/TopBar/WorldVBox/AutoAttackBadge"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BadgeIcon" type="TextureRect" parent="MarginContainer/GameplayVBox/TopBar/WorldVBox/AutoAttackBadge/BadgeHBox"]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("7")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BadgeLabel" type="Label" parent="MarginContainer/GameplayVBox/TopBar/WorldVBox/AutoAttackBadge/BadgeHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.369, 0.918, 0.831, 1)
+theme_override_font_sizes/font_size = 24
+text = "AUTO-ATTACK ACTIVE"
 
 [node name="MenuButton" type="Button" parent="MarginContainer/GameplayVBox/TopBar"]
 unique_name_in_owner = true

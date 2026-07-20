@@ -11,6 +11,21 @@ const SUFFIXES: Array[String] = [
 ]
 
 
+## Exact integer with comma grouping ("1,240") — used by hold-to-reveal
+## interactions behind abbreviated figures (Enhanced accessibility tier).
+static func format_exact(value: float) -> String:
+	var negative: bool = value < 0.0
+	var digits: String = str(int(round(absf(value))))
+	var grouped: String = ""
+	var count: int = 0
+	for i in range(digits.length() - 1, -1, -1):
+		grouped = digits[i] + grouped
+		count += 1
+		if count % 3 == 0 and i > 0:
+			grouped = "," + grouped
+	return "-" + grouped if negative else grouped
+
+
 static func format(value: float) -> String:
 	var negative: bool = value < 0.0
 	var v: float = absf(value)
