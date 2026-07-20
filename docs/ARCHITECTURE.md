@@ -24,6 +24,7 @@ Load order matters — each autoload may only rely on the ones above it:
 | 7 | `PlayerStats` | `player_stats.gd` | All player combat stats behind `get_*()` functions; each layer (upgrades, equipment, ...) stacks inside them. |
 | 8 | `CombatManager` | `combat_manager.gd` | Enemy state, damage rules, kill/respawn loop, essence rewards, infinite scaling. |
 | 9 | `SceneManager` | `scene_manager.gd` | Scene switching with fade + threaded loading. |
+| 10 | `IdleManager` | `idle_manager.gd` | Auto-attack unlock/ticking, offline-reward eligibility and granting, app-resume hook. Last on purpose: it references SceneManager constants, and its `enemy_spawned` connection order relative to CombatManager's `game_loaded` handler is load-bearing (see its comments). |
 
 ## Communication rules
 
@@ -50,7 +51,8 @@ The save file (`user://savegame.json`) is one versioned JSON document:
         "game": { "total_play_time": 123.4, "launch_count": 2, "created_at_unix": 1789000000 },
         "combat": { "enemy_level": 14, "total_kills": 13 },
         "currencies": { "essence": 250.0, "void_crystals": 0.0, "astral_shards": 0.0 },
-        "upgrades": { "void_claws": 5, "dark_focus": 2 }
+        "upgrades": { "void_claws": 5, "dark_focus": 2 },
+        "idle": { "auto_attack_unlocked": true }
     }
 }
 ```
@@ -94,6 +96,14 @@ upgrade buying): level 30 in ~1.5 min, level 50 at ~8 min, level 60 at
 ~19 min, soft wall near level 70 that idle mechanics (Milestone 4) relieve.
 Enemy health grows 15%/level while essence rewards grow 9%/level — that
 widening gap is what makes upgrades feel necessary.
+
+Idle/offline (Milestone 4): auto-attack ticks at 1.0s (one third of active
+tapping speed) once unlocked at enemy level 15. Offline pay mirrors the
+real auto-attack kill rate at the player's current stats, at 50%
+efficiency (`PlayerStats.get_offline_multiplier`), capped at 8 hours —
+both values are deliberate upgrade hooks for prestige and rewarded ads.
+Enemy level never advances while away: the player returns to essence, not
+to a wall.
 
 ## Visual identity
 
