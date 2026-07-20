@@ -1,6 +1,6 @@
 # Milestone 4 UX Spec — Auto-Attack Unlock & Offline Rewards
 
-Author: ux-designer · Status: draft for review (Phase 1c gate)
+Author: ux-designer · Status: revised after Phase 1c review round 1
 Serves: `design/player-journey.md` Stage 4 (Idle Discovery) and Stage 5
 (Return Session).
 
@@ -62,7 +62,7 @@ nothing was ever blocked.
         ▼
 From this point on, every auto-attack hit spawns a Floating Damage Number
 above the enemy and triggers the same Enemy Animation hit-reaction as a
-manual tap (see Interaction Details §4C).
+manual tap (see Interaction Details §4B).
 ```
 
 **Branch — player already past level 15 on load** (feature ships into an
@@ -117,7 +117,7 @@ right before this away-period started)
         gameplay screen.                        PLAY whenever they choose.
                     │                            Popup renders the instant
                     │                            the gameplay scene's fade-in
-                    │                            finishes (see §4B for why).
+                    │                            finishes (see §4C for why).
                     └───────────────────┬───────────────────┘
                                          ▼
                         Modal blocks input to the HUD behind it (by
@@ -158,7 +158,7 @@ right before this away-period started)
 Reference canvas 1080×1920, matching `scenes/gameplay/gameplay.tscn`'s
 current `MarginContainer` (margins 40/40/40/28) and `GameplayVBox`
 (separation 18). All Y-values below are derived from that scene's actual
-node sizes and are accurate to roughly ±10px — enough to build against,
+node sizes and are accurate to roughly ±25px — enough to build against,
 not sub-pixel.
 
 ### 3A. Top bar, before Auto-Attack unlocks (current, unchanged)
@@ -202,13 +202,22 @@ y≈174 └───────────────────────
   shorter. This is imperceptible against its size and doubles as a subtle
   secondary "something changed" cue at the moment of unlock.
 - Permanent once shown. There is no code path that hides it again.
+- **Idle pulse (steady state):** once in steady state the badge's opacity
+  gently pulses 1.0 ↔ 0.75 on a 1.2s cycle. Purely decorative — the icon
+  and text alone communicate "auto-attack active" with the pulse switched
+  off entirely (this is the property the accessibility notes in §5 rely
+  on). Cycle length is deliberately under the 1.5s ceiling in
+  `design/accessibility-requirements.md`.
 
 ### 3C. Unlock Celebration Toast (transient, plays once per save file)
 
-Overlaid on `CombatArea`, positioned in the upper portion so it never
-covers the enemy sprite (`EnemyView` occupies roughly y 721–1221,
-centered horizontally) — the player can keep looking at, and tapping, the
-enemy the whole time this is on screen.
+Rendered on its own `CanvasLayer` (layer 50 — above the gameplay HUD and
+the shop's Slide-Up Panel, below `SceneManager`'s fade layer at 100), not
+as a `CombatArea` child, so it always draws above the shop panel as §4A
+requires. Positioned in the upper portion of the screen so it never covers
+the enemy sprite (`EnemyView` occupies roughly y 744–1244, centered
+horizontally) — the player can keep looking at, and tapping, the enemy the
+whole time this is on screen.
 
 ```
 x=140                                                    x=940
@@ -219,7 +228,7 @@ y≈430 ┌───────────────────────
       │              not tapping.                        │
 y≈610 └────────────────────────────────────────────────┘
 
-                  (enemy sprite renders below, y 721+,
+                  (enemy sprite renders below, y 744+,
                    fully clear of the toast, fully tappable
                    through the toast's non-blocking region too)
 ```
@@ -250,7 +259,7 @@ y≈660 ┌───────────────────────
       │                  were away.                            │
       │                                                      │
       │                 [essence icon]                       │
-      │                +1,240 Essence                        │
+      │                +1.24K Essence                        │
       │           (tap and hold for exact amount)             │
       │                                                      │
       │               Away for 3h 42m                        │
@@ -266,11 +275,13 @@ y≈1260└───────────────────────
   y 660–1260 — vertical center at 960, matching screen center).
   `PanelContainer` styled consistent with `UpgradeShopPanel`'s card look
   from `ui/theme/main_theme.tres`.
-- "+1,240 Essence" uses the existing `NumberFormat` abbreviation (same
-  formatter as the HUD essence counter) at a large font size (~48px,
-  matching `EssenceLabel`'s visual weight) so it reads as *the* headline
-  number in the card.
-- "Away for 3h 42m" is a **rough** duration — see §4B for the exact
+- "+1.24K Essence" uses the existing `NumberFormat` abbreviation (same
+  formatter as the HUD essence counter — exact integers with comma
+  grouping are never shown as the headline; the exact value lives behind
+  the tap-and-hold interaction) at a large font size (~48px, matching
+  `EssenceLabel`'s visual weight) so it reads as *the* headline number in
+  the card.
+- "Away for 3h 42m" is a **rough** duration — see §4C for the exact
   formatting rules. This is deliberately coarser than
   `GameManager.format_time()` (which shows seconds); seconds precision
   on a "you were away" line would contradict "roughly."
@@ -283,7 +294,7 @@ y≈1260└───────────────────────
 
 ```
       │               Essence icon
-      │              +9,600 Essence
+      │              +9.6K Essence
       │
       │      Away for 19h 10m
       │      (offline earnings cap at 8h)
@@ -382,6 +393,20 @@ about the exact cap value.
   including the offline reward, exactly like `_ready()` already does
   today — no animated pop on that path, which is consistent with how
   the label behaves on every other scene load.
+- **Why the popup waits for the gameplay fade-in (deferred path):** the
+  modal's appear trigger on the cold-launch path is
+  `EventBus.scene_transition_finished` for the gameplay scene — not the
+  scene's `_ready()`. Rendering during the fade would mean the modal is
+  born underneath `SceneManager`'s still-fading overlay, its entrance
+  animation half-eaten and its COLLECT button technically live while the
+  screen is still dark. Waiting for the transition-finished signal
+  guarantees the modal's entrance plays once, in full view, on a settled
+  screen.
+- **Save immediately after granting:** the eligibility-time grant is
+  followed by an immediate `SaveManager.save_game()`, which advances
+  `last_save_unix` past the away-window. This shrinks the crash-regrant
+  window (crash after grant but before any save would otherwise re-run
+  the same eligibility on next launch) to near zero.
 - **Modal entrance:** scrim fades in 0.2s; card scales 0.85 → 1.0 and
   fades in over 0.25s, `TRANS_BACK`/`EASE_OUT`. The COLLECT button is
   interactive from frame one — a player who taps immediately dismisses
@@ -414,6 +439,26 @@ about the exact cap value.
   one place the Enhanced tier's "Readable numbers" bullet directly
   applies to a brand-new number the player has never seen before.
 
+### 4D. System ownership
+
+Per `docs/ARCHITECTURE.md`, UI never owns state, so every piece of this
+milestone's state has a named manager owner:
+
+- **A new `IdleManager` autoload** (registered after `CombatManager`)
+  owns: the persisted `auto_attack_unlocked` flag (its own `"idle"` save
+  section via `SaveManager.register_saveable`), the auto-attack tick
+  timer, offline-reward eligibility computation, the "popup pending"
+  state, and the app-resume notification hook flagged in §8. It emits
+  the EventBus signals the UI renders (unlock moment, offline rewards
+  ready).
+- **`CombatManager`** owns the actual attacking: `IdleManager`'s tick
+  calls into the same damage path `player_tap_attack()` uses, so
+  crits/essence/signals are inherited (§4B), and `CombatManager` remains
+  the only system that touches enemy state.
+- **UI (`gameplay.gd`, the toast, the badge, the modal)** owns nothing:
+  it renders `IdleManager`/`CombatManager` state and EventBus signals,
+  and reports exactly one input — the COLLECT tap — back as a dismiss.
+
 ---
 
 ## 5. Accessibility Notes
@@ -425,7 +470,7 @@ Mapped against the committed **Enhanced** tier in
   the unlock toast (~2.0s total, plays once ever), the badge pop-in
   (0.24s, plays once), the modal entrance/exit (0.25s/0.18s, gated on a
   real event, not decorative looping). The only *looping* new animation
-  is the badge's idle pulse (§7, opacity 1.0↔0.75, 1.2s cycle) — under
+  is the badge's idle pulse (§3B, opacity 1.0↔0.75, 1.2s cycle) — under
   the doc's 1.5s-cycle ceiling for "keep it short until Reduce Motion
   exists," and purely decorative: the badge's text and icon communicate
   "auto-attack active" with the pulse switched off entirely. No new
@@ -606,9 +651,9 @@ than a one-off.
 - **Technical dependency flagged for engineering, not the designer:**
   `SaveManager`/`SettingsManager` currently only handle
   `NOTIFICATION_APPLICATION_PAUSED` (save-on-background); there is no
-  existing resume-notification hook. The background-resume-while-
-  already-on-gameplay path in §2B needs one added (e.g. an
-  `EventBus` signal fired on `NOTIFICATION_APPLICATION_RESUMED` /
-  cold-start `game_loaded` alike) for the popup to trigger correctly
-  without a full scene reload. Mentioned here so it isn't lost between
-  the UX spec and implementation.
+  existing resume-notification hook. Per §4D this hook belongs to the
+  new `IdleManager`, which listens for
+  `NOTIFICATION_APPLICATION_RESUMED` (and cold-start `game_loaded`
+  alike) and runs the §2B eligibility check on both paths, so the popup
+  triggers correctly without a full scene reload. Mentioned here so it
+  isn't lost between the UX spec and implementation.
