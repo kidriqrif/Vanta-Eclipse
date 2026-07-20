@@ -96,6 +96,9 @@ func _on_game_loaded(is_new_game: bool) -> void:
 	# A save already past the threshold unlocks silently — the celebration
 	# only ever plays on a live crossing (UX spec §2A). This also silently
 	# migrates pre-Milestone-4 saves, which have no "idle" section at all.
+	# Design intent: a migrated save IS paid offline rewards for this very
+	# launch — "your hero fought while you were away" is the update's own
+	# welcome gift, and it can only happen once.
 	if not auto_attack_unlocked and CombatManager.enemy_level >= AUTO_ATTACK_UNLOCK_LEVEL:
 		auto_attack_unlocked = true
 	if auto_attack_unlocked:

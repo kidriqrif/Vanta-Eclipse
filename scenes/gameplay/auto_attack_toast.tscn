@@ -22,6 +22,7 @@ theme_type_variation = &"CelebrationToast"
 
 [node name="ToastVBox" type="VBoxContainer" parent="ToastPanel"]
 layout_mode = 2
+mouse_filter = 2
 theme_override_constants/separation = 6
 alignment = 1
 
@@ -29,6 +30,7 @@ alignment = 1
 custom_minimum_size = Vector2(56, 56)
 layout_mode = 2
 size_flags_horizontal = 4
+mouse_filter = 2
 texture = ExtResource("2")
 expand_mode = 1
 stretch_mode = 5
