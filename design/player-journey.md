@@ -51,8 +51,31 @@ one-tap dismissal so it never blocks getting back into the game; never feel
 punished for having Auto-Attack "waste" time capped too low without
 understanding why.
 
-## 6. Future stages (not yet built)
+## 6. First Boss (Milestone 5 — new)
 
-Boss Encounter (Milestone 5) — World Unlock (Milestone 5) — First Equipment
-Drop (Milestone 6) — First Relic (Milestone 7) — First Prestige
-(Milestone 8) — First Minigame (Milestone 9+).
+Around 1-2 minutes in, the player hits enemy level 10 and meets the first
+boss: a bigger, meaner creature with a countdown timer.
+
+**Needs:** instantly read "this is different and dangerous" (distinct
+visual language: boss plate, timer, imposing presentation) without any
+tutorial text; understand the stakes (beat it before the timer ends);
+and — critically — a fail state that redirects rather than punishes:
+losing must clearly say "grow stronger, then come back" with an obvious
+retry path, never a dead end. Winning should feel like breaking a wall:
+bigger payout, visible progress.
+
+## 7. World Unlock (Milestone 5 — new)
+
+Defeating the level-50 world boss ends the Dark Forest and opens the
+Frozen Ruins.
+
+**Needs:** a "new chapter" moment bigger than any celebration so far —
+this is the game's largest reward to date and should be acknowledged
+before play continues; immediately *visible* change afterward (new
+enemies, new sky/palette) so the unlock feels real, not just a label; and
+a sense of permanence — worlds never re-lock.
+
+## 8. Future stages (not yet built)
+
+First Equipment Drop (Milestone 6) — First Relic (Milestone 7) — First
+Prestige (Milestone 8) — First Minigame (Milestone 9+).
