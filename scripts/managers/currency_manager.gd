@@ -1,0 +1,92 @@
+extends Node
+## CurrencyManager — single source of truth for every currency balance
+## (autoload).
+##
+## All three game currencies live here from day one so later systems slot in
+## without refactoring. Balances are floats: incremental-game numbers
+## eventually outgrow 64-bit integers, and all display goes through
+## NumberFormat anyway.
+##
+## Nothing outside this manager may change a balance. Earning goes through
+## add(), spending through try_spend() — which refuses cleanly instead of
+## going negative.
+
+## Main currency, earned from kills (Milestone 3+).
+const ESSENCE: StringName = &"essence"
+
+## Prestige currency. TODO(Milestone 8): earned by prestiging.
+const VOID_CRYSTALS: StringName = &"void_crystals"
+
+## Premium currency. TODO(Milestone 14): purchases and rewarded ads.
+const ASTRAL_SHARDS: StringName = &"astral_shards"
+
+var _balances: Dictionary = {
+	ESSENCE: 0.0,
+	VOID_CRYSTALS: 0.0,
+	ASTRAL_SHARDS: 0.0,
+}
+
+
+func _ready() -> void:
+	SaveManager.register_saveable("currencies", self)
+
+
+# --- Save contract (called by SaveManager) ------------------------------------
+
+
+func get_save_data() -> Dictionary:
+	return {
+		"essence": _balances[ESSENCE],
+		"void_crystals": _balances[VOID_CRYSTALS],
+		"astral_shards": _balances[ASTRAL_SHARDS],
+	}
+
+
+func load_save_data(data: Dictionary) -> void:
+	_balances[ESSENCE] = maxf(0.0, float(data.get("essence", 0.0)))
+	_balances[VOID_CRYSTALS] = maxf(0.0, float(data.get("void_crystals", 0.0)))
+	_balances[ASTRAL_SHARDS] = maxf(0.0, float(data.get("astral_shards", 0.0)))
+	for currency: StringName in _balances:
+		EventBus.currency_changed.emit(currency, _balances[currency])
+
+
+# --- Public API --------------------------------------------------------------
+
+
+func get_balance(currency: StringName) -> float:
+	if not _balances.has(currency):
+		push_error("CurrencyManager: unknown currency: %s" % currency)
+		return 0.0
+	return _balances[currency]
+
+
+func can_afford(currency: StringName, amount: float) -> bool:
+	return get_balance(currency) >= amount
+
+
+## Grant currency. Amount must be positive — spending goes through try_spend().
+func add(currency: StringName, amount: float) -> void:
+	if not _balances.has(currency):
+		push_error("CurrencyManager: unknown currency: %s" % currency)
+		return
+	if amount < 0.0:
+		push_error("CurrencyManager: add() amount must be positive, got %f" % amount)
+		return
+	_balances[currency] += amount
+	EventBus.currency_changed.emit(currency, _balances[currency])
+
+
+## Attempt to spend. Returns false (and changes nothing) if the balance is
+## too low — callers decide how to present that to the player.
+func try_spend(currency: StringName, amount: float) -> bool:
+	if not _balances.has(currency):
+		push_error("CurrencyManager: unknown currency: %s" % currency)
+		return false
+	if amount < 0.0:
+		push_error("CurrencyManager: try_spend() amount must be positive, got %f" % amount)
+		return false
+	if _balances[currency] < amount:
+		return false
+	_balances[currency] -= amount
+	EventBus.currency_changed.emit(currency, _balances[currency])
+	return true

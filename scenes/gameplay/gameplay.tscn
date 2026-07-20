@@ -1,9 +1,11 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/gameplay.gd" id="1"]
 [ext_resource type="Theme" path="res://ui/theme/main_theme.tres" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/common/void_background.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/gameplay/enemy_view.tscn" id="4"]
+[ext_resource type="Texture2D" path="res://sprites/ui/essence_icon.svg" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/upgrade_shop_panel.tscn" id="6"]
 
 [node name="Gameplay" type="Control"]
 layout_mode = 3
@@ -61,6 +63,26 @@ custom_minimum_size = Vector2(200, 96)
 layout_mode = 2
 size_flags_vertical = 0
 text = "MENU"
+
+[node name="EssenceDisplay" type="HBoxContainer" parent="MarginContainer/GameplayVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 12
+
+[node name="EssenceIcon" type="TextureRect" parent="MarginContainer/GameplayVBox/EssenceDisplay"]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+texture = ExtResource("5")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="EssenceLabel" type="Label" parent="MarginContainer/GameplayVBox/EssenceDisplay"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 42
+text = "0"
+vertical_alignment = 1
 
 [node name="EnemyNameLabel" type="Label" parent="MarginContainer/GameplayVBox"]
 unique_name_in_owner = true
@@ -129,6 +151,12 @@ theme_override_font_sizes/font_size = 26
 text = "Void creatures slain: 0"
 horizontal_alignment = 1
 
+[node name="UpgradesButton" type="Button" parent="MarginContainer/GameplayVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+text = "UPGRADES"
+
 [node name="FooterBar" type="HBoxContainer" parent="MarginContainer/GameplayVBox"]
 layout_mode = 2
 
@@ -147,3 +175,6 @@ theme_override_colors/font_color = Color(0.45, 0.41, 0.56, 1)
 theme_override_font_sizes/font_size = 22
 text = "0m 00s"
 horizontal_alignment = 2
+
+[node name="UpgradeShopPanel" parent="." instance=ExtResource("6")]
+unique_name_in_owner = true

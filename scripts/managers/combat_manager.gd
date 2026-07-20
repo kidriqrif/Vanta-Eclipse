@@ -9,10 +9,16 @@ const RESPAWN_DELAY: float = 0.45
 
 ## Baseline enemy health curve. An enemy's final health is:
 ##   ENEMY_BASE_HP * ENEMY_HP_GROWTH^(level-1) * definition.hp_multiplier
-## TODO(Milestone 3): full balancing pass once the upgrade shop exists.
+## Tuned via simulation together with essence rewards and upgrade costs so
+## active play reaches ~L50 in 10 minutes and slows smoothly after that.
 ## TODO(Milestone 5): world multipliers and per-world enemy pools.
-const ENEMY_BASE_HP: float = 4.0
-const ENEMY_HP_GROWTH: float = 1.12
+const ENEMY_BASE_HP: float = 5.0
+const ENEMY_HP_GROWTH: float = 1.15
+
+## Essence reward curve: grows slower than enemy health on purpose — the
+## widening gap is exactly what makes buying upgrades necessary.
+const ESSENCE_BASE_REWARD: float = 2.0
+const ESSENCE_REWARD_GROWTH: float = 1.09
 
 const ENEMY_DEFINITION_PATHS: Array[String] = [
 	"res://data/enemies/gloom_wisp.tres",
@@ -69,6 +75,14 @@ func get_enemy_definition() -> EnemyDefinition:
 	return _current_definition
 
 
+## Essence granted for killing an enemy of the given level, after the
+## player's essence-gain multiplier. Always at least 1.
+func get_essence_reward(level: int) -> float:
+	var reward: float = ESSENCE_BASE_REWARD * pow(ESSENCE_REWARD_GROWTH, level - 1)
+	reward *= PlayerStats.get_essence_gain_multiplier()
+	return maxf(1.0, round(reward))
+
+
 ## Called by the gameplay scene when the player taps the combat area.
 func player_tap_attack() -> void:
 	if not _alive:
@@ -91,7 +105,9 @@ func _on_enemy_killed() -> void:
 	_alive = false
 	total_kills += 1
 	EventBus.enemy_died.emit(enemy_level, total_kills)
-	# TODO(Milestone 3): grant Eclipse Essence based on enemy_level here.
+	var reward: float = get_essence_reward(enemy_level)
+	CurrencyManager.add(CurrencyManager.ESSENCE, reward)
+	EventBus.essence_earned.emit(reward, &"combat")
 	enemy_level += 1
 	# Short pause so the death animation can play before the next enemy.
 	get_tree().create_timer(RESPAWN_DELAY).timeout.connect(_spawn_enemy)

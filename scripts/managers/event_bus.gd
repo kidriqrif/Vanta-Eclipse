@@ -42,3 +42,16 @@ signal enemy_damaged(amount: float, is_crit: bool, hp_remaining: float, max_hp: 
 
 ## Fired the moment an enemy's health reaches zero.
 signal enemy_died(level: int, total_kills: int)
+
+# --- Economy (Milestone 3) ---
+
+## Fired whenever any currency balance changes. UI reads the new balance
+## straight from the signal instead of polling CurrencyManager.
+signal currency_changed(currency: StringName, balance: float)
+
+## Fired when essence is earned, with where it came from
+## (&"combat" now; &"offline", &"minigame", &"ad_bonus" in later milestones).
+signal essence_earned(amount: float, source: StringName)
+
+## Fired after a successful shop purchase.
+signal upgrade_purchased(id: StringName, new_level: int)

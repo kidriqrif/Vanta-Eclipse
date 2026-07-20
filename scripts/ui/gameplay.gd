@@ -10,7 +10,12 @@ const DAMAGE_NUMBER_SCENE: PackedScene = preload("res://scenes/gameplay/damage_n
 ## Where the last tap landed, so its damage number spawns under the finger.
 var _last_tap_position: Vector2 = Vector2.ZERO
 var _has_tap_position: bool = false
+var _essence_pop_tween: Tween
 
+@onready var _essence_display: HBoxContainer = %EssenceDisplay
+@onready var _essence_label: Label = %EssenceLabel
+@onready var _upgrades_button: Button = %UpgradesButton
+@onready var _shop_panel: UpgradeShopPanel = %UpgradeShopPanel
 @onready var _stage_label: Label = %StageLabel
 @onready var _enemy_name_label: Label = %EnemyNameLabel
 @onready var _health_bar: ProgressBar = %HealthBar
@@ -27,10 +32,15 @@ func _ready() -> void:
 	EventBus.enemy_spawned.connect(_on_enemy_spawned)
 	EventBus.enemy_damaged.connect(_on_enemy_damaged)
 	EventBus.enemy_died.connect(_on_enemy_died)
+	EventBus.currency_changed.connect(_on_currency_changed)
 	_combat_area.gui_input.connect(_on_combat_area_input)
 	_menu_button.pressed.connect(_on_menu_pressed)
+	_upgrades_button.pressed.connect(_shop_panel.toggle)
 
 	_session_label.text = "Session #%d" % GameManager.launch_count
+	_essence_label.text = NumberFormat.format(
+		CurrencyManager.get_balance(CurrencyManager.ESSENCE)
+	)
 	_render_current_state()
 
 
@@ -74,6 +84,13 @@ func _on_enemy_died(_level: int, total_kills: int) -> void:
 	SettingsManager.vibrate(35)
 
 
+func _on_currency_changed(currency: StringName, balance: float) -> void:
+	if currency != CurrencyManager.ESSENCE:
+		return
+	_essence_label.text = NumberFormat.format(balance)
+	_pop_essence_display()
+
+
 func _on_menu_pressed() -> void:
 	SceneManager.change_scene(SceneManager.SCENE_MAIN_MENU)
 
@@ -100,6 +117,17 @@ func _update_health(hp: float, max_hp: float) -> void:
 	_health_bar.max_value = max_hp
 	_health_bar.value = hp
 	_health_label.text = "%s / %s" % [NumberFormat.format(hp), NumberFormat.format(max_hp)]
+
+
+## Small scale bounce on the essence counter every time it changes.
+func _pop_essence_display() -> void:
+	if _essence_pop_tween != null and _essence_pop_tween.is_valid():
+		_essence_pop_tween.kill()
+	_essence_display.pivot_offset = _essence_display.size * 0.5
+	_essence_display.scale = Vector2(1.12, 1.12)
+	_essence_pop_tween = create_tween()
+	_essence_pop_tween.tween_property(_essence_display, "scale", Vector2.ONE, 0.18) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _spawn_damage_number(amount: float, is_crit: bool) -> void:

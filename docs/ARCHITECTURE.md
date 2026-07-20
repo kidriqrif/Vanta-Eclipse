@@ -19,9 +19,11 @@ Load order matters — each autoload may only rely on the ones above it:
 | 2 | `SettingsManager` | `settings_manager.gd` | Player preferences (`user://settings.cfg`), audio bus volumes, haptics. |
 | 3 | `SaveManager` | `save_manager.gd` | Versioned JSON save file, autosave, atomic writes, migrations. |
 | 4 | `GameManager` | `game_manager.gd` | Game version, play time, session count, pause. Deliberately small. |
-| 5 | `PlayerStats` | `player_stats.gd` | All player combat stats behind `get_*()` functions; upgrades/equipment plug in later. |
-| 6 | `CombatManager` | `combat_manager.gd` | Enemy state, damage rules, kill/respawn loop, infinite health scaling. |
-| 7 | `SceneManager` | `scene_manager.gd` | Scene switching with fade + threaded loading. |
+| 5 | `CurrencyManager` | `currency_manager.gd` | All currency balances (essence, void crystals, astral shards). Only add()/try_spend() may change them. |
+| 6 | `UpgradeManager` | `upgrade_manager.gd` | Upgrade definitions + owned levels; answers stat-modifier queries. |
+| 7 | `PlayerStats` | `player_stats.gd` | All player combat stats behind `get_*()` functions; each layer (upgrades, equipment, ...) stacks inside them. |
+| 8 | `CombatManager` | `combat_manager.gd` | Enemy state, damage rules, kill/respawn loop, essence rewards, infinite scaling. |
+| 9 | `SceneManager` | `scene_manager.gd` | Scene switching with fade + threaded loading. |
 
 ## Communication rules
 
@@ -46,7 +48,9 @@ The save file (`user://savegame.json`) is one versioned JSON document:
     "saved_at_unix": 1789000000,
     "sections": {
         "game": { "total_play_time": 123.4, "launch_count": 2, "created_at_unix": 1789000000 },
-        "combat": { "enemy_level": 14, "total_kills": 13 }
+        "combat": { "enemy_level": 14, "total_kills": 13 },
+        "currencies": { "essence": 250.0, "void_crystals": 0.0, "astral_shards": 0.0 },
+        "upgrades": { "void_claws": 5, "dark_focus": 2 }
     }
 }
 ```
@@ -78,8 +82,18 @@ prestige resets and save deletion.
 
 Game content lives in Resource files (`.tres`), not code. Enemies are
 `EnemyDefinition` resources in `data/enemies/` — adding an enemy means adding
-one `.tres` file and one sprite, zero code changes. Equipment, relics, and
-pets will follow the same pattern in later milestones.
+one `.tres` file and one sprite, zero code changes. Shop upgrades are
+`UpgradeDefinition` resources in `data/upgrades/` and the shop UI builds
+itself from them. Equipment, relics, and pets will follow the same pattern.
+
+## Balancing
+
+Combat/economy curves are tuned by simulation, not gut feeling — see the
+constants in `combat_manager.gd`. Current tuning (active tapping, greedy
+upgrade buying): level 30 in ~1.5 min, level 50 at ~8 min, level 60 at
+~19 min, soft wall near level 70 that idle mechanics (Milestone 4) relieve.
+Enemy health grows 15%/level while essence rewards grow 9%/level — that
+widening gap is what makes upgrades feel necessary.
 
 ## Visual identity
 
