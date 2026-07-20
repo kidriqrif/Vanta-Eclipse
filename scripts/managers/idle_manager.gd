@@ -82,10 +82,14 @@ func consume_pending_offline_rewards() -> Dictionary:
 ## Essence per second the auto-attacker earns at current stats,
 ## before the offline multiplier is applied.
 func get_live_essence_rate() -> float:
+	# Priced at the EFFECTIVE kill level: at a boss wall the auto-attacker
+	# is really killing gate-1 enemies, and offline pay must mirror that
+	# honestly (UX spec milestone-5 §6).
+	var level: int = CombatManager.get_effective_kill_level()
 	var seconds_per_kill: float = CombatManager.get_expected_seconds_per_kill(
-		CombatManager.enemy_level, AUTO_ATTACK_INTERVAL
+		level, AUTO_ATTACK_INTERVAL
 	)
-	var essence_per_kill: float = CombatManager.get_essence_reward(CombatManager.enemy_level)
+	var essence_per_kill: float = CombatManager.get_essence_reward(level)
 	return essence_per_kill / maxf(0.0001, seconds_per_kill)
 
 

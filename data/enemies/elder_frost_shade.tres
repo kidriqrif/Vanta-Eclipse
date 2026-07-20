@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EnemyDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_definition.gd" id="1"]
+[ext_resource type="Texture2D" path="res://sprites/enemies/frost_shade.svg" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"elder_frost_shade"
+display_name = "Elder Frost Shade"
+texture = ExtResource("2")
+hp_multiplier = 0.85
+glow_color = Color(0.984, 0.573, 0.235, 1)
+is_boss = true
+view_scale = 1.3

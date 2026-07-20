@@ -29,8 +29,9 @@ GameManager="*res://scripts/managers/game_manager.gd"
 CurrencyManager="*res://scripts/managers/currency_manager.gd"
 UpgradeManager="*res://scripts/managers/upgrade_manager.gd"
 PlayerStats="*res://scripts/managers/player_stats.gd"
-CombatManager="*res://scripts/managers/combat_manager.gd"
 SceneManager="*res://scripts/managers/scene_manager.gd"
+WorldManager="*res://scripts/managers/world_manager.gd"
+CombatManager="*res://scripts/managers/combat_manager.gd"
 IdleManager="*res://scripts/managers/idle_manager.gd"
 
 [debug]

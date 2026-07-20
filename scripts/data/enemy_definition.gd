@@ -20,3 +20,9 @@ extends Resource
 
 ## Accent color used for death particles and effects.
 @export var glow_color: Color = Color(0.6, 0.4, 1.0)
+
+## True for boss-tier enemies (boss HUD dressing, timed fights).
+@export var is_boss: bool = false
+
+## Sprite scale multiplier applied by EnemyView (bosses ~1.3).
+@export var view_scale: float = 1.0

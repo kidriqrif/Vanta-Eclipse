@@ -65,3 +65,28 @@ signal auto_attack_unlocked
 ## Fired when an offline reward has been granted and is waiting to be
 ## presented to the player (the essence is already in their balance).
 signal offline_rewards_ready(amount: float, seconds_away: int, was_capped: bool)
+
+# --- Bosses & worlds (Milestone 5) ---
+
+## Fired when a boss fight begins (after the unobstructed-screen check).
+signal boss_fight_started(definition: EnemyDefinition, level: int, max_hp: float, duration: float)
+
+## Fired at the moment of a boss kill. The payout is already granted.
+signal boss_fight_won(level: int, payout: float, is_world_boss: bool)
+
+## Fired when the countdown expires with the boss alive.
+signal boss_fight_failed(level: int)
+
+## Fired when an enemy leaves without dying (boss endures / farm enemy
+## steps aside for a retry) — EnemyView plays the withdraw micro-state.
+signal enemy_withdrawn
+
+## Fired by WorldManager after a world unlock is recorded and saved.
+signal world_unlocked(world: WorldDefinition)
+
+# --- UI presentation facts (Milestone 5) ---
+# Emitted by overlays (shop panel, blocking modals) so managers can defer
+# moments that need an unobstructed screen. Presentation facts, not state.
+
+signal ui_overlay_opened
+signal ui_overlay_closed

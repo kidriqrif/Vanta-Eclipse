@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0.4" stop-color="#f0562a" stop-opacity="0.45"/>
+      <stop offset="0.8" stop-color="#f0562a" stop-opacity="0.1"/>
+      <stop offset="1" stop-color="#f0562a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="left" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffe3d4"/>
+      <stop offset="1" stop-color="#f0562a"/>
+    </linearGradient>
+    <linearGradient id="right" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c2410c"/>
+      <stop offset="1" stop-color="#7c2d12"/>
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="64" r="62" fill="url(#glow)"/>
+  <polygon points="64,16 28,42 30,84 64,92" fill="url(#left)"/>
+  <polygon points="64,16 100,42 98,84 64,92" fill="url(#right)"/>
+  <polygon points="44,90 84,90 78,112 70,100 64,112 58,100 50,112" fill="url(#right)"/>
+  <ellipse cx="46" cy="60" rx="11" ry="13" fill="#160608"/>
+  <ellipse cx="82" cy="60" rx="11" ry="13" fill="#160608"/>
+  <polygon points="60,70 68,70 64,82" fill="#160608"/>
+</svg>
