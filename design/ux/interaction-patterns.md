@@ -130,6 +130,35 @@ the affordance. Satisfies the Enhanced tier's "Readable numbers" rule.
 **Implementation:** label with `mouse_filter = STOP` + `gui_input`
 press/release handling — see `scripts/ui/offline_rewards_modal.gd`.
 
+## Countdown Timer Bar
+**Used in:** boss fights. Future: timed minigames, timed ad-bonus windows.
+**Behavior:** a full-width bar draining smoothly from a configured
+duration to zero with centered 28px `M:SS` numerals inside it (outlined —
+text over a moving two-tone fill is always outline-anchored). Urgency at
+`min(10s, duration/3)` remaining: ember fill + 0.6s decorative pulse; the
+numerals alone are sufficient. Non-interactive. The bar never owns the
+countdown — it polls its owner system per frame.
+**Implementation:** `scenes/common/countdown_timer_bar.tscn` +
+`scripts/ui/countdown_timer_bar.gd` (self-syncs via `sync_with_combat()`).
+
+## Transient Result Banner (repeatable, non-blocking)
+**Used in:** boss win/fail. Future: minigame results, drop announcements.
+**Behavior:** the Unlock Celebration Toast's geometry/motion/input-
+transparency, but repeatable and parameterized (`setup(icon, headline,
+body, is_win)`); win variant celebrates in violet, fail stays neutral.
+A depth-1 queue (owned by the spawning scene) prevents layer-50 stacking.
+**Implementation:** `scenes/common/result_banner.tscn` +
+`scripts/ui/result_banner.gd`.
+
+## Blocking-Modal Presentation Queue
+**Used in:** gameplay arrivals where multiple must-acknowledge moments
+collide (offline rewards + world unlock).
+**Behavior:** blocking modals never stack; a scene-owned queue presents
+one at a time — chronological past (offline) before go-forward state
+(world unlock) — each next presentation on the previous one's exit.
+**Implementation:** `_enqueue_modal()` / `_present_next_modal()` in
+`scripts/ui/gameplay.gd`.
+
 ## CanvasLayer Registry
 Overlay stacking is fixed project-wide: scene UI = 0, celebration toast =
 50, blocking modals = 60, SceneManager transition fade = 100. New overlays

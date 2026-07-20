@@ -23,8 +23,10 @@ Load order matters — each autoload may only rely on the ones above it:
 | 6 | `UpgradeManager` | `upgrade_manager.gd` | Upgrade definitions + owned levels; answers stat-modifier queries. |
 | 7 | `PlayerStats` | `player_stats.gd` | All player combat stats behind `get_*()` functions; each layer (upgrades, equipment, ...) stacks inside them. |
 | 8 | `CombatManager` | `combat_manager.gd` | Enemy state, damage rules, kill/respawn loop, essence rewards, infinite scaling. |
-| 9 | `SceneManager` | `scene_manager.gd` | Scene switching with fade + threaded loading. |
-| 10 | `IdleManager` | `idle_manager.gd` | Auto-attack unlock/ticking, offline-reward eligibility and granting, app-resume hook. Last on purpose: it references SceneManager constants, and its `enemy_spawned` connection order relative to CombatManager's `game_loaded` handler is load-bearing (see its comments). |
+| 8 | `SceneManager` | `scene_manager.gd` | Scene switching with fade + threaded loading. Above the combat managers so they may compare scene-path constants (M5). |
+| 9 | `WorldManager` | `world_manager.gd` | World definitions, unlock progression (grandfather migration), palettes, essence multipliers. |
+| 10 | `CombatManager` | `combat_manager.gd` | Three-state combat machine (normal/boss/farm), gates, countdown, rewards, world-driven rosters. |
+| 11 | `IdleManager` | `idle_manager.gd` | Auto-attack unlock/ticking, offline-reward eligibility and granting (priced at the effective farm level), app-resume hook. Last on purpose: its `enemy_spawned` connection order relative to CombatManager's `game_loaded` handler is load-bearing (see its comments). |
 
 ## Communication rules
 
@@ -52,7 +54,8 @@ The save file (`user://savegame.json`) is one versioned JSON document:
         "combat": { "enemy_level": 14, "total_kills": 13 },
         "currencies": { "essence": 250.0, "void_crystals": 0.0, "astral_shards": 0.0 },
         "upgrades": { "void_claws": 5, "dark_focus": 2 },
-        "idle": { "auto_attack_unlocked": true }
+        "idle": { "auto_attack_unlocked": true },
+        "world": { "highest_unlocked_index": 1, "unlock_celebration_pending": "", "unlock_celebration_payout": 0.0 }
     }
 }
 ```
@@ -104,6 +107,12 @@ efficiency (`PlayerStats.get_offline_multiplier`), capped at 8 hours —
 both values are deliberate upgrade hooks for prestige and rewarded ads.
 Enemy level never advances while away: the player returns to essence, not
 to a wall.
+
+Bosses (Milestone 5, tuned via scratchpad boss_sim.py): every 10th level,
+3x HP, 30s timer (1.1s entrance grace), 10x payout. Gates 10-40 are
+beatable on arrival with escalating tension; the level-50 world boss is a
+~6-minute farm wall; Frozen Ruins pays 2.5x essence. Deep-world walls
+(L60+) are intentionally brutal until equipment/relics/prestige land.
 
 ## Visual identity
 
