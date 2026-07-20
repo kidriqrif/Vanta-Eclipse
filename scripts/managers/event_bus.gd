@@ -31,3 +31,14 @@ signal scene_transition_started(scene_path: String)
 
 ## Fired when a scene transition ends (new scene visible, fade finished).
 signal scene_transition_finished(scene_path: String)
+
+# --- Combat (Milestone 2) ---
+
+## Fired when a new enemy appears.
+signal enemy_spawned(definition: EnemyDefinition, level: int, max_hp: float)
+
+## Fired for every hit that lands on the enemy.
+signal enemy_damaged(amount: float, is_crit: bool, hp_remaining: float, max_hp: float)
+
+## Fired the moment an enemy's health reaches zero.
+signal enemy_died(level: int, total_kills: int)

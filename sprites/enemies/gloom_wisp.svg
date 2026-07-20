@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="aura" cx="50%" cy="46%" r="50%">
+      <stop offset="0.3" stop-color="#8b5cf6" stop-opacity="0.4"/>
+      <stop offset="0.7" stop-color="#8b5cf6" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#8b5cf6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="body" cx="50%" cy="38%" r="65%">
+      <stop offset="0" stop-color="#31205c"/>
+      <stop offset="0.6" stop-color="#1e1240"/>
+      <stop offset="1" stop-color="#120826"/>
+    </radialGradient>
+    <radialGradient id="eye" cx="50%" cy="50%" r="50%">
+      <stop offset="0.2" stop-color="#f3efff"/>
+      <stop offset="0.55" stop-color="#c4b5fd"/>
+      <stop offset="1" stop-color="#c4b5fd" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="256" cy="236" r="228" fill="url(#aura)"/>
+  <path fill="url(#body)" d="M256 44
+    C 330 118 372 194 372 282
+    C 372 372 326 434 288 448
+    C 296 470 288 492 270 504
+    C 274 484 266 470 252 462
+    C 240 472 236 490 242 506
+    C 220 494 210 470 220 448
+    C 184 432 140 372 140 282
+    C 140 194 182 118 256 44 Z"/>
+  <path fill="#1e1240" d="M144 300 C 118 316 102 344 100 372 C 124 356 140 336 150 318 Z"/>
+  <path fill="#1e1240" d="M368 300 C 394 316 410 344 412 372 C 388 356 372 336 362 318 Z"/>
+  <ellipse cx="210" cy="240" rx="34" ry="40" fill="url(#eye)"/>
+  <ellipse cx="302" cy="240" rx="34" ry="40" fill="url(#eye)"/>
+  <ellipse cx="212" cy="238" rx="10" ry="16" fill="#f8f6ff"/>
+  <ellipse cx="300" cy="238" rx="10" ry="16" fill="#f8f6ff"/>
+</svg>

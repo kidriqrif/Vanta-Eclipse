@@ -19,7 +19,9 @@ Load order matters — each autoload may only rely on the ones above it:
 | 2 | `SettingsManager` | `settings_manager.gd` | Player preferences (`user://settings.cfg`), audio bus volumes, haptics. |
 | 3 | `SaveManager` | `save_manager.gd` | Versioned JSON save file, autosave, atomic writes, migrations. |
 | 4 | `GameManager` | `game_manager.gd` | Game version, play time, session count, pause. Deliberately small. |
-| 5 | `SceneManager` | `scene_manager.gd` | Scene switching with fade + threaded loading. |
+| 5 | `PlayerStats` | `player_stats.gd` | All player combat stats behind `get_*()` functions; upgrades/equipment plug in later. |
+| 6 | `CombatManager` | `combat_manager.gd` | Enemy state, damage rules, kill/respawn loop, infinite health scaling. |
+| 7 | `SceneManager` | `scene_manager.gd` | Scene switching with fade + threaded loading. |
 
 ## Communication rules
 
@@ -43,7 +45,8 @@ The save file (`user://savegame.json`) is one versioned JSON document:
     "game_version": "0.1.0",
     "saved_at_unix": 1789000000,
     "sections": {
-        "game": { "total_play_time": 123.4, "launch_count": 2, "created_at_unix": 1789000000 }
+        "game": { "total_play_time": 123.4, "launch_count": 2, "created_at_unix": 1789000000 },
+        "combat": { "enemy_level": 14, "total_kills": 13 }
     }
 }
 ```
@@ -70,6 +73,24 @@ prestige resets and save deletion.
 2. Create its script in `scripts/ui/` — display logic only.
 3. Add a `SCENE_<NAME>` constant in `scene_manager.gd`.
 4. Navigate with `SceneManager.change_scene(SceneManager.SCENE_<NAME>)`.
+
+## Content as data
+
+Game content lives in Resource files (`.tres`), not code. Enemies are
+`EnemyDefinition` resources in `data/enemies/` — adding an enemy means adding
+one `.tres` file and one sprite, zero code changes. Equipment, relics, and
+pets will follow the same pattern in later milestones.
+
+## Visual identity
+
+* Shared animated backdrop: `scenes/common/void_background.tscn`
+  (nebula shader in `effects/` + drifting dust particles).
+* Display font: Cinzel Bold (`fonts/`, SIL OFL licensed — safe for
+  commercial use; license bundled).
+* All widget styling comes from `ui/theme/main_theme.tres`. Theme
+  *variations* (`PrimaryButton`, `TitleLabel`, `HeaderLabel`) give screens a
+  consistent look — set `theme_type_variation` on a node instead of
+  hand-overriding fonts and colors.
 
 ## Conventions
 
