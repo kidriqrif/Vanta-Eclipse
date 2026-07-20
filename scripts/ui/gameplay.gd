@@ -120,7 +120,9 @@ func _on_enemy_damaged(amount: float, is_crit: bool, hp: float, max_hp: float) -
 
 func _on_enemy_died(_level: int, total_kills: int) -> void:
 	_kills_label.text = "Void creatures slain: %s" % NumberFormat.format(float(total_kills))
-	SettingsManager.vibrate(35)
+	# Boss kills get the single stronger buzz from the win handler instead.
+	if CombatManager.state != CombatManager.State.BOSS_FIGHT:
+		SettingsManager.vibrate(35)
 
 
 func _on_auto_attack_unlocked() -> void:
@@ -154,14 +156,28 @@ func _on_boss_fight_started(
 	var prefix: String = "World Boss" if WorldManager.is_world_boss_gate(level) else "Boss"
 	_stage_label.text = "%s · Lv. %d" % [prefix, level]
 	_dress_health_bar(true)
+	_slam_boss_plate()
 	SettingsManager.vibrate(50)
+
+
+## The plate slams in at higher amplitude than the badge pop (spec §4A).
+func _slam_boss_plate() -> void:
+	await get_tree().process_frame
+	if not _boss_plate.visible:
+		return
+	_boss_plate.pivot_offset = _boss_plate.size * 0.5
+	_boss_plate.scale = Vector2(1.4, 1.4)
+	create_tween().tween_property(_boss_plate, "scale", Vector2.ONE, 0.3) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _on_boss_fight_won(_level: int, payout: float, is_world_boss: bool) -> void:
 	_undress_boss()
 	SettingsManager.vibrate(60)
-	if is_world_boss:
+	if is_world_boss and WorldManager.has_pending_unlock_celebration():
 		return  # the World Unlock modal is the celebration — never both
+	# (The final world's boss has no next world to unlock — it gets the
+	# normal win banner so the moment is never silent.)
 	var banner: ResultBanner = RESULT_BANNER_SCENE.instantiate()
 	banner.setup(
 		BOSS_SKULL_TEXTURE, "BOSS FELLED",
@@ -179,8 +195,20 @@ func _on_boss_fight_failed(_level: int) -> void:
 		"Farm essence, grow stronger — challenge again anytime.", false
 	)
 	_show_banner(banner)
-	_challenge_boss_button.visible = true
 	_challenge_boss_button.disabled = false
+	_pop_challenge_button()
+
+
+## Pop-in for the retry path (the badge-pop idiom, spec §4B).
+func _pop_challenge_button() -> void:
+	_challenge_boss_button.visible = true
+	await get_tree().process_frame
+	if not _challenge_boss_button.visible:
+		return
+	_challenge_boss_button.pivot_offset = _challenge_boss_button.size * 0.5
+	_challenge_boss_button.scale = Vector2(0.9, 0.9)
+	create_tween().tween_property(_challenge_boss_button, "scale", Vector2.ONE, 0.24) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _on_challenge_boss_pressed() -> void:
@@ -233,22 +261,29 @@ func _render_current_state() -> void:
 	_boss_plate.visible = mid_boss_fight
 	_enemy_name_label.visible = not mid_boss_fight
 	_dress_health_bar(mid_boss_fight)
-	if mid_boss_fight:
-		var definition: EnemyDefinition = CombatManager.get_enemy_definition()
-		_boss_name_label.text = definition.display_name.to_upper()
-		var world_gate: bool = WorldManager.is_world_boss_gate(CombatManager.enemy_level)
-		var prefix: String = "World Boss" if world_gate else "Boss"
-		_stage_label.text = "%s · Lv. %d" % [prefix, CombatManager.enemy_level]
 	if CombatManager.is_enemy_alive():
 		var definition: EnemyDefinition = CombatManager.get_enemy_definition()
-		_enemy_name_label.text = definition.display_name
-		_stage_label.text = "Enemy Lv. %d" % CombatManager.enemy_level
+		if mid_boss_fight:
+			_boss_name_label.text = definition.display_name.to_upper()
+		else:
+			_enemy_name_label.text = definition.display_name
 		_update_health(CombatManager.enemy_hp, CombatManager.enemy_max_hp)
 	else:
 		# Between kill and respawn — the spawn signal fills this in shortly.
 		_enemy_name_label.text = ""
-		_stage_label.text = "Enemy Lv. %d" % CombatManager.enemy_level
 		_update_health(0.0, 1.0)
+	# Stage label per state (review #4: farm re-entry must keep the wall
+	# suffix and show the level actually being fought).
+	if mid_boss_fight:
+		var world_gate: bool = WorldManager.is_world_boss_gate(CombatManager.enemy_level)
+		var prefix: String = "World Boss" if world_gate else "Boss"
+		_stage_label.text = "%s · Lv. %d" % [prefix, CombatManager.enemy_level]
+	elif in_farm_mode:
+		_stage_label.text = "Enemy Lv. %d · Boss at Lv. %d" % [
+			CombatManager.get_effective_kill_level(), CombatManager.enemy_level,
+		]
+	else:
+		_stage_label.text = "Enemy Lv. %d" % CombatManager.enemy_level
 
 
 func _update_health(hp: float, max_hp: float) -> void:
@@ -330,6 +365,8 @@ func _enqueue_unlock_presentation() -> void:
 func _on_unlock_acknowledged(world: WorldDefinition) -> void:
 	_unlock_presentation_queued = false
 	WorldManager.acknowledge_unlock_celebration()
+	# The new world's first enemy spawns now, on ENTER (spec §2B/§4C).
+	CombatManager.resume_spawning()
 	_world_label.text = world.display_name.to_upper()
 	_world_label.pivot_offset = _world_label.size * 0.5
 	_world_label.scale = Vector2(1.15, 1.15)

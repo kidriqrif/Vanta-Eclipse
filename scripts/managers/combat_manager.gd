@@ -149,6 +149,13 @@ func get_expected_seconds_per_kill(level: int, attack_interval: float) -> float:
 	return hits * attack_interval + RESPAWN_DELAY
 
 
+## Called by the UI after the World Unlock modal's ENTER: the new
+## world's first enemy spawns only now (spec §2B/§4C).
+func resume_spawning() -> void:
+	if not _alive:
+		_do_respawn()
+
+
 ## Called by the UI when the CHALLENGE BOSS button is tapped.
 func request_boss_challenge() -> void:
 	if state != State.FARM_MODE:
@@ -193,14 +200,21 @@ func _on_enemy_killed() -> void:
 	EventBus.enemy_died.emit(enemy_level, total_kills)
 	if state == State.BOSS_FIGHT:
 		_boss_timer_running = false
-		var payout: float = get_essence_reward(enemy_level) * BOSS_REWARD_MULTIPLIER
+		var gate_level: int = enemy_level
+		var payout: float = get_essence_reward(gate_level) * BOSS_REWARD_MULTIPLIER
 		CurrencyManager.add(CurrencyManager.ESSENCE, payout)
 		EventBus.essence_earned.emit(payout, &"boss")
-		var is_world_boss: bool = WorldManager.is_world_boss_gate(enemy_level)
-		# WorldManager reacts to this (unlock + save) before it returns.
-		EventBus.boss_fight_won.emit(enemy_level, payout, is_world_boss)
+		var is_world_boss: bool = WorldManager.is_world_boss_gate(gate_level)
+		# Advance PAST the gate before announcing: WorldManager saves at
+		# the kill, and that save must capture the post-win state so a
+		# crash under the modal reloads into the new world, not the gate.
 		state = State.NORMAL
 		enemy_level += 1
+		EventBus.boss_fight_won.emit(gate_level, payout, is_world_boss)
+		if is_world_boss and WorldManager.has_pending_unlock_celebration():
+			# The new world's first enemy spawns on ENTER (spec §2B/§4C);
+			# gameplay calls resume_spawning() on acknowledgment.
+			return
 		_schedule_respawn(BOSS_WIN_RESPAWN_DELAY)
 		return
 	var reward: float = get_essence_reward(enemy_level if state == State.NORMAL
@@ -316,7 +330,10 @@ func _on_overlay_opened() -> void:
 
 func _on_overlay_closed() -> void:
 	_overlay_count = maxi(0, _overlay_count - 1)
-	_check_held_entry()
+	# Deferred: the modal queue may present its NEXT dialog during this
+	# same emission chain — checking at end of frame sees the true final
+	# overlay state, so a countdown can never start under a scrim.
+	_check_held_entry.call_deferred()
 
 
 func _on_scene_transition_started(_scene_path: String) -> void:
@@ -334,7 +351,11 @@ func _on_scene_transition_started(_scene_path: String) -> void:
 func _on_scene_transition_finished(scene_path: String) -> void:
 	if scene_path == SceneManager.SCENE_GAMEPLAY:
 		_gameplay_current = true
-		_check_held_entry()
+		# Deferred: pending offline/unlock modals are enqueued later in
+		# this same emission (IdleManager re-emit, gameplay handler run
+		# after this one). End-of-frame, their ui_overlay_opened has
+		# landed and the held entry correctly stays held (review #1).
+		_check_held_entry.call_deferred()
 
 
 func _check_held_entry() -> void:

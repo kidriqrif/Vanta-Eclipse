@@ -10,7 +10,6 @@ var _payout: float = 0.0
 @onready var _name_row: HBoxContainer = %NameRow
 @onready var _world_name_label: Label = %WorldNameLabel
 @onready var _levels_label: Label = %LevelsLabel
-@onready var _multiplier_label: Label = %MultiplierLabel
 @onready var _amount_label: Label = %AmountLabel
 
 
@@ -26,9 +25,9 @@ func _ready() -> void:
 	_levels_label.text = "Levels %d – %d" % [
 		_world.first_level, _world.first_level + WorldManager.LEVELS_PER_WORLD - 1,
 	]
-	_multiplier_label.text = "Essence ×%s in this world" % String.num(
-		_world.essence_multiplier, 1
-	)
+	# The world essence multiplier is deliberately NOT surfaced here —
+	# the approved spec (§4C/§8) keeps it invisible until the future
+	# world-select screen, its natural home.
 	_set_exact_shown(false)
 	_amount_label.gui_input.connect(_on_amount_gui_input)
 	_stage_name_reveal()

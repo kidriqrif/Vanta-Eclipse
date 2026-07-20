@@ -110,6 +110,8 @@ func get_pending_unlock_world() -> WorldDefinition:
 func acknowledge_unlock_celebration() -> void:
 	unlock_celebration_pending = ""
 	unlock_celebration_payout = 0.0
+	# Persist immediately so a force-kill can't replay the ceremony.
+	SaveManager.save_game()
 
 
 # --- Internals ---------------------------------------------------------------

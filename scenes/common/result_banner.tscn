@@ -37,6 +37,7 @@ stretch_mode = 5
 [node name="BannerHeadline" type="Label" parent="BannerPanel/BannerVBox"]
 unique_name_in_owner = true
 layout_mode = 2
+mouse_filter = 2
 theme_type_variation = &"HeaderLabel"
 theme_override_font_sizes/font_size = 40
 text = "HEADLINE"
@@ -45,6 +46,7 @@ horizontal_alignment = 1
 [node name="BannerBody" type="Label" parent="BannerPanel/BannerVBox"]
 unique_name_in_owner = true
 layout_mode = 2
+mouse_filter = 2
 theme_override_font_sizes/font_size = 28
 text = "Body"
 horizontal_alignment = 1

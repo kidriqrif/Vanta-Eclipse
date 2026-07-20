@@ -92,6 +92,9 @@ func _on_boss_fight_won(_level: int, _payout: float, _is_world_boss: bool) -> vo
 
 
 func _on_boss_fight_failed(_level: int) -> void:
+	# An expiry freezes at a true zero, never at "0:01".
+	value = 0.0
+	_time_label.text = "0:00"
 	_finish()
 
 
