@@ -55,3 +55,13 @@ signal essence_earned(amount: float, source: StringName)
 
 ## Fired after a successful shop purchase.
 signal upgrade_purchased(id: StringName, new_level: int)
+
+# --- Idle & offline (Milestone 4) ---
+
+## Fired exactly once per save file, at the moment auto-attack unlocks
+## during live play (never re-fired when loading an already-unlocked save).
+signal auto_attack_unlocked
+
+## Fired when an offline reward has been granted and is waiting to be
+## presented to the player (the essence is already in their balance).
+signal offline_rewards_ready(amount: float, seconds_away: int, was_capped: bool)

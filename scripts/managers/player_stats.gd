@@ -16,6 +16,9 @@ const BASE_CRIT_MULTIPLIER: float = 2.0
 ## Hard cap so crit chance never becomes a guaranteed, boring 100%.
 const MAX_CRIT_CHANCE: float = 0.5
 
+## Fraction of the live essence rate earned while the game is closed.
+const BASE_OFFLINE_EFFICIENCY: float = 0.5
+
 
 func get_tap_damage() -> float:
 	var damage: float = BASE_TAP_DAMAGE + UpgradeManager.get_stat_additive(&"tap_damage")
@@ -35,6 +38,19 @@ func get_crit_multiplier() -> float:
 ## Multiplier applied to all essence earned from kills.
 func get_essence_gain_multiplier() -> float:
 	return UpgradeManager.get_stat_multiplier(&"essence_gain")
+
+
+## Fraction of the live essence rate paid out for time away.
+## TODO(Milestone 8): prestige upgrades raise this.
+## TODO(Milestone 14): the "double offline rewards" ad multiplies it.
+func get_offline_multiplier() -> float:
+	return BASE_OFFLINE_EFFICIENCY
+
+
+## Expected damage of one hit averaged over crit probability — the basis
+## for offline kill-rate estimates.
+func get_average_damage_per_hit() -> float:
+	return get_tap_damage() * (1.0 + get_crit_chance() * (get_crit_multiplier() - 1.0))
 
 
 ## Roll one tap attack, including the critical-hit check.

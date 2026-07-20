@@ -91,6 +91,25 @@ func player_tap_attack() -> void:
 	_apply_damage(roll["amount"], roll["is_crit"])
 
 
+## Called by IdleManager's tick. Identical to a tap by design — auto
+## attacks inherit crits, rewards, and every EventBus signal.
+## TODO(Milestone 8): a separate idle-damage stat may diverge here.
+func auto_attack() -> void:
+	if not _alive:
+		return
+	var roll: Dictionary = PlayerStats.roll_tap_damage()
+	_apply_damage(roll["amount"], roll["is_crit"])
+
+
+## Average seconds one kill takes for an auto-attacker at current stats,
+## against the baseline (multiplier 1.0) enemy of the given level.
+## Used by IdleManager to price offline progression honestly.
+func get_expected_seconds_per_kill(level: int, attack_interval: float) -> float:
+	var hp: float = ENEMY_BASE_HP * pow(ENEMY_HP_GROWTH, level - 1)
+	var hits: float = hp / maxf(0.0001, PlayerStats.get_average_damage_per_hit())
+	return hits * attack_interval + RESPAWN_DELAY
+
+
 # --- Internals ---------------------------------------------------------------
 
 

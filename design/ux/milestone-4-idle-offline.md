@@ -428,7 +428,7 @@ about the exact cap value.
   - ≥ 1 day: `"2d 5h"`
   This keeps the line skimmable ("roughly," per the task) instead of a
   precise duration.
-- **Essence figure precision:** the large "+1,240 Essence" figure uses
+- **Essence figure precision:** the large "+1.24K Essence" figure uses
   the existing `NumberFormat.format()` abbreviation. Per the Enhanced
   accessibility tier's "Readable numbers" requirement, tap-and-hold on
   the figure reveals the exact unabbreviated integer for as long as
