@@ -75,7 +75,31 @@ before play continues; immediately *visible* change afterward (new
 enemies, new sky/palette) so the unlock feels real, not just a label; and
 a sense of permanence — worlds never re-lock.
 
-## 8. Future stages (not yet built)
+## 8. First Equipment Drop (Milestone 6 — new)
 
-First Equipment Drop (Milestone 6) — First Relic (Milestone 7) — First
-Prestige (Milestone 8) — First Minigame (Milestone 9+).
+Somewhere in the first minutes of play, an enemy dies and leaves
+something behind: the player's first piece of gear.
+
+**Needs:** the drop moment must be noticeable without interrupting
+combat (loot is a bonus, never a gate); finding where gear lives must
+take one obvious tap; the item's power must be readable at a glance by a
+player who has never seen an RPG stat sheet (rarity color + a few plain
+stat lines, not a spreadsheet); equipping must feel immediately stronger
+(the very next hit shows bigger numbers).
+
+## 9. Gear Routine (Milestone 6 — new)
+
+Once drops are flowing, the player settles into a check-compare-equip
+rhythm every few minutes, salvaging rejects into Void Scraps and
+eventually forging when scraps pile up.
+
+**Needs:** comparing new vs equipped must be effortless (side-by-side or
+clear better/worse signals); salvage must be safe (no accidental loss of
+equipped or clearly-better items); the Forge must read as a slot machine
+worth pulling, not a spreadsheet; none of this may ever be required to
+progress — a player who ignores gear entirely just moves slower.
+
+## 10. Future stages (not yet built)
+
+First Relic (Milestone 7) — First Prestige (Milestone 8) — First
+Minigame (Milestone 9+).

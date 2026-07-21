@@ -64,5 +64,5 @@ Later worlds introduce the *new* mechanics of their own milestones.
 - Milestone 2: combat, enemies, damage numbers, animations — DONE
 - Milestone 3: currency system, upgrade shop, stat scaling, balancing — DONE
 - Milestone 4: auto attacks, idle mechanics, offline progression — DONE
-- Milestone 5: boss battles, world progression, unlock system — implementation
-  complete; Phase 4 reviews pending
+- Milestone 5: boss battles, world progression, unlock system — DONE
+- Milestone 6: equipment, inventory, loot tables, crafting — IN PROGRESS
