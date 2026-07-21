@@ -108,6 +108,13 @@ both values are deliberate upgrade hooks for prestige and rewarded ads.
 Enemy level never advances while away: the player returns to essence, not
 to a wall.
 
+Loot (Milestone 6, tuned via scratchpad loot_sim.py): 3% drop on normal
+kills, guaranteed on bosses (weights 30/40/22/7/1), world bosses min-Epic
+(0/0/60/32/8), normal weights 74/20/5/0.9/0.1. Affix magnitudes anchor to
+the upgrade curve (flat rolls ~L x 0.06-0.18 x rarity), giving full gear
+~1.45x dps — acceleration, never a gate. Salvage 2/5/12/30/75 scraps by
+rarity; forge pull costs 20 (~first pull at 30-40 min).
+
 Bosses (Milestone 5, tuned via scratchpad boss_sim.py): every 10th level,
 3x HP, 30s timer (1.1s entrance grace), 10x payout. Gates 10-40 are
 beatable on arrival with escalating tension; the level-50 world boss is a
