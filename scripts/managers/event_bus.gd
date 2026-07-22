@@ -84,6 +84,17 @@ signal enemy_withdrawn
 ## Fired by WorldManager after a world unlock is recorded and saved.
 signal world_unlocked(world: WorldDefinition)
 
+# --- Equipment & loot (Milestone 6) ---
+
+## Fired when a new item enters the inventory (drop or forge).
+signal item_dropped(item: Dictionary)
+
+## Fired when the inventory contents change (drop, equip, salvage, forge).
+signal inventory_changed
+
+## Fired when an item is equipped or unequipped in a slot.
+signal item_equipped(slot: StringName)
+
 # --- UI presentation facts (Milestone 5) ---
 # Emitted by overlays (shop panel, blocking modals) so managers can defer
 # moments that need an unobstructed screen. Presentation facts, not state.

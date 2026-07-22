@@ -20,10 +20,14 @@ const VOID_CRYSTALS: StringName = &"void_crystals"
 ## Premium currency. TODO(Milestone 14): purchases and rewarded ads.
 const ASTRAL_SHARDS: StringName = &"astral_shards"
 
+## Crafting material from salvaging gear (Milestone 6). Spent at the Forge.
+const VOID_SCRAPS: StringName = &"void_scraps"
+
 var _balances: Dictionary = {
 	ESSENCE: 0.0,
 	VOID_CRYSTALS: 0.0,
 	ASTRAL_SHARDS: 0.0,
+	VOID_SCRAPS: 0.0,
 }
 
 
@@ -39,6 +43,7 @@ func get_save_data() -> Dictionary:
 		"essence": _balances[ESSENCE],
 		"void_crystals": _balances[VOID_CRYSTALS],
 		"astral_shards": _balances[ASTRAL_SHARDS],
+		"void_scraps": _balances[VOID_SCRAPS],
 	}
 
 
@@ -46,6 +51,7 @@ func load_save_data(data: Dictionary) -> void:
 	_balances[ESSENCE] = maxf(0.0, float(data.get("essence", 0.0)))
 	_balances[VOID_CRYSTALS] = maxf(0.0, float(data.get("void_crystals", 0.0)))
 	_balances[ASTRAL_SHARDS] = maxf(0.0, float(data.get("astral_shards", 0.0)))
+	_balances[VOID_SCRAPS] = maxf(0.0, float(data.get("void_scraps", 0.0)))
 	for currency: StringName in _balances:
 		EventBus.currency_changed.emit(currency, _balances[currency])
 

@@ -188,6 +188,11 @@ func _on_game_loaded(_is_new_game: bool) -> void:
 
 
 func _apply_damage(amount: float, is_crit: bool) -> void:
+	# Boss-damage equipment affixes apply to boss hits only. The crit roll
+	# happens in PlayerStats (no boss context there); the boss multiplier
+	# is applied here, where the target's boss-ness is known.
+	if state == State.BOSS_FIGHT:
+		amount *= PlayerStats.get_boss_damage_multiplier()
 	enemy_hp = maxf(0.0, enemy_hp - amount)
 	EventBus.enemy_damaged.emit(amount, is_crit, enemy_hp, enemy_max_hp)
 	if enemy_hp <= 0.0 and _alive:

@@ -26,6 +26,13 @@ static func format_exact(value: float) -> String:
 	return "-" + grouped if negative else grouped
 
 
+## Percent affix display: 0.12 -> "12%", 0.045 -> "4.5%".
+static func format_percent(fraction: float) -> String:
+	var pct: float = fraction * 100.0
+	var decimals: int = 0 if absf(pct) >= 10.0 else 1
+	return "%s%%" % String.num(pct, decimals)
+
+
 static func format(value: float) -> String:
 	var negative: bool = value < 0.0
 	var v: float = absf(value)
