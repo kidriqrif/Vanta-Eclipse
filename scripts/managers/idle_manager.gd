@@ -42,6 +42,9 @@ func _ready() -> void:
 	SaveManager.register_saveable("idle", self)
 	EventBus.game_loaded.connect(_on_game_loaded)
 	EventBus.scene_transition_finished.connect(_on_scene_transition_finished)
+	# Twin Fang and any future cadence relic re-time the tick live.
+	EventBus.active_relic_changed.connect(_on_active_relic_changed)
+	_refresh_attack_interval()
 	# Deliberately NOT connecting enemy_spawned here — see _on_game_loaded.
 
 
@@ -81,16 +84,35 @@ func consume_pending_offline_rewards() -> Dictionary:
 
 ## Essence per second the auto-attacker earns at current stats,
 ## before the offline multiplier is applied.
+## Effective seconds between auto-attacks after cadence relics (Twin Fang).
+## The single source both the live timer and the offline math read, so a
+## faster-auto-attack relic doubles offline earning exactly as it does live.
+func get_effective_attack_interval() -> float:
+	return AUTO_ATTACK_INTERVAL / maxf(0.0001, RelicManager.get_attack_speed_mult())
+
+
 func get_live_essence_rate() -> float:
 	# Priced at the EFFECTIVE kill level: at a boss wall the auto-attacker
 	# is really killing gate-1 enemies, and offline pay must mirror that
-	# honestly (UX spec milestone-5 §6).
+	# honestly (UX spec milestone-5 §6). The interval is the effective one,
+	# so Twin Fang's doubled cadence flows into offline pay (milestone-7 §6).
 	var level: int = CombatManager.get_effective_kill_level()
 	var seconds_per_kill: float = CombatManager.get_expected_seconds_per_kill(
-		level, AUTO_ATTACK_INTERVAL
+		level, get_effective_attack_interval()
 	)
 	var essence_per_kill: float = CombatManager.get_essence_reward(level)
 	return essence_per_kill / maxf(0.0001, seconds_per_kill)
+
+
+func _refresh_attack_interval() -> void:
+	# A running repeating Timer adopts the new wait_time on its NEXT cycle —
+	# no start() (that would reset the current countdown).
+	if _attack_timer != null:
+		_attack_timer.wait_time = get_effective_attack_interval()
+
+
+func _on_active_relic_changed(_id: StringName) -> void:
+	_refresh_attack_interval()
 
 
 # --- Internals ---------------------------------------------------------------
@@ -107,6 +129,8 @@ func _on_game_loaded(is_new_game: bool) -> void:
 		auto_attack_unlocked = true
 	if auto_attack_unlocked:
 		_attack_timer.start()
+	# RelicManager's save is loaded by now, so the cadence is correct.
+	_refresh_attack_interval()
 	# Connected only now: CombatManager's load-time enemy_spawned fires
 	# earlier in the game_loaded connection list, so the first spawn this
 	# handler sees is a genuine live one. Reordering the autoload list or
@@ -165,6 +189,14 @@ func _check_offline_rewards() -> void:
 		return
 	CurrencyManager.add(CurrencyManager.ESSENCE, amount)
 	EventBus.essence_earned.emit(amount, &"offline")
+	# Hand PetManager the same capped kill estimate (never re-derived, never
+	# on the deferred re-emit) so offline pet XP stays consistent (M7 §6).
+	var seconds_per_kill: float = CombatManager.get_expected_seconds_per_kill(
+		CombatManager.get_effective_kill_level(), get_effective_attack_interval()
+	)
+	var kills: int = int(floor(rewarded_seconds / maxf(0.0001, seconds_per_kill)))
+	if kills > 0:
+		EventBus.offline_kills_estimated.emit(kills)
 	# Advance last_save_unix right away so a crash after the grant cannot
 	# re-run the same eligibility window and double-grant (UX spec §4C).
 	SaveManager.save_game()

@@ -95,6 +95,33 @@ signal inventory_changed
 ## Fired when an item is equipped or unequipped in a slot.
 signal item_equipped(slot: StringName)
 
+# --- Relics & Pets (Milestone 7) ---
+
+## Fired when a relic is recovered (added to the collection).
+signal relic_dropped(id: StringName)
+
+## Fired when the active relic changes (attune / detach).
+signal active_relic_changed(id: StringName)
+
+## Fired once when the relic system awakens (first world unlock).
+signal relics_awakened
+
+## Fired when a new pet is unlocked.
+signal pet_unlocked(id: StringName)
+
+## Fired when the active pet gains a level.
+signal pet_leveled(id: StringName, level: int)
+
+## Fired when a pet evolves to a new stage.
+signal pet_evolved(id: StringName, stage: int)
+
+## Fired when the active pet changes.
+signal active_pet_changed(id: StringName)
+
+## Fired at offline-reward grant time with the estimated kills, so pet XP
+## can be granted from the same estimate (never re-derived).
+signal offline_kills_estimated(kills: int)
+
 # --- UI presentation facts (Milestone 5) ---
 # Emitted by overlays (shop panel, blocking modals) so managers can defer
 # moments that need an unobstructed screen. Presentation facts, not state.

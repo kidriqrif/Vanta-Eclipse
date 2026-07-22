@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="PetDefinition" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/pet_definition.gd" id="1"]
+[ext_resource type="Texture2D" path="res://sprites/pets/pet_ember.svg" id="2"]
+[ext_resource type="Texture2D" path="res://sprites/pets/pet_blaze.svg" id="3"]
+
+[resource]
+script = ExtResource("1")
+id = &"ember"
+stage_names = PackedStringArray("Ember", "Blaze")
+stage_sprites = Array[Texture2D]([ExtResource("2"), ExtResource("3")])
+evolution_levels = PackedInt32Array(10)
+bonus_stat = &"essence"
+bonus_per_level = 0.02
+max_level = 30
