@@ -99,9 +99,11 @@ sit between EquipmentManager and PlayerStats; `PlayerStats` reads **both**
 inside its existing `get_*()` layering, which is what makes every
 stat-shaped relic and pet bonus apply to the literal next hit with zero new
 plumbing. **CombatManager gains no new hook** (the boss-damage multiplier
-read it already has carries Hunter's Sigil). **IdleManager gains exactly
-one hook** — the auto-attack interval, because Twin Fang changes attack
-*cadence*, which is not a PlayerStats value (§4-last). UI owns nothing.
+read it already has carries Hunter's Sigil). **IdleManager gains the Twin
+Fang cadence hook** — the auto-attack interval, which drives both the live
+timer and the offline rate/kills estimate (§4-last touch b), because Twin
+Fang changes attack *cadence*, not a PlayerStats value — plus the offline
+pet-XP handoff signal (§4-last). UI owns nothing.
 
 ---
 
@@ -1053,6 +1055,7 @@ mistake them for un-catalogued invention.)*
   (b) `SCENE_PETS` constant + `scenes/pets/pets.tscn` per the architecture's
   new-screen checklist; (c) the Relic Collection panel reuses the Forge
   panel's offsets — extract shared slide-up constants or accept the
-  duplication consciously; (d) IdleManager's `_refresh_attack_interval()` and
-  `offline_kills_estimated` emission are the only two new touches in an
+  duplication consciously; (d) IdleManager's three new touches
+  (`_refresh_attack_interval()`, the effective-interval offline repricing,
+  and the `offline_kills_estimated` emission) are the only additions in an
   otherwise unchanged combat/idle path.
