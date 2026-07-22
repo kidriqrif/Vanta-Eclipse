@@ -51,6 +51,7 @@ var _active_loot_toast: Node
 @onready var _health_bar: ProgressBar = %HealthBar
 @onready var _health_label: Label = %HealthLabel
 @onready var _combat_area: Control = %CombatArea
+@onready var _companion_button: Button = %CompanionButton
 @onready var _fx_layer: Control = %FxLayer
 @onready var _kills_label: Label = %KillsLabel
 @onready var _session_label: Label = %SessionLabel
@@ -76,8 +77,16 @@ func _ready() -> void:
 	_gear_button.pressed.connect(_on_gear_pressed)
 	_challenge_boss_button.pressed.connect(_on_challenge_boss_pressed)
 	EventBus.item_dropped.connect(_on_item_dropped)
+	EventBus.relic_dropped.connect(_on_relic_dropped)
+	EventBus.relics_awakened.connect(_on_relics_awakened)
+	EventBus.pet_unlocked.connect(_on_pet_unlocked)
+	EventBus.pet_evolved.connect(_on_pet_evolved)
+	EventBus.pet_leveled.connect(_on_pet_leveled)
+	EventBus.active_pet_changed.connect(_on_active_pet_changed)
+	_companion_button.pressed.connect(_on_companion_pressed)
 	_apply_world_palette()
 	_update_count_pill()
+	_update_companion()
 
 	_session_label.text = "Session #%d" % GameManager.launch_count
 	_essence_label.text = NumberFormat.format(
@@ -247,6 +256,76 @@ func _on_currency_changed(currency: StringName, balance: float) -> void:
 
 func _on_gear_pressed() -> void:
 	SceneManager.change_scene(SceneManager.SCENE_GEAR)
+
+
+func _on_companion_pressed() -> void:
+	SceneManager.change_scene(SceneManager.SCENE_PETS)
+
+
+func _on_relic_dropped(id: StringName) -> void:
+	var def: RelicDefinition = RelicManager.get_definition(id)
+	if def == null:
+		return
+	SettingsManager.vibrate(45)
+	var banner: ResultBanner = RESULT_BANNER_SCENE.instantiate()
+	banner.setup(def.sigil, "RELIC RECOVERED", def.display_name, true)
+	_show_banner(banner)
+
+
+func _on_relics_awakened() -> void:
+	var banner: ResultBanner = RESULT_BANNER_SCENE.instantiate()
+	banner.setup(BOSS_SKULL_TEXTURE, "RELICS AWAKENED",
+		"The relic slot stirs — attune one in your Gear.", true)
+	_show_banner(banner)
+
+
+func _on_pet_unlocked(id: StringName) -> void:
+	var def: PetDefinition = PetManager.get_definition(id)
+	SettingsManager.vibrate(35)
+	_update_companion()
+	if def == null:
+		return
+	var banner: ResultBanner = RESULT_BANNER_SCENE.instantiate()
+	banner.setup(def.stage_sprites[0], "NEW COMPANION", def.stage_names[0], true)
+	_show_banner(banner)
+
+
+func _on_pet_evolved(id: StringName, stage: int) -> void:
+	var def: PetDefinition = PetManager.get_definition(id)
+	SettingsManager.vibrate(50)
+	_update_companion()
+	if def == null:
+		return
+	var banner: ResultBanner = RESULT_BANNER_SCENE.instantiate()
+	banner.setup(def.stage_sprites[stage], "EVOLUTION",
+		"%s evolved!" % def.stage_names[stage], true)
+	_show_banner(banner)
+
+
+func _on_pet_leveled(id: StringName, _level: int) -> void:
+	# Low-ceremony: the active companion gives a small scale-pop on level.
+	if id == PetManager.get_active_id() and _companion_button.visible:
+		_companion_button.pivot_offset = _companion_button.size * 0.5
+		_companion_button.scale = Vector2(1.18, 1.18)
+		create_tween().tween_property(_companion_button, "scale", Vector2.ONE, 0.2) \
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+func _on_active_pet_changed(_id: StringName) -> void:
+	_update_companion()
+
+
+func _update_companion() -> void:
+	var active: StringName = PetManager.get_active_id()
+	if active == &"":
+		_companion_button.visible = false
+		return
+	var def: PetDefinition = PetManager.get_definition(active)
+	if def == null:
+		_companion_button.visible = false
+		return
+	_companion_button.icon = def.stage_sprites[PetManager.get_stage(active)]
+	_companion_button.visible = true
 
 
 func _on_item_dropped(item: Dictionary) -> void:

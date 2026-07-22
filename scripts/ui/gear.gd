@@ -6,6 +6,7 @@ extends Control
 
 const INSPECTOR_CARD_SCENE: PackedScene = preload("res://scenes/gear/inspector_card.tscn")
 const LOCK_GLYPH: Texture2D = preload("res://sprites/ui/lock_glyph.svg")
+const RELIC_SLOT_ICON: Texture2D = preload("res://sprites/ui/slot_relic.svg")
 const SLOT_TILE_SIZE: Vector2 = Vector2(236, 250)
 const ROW_HEIGHT: float = 140.0
 const ARM_SECONDS: float = 2.5
@@ -24,6 +25,7 @@ var _commons_armed: bool = false
 @onready var _forge_button: Button = %ForgeButton
 @onready var _salvage_commons_button: Button = %SalvageCommonsButton
 @onready var _forge_panel: Control = %ForgePanel
+@onready var _relic_panel: Control = %RelicCollectionPanel
 @onready var _nebula: ColorRect = $VoidBackground/NebulaRect
 
 
@@ -36,6 +38,9 @@ func _ready() -> void:
 	EventBus.inventory_changed.connect(_refresh)
 	EventBus.item_equipped.connect(_on_item_equipped)
 	EventBus.currency_changed.connect(_on_currency_changed)
+	EventBus.relics_awakened.connect(_refresh)
+	EventBus.relic_dropped.connect(func(_id: StringName) -> void: _refresh())
+	EventBus.active_relic_changed.connect(func(_id: StringName) -> void: _refresh())
 	_refresh()
 
 
@@ -66,7 +71,65 @@ func _rebuild_slots() -> void:
 	for child in _slot_grid.get_children():
 		child.queue_free()
 	for slot: SlotDefinition in EquipmentManager.get_slots():
-		_slot_grid.add_child(_make_slot_tile(slot))
+		if slot.id == &"relic" and RelicManager.is_awakened():
+			_slot_grid.add_child(_make_relic_tile())
+		else:
+			_slot_grid.add_child(_make_slot_tile(slot))
+
+
+## The awakened relic tile (gold Aureate frame) — opens the Relic Collection.
+func _make_relic_tile() -> Button:
+	var tile := Button.new()
+	tile.custom_minimum_size = SLOT_TILE_SIZE
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.10, 0.086, 0.055, 0.92)
+	style.set_corner_radius_all(16)
+	style.set_content_margin_all(12)
+	style.set_border_width_all(3)
+	style.border_color = Color(0.961, 0.769, 0.318, 0.95)
+	style.shadow_color = Color(0.961, 0.769, 0.318, 0.3)
+	style.shadow_size = 14
+	tile.add_theme_stylebox_override("normal", style)
+	tile.add_theme_stylebox_override("hover", style)
+	tile.add_theme_stylebox_override("pressed", style)
+
+	var box := VBoxContainer.new()
+	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	box.add_theme_constant_override("separation", 6)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	tile.add_child(box)
+
+	var kicker := Label.new()
+	kicker.text = "RELIC"
+	kicker.add_theme_color_override("font_color", Color(0.984, 0.906, 0.659, 1))
+	kicker.add_theme_font_size_override("font_size", 24)
+	kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(kicker)
+
+	var active_id: StringName = RelicManager.get_active_id()
+	var icon := TextureRect.new()
+	icon.custom_minimum_size = Vector2(88, 88)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(icon)
+	var sub := Label.new()
+	sub.add_theme_font_size_override("font_size", 24)
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(sub)
+	if active_id != &"":
+		var def: RelicDefinition = RelicManager.get_definition(active_id)
+		icon.texture = def.sigil
+		sub.text = def.display_name
+	else:
+		icon.texture = RELIC_SLOT_ICON
+		icon.modulate = Color(0.7, 0.62, 0.35, 1)
+		sub.text = "Tap to attune"
+		sub.add_theme_color_override("font_color", MUTED)
+	tile.pressed.connect(_relic_panel.toggle)
+	return tile
 
 
 func _make_slot_tile(slot: SlotDefinition) -> Button:

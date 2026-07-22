@@ -151,6 +151,10 @@ func get_unseen_count() -> int:
 	return count
 
 
+func is_unseen(id: StringName) -> bool:
+	return _owned.has(id) and not bool(_owned[id].get("seen", true))
+
+
 # --- Internals ---------------------------------------------------------------
 
 
