@@ -110,14 +110,15 @@ one hook** — the auto-attack interval, because Twin Fang changes attack
 ### 2A. Stage 10 — the slot awakens → first relic → first attune
 
 ```
-Player defeats the level-50 world boss of the Frozen Ruins (or Molten
-Core) and unlocks the ASTRAL TEMPLE (existing World Unlock modal)
+Player defeats the DARK FOREST's level-50 world boss and unlocks the
+FROZEN RUINS — the first world unlock (existing World Unlock modal)
         │
         ▼
 RelicManager.awaken() flips the relic system on (state first). The
 World Unlock modal — already the chapter's celebration container —
-carries one added line: "The relic slot stirs. Astral bosses hold
-what fills it." (no new modal; M6 world-boss-drop idiom reused, §6)
+carries one added line: "The relic slot stirs. The bosses of the
+frozen deep hold what fills it." (no new modal; M6 world-boss-drop
+idiom reused, §6)
         │
         ▼
 Player taps GEAR (unchanged bottom-row button). On the Gear screen the
@@ -128,12 +129,12 @@ shimmer plays on first view (once per save, never replayed on load)
         ▼
 Tap the relic tile → RELIC COLLECTION panel slides up (in-scene, §3B).
 Empty state: "No relic attuned. Relics are recovered from the bosses of
-the Astral Temple and beyond." — teaching the drop rule in one line
+the Frozen Ruins and beyond." — teaching the drop rule in one line
         │
         ▼
-Player farms / fights an Astral boss. RelicManager rolls the rare relic
-drop → the relic is added to the owned collection IMMEDIATELY (grant-
-then-present) → RESULT BANNER, win variant: "RELIC RECOVERED · Eclipse
+Player farms / fights a Frozen Ruins boss. RelicManager rolls the rare
+relic drop → the relic is added to the owned collection IMMEDIATELY
+(grant-then-present) → RESULT BANNER, win variant: "RELIC RECOVERED · Eclipse
 Heart — offline rewards tripled." + the GEAR pill increments
         │
         ▼
@@ -287,7 +288,7 @@ y≈1920└───────────────────────
 - **ACTIVE card** — the currently-attuned relic pinned at top: sigil, name
   (30px), the single plain effect sentence (25px muted), an "● ATTUNED"
   badge. Empty state (awakened, none attuned): a muted block "No relic
-  attuned." / "Relics drop from the bosses of the Astral Temple and beyond."
+  attuned." / "Relics drop from the bosses of the Frozen Ruins and beyond."
 - **COLLECTION rows** — Data-Driven Content Rows, one per owned relic (the
   upgrade-shop / M6-inventory idiom). Each: sigil 64×64, name 30px, the one
   effect sentence 25px muted, a "NEW" word pill (IGNORE) for relics unseen
@@ -554,7 +555,10 @@ named:
   put in it, which is exactly how the M6 empty-slot teaching works.
 
 The relic slot therefore awakens **empty**; the first relic is a rare drop
-from Astral Temple bosses / world-bosses (a distinct drop KIND, §4-last).
+from Frozen Ruins bosses / world-bosses onward (a distinct drop KIND,
+§4-last). (The Astral Temple reclaims this as its themed source when
+Worlds 3–4 ship; until then the frozen deep is the real, reachable
+source the copy names.)
 
 ### 4C. The Relic Collection and attune flow
 
@@ -760,12 +764,20 @@ them, exactly as it already calls UpgradeManager and EquipmentManager):
   added in M6 already carries Hunter's Sigil; all other relic/pet stat
   effects arrive through the getters it already calls per roll. Its existing
   signals are the entire relic/pet drop and XP interface.
-- **`IdleManager` gains exactly two touches:** *(a)* the Twin Fang hook —
+- **`IdleManager` gains exactly three touches:** *(a)* the Twin Fang hook —
   `_refresh_attack_interval()` sets `_attack_timer.wait_time` from
   `RelicManager.get_attack_speed_mult()`, called on `_ready`, on
-  `active_relic_changed`, and after load; *(b)* it emits
+  `active_relic_changed`, and after load. *(b)* **Offline is repriced at the
+  same effective interval** — `get_live_essence_rate()` (and the offline
+  kills estimate) must divide by the *effective* interval
+  `1.0 / get_attack_speed_mult()`, NOT the raw `AUTO_ATTACK_INTERVAL`
+  constant, so Twin Fang's doubled kill rate flows into offline essence and
+  offline pet XP exactly as it does live. Without this the relic would
+  silently double active earning only — the reviewer-flagged desync. One
+  small helper, `get_effective_attack_interval()`, is the single source both
+  the live timer and the offline math read. *(c)* it emits
   `offline_kills_estimated(kills)` alongside `offline_rewards_ready` at
-  resume, so PetManager can grant offline XP from the same estimate without
+  resume, so PetManager grants offline XP from the same estimate without
   re-deriving it (a downward-free, signal-only handoff).
 - **Definitions are data, per the content-as-data rule.**
   - `RelicDefinition` in `data/relics/`: `id` (StringName, save-stable
@@ -914,11 +926,15 @@ applied.
   (offline is a rate estimate priced at current stats, never a simulation).
   If the relic is detached before returning, the bonus simply is not applied
   — no copy change needed; the offline modal's single number stays true.
-- **Twin Fang vs the fixed 1.0s auto-attack tick.** Handled by the one
-  IdleManager hook (§4G): `wait_time = 1.0 / attack_speed_mult` → 0.5s while
-  attuned; the change lands on the timer's next cycle. Detaching restores
-  1.0s the same way. A stacked future attack-speed pet would multiply into
-  the same `attack_speed_mult` product (out of M7 scope).
+- **Twin Fang vs the fixed 1.0s auto-attack tick — live AND offline.**
+  Handled by the IdleManager hook (§4G): `wait_time = 1.0 /
+  attack_speed_mult` → 0.5s while attuned, landing on the timer's next
+  cycle; detaching restores 1.0s the same way. Critically, the SAME
+  effective interval drives `get_live_essence_rate()` and the offline kills
+  estimate (§4G touch *b*), so offline essence and offline pet XP double
+  right alongside live earning — the relic never silently applies to only
+  half the game. A stacked future attack-speed pet multiplies into the same
+  `attack_speed_mult` product (out of M7 scope).
 - **Pet XP offline.** Granted from IdleManager's estimated-kills figure via
   the `offline_kills_estimated` signal (§4F); if the pet leveled/evolved
   while away, one line joins the offline modal, else the modal stays
@@ -993,16 +1009,16 @@ mistake them for un-catalogued invention.)*
   parameterized and renders whatever the sim locks. One UX-side request:
   keep the first relic reachable "deep enough in but not punishingly rare,"
   so Stage 10 actually lands.
-- **World-content dependency (for engineering/GD).** The awaken and first-pet
-  triggers key off the **Astral Temple (World 4)** unlock, but only Dark
-  Forest and Frozen Ruins exist as data today; Molten Core (W3) and Astral
-  Temple (W4) are unbuilt. Worlds are "pure data drops" per the game concept,
-  so this is expected — but M7 needs W3+W4 data (or an interim home) before
-  the triggers have a world to fire on. Confirm the shipping order.
-- **First-pet trigger** — this spec recommends a **guaranteed grant at the
-  Astral Temple unlock**. Confirm, or prefer a first-Astral-boss reward (also
-  deterministic-ish, but a few minutes later, and couples the moment to a
-  boss kill).
+- **World-content dependency — RESOLVED by the §1 DESIGN OVERRIDE.** The
+  awaken and first-pet triggers key off the **first world unlock (Frozen
+  Ruins, World 2)**, which ships as data today and fires the real
+  `world_unlocked` event — so the triggers have a world to fire on now. When
+  Molten Core (W3) and the Astral Temple (W4) ship, the Astral Temple
+  reclaims the relic theme; no M7 change needed then. No blocking dependency
+  remains.
+- **First-pet trigger** — a **guaranteed grant at the first world unlock
+  (Frozen Ruins)**, on the same `world_unlocked` event as the relic awaken,
+  so both land in the one celebrated moment.
 - **Evolution ceremony** — this spec ships evolution as a **non-blocking
   Result Banner**, with an optional save-gated first-evolution escalation to
   a blocking modal (§4E). Confirm the default and whether to build the valve.
