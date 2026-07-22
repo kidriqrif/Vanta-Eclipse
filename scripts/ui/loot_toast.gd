@@ -5,10 +5,14 @@ extends CanvasLayer
 ## Mythic drops use the Result Banner instead (handled by the caller).
 
 const HOLD_SECONDS: float = 1.3
+## Absolute ceiling on lifetime so a sustained drop storm can't keep the
+## pill alive forever by repeatedly restarting the hold.
+const MAX_LIFETIME: float = 5.0
 
 var _rarity: int = 0
 var _count: int = 1
 var _life_tween: Tween
+var _spawned_at: float = 0.0
 var _icon_texture: Texture2D
 var _label_text: String = ""
 
@@ -31,6 +35,7 @@ func setup(item: Dictionary) -> void:
 
 
 func _ready() -> void:
+	_spawned_at = Time.get_ticks_msec() / 1000.0
 	_icon.texture = _icon_texture
 	_render()
 	_panel.pivot_offset = _panel.size * 0.5
@@ -58,10 +63,18 @@ func _render() -> void:
 	_label.add_theme_color_override("font_color", RarityStyle.color(_rarity))
 	var style: StyleBoxFlat = _panel.get_theme_stylebox("panel").duplicate()
 	style.border_color = RarityStyle.color(_rarity)
+	var glow: Color = RarityStyle.color(_rarity)
+	glow.a = 0.25
+	style.shadow_color = glow
+	style.shadow_size = 10
 	_panel.add_theme_stylebox_override("panel", style)
 
 
 func _start_life() -> void:
+	# Past the absolute ceiling, stop restarting and let the current tween
+	# run to its free — a drop storm can't keep the pill alive forever.
+	if Time.get_ticks_msec() / 1000.0 - _spawned_at > MAX_LIFETIME:
+		return
 	if _life_tween != null and _life_tween.is_valid():
 		_life_tween.kill()
 	_panel.modulate.a = 1.0

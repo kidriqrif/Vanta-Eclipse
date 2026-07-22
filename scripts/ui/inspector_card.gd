@@ -20,6 +20,11 @@ var _item: Dictionary
 var _is_equipped: bool
 var _salvage_armed: bool = false
 var _closing: bool = false
+## Info mode: a card for an empty or sealed slot (no item, CLOSE only).
+var _info_mode: bool = false
+var _info_title: String = ""
+var _info_subtitle: String = ""
+var _info_body: String = ""
 
 @onready var _scrim: ColorRect = %Scrim
 @onready var _card: PanelContainer = %Card
@@ -35,25 +40,19 @@ func setup(item: Dictionary, is_equipped: bool) -> void:
 	_is_equipped = is_equipped
 
 
+## Build an info-only card (empty slot / sealed relic): one message, CLOSE.
+func setup_info(title: String, subtitle: String, body: String) -> void:
+	_info_mode = true
+	_info_title = title
+	_info_subtitle = subtitle
+	_info_body = body
+
+
 func _ready() -> void:
-	var rarity: int = int(_item["rarity"])
-	# Card border wears the item's rarity color.
-	var style: StyleBoxFlat = _card.get_theme_stylebox("panel").duplicate()
-	style.border_color = RarityStyle.color(rarity)
-	style.border_width_left = 2
-	style.border_width_top = 2
-	style.border_width_right = 2
-	style.border_width_bottom = 2
-	_card.add_theme_stylebox_override("panel", style)
-
-	_build_header(rarity)
-	_build_affix_list()
-	_build_compare()
-
-	_equip_button.text = "UNEQUIP" if _is_equipped else "EQUIP"
-	_equip_button.pressed.connect(_on_equip_pressed)
-	_salvage_button.visible = not _is_equipped
-	_salvage_button.pressed.connect(_on_salvage_pressed)
+	if _info_mode:
+		_build_info()
+	else:
+		_build_item()
 	%CloseButton.pressed.connect(close)
 	_scrim.gui_input.connect(_on_scrim_input)
 
@@ -81,6 +80,56 @@ func close() -> void:
 
 
 # --- Build ------------------------------------------------------------------
+
+
+func _build_item() -> void:
+	var rarity: int = int(_item["rarity"])
+	# Card border wears the item's rarity color (softened, per the visual spec).
+	var style: StyleBoxFlat = _card.get_theme_stylebox("panel").duplicate()
+	var border: Color = RarityStyle.color(rarity)
+	border.a = 0.8
+	style.border_color = border
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	_card.add_theme_stylebox_override("panel", style)
+
+	_build_header(rarity)
+	_build_affix_list()
+	_build_compare()
+
+	_equip_button.text = "UNEQUIP" if _is_equipped else "EQUIP"
+	_equip_button.pressed.connect(_on_equip_pressed)
+	_salvage_button.visible = not _is_equipped
+	_salvage_button.text = "SALVAGE  +%d" % EquipmentManager.get_salvage_yield(rarity)
+	_salvage_button.pressed.connect(_on_salvage_pressed)
+
+
+func _build_info() -> void:
+	_equip_button.visible = false
+	_salvage_button.visible = false
+	var title := Label.new()
+	title.text = _info_title
+	title.add_theme_font_size_override("font_size", 40)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_body.add_child(title)
+	if _info_subtitle != "":
+		var sub := Label.new()
+		sub.text = _info_subtitle
+		sub.add_theme_color_override("font_color", MUTED)
+		sub.add_theme_font_size_override("font_size", 26)
+		sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_body.add_child(sub)
+	var spacer := Control.new()
+	spacer.custom_minimum_size = Vector2(0, 20)
+	_body.add_child(spacer)
+	var body := Label.new()
+	body.text = _info_body
+	body.add_theme_font_size_override("font_size", 28)
+	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_body.add_child(body)
 
 
 func _build_header(rarity: int) -> void:
@@ -174,10 +223,12 @@ func _on_equip_pressed() -> void:
 
 
 func _on_salvage_pressed() -> void:
-	# Two-Tap Arm for Epic+; Common/Rare salvage on the first tap.
+	# Two-Tap Arm for Epic+; Common/Rare salvage on the first tap. Either
+	# way the yield is on the button face before the player commits.
+	var yield_amount: int = EquipmentManager.get_salvage_yield(int(_item["rarity"]))
 	if int(_item["rarity"]) >= EquipmentManager.Rarity.EPIC and not _salvage_armed:
 		_salvage_armed = true
-		_salvage_button.text = "SALVAGE?"
+		_salvage_button.text = "TAP AGAIN:  +%d SCRAPS" % yield_amount
 		var timer: SceneTreeTimer = get_tree().create_timer(ARM_SECONDS)
 		timer.timeout.connect(_disarm_salvage)
 		return
@@ -188,7 +239,9 @@ func _on_salvage_pressed() -> void:
 func _disarm_salvage() -> void:
 	if is_instance_valid(_salvage_button) and _salvage_armed:
 		_salvage_armed = false
-		_salvage_button.text = "SALVAGE"
+		_salvage_button.text = "SALVAGE  +%d" % EquipmentManager.get_salvage_yield(
+			int(_item["rarity"])
+		)
 
 
 func _on_scrim_input(event: InputEvent) -> void:

@@ -41,10 +41,6 @@ const SLOT_PATHS: Array[String] = [
 	"res://data/slots/relic.tres",
 ]
 
-## Drops the player hasn't seen on the Gear screen yet (runtime-only,
-## drives the count pill on the GEAR button). Reset by mark_all_seen().
-var unseen_count: int = 0
-
 ## slot id (StringName) -> item Dictionary
 var _equipped: Dictionary = {}
 var _inventory: Array = []
@@ -119,6 +115,7 @@ func _normalize_item(raw: Dictionary) -> Dictionary:
 		"rarity": int(raw.get("rarity", 0)),
 		"item_level": int(raw.get("item_level", 1)),
 		"affixes": affixes,
+		"seen": bool(raw.get("seen", true)),
 	}
 
 
@@ -151,6 +148,34 @@ func get_affix_definition(id: StringName) -> AffixDefinition:
 		if affix.id == id:
 			return affix
 	return null
+
+
+## Void Scraps an item is worth if salvaged.
+func get_salvage_yield(rarity: int) -> int:
+	return RARITY_SALVAGE[clampi(rarity, 0, RARITY_SALVAGE.size() - 1)]
+
+
+## Inventory items the player hasn't seen on the Gear screen yet. Durable —
+## the "seen" flag lives on each item and persists through the save, so the
+## GEAR count pill and per-row NEW tags survive an app restart.
+func get_unseen_count() -> int:
+	var count: int = 0
+	for item: Dictionary in _inventory:
+		if not bool(item.get("seen", true)):
+			count += 1
+	return count
+
+
+func is_item_unseen(item: Dictionary) -> bool:
+	return not bool(item.get("seen", true))
+
+
+func get_commons_count() -> int:
+	var count: int = 0
+	for item: Dictionary in _inventory:
+		if int(item["rarity"]) == Rarity.COMMON:
+			count += 1
+	return count
 
 
 ## Human-readable affix line, e.g. "Tap Damage +12" or "Crit Chance +0.8%".
@@ -306,14 +331,15 @@ func _on_boss_fight_won(level: int, _payout: float, is_world_boss: bool) -> void
 
 
 func _drop(item: Dictionary) -> void:
+	item["seen"] = false
 	_add_to_inventory(item)
-	unseen_count += 1
 	EventBus.item_dropped.emit(item)
 
 
-## Called by the Gear screen on open — the count pill clears.
+## Called by the Gear screen on open — every inventory item is now seen.
 func mark_all_seen() -> void:
-	unseen_count = 0
+	for item: Dictionary in _inventory:
+		item["seen"] = true
 
 
 func _add_to_inventory(item: Dictionary) -> void:

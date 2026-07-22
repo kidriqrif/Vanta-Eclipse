@@ -250,14 +250,20 @@ func _on_gear_pressed() -> void:
 
 
 func _on_item_dropped(item: Dictionary) -> void:
-	SettingsManager.vibrate(10)
+	var rarity: int = int(item["rarity"])
+	# Haptics mark meaningful drops only — Common/Rare are frequent and
+	# silent (UX spec §4D).
+	if rarity >= EquipmentManager.Rarity.EPIC:
+		SettingsManager.vibrate(15)
 	_update_count_pill()
+	var slot_def: SlotDefinition = EquipmentManager.get_slot_definition(item["slot"])
+	var slot_name: String = slot_def.display_name if slot_def != null else str(item["slot"])
 	# Mythic drops get the full Result Banner; everything else a Loot Toast
 	# that collapses if one is already showing.
-	if int(item["rarity"]) >= EquipmentManager.Rarity.MYTHIC:
+	if rarity >= EquipmentManager.Rarity.MYTHIC:
 		var banner: ResultBanner = RESULT_BANNER_SCENE.instantiate()
 		banner.setup(BOSS_SKULL_TEXTURE, "MYTHIC DROP",
-			"%s %s" % [RarityStyle.rarity_name(int(item["rarity"])), item["slot"]], true)
+			"%s %s" % [RarityStyle.rarity_name(rarity), slot_name], true)
 		_show_banner(banner)
 		return
 	if _active_loot_toast != null and is_instance_valid(_active_loot_toast):
@@ -271,9 +277,9 @@ func _on_item_dropped(item: Dictionary) -> void:
 
 
 func _update_count_pill() -> void:
-	var count: int = EquipmentManager.unseen_count
+	var count: int = EquipmentManager.get_unseen_count()
 	_count_pill.visible = count > 0
-	_count_label.text = str(count)
+	_count_label.text = "%d NEW" % count
 
 
 func _on_menu_pressed() -> void:

@@ -68,11 +68,11 @@ func _build_slot_pickers() -> void:
 			continue
 		var button := Button.new()
 		button.toggle_mode = true
-		button.custom_minimum_size = Vector2(140, 150)
+		button.custom_minimum_size = Vector2(236, 250)
 		button.icon = slot.icon
 		button.expand_icon = true
 		button.text = slot.display_name
-		button.add_theme_font_size_override("font_size", 22)
+		button.add_theme_font_size_override("font_size", 24)
 		button.pressed.connect(_on_slot_selected.bind(slot.id))
 		_slot_row.add_child(button)
 		_slot_buttons[slot.id] = button
@@ -94,12 +94,16 @@ func _refresh() -> void:
 	var cost: float = EquipmentManager.FORGE_COST
 	var balance: float = CurrencyManager.get_balance(CurrencyManager.VOID_SCRAPS)
 	var affordable: bool = balance >= cost
-	_cost_label.text = "%s / %s Void Scraps" % [
+	var cost_text: String = "%s / %s Void Scraps" % [
 		NumberFormat.format(balance), NumberFormat.format(cost)
 	]
+	if not affordable:
+		cost_text += "  ·  Need %s more" % NumberFormat.format(cost - balance)
+	_cost_label.text = cost_text
 	_cost_label.add_theme_color_override(
 		"font_color", AFFORD_COLOR if affordable else DENY_COLOR
 	)
+	_forge_button.text = "FORGE  ·  Item Lv. %d" % CombatManager.enemy_level
 	_forge_button.disabled = not affordable or _selected_slot == &""
 
 

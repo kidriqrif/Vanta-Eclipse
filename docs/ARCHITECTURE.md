@@ -26,6 +26,7 @@ Load order matters — each autoload may only rely on the ones above it:
 | 8 | `SceneManager` | `scene_manager.gd` | Scene switching with fade + threaded loading. Above the combat managers so they may compare scene-path constants (M5). |
 | 9 | `WorldManager` | `world_manager.gd` | World definitions, unlock progression (grandfather migration), palettes, essence multipliers. |
 | 10 | `CombatManager` | `combat_manager.gd` | Three-state combat machine (normal/boss/farm), gates, countdown, rewards, world-driven rosters. |
+| 6b | `EquipmentManager` | `equipment_manager.gd` | Inventory, equipped items, procedural generation, drops, salvage, forge. Between UpgradeManager and PlayerStats so PlayerStats reads its affix sums; items are serialized dicts, affix/slot pools are `.tres`. |
 | 11 | `IdleManager` | `idle_manager.gd` | Auto-attack unlock/ticking, offline-reward eligibility and granting (priced at the effective farm level), app-resume hook. Last on purpose: its `enemy_spawned` connection order relative to CombatManager's `game_loaded` handler is load-bearing (see its comments). |
 
 ## Communication rules

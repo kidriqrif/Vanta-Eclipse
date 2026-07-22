@@ -5,12 +5,16 @@ extends Control
 ## gameplay, re-checking the held gate — no ui_overlay plumbing needed.
 
 const INSPECTOR_CARD_SCENE: PackedScene = preload("res://scenes/gear/inspector_card.tscn")
+const LOCK_GLYPH: Texture2D = preload("res://sprites/ui/lock_glyph.svg")
 const SLOT_TILE_SIZE: Vector2 = Vector2(236, 250)
 const ROW_HEIGHT: float = 140.0
+const ARM_SECONDS: float = 2.5
 const EQUIP_BG: Color = Color(0.086, 0.063, 0.133, 0.92)
 const EMPTY_BG: Color = Color(0.06, 0.05, 0.09, 0.85)
 const SEALED_BG: Color = Color(0.05, 0.045, 0.07, 0.9)
 const MUTED: Color = Color(0.62, 0.57, 0.75)
+
+var _commons_armed: bool = false
 
 @onready var _slot_grid: GridContainer = %SlotGrid
 @onready var _inventory_list: VBoxContainer = %InventoryList
@@ -32,7 +36,6 @@ func _ready() -> void:
 	EventBus.inventory_changed.connect(_refresh)
 	EventBus.item_equipped.connect(_on_item_equipped)
 	EventBus.currency_changed.connect(_on_currency_changed)
-	EquipmentManager.mark_all_seen()
 	_refresh()
 
 
@@ -42,6 +45,18 @@ func _refresh() -> void:
 	)
 	_rebuild_slots()
 	_rebuild_inventory()
+	_refresh_commons_button()
+
+
+func _refresh_commons_button() -> void:
+	var count: int = EquipmentManager.get_commons_count()
+	_salvage_commons_button.disabled = count == 0
+	if _commons_armed and count > 0:
+		var yield_each: int = EquipmentManager.get_salvage_yield(EquipmentManager.Rarity.COMMON)
+		_salvage_commons_button.text = "TAP AGAIN: %d → +%d" % [count, count * yield_each]
+	else:
+		_commons_armed = false
+		_salvage_commons_button.text = "Salvage Commons (%d)" % count
 
 
 # --- Slots -------------------------------------------------------------------
@@ -69,6 +84,10 @@ func _make_slot_tile(slot: SlotDefinition) -> Button:
 		style.bg_color = EQUIP_BG
 		style.set_border_width_all(3)
 		style.border_color = RarityStyle.color(int(equipped["rarity"]))
+		var glow: Color = RarityStyle.color(int(equipped["rarity"]))
+		glow.a = 0.22
+		style.shadow_color = glow
+		style.shadow_size = 8
 	else:
 		style.bg_color = EMPTY_BG
 		style.set_border_width_all(2)
@@ -104,10 +123,24 @@ func _make_slot_tile(slot: SlotDefinition) -> Button:
 		var flavor := Label.new()
 		flavor.text = slot.sealed_flavor
 		flavor.add_theme_color_override("font_color", MUTED)
-		flavor.add_theme_font_size_override("font_size", 18)
+		flavor.add_theme_font_size_override("font_size", 24)
 		flavor.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		flavor.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(flavor)
+		# A lock glyph bottom-right marks the slot sealed beyond the tint.
+		var lock := TextureRect.new()
+		lock.texture = LOCK_GLYPH
+		lock.custom_minimum_size = Vector2(40, 40)
+		lock.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		lock.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT
+		lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		lock.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+		lock.offset_left = -52
+		lock.offset_top = -52
+		lock.offset_right = -12
+		lock.offset_bottom = -12
+		tile.add_child(lock)
+		tile.pressed.connect(_open_sealed_card.bind(slot))
 	elif not equipped.is_empty():
 		var pips: HBoxContainer = RarityStyle.make_pip_row(int(equipped["rarity"]))
 		pips.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -115,7 +148,7 @@ func _make_slot_tile(slot: SlotDefinition) -> Button:
 		var stat := Label.new()
 		stat.text = RarityStyle.key_stat_line(equipped)
 		stat.add_theme_color_override("font_color", MUTED)
-		stat.add_theme_font_size_override("font_size", 20)
+		stat.add_theme_font_size_override("font_size", 24)
 		stat.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		box.add_child(stat)
 		tile.pressed.connect(_open_card.bind(equipped, true))
@@ -123,9 +156,10 @@ func _make_slot_tile(slot: SlotDefinition) -> Button:
 		var empty := Label.new()
 		empty.text = "Empty"
 		empty.add_theme_color_override("font_color", MUTED)
-		empty.add_theme_font_size_override("font_size", 22)
+		empty.add_theme_font_size_override("font_size", 24)
 		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		box.add_child(empty)
+		tile.pressed.connect(_open_empty_card.bind(slot))
 	return tile
 
 
@@ -197,6 +231,15 @@ func _make_inventory_row(item: Dictionary) -> Button:
 	stat.add_theme_font_size_override("font_size", 24)
 	info.add_child(stat)
 
+	# Durable NEW tag for items not yet seen on the Gear screen.
+	if EquipmentManager.is_item_unseen(item):
+		var new_pill := Label.new()
+		new_pill.text = "NEW"
+		new_pill.add_theme_color_override("font_color", Color(0.655, 0.545, 0.98, 1))
+		new_pill.add_theme_font_size_override("font_size", 24)
+		new_pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		hbox.add_child(new_pill)
+
 	row.pressed.connect(_open_card.bind(item, false))
 	return row
 
@@ -205,11 +248,27 @@ func _make_inventory_row(item: Dictionary) -> Button:
 
 
 func _open_card(item: Dictionary, is_equipped: bool) -> void:
-	var card = INSPECTOR_CARD_SCENE.instantiate()
+	var card: Node = INSPECTOR_CARD_SCENE.instantiate()
 	card.setup(item, is_equipped)
 	card.equip_requested.connect(_on_equip_requested)
 	card.unequip_requested.connect(_on_unequip_requested)
 	card.salvage_requested.connect(_on_salvage_requested)
+	add_child(card)
+
+
+func _open_empty_card(slot: SlotDefinition) -> void:
+	var card: Node = INSPECTOR_CARD_SCENE.instantiate()
+	card.setup_info(
+		"Empty %s" % slot.display_name, "",
+		"Defeat enemies to find %s gear, then equip it here." % slot.display_name.to_lower()
+	)
+	add_child(card)
+
+
+func _open_sealed_card(slot: SlotDefinition) -> void:
+	var card: Node = INSPECTOR_CARD_SCENE.instantiate()
+	card.setup_info("%s — Sealed" % slot.display_name, slot.sealed_flavor,
+		"This slot awakens in a later world.")
 	add_child(card)
 
 
@@ -227,7 +286,22 @@ func _on_salvage_requested(item_id: int) -> void:
 
 
 func _on_salvage_commons() -> void:
+	if EquipmentManager.get_commons_count() == 0:
+		return
+	# Bulk salvage is always armed — one tap to arm, a second to commit.
+	if not _commons_armed:
+		_commons_armed = true
+		_refresh_commons_button()
+		get_tree().create_timer(ARM_SECONDS).timeout.connect(_disarm_commons)
+		return
+	_commons_armed = false
 	EquipmentManager.salvage_all_commons()
+
+
+func _disarm_commons() -> void:
+	if _commons_armed:
+		_commons_armed = false
+		_refresh_commons_button()
 
 
 func _on_item_forged(item: Dictionary) -> void:
@@ -255,4 +329,8 @@ func _apply_world_palette() -> void:
 
 
 func _on_back_pressed() -> void:
+	# Everything viewed this visit is now seen — clears the GEAR pill and
+	# NEW tags. Durable: the flags persist through the save.
+	EquipmentManager.mark_all_seen()
+	SaveManager.save_game()
 	SceneManager.change_scene(SceneManager.SCENE_GAMEPLAY)

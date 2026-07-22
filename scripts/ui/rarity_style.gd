@@ -13,8 +13,10 @@ const COLORS: Array[Color] = [
 ]
 const NAMES: Array[String] = ["Common", "Rare", "Epic", "Legendary", "Mythic"]
 
-const PIP_SIZE: float = 14.0
+const PIP_SIZE: float = 13.0
+const PIP_CELL: float = 20.0
 const PIP_SEPARATION: int = 4
+const PIP_OUTLINE: Color = Color(0, 0, 0, 0.4)
 
 
 static func color(rarity: int) -> Color:
@@ -25,19 +27,34 @@ static func rarity_name(rarity: int) -> String:
 	return NAMES[clampi(rarity, 0, NAMES.size() - 1)]
 
 
-## Build an HBox of (rarity+1) pips — the color-independent rarity signal
-## (pip count == affix count == tier). Caller adds it to the tree.
+## Build an HBox of (rarity+1) diamond pips — the color-independent rarity
+## signal (pip count == affix count == tier). Each pip carries a dark
+## outline so light-colored pips (Common/Legendary) stay legible on light
+## background patches. Caller adds it to the tree.
 static func make_pip_row(rarity: int) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", PIP_SEPARATION)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var pip_color: Color = color(rarity)
+	var style := StyleBoxFlat.new()
+	style.bg_color = pip_color
+	style.set_border_width_all(1)
+	style.border_color = PIP_OUTLINE
 	for i in range(rarity + 1):
-		var pip := ColorRect.new()
-		pip.color = pip_color
-		pip.custom_minimum_size = Vector2(PIP_SIZE, PIP_SIZE)
+		# A fixed cell keeps HBox layout stable while the inner panel is
+		# rotated 45° into a diamond.
+		var cell := Control.new()
+		cell.custom_minimum_size = Vector2(PIP_CELL, PIP_CELL)
+		cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var pip := Panel.new()
+		pip.add_theme_stylebox_override("panel", style)
+		pip.size = Vector2(PIP_SIZE, PIP_SIZE)
+		pip.position = Vector2((PIP_CELL - PIP_SIZE) * 0.5, (PIP_CELL - PIP_SIZE) * 0.5)
+		pip.pivot_offset = Vector2(PIP_SIZE, PIP_SIZE) * 0.5
+		pip.rotation = deg_to_rad(45.0)
 		pip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		row.add_child(pip)
+		cell.add_child(pip)
+		row.add_child(cell)
 	return row
 
 

@@ -159,6 +159,42 @@ one at a time — chronological past (offline) before go-forward state
 **Implementation:** `_enqueue_modal()` / `_present_next_modal()` in
 `scripts/ui/gameplay.gd`.
 
+## Inspector Card (dismissible, multi-action)
+**Used in:** the item detail card (equip/salvage/close). Future: any
+player-summoned detail surface with more than one action.
+**Behavior:** deliberately NOT the Centered Modal Dialog — that pattern's
+contract is exactly one dismiss and no tap-outside. The Inspector Card is
+player-initiated, carries several actions (EQUIP/UNEQUIP + SALVAGE +
+CLOSE), and closes by CLOSE **or** scrim-tap. Rarity-bordered card on a
+lighter scrim (0.6, a browse surface not a hard stop). Buttons live from
+frame one. Supports an info-only mode (empty/sealed slots) that shows one
+message and CLOSE alone.
+**Implementation:** `scripts/ui/inspector_card.gd` +
+`scenes/gear/inspector_card.tscn`.
+
+## Loot Toast (compact transient pickup)
+**Used in:** equipment drops. Future: any frequent, low-ceremony pickup.
+**Behavior:** a small rarity-colored pill (CanvasLayer 50, all nodes
+IGNORE) that pops, holds ~1.3s, fades, self-frees. Quick successive drops
+**collapse** into one pill ("N items") rather than stacking or queuing; a
+hard MAX_LIFETIME ceiling stops a drop storm from keeping it alive
+forever. Rarity is carried by pip count + word, never color alone. Rare
+top-tier events (Mythic) escalate to the Result Banner instead.
+**Implementation:** `scripts/ui/loot_toast.gd` +
+`scenes/gear/loot_toast.tscn`.
+
+## Two-Tap Arm (in-place destructive confirm)
+**Used in:** Epic+ single salvage and bulk salvage-commons. Future: any
+destructive action too frequent for a full confirm dialog.
+**Behavior:** the destructive button re-labels to a confirming state that
+also **discloses the outcome** ("TAP AGAIN: +N SCRAPS", "TAP AGAIN: N →
++M") and disarms after ~2.5s. One tap arms, a second within the window
+commits; the yield is always on the button face before commitment.
+Common/Rare skip arming (cheap, plentiful). Never applies to equipped
+items.
+**Implementation:** `scripts/ui/inspector_card.gd` (single),
+`scripts/ui/gear.gd` (bulk).
+
 ## CanvasLayer Registry
 Overlay stacking is fixed project-wide: scene UI = 0, celebration toast =
 50, blocking modals = 60, SceneManager transition fade = 100. New overlays
