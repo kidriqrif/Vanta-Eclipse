@@ -41,6 +41,10 @@ const SLOT_PATHS: Array[String] = [
 	"res://data/slots/relic.tres",
 ]
 
+## Drops the player hasn't seen on the Gear screen yet (runtime-only,
+## drives the count pill on the GEAR button). Reset by mark_all_seen().
+var unseen_count: int = 0
+
 ## slot id (StringName) -> item Dictionary
 var _equipped: Dictionary = {}
 var _inventory: Array = []
@@ -88,10 +92,34 @@ func get_save_data() -> Dictionary:
 
 
 func load_save_data(data: Dictionary) -> void:
-	_equipped = (data.get("equipped", {}) as Dictionary).duplicate(true)
-	_inventory = (data.get("inventory", []) as Array).duplicate(true)
+	# JSON turns every StringName into a plain String, and Godot treats
+	# &"x" and "x" as different dict keys — so slot ids and affix ids must
+	# be normalized back to StringName or lookups (and stat sums) would
+	# silently miss after a reload.
+	_equipped.clear()
+	var raw_equipped: Dictionary = data.get("equipped", {})
+	for slot_key in raw_equipped:
+		var item: Dictionary = _normalize_item(raw_equipped[slot_key])
+		_equipped[StringName(slot_key)] = item
+	_inventory.clear()
+	for raw_item in data.get("inventory", []):
+		_inventory.append(_normalize_item(raw_item))
 	_next_item_id = maxi(1, int(data.get("next_item_id", 1)))
 	_recompute_sums()
+
+
+## Rebuild one loaded item with StringName keys where the runtime expects them.
+func _normalize_item(raw: Dictionary) -> Dictionary:
+	var affixes: Dictionary = {}
+	for stat in raw.get("affixes", {}):
+		affixes[StringName(stat)] = float(raw["affixes"][stat])
+	return {
+		"id": int(raw.get("id", 0)),
+		"slot": StringName(raw.get("slot", &"")),
+		"rarity": int(raw.get("rarity", 0)),
+		"item_level": int(raw.get("item_level", 1)),
+		"affixes": affixes,
+	}
 
 
 # --- Public: data queries ----------------------------------------------------
@@ -279,7 +307,13 @@ func _on_boss_fight_won(level: int, _payout: float, is_world_boss: bool) -> void
 
 func _drop(item: Dictionary) -> void:
 	_add_to_inventory(item)
+	unseen_count += 1
 	EventBus.item_dropped.emit(item)
+
+
+## Called by the Gear screen on open — the count pill clears.
+func mark_all_seen() -> void:
+	unseen_count = 0
 
 
 func _add_to_inventory(item: Dictionary) -> void:

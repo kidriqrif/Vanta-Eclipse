@@ -13,6 +13,7 @@ extends Node
 const SCENE_MAIN_MENU: String = "res://scenes/main_menu/main_menu.tscn"
 const SCENE_SETTINGS: String = "res://scenes/settings/settings_menu.tscn"
 const SCENE_GAMEPLAY: String = "res://scenes/gameplay/gameplay.tscn"
+const SCENE_GEAR: String = "res://scenes/gear/gear.tscn"
 
 const FADE_DURATION: float = 0.25
 const FADE_COLOR: Color = Color(0.016, 0.008, 0.031)

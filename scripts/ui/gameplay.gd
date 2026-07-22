@@ -15,6 +15,7 @@ const WORLD_UNLOCK_MODAL_SCENE: PackedScene = preload(
 	"res://scenes/gameplay/world_unlock_modal.tscn"
 )
 const BOSS_SKULL_TEXTURE: Texture2D = preload("res://sprites/ui/boss_skull_icon.svg")
+const LOOT_TOAST_SCENE: PackedScene = preload("res://scenes/gear/loot_toast.tscn")
 
 ## Where the last tap landed, so its damage number spawns under the finger.
 var _last_tap_position: Vector2 = Vector2.ZERO
@@ -28,6 +29,8 @@ var _unlock_presentation_queued: bool = false
 ## Depth-1 banner queue so layer-50 transients never stack.
 var _active_banner: ResultBanner
 var _queued_banner: ResultBanner
+## The currently-visible loot toast, so quick drops collapse into it.
+var _active_loot_toast: Node
 
 @onready var _auto_attack_badge: PanelContainer = %AutoAttackBadge
 @onready var _world_label: Label = %WorldLabel
@@ -39,6 +42,9 @@ var _queued_banner: ResultBanner
 @onready var _essence_display: HBoxContainer = %EssenceDisplay
 @onready var _essence_label: Label = %EssenceLabel
 @onready var _upgrades_button: Button = %UpgradesButton
+@onready var _gear_button: Button = %GearButton
+@onready var _count_pill: PanelContainer = %CountPill
+@onready var _count_label: Label = %CountLabel
 @onready var _shop_panel: UpgradeShopPanel = %UpgradeShopPanel
 @onready var _stage_label: Label = %StageLabel
 @onready var _enemy_name_label: Label = %EnemyNameLabel
@@ -67,8 +73,11 @@ func _ready() -> void:
 	_combat_area.gui_input.connect(_on_combat_area_input)
 	_menu_button.pressed.connect(_on_menu_pressed)
 	_upgrades_button.pressed.connect(_shop_panel.toggle)
+	_gear_button.pressed.connect(_on_gear_pressed)
 	_challenge_boss_button.pressed.connect(_on_challenge_boss_pressed)
+	EventBus.item_dropped.connect(_on_item_dropped)
 	_apply_world_palette()
+	_update_count_pill()
 
 	_session_label.text = "Session #%d" % GameManager.launch_count
 	_essence_label.text = NumberFormat.format(
@@ -234,6 +243,37 @@ func _on_currency_changed(currency: StringName, balance: float) -> void:
 		return
 	_essence_label.text = NumberFormat.format(balance)
 	_pop_essence_display()
+
+
+func _on_gear_pressed() -> void:
+	SceneManager.change_scene(SceneManager.SCENE_GEAR)
+
+
+func _on_item_dropped(item: Dictionary) -> void:
+	SettingsManager.vibrate(10)
+	_update_count_pill()
+	# Mythic drops get the full Result Banner; everything else a Loot Toast
+	# that collapses if one is already showing.
+	if int(item["rarity"]) >= EquipmentManager.Rarity.MYTHIC:
+		var banner: ResultBanner = RESULT_BANNER_SCENE.instantiate()
+		banner.setup(BOSS_SKULL_TEXTURE, "MYTHIC DROP",
+			"%s %s" % [RarityStyle.rarity_name(int(item["rarity"])), item["slot"]], true)
+		_show_banner(banner)
+		return
+	if _active_loot_toast != null and is_instance_valid(_active_loot_toast):
+		_active_loot_toast.add_item(item)
+		return
+	var toast: Node = LOOT_TOAST_SCENE.instantiate()
+	toast.setup(item)
+	_active_loot_toast = toast
+	toast.tree_exited.connect(func() -> void: _active_loot_toast = null)
+	add_child(toast)
+
+
+func _update_count_pill() -> void:
+	var count: int = EquipmentManager.unseen_count
+	_count_pill.visible = count > 0
+	_count_label.text = str(count)
 
 
 func _on_menu_pressed() -> void:
