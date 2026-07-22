@@ -99,7 +99,26 @@ equipped or clearly-better items); the Forge must read as a slot machine
 worth pulling, not a spreadsheet; none of this may ever be required to
 progress — a player who ignores gear entirely just moves slower.
 
-## 10. Future stages (not yet built)
+## 10. First Relic (Milestone 7 — new)
 
-First Relic (Milestone 7) — First Prestige (Milestone 8) — First
-Minigame (Milestone 9+).
+Deep enough in, the sealed relic slot awakens and the player equips their
+first relic — a unique, permanent, build-defining effect (not another
+stat stick).
+
+**Needs:** understand at a glance that a relic is *different* from
+equipment (unique named effect, not random affixes); feel the effect is
+meaningful and build-shaping; only one relic active at a time, so the
+choice matters; swapping is free and reversible.
+
+## 11. Pet Companion (Milestone 7 — new)
+
+The player unlocks their first pet, which fights alongside them and grows.
+
+**Needs:** a pet feels like a growing companion, not a menu — it levels
+from play, evolves at milestones (visible transformation), and its
+passive bonus is legible; managing pets is a light, rewarding routine,
+never a chore, and never required to progress.
+
+## 12. Future stages (not yet built)
+
+First Prestige (Milestone 8) — First Minigame (Milestone 9+).
