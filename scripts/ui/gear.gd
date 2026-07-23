@@ -88,7 +88,9 @@ func _make_relic_tile() -> Button:
 	style.set_border_width_all(3)
 	style.border_color = Color(0.961, 0.769, 0.318, 0.95)
 	style.shadow_color = Color(0.961, 0.769, 0.318, 0.3)
-	style.shadow_size = 14
+	# 12 is the single sanctioned relic-glow step (visual §1.3/§5); the empty
+	# tile softens further below so it never out-glows an attuned one.
+	style.shadow_size = 12
 	tile.add_theme_stylebox_override("normal", style)
 	tile.add_theme_stylebox_override("hover", style)
 	tile.add_theme_stylebox_override("pressed", style)
@@ -124,8 +126,12 @@ func _make_relic_tile() -> Button:
 		icon.texture = def.sigil
 		sub.text = def.display_name
 	else:
+		# Empty slot: the sigil is a faint prompt, not a lit relic — modulate
+		# it down and dim the tile's own glow so it never reads as attuned
+		# (visual §1.3).
 		icon.texture = RELIC_SLOT_ICON
-		icon.modulate = Color(0.7, 0.62, 0.35, 1)
+		icon.modulate = Color(0.7, 0.62, 0.35, 0.30)
+		style.shadow_size = 8
 		sub.text = "Tap to attune"
 		sub.add_theme_color_override("font_color", MUTED)
 	tile.pressed.connect(_relic_panel.toggle)

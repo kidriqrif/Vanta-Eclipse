@@ -207,3 +207,39 @@ definitions and instances one row scene per entry. Adding content is a data
 file, not a code change.
 **Implementation:** `UpgradeShopPanel._ready()` +
 `scenes/gameplay/upgrade_row.tscn`.
+
+## Diegetic Companion Entry & Durable Badges
+**Used in:** the active pet on the combat screen (`CompanionButton`,
+200×200, low-left of `CombatArea`, clear of the centred enemy). Future:
+any always-present ally/summon that is also a screen entry point.
+**Behavior:** the button *is* the companion — it shows the active pet's
+current-stage sprite and a persistent "Lv. N" pill, and doubles as the tap
+target for the Pets screen. Its NEW badge is a **durable record**: it
+reflects `PetManager.get_unseen_count() > 0` (any unseen companion —
+starter grant or a boss drop), not a fired signal, so a missed banner never
+loses the news; it clears when the Pets screen marks all seen. Level-ups
+are low-ceremony (§2.8): the Lv. pill re-texts and both it and the button
+get a center-pivot scale-pop (`_pop_control`), no toast queued. Relic drops
+mirror this on the GEAR side — `_update_count_pill()` sums unseen equipment
+**and** unseen relics, so the pill is the durable record for everything
+behind Gear.
+**Implementation:** `_update_companion()` / `_pop_control()` /
+`_update_count_pill()` in `scripts/ui/gameplay.gd`; nodes in
+`scenes/gameplay/gameplay.tscn`.
+
+## Single-Class Accent Scope
+**Used in:** relics, pets, bosses — every family that carries a signature
+color. Enforced across M5–M7.
+**Behavior:** each accent belongs to exactly one class and never leaks.
+Aureate gold (`Color(0.961,0.769,0.318)` frame, `0.984,0.906,0.659` ivory
+names) is **relic-only** — never on buttons, gear, pets, or chrome. The
+companion class wears **ally-violet** `Color(0.545,0.361,0.965)` — one
+color for XP fill, roster spine (a uniform 6px left border on every row),
+active border, and the Lv./NEW/ACTIVE pills; a pet never borrows the
+boss-ember threat accent `Color(0.984,0.573,0.235)` (boss-only) or any
+per-species tint. Data labels stay standard ink `Color(0.906,0.886,0.973)`.
+Relic glow is a single sanctioned step (shadow_size 12), below the
+PrimaryButton hover glow; the empty relic slot dims its sigil
+(`modulate.a 0.30`, shadow 8) so it never reads as attuned.
+**Implementation:** `ALLY_VIOLET`/`STANDARD` in `scripts/ui/pets.gd`;
+`_make_relic_tile()` in `scripts/ui/gear.gd`.

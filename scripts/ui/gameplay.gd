@@ -52,6 +52,9 @@ var _active_loot_toast: Node
 @onready var _health_label: Label = %HealthLabel
 @onready var _combat_area: Control = %CombatArea
 @onready var _companion_button: Button = %CompanionButton
+@onready var _companion_level_pill: PanelContainer = %LevelPill
+@onready var _companion_level_label: Label = %LevelLabel
+@onready var _companion_new_pill: PanelContainer = %NewPill
 @onready var _fx_layer: Control = %FxLayer
 @onready var _kills_label: Label = %KillsLabel
 @onready var _session_label: Label = %SessionLabel
@@ -267,6 +270,7 @@ func _on_relic_dropped(id: StringName) -> void:
 	if def == null:
 		return
 	SettingsManager.vibrate(45)
+	_update_count_pill()  # relic is now an unseen item behind GEAR (UX §4D)
 	var banner: ResultBanner = RESULT_BANNER_SCENE.instantiate()
 	banner.setup(def.sigil, "RELIC RECOVERED", def.display_name, true)
 	_show_banner(banner)
@@ -302,13 +306,14 @@ func _on_pet_evolved(id: StringName, stage: int) -> void:
 	_show_banner(banner)
 
 
-func _on_pet_leveled(id: StringName, _level: int) -> void:
-	# Low-ceremony: the active companion gives a small scale-pop on level.
-	if id == PetManager.get_active_id() and _companion_button.visible:
-		_companion_button.pivot_offset = _companion_button.size * 0.5
-		_companion_button.scale = Vector2(1.18, 1.18)
-		create_tween().tween_property(_companion_button, "scale", Vector2.ONE, 0.2) \
-			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+func _on_pet_leveled(id: StringName, level: int) -> void:
+	# Low-ceremony level-up (§2.8): refresh the companion's Lv. pill and give
+	# both it and the companion a small pop — a Loot-Toast-kin acknowledgment.
+	if id != PetManager.get_active_id() or not _companion_button.visible:
+		return
+	_companion_level_label.text = "Lv. %d" % level
+	_pop_control(_companion_button, 1.18)
+	_pop_control(_companion_level_pill, 1.35)
 
 
 func _on_active_pet_changed(_id: StringName) -> void:
@@ -325,7 +330,20 @@ func _update_companion() -> void:
 		_companion_button.visible = false
 		return
 	_companion_button.icon = def.stage_sprites[PetManager.get_stage(active)]
+	_companion_level_label.text = "Lv. %d" % PetManager.get_level(active)
+	# The companion is the entry to the Pets screen, so it carries the durable
+	# NEW badge for any unseen companion (starter grant or a boss drop). It
+	# clears when the Pets screen marks all seen (UX §4D).
+	_companion_new_pill.visible = PetManager.get_unseen_count() > 0
 	_companion_button.visible = true
+
+
+## Center-pivot scale-pop used for low-ceremony acknowledgments.
+func _pop_control(node: Control, amount: float) -> void:
+	node.pivot_offset = node.size * 0.5
+	node.scale = Vector2(amount, amount)
+	create_tween().tween_property(node, "scale", Vector2.ONE, 0.2) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _on_item_dropped(item: Dictionary) -> void:
@@ -356,7 +374,10 @@ func _on_item_dropped(item: Dictionary) -> void:
 
 
 func _update_count_pill() -> void:
-	var count: int = EquipmentManager.get_unseen_count()
+	# The GEAR pill is the durable record for everything that lives behind the
+	# Gear screen — unseen equipment AND unseen relics (UX §4D). Pets have
+	# their own entry (the companion NEW badge), so they are counted there.
+	var count: int = EquipmentManager.get_unseen_count() + RelicManager.get_unseen_count()
 	_count_pill.visible = count > 0
 	_count_label.text = "%d NEW" % count
 

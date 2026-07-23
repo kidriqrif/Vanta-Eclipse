@@ -5,10 +5,11 @@ extends Control
 ## test (no ui_overlay plumbing). Never required to progress.
 
 const MUTED: Color = Color(0.62, 0.57, 0.75, 1)
-const ACCENTS: Dictionary = {
-	&"ember": Color(0.984, 0.573, 0.235, 1),
-	&"frostling": Color(0.576, 0.773, 0.992, 1),
-}
+## The single companion-class color (visual §2.5/§5). Pets never borrow the
+## boss-ember threat accent or any per-species tint — growth wears one color.
+const ALLY_VIOLET: Color = Color(0.545, 0.361, 0.965, 1)
+## Standard data-label ink (visual §2.5, §4-verified contrast).
+const STANDARD: Color = Color(0.906, 0.886, 0.973, 1)
 
 @onready var _showcase: VBoxContainer = %ShowcaseBox
 @onready var _roster: VBoxContainer = %RosterList
@@ -51,7 +52,6 @@ func _build_showcase() -> void:
 	var def: PetDefinition = PetManager.get_definition(active)
 	var stage: int = PetManager.get_stage(active)
 	var level: int = PetManager.get_level(active)
-	var accent: Color = ACCENTS.get(active, Color.WHITE)
 
 	var sprite := TextureRect.new()
 	sprite.texture = def.stage_sprites[stage]
@@ -75,7 +75,7 @@ func _build_showcase() -> void:
 	xp_bar.max_value = maxf(1.0, progress["needed"])
 	xp_bar.value = progress["into"]
 	var fill := StyleBoxFlat.new()
-	fill.bg_color = Color(0.42, 0.62, 0.98, 1)
+	fill.bg_color = ALLY_VIOLET
 	fill.set_corner_radius_all(12)
 	xp_bar.add_theme_stylebox_override("fill", fill)
 	_showcase.add_child(xp_bar)
@@ -83,8 +83,10 @@ func _build_showcase() -> void:
 	if level >= def.max_level:
 		xp_label.text = "Lv. %d · MAX" % level
 	else:
-		xp_label.text = "Lv. %d · %d / %d XP" % [
-			level, int(progress["into"]), int(progress["needed"])
+		xp_label.text = "Lv. %d · %s / %s XP" % [
+			level,
+			NumberFormat.format_exact(progress["into"]),
+			NumberFormat.format_exact(progress["needed"]),
 		]
 	xp_label.add_theme_font_size_override("font_size", 26)
 	xp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -92,7 +94,7 @@ func _build_showcase() -> void:
 
 	var bonus := Label.new()
 	bonus.text = _bonus_text(def, level)
-	bonus.add_theme_color_override("font_color", accent)
+	bonus.add_theme_color_override("font_color", STANDARD)
 	bonus.add_theme_font_size_override("font_size", 28)
 	bonus.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_showcase.add_child(bonus)
@@ -130,9 +132,15 @@ func _make_roster_row(id: StringName, is_active: bool) -> Button:
 	style.bg_color = Color(0.10, 0.078, 0.157, 0.9)
 	style.set_corner_radius_all(14)
 	style.set_content_margin_all(16)
+	# Every companion wears the same 6px ally-violet spine — "one class"
+	# (visual §2.5). The active row raises the other three edges to a full
+	# border in the same color; nothing borrows a second accent.
+	style.border_color = ALLY_VIOLET
+	style.border_width_left = 6
 	if is_active:
-		style.set_border_width_all(2)
-		style.border_color = Color(0.655, 0.545, 0.98, 1)
+		style.border_width_top = 2
+		style.border_width_right = 2
+		style.border_width_bottom = 2
 	row.add_theme_stylebox_override("normal", style)
 	row.add_theme_stylebox_override("hover", style)
 	row.add_theme_stylebox_override("pressed", style)
@@ -168,13 +176,13 @@ func _make_roster_row(id: StringName, is_active: bool) -> Button:
 	if is_active:
 		var pill := Label.new()
 		pill.text = "● ACTIVE"
-		pill.add_theme_color_override("font_color", Color(0.655, 0.545, 0.98, 1))
+		pill.add_theme_color_override("font_color", ALLY_VIOLET)
 		pill.add_theme_font_size_override("font_size", 24)
 		name_row.add_child(pill)
 	elif PetManager.is_unseen(id):
 		var new_pill := Label.new()
 		new_pill.text = "NEW"
-		new_pill.add_theme_color_override("font_color", Color(0.655, 0.545, 0.98, 1))
+		new_pill.add_theme_color_override("font_color", ALLY_VIOLET)
 		new_pill.add_theme_font_size_override("font_size", 24)
 		name_row.add_child(new_pill)
 	var bonus := Label.new()
