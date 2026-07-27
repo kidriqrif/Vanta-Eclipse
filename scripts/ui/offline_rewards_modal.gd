@@ -9,6 +9,9 @@ extends CenteredModalDialog
 ##   modal.setup(amount, seconds_away, was_capped)
 ##   add_child(modal)
 
+## The placement this modal offers. Data lives in data/ads/.
+const OFFER_ID: StringName = &"offline_double"
+
 var _amount: float = 0.0
 var _seconds_away: int = 0
 var _was_capped: bool = false
@@ -16,6 +19,7 @@ var _was_capped: bool = false
 @onready var _amount_label: Label = %AmountLabel
 @onready var _duration_label: Label = %DurationLabel
 @onready var _cap_label: Label = %CapLabel
+@onready var _double_button: Button = %DoubleButton
 
 
 ## Call BEFORE add_child().
@@ -35,6 +39,15 @@ func _ready() -> void:
 	# and then always plainly, never as a silently shortened time (§6).
 	_cap_label.visible = _was_capped
 	_amount_label.gui_input.connect(_on_amount_gui_input)
+	# The offer sits ABOVE COLLECT and is purely additive: the essence is
+	# already granted and already stated, dismissal is still one tap, and
+	# declining costs nothing (M14 §2).
+	_double_button.visible = _amount > 0.0 \
+		and MonetizationManager.can_offer(OFFER_ID)
+	if _double_button.visible:
+		_double_button.text = "CLAIM · DOUBLE IT" if MonetizationManager.ads_removed() \
+			else "WATCH · DOUBLE IT"
+		_double_button.pressed.connect(_on_double_pressed)
 
 
 # --- Hold-to-reveal exact amount (Enhanced tier "Readable numbers") ----------
@@ -52,3 +65,23 @@ func _set_exact_shown(exact: bool) -> void:
 		_amount_label.text = "+%s Essence" % NumberFormat.format_exact(_amount)
 	else:
 		_amount_label.text = "+%s Essence" % NumberFormat.format(_amount)
+
+
+# --- Opt-in doubler (M14) ------------------------------------------------------
+
+
+func _on_double_pressed() -> void:
+	if MonetizationManager.is_busy():
+		return
+	_double_button.disabled = true
+	_double_button.text = "WATCHING…"
+	var bonus: float = await MonetizationManager.run_offer(OFFER_ID, _amount)
+	if bonus <= 0.0:
+		# Declined, no fill, or an error: the base reward is untouched, so the
+		# modal simply drops the offer rather than reporting a failure.
+		_double_button.visible = false
+		return
+	_amount += bonus
+	SettingsManager.vibrate(35)
+	_double_button.visible = false
+	_set_exact_shown(false)

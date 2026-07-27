@@ -55,6 +55,7 @@ var _active_loot_toast: Node
 @onready var _eclipse_button: Button = %EclipseButton
 @onready var _arcade_button: Button = %ArcadeButton
 @onready var _journal_button: Button = %JournalButton
+@onready var _shop_button: Button = %ShopButton
 @onready var _journal_pill: PanelContainer = %JournalPill
 @onready var _journal_count: Label = %JournalCount
 @onready var _count_pill: PanelContainer = %CountPill
@@ -113,6 +114,7 @@ func _ready() -> void:
 	_arcade_button.visible = MinigameManager.is_arcade_unlocked()
 	_journal_button.pressed.connect(_on_journal_pressed)
 	_style_journal_button()
+	_shop_button.pressed.connect(_on_shop_pressed)
 	_update_journal_pill()
 	_apply_world_palette()
 	_update_count_pill()
@@ -338,6 +340,10 @@ func _style_journal_button() -> void:
 	style.border_color = Color(0.235, 0.18, 0.361, 0.7)
 	for state: String in ["normal", "hover", "pressed"]:
 		_journal_button.add_theme_stylebox_override(state, style)
+
+
+func _on_shop_pressed() -> void:
+	SceneManager.change_scene(SceneManager.SCENE_SHOP)
 
 
 func _on_journal_pressed() -> void:

@@ -27,7 +27,12 @@ func setup(amount: float, is_crit: bool) -> void:
 		label_settings.font_color = CRIT_COLOR
 		label_settings.outline_color = CRIT_OUTLINE_COLOR
 	else:
-		label_settings.font_color = NORMAL_COLOR
+		# The equipped cosmetic tints ordinary hits. Crits keep their own
+		# colour: that one IS state (it reads "this hit was special"), and a
+		# cosmetic must never overwrite a state signal.
+		var cosmetic: CosmeticDefinition = MonetizationManager.get_equipped_cosmetic()
+		label_settings.font_color = cosmetic.number_color if cosmetic != null \
+			else NORMAL_COLOR
 	# Compute our final size now so the caller can center us immediately.
 	size = get_minimum_size()
 	pivot_offset = size * 0.5

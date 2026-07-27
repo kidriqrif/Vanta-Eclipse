@@ -39,6 +39,7 @@ CombatManager="*res://scripts/managers/combat_manager.gd"
 IdleManager="*res://scripts/managers/idle_manager.gd"
 MinigameManager="*res://scripts/managers/minigame_manager.gd"
 QuestManager="*res://scripts/managers/quest_manager.gd"
+MonetizationManager="*res://scripts/managers/monetization_manager.gd"
 PrestigeManager="*res://scripts/managers/prestige_manager.gd"
 
 [debug]

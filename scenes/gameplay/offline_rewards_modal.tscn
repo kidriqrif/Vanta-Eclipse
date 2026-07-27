@@ -121,6 +121,14 @@ theme_override_font_sizes/font_size = 24
 text = "(offline earnings cap at 8h)"
 horizontal_alignment = 1
 
+[node name="DoubleButton" type="Button" parent="Card/CardVBox"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(500, 110)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "WATCH · DOUBLE IT"
+
 [node name="ConfirmButton" type="Button" parent="Card/CardVBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(500, 110)

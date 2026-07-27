@@ -73,3 +73,9 @@ Later worlds introduce the *new* mechanics of their own milestones.
 - Milestone 11: Connect Four minigame — DONE
 - Milestone 12: Void Salvo (Battleship) minigame — DONE
 - Milestone 13: the Journal — quests, dailies, achievements — DONE
+- Milestone 14: monetization architecture (STUB providers — see below) — DONE
+
+**Milestone 14 caveat:** ads and purchases run on stub providers. Real
+AdMob/Play Billing integration, receipt validation, and flipping
+`MonetizationManager.USE_STUB_PROVIDERS` to false are Milestone 15 work.
+Nothing in this build charges money or shows a real ad.

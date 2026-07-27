@@ -19,6 +19,7 @@ const SCENE_ECLIPSE: String = "res://scenes/eclipse/eclipse.tscn"
 const SCENE_ARCADE: String = "res://scenes/arcade/arcade.tscn"
 const SCENE_MINIGAME_HOST: String = "res://scenes/minigames/minigame_host.tscn"
 const SCENE_JOURNAL: String = "res://scenes/journal/journal.tscn"
+const SCENE_SHOP: String = "res://scenes/shop/shop.tscn"
 
 const FADE_DURATION: float = 0.25
 const FADE_COLOR: Color = Color(0.016, 0.008, 0.031)

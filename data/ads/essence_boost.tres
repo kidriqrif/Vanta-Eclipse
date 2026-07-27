@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AdPlacementDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ad_placement_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"essence_boost"
+display_name = "Essence Surge"
+description = "Ten minutes of Essence at your current rate."
+reward_kind = 0
+reward_amount = 600.0
+daily_cap = 5
+sort_order = 2

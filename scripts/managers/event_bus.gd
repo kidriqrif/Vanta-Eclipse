@@ -158,6 +158,17 @@ signal goal_claimed(id: StringName, reward_text: String)
 ## Fired when the daily set is redrawn for a new UTC day.
 signal dailies_rerolled
 
+# --- Monetization (Milestone 14) ---
+
+## Fired after an opt-in ad offer is watched and its bonus granted.
+signal ad_reward_granted(placement_id: StringName, amount: float)
+
+## Fired after a purchase completes and its contents are granted.
+signal purchase_completed(product_id: StringName)
+
+## Fired when the equipped tap-trail cosmetic changes.
+signal cosmetic_equipped(id: StringName)
+
 # --- UI presentation facts (Milestone 5) ---
 # Emitted by overlays (shop panel, blocking modals) so managers can defer
 # moments that need an unobstructed screen. Presentation facts, not state.
