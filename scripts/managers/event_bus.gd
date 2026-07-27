@@ -135,6 +135,17 @@ signal eclipse_performed(reward: float, prestige_count: int)
 ## Fired after an Ascendant Power level is bought.
 signal skill_purchased(id: StringName, new_level: int)
 
+# --- The Arcade (Milestone 9) ---
+
+## Fired whenever the Arcade Token meter changes (spend, regen, boss grant).
+signal arcade_tokens_changed(count: int)
+
+## Fired once, on the first live crossing of the Arcade unlock level.
+signal arcade_unlocked
+
+## Fired by the host after a run is paid out and recorded.
+signal minigame_finished(id: StringName, outcome: int, payout: float)
+
 # --- UI presentation facts (Milestone 5) ---
 # Emitted by overlays (shop panel, blocking modals) so managers can defer
 # moments that need an unobstructed screen. Presentation facts, not state.

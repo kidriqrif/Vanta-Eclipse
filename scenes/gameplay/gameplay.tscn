@@ -341,6 +341,15 @@ size_flags_horizontal = 3
 text = "ECLIPSE"
 expand_icon = true
 
+[node name="ArcadeButton" type="Button" parent="MarginContainer/GameplayVBox/BottomRow"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ARCADE"
+expand_icon = true
+
 [node name="FooterBar" type="HBoxContainer" parent="MarginContainer/GameplayVBox"]
 layout_mode = 2
 

@@ -17,9 +17,13 @@ const WORLD_UNLOCK_MODAL_SCENE: PackedScene = preload(
 const BOSS_SKULL_TEXTURE: Texture2D = preload("res://sprites/ui/boss_skull_icon.svg")
 const LOOT_TOAST_SCENE: PackedScene = preload("res://scenes/gear/loot_toast.tscn")
 const ECLIPSE_TEXTURE: Texture2D = preload("res://sprites/ui/eclipse_icon.svg")
+const ARCADE_TOKEN_TEXTURE: Texture2D = preload("res://sprites/ui/arcade_token_icon.svg")
 ## The prestige accent, scoped to the Eclipse door here (visual §1).
 const ECLIPSE_CRYSTAL: Color = Color(0.4, 0.86, 0.85, 1)
 const ECLIPSE_CRYSTAL_DEEP: Color = Color(0.16, 0.44, 0.47, 1)
+## The Arcade accent, scoped to the Arcade door here (M9 visual §1).
+const ARCADE_LIME: Color = Color(0.65, 0.93, 0.42, 1)
+const ARCADE_LIME_DEEP: Color = Color(0.24, 0.42, 0.16, 1)
 
 ## Where the last tap landed, so its damage number spawns under the finger.
 var _last_tap_position: Vector2 = Vector2.ZERO
@@ -48,6 +52,7 @@ var _active_loot_toast: Node
 @onready var _upgrades_button: Button = %UpgradesButton
 @onready var _gear_button: Button = %GearButton
 @onready var _eclipse_button: Button = %EclipseButton
+@onready var _arcade_button: Button = %ArcadeButton
 @onready var _count_pill: PanelContainer = %CountPill
 @onready var _count_label: Label = %CountLabel
 @onready var _shop_panel: UpgradeShopPanel = %UpgradeShopPanel
@@ -92,10 +97,14 @@ func _ready() -> void:
 	EventBus.pet_leveled.connect(_on_pet_leveled)
 	EventBus.active_pet_changed.connect(_on_active_pet_changed)
 	EventBus.eclipse_available.connect(_on_eclipse_available)
+	EventBus.arcade_unlocked.connect(_on_arcade_unlocked)
 	_companion_button.pressed.connect(_on_companion_pressed)
 	_eclipse_button.pressed.connect(_on_eclipse_pressed)
 	_style_eclipse_button()
 	_eclipse_button.visible = PrestigeManager.is_unlocked()
+	_arcade_button.pressed.connect(_on_arcade_pressed)
+	_style_door_button(_arcade_button, ARCADE_TOKEN_TEXTURE, ARCADE_LIME, ARCADE_LIME_DEEP)
+	_arcade_button.visible = MinigameManager.is_arcade_unlocked()
 	_apply_world_palette()
 	_update_count_pill()
 	_update_companion()
@@ -274,24 +283,47 @@ func _on_companion_pressed() -> void:
 	SceneManager.change_scene(SceneManager.SCENE_PETS)
 
 
-## The prestige door wears the crystal-deep tint so it reads as the special
-## entrance, not a routine bottom-row button (visual §4).
-func _style_eclipse_button() -> void:
-	_eclipse_button.icon = ECLIPSE_TEXTURE
-	_eclipse_button.add_theme_color_override("font_color", ECLIPSE_CRYSTAL)
-	_eclipse_button.add_theme_color_override("font_hover_color", ECLIPSE_CRYSTAL)
+## A "door" button wears its destination's family tint, so the special
+## entrances in the bottom row read apart from the routine ones (visual §4).
+## Each door keeps its own accent — the tints never mix.
+func _style_door_button(
+	button: Button, icon: Texture2D, accent: Color, deep: Color
+) -> void:
+	button.icon = icon
+	button.add_theme_color_override("font_color", accent)
+	button.add_theme_color_override("font_hover_color", accent)
 	var style := StyleBoxFlat.new()
-	style.bg_color = ECLIPSE_CRYSTAL_DEEP
+	style.bg_color = deep
 	style.set_corner_radius_all(14)
 	style.set_content_margin_all(12)
 	style.set_border_width_all(2)
-	style.border_color = Color(ECLIPSE_CRYSTAL.r, ECLIPSE_CRYSTAL.g, ECLIPSE_CRYSTAL.b, 0.6)
+	style.border_color = Color(accent.r, accent.g, accent.b, 0.6)
 	for state: String in ["normal", "hover", "pressed"]:
-		_eclipse_button.add_theme_stylebox_override(state, style)
+		button.add_theme_stylebox_override(state, style)
+
+
+func _style_eclipse_button() -> void:
+	_style_door_button(
+		_eclipse_button, ECLIPSE_TEXTURE, ECLIPSE_CRYSTAL, ECLIPSE_CRYSTAL_DEEP
+	)
 
 
 func _on_eclipse_pressed() -> void:
 	SceneManager.change_scene(SceneManager.SCENE_ECLIPSE)
+
+
+func _on_arcade_pressed() -> void:
+	SceneManager.change_scene(SceneManager.SCENE_ARCADE)
+
+
+func _on_arcade_unlocked() -> void:
+	# One-time live crossing: reveal the door and announce it (M9 UX §5).
+	_arcade_button.visible = true
+	SettingsManager.vibrate(45)
+	var banner: ResultBanner = RESULT_BANNER_SCENE.instantiate()
+	banner.setup(ARCADE_TOKEN_TEXTURE, "THE ARCADE OPENS",
+		"Spend a token. Win a burst of Essence.", true)
+	_show_banner(banner)
 
 
 func _on_eclipse_available() -> void:

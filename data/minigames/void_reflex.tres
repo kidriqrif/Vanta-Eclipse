@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="MinigameDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/minigame_definition.gd" id="1"]
+[ext_resource type="Texture2D" path="res://sprites/ui/minigame_reflex_icon.svg" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"void_reflex"
+display_name = "Void Reflex"
+description = "Five sigils. Tap each the instant it flares."
+icon = ExtResource("2")
+scene_path = "res://scenes/minigames/void_reflex.tscn"
+unlock_level = 20
+reward_seconds = 240.0
+token_cost = 1
+sort_order = 0

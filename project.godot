@@ -37,6 +37,7 @@ SceneManager="*res://scripts/managers/scene_manager.gd"
 WorldManager="*res://scripts/managers/world_manager.gd"
 CombatManager="*res://scripts/managers/combat_manager.gd"
 IdleManager="*res://scripts/managers/idle_manager.gd"
+MinigameManager="*res://scripts/managers/minigame_manager.gd"
 PrestigeManager="*res://scripts/managers/prestige_manager.gd"
 
 [debug]

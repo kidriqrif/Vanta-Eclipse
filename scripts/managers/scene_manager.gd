@@ -16,6 +16,8 @@ const SCENE_GAMEPLAY: String = "res://scenes/gameplay/gameplay.tscn"
 const SCENE_GEAR: String = "res://scenes/gear/gear.tscn"
 const SCENE_PETS: String = "res://scenes/pets/pets.tscn"
 const SCENE_ECLIPSE: String = "res://scenes/eclipse/eclipse.tscn"
+const SCENE_ARCADE: String = "res://scenes/arcade/arcade.tscn"
+const SCENE_MINIGAME_HOST: String = "res://scenes/minigames/minigame_host.tscn"
 
 const FADE_DURATION: float = 0.25
 const FADE_COLOR: Color = Color(0.016, 0.008, 0.031)
