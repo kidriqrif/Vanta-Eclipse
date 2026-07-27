@@ -69,3 +69,5 @@ Later worlds introduce the *new* mechanics of their own milestones.
 - Milestone 7: relics, pets, passive bonuses — DONE
 - Milestone 8: prestige (Eclipse), Ascendant Powers skill tree — DONE
 - Milestone 9: the Arcade — minigame framework + Void Reflex — DONE
+- Milestone 10: Memory Match minigame — DONE
+- Milestone 11: Connect Four minigame — DONE

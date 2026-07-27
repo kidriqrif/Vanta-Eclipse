@@ -19,6 +19,7 @@ const ARCADE_UNLOCK_LEVEL: int = 20
 const MINIGAME_DEFINITION_PATHS: Array[String] = [
 	"res://data/minigames/void_reflex.tres",
 	"res://data/minigames/memory_match.tres",
+	"res://data/minigames/connect_four.tres",
 ]
 
 ## Which minigame the host should load. The hub sets it immediately before
