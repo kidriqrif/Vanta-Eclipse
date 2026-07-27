@@ -32,6 +32,8 @@ const DEFAULT_FLEET: Array[int] = [4, 3, 2]
 const POP_TIME: float = 0.14
 ## Guards against an unluckily-packed board wedging the placement loop.
 const PLACEMENT_ATTEMPTS: int = 200
+## Whole-layout restarts before giving up (see _place_fleet).
+const LAYOUT_ATTEMPTS: int = 20
 
 var _size: int = DEFAULT_SIZE
 var _shot_budget: int = DEFAULT_SHOTS
@@ -55,14 +57,25 @@ var _total_ship_cells: int = 0
 ## Grid size, shot budget and fleet come from the definition.
 func setup(context: Dictionary) -> void:
 	_size = clampi(int(context.get("size", DEFAULT_SIZE)), 5, 8)
-	_shot_budget = maxi(4, int(context.get("shots", DEFAULT_SHOTS)))
 	_fleet.clear()
+	# Keep the fleet sparse enough that a random layout always succeeds. A board
+	# packed past a third full can wedge the placement search, and a ship that
+	# fails to place would quietly shrink the target count and inflate scoring.
+	var capacity: int = int(floor(float(_size * _size) / 3.0))
+	var occupied: int = 0
 	for length: Variant in context.get("fleet", DEFAULT_FLEET):
 		var value: int = int(length)
-		if value >= 2 and value <= _size:
+		if value >= 2 and value <= _size and occupied + value <= capacity:
 			_fleet.append(value)
+			occupied += value
 	if _fleet.is_empty():
 		_fleet.assign(DEFAULT_FLEET)
+		occupied = 0
+		for length: int in _fleet:
+			occupied += length
+	# Never ship a mathematically unwinnable round: the budget must at least
+	# cover a perfect salvo (the idiom memory_match.gd uses for its attempts).
+	_shot_budget = maxi(occupied, int(context.get("shots", DEFAULT_SHOTS)))
 
 
 func _ready() -> void:
@@ -82,7 +95,22 @@ func _ready() -> void:
 # --- Setup ----------------------------------------------------------------------
 
 
+## Lay the whole fleet out, retrying the ENTIRE layout on failure rather than
+## dropping a ship. A pre-sunk ship would read as "1 of 3 sunk" before the first
+## shot and quietly inflate the score; restarting keeps the roster honest.
 func _place_fleet() -> void:
+	for _layout: int in range(LAYOUT_ATTEMPTS):
+		_ship_at.fill(-1)
+		_ship_health.clear()
+		_total_ship_cells = 0
+		if _try_layout():
+			return
+	# Unreachable at any sane density (setup caps the fleet at a third of the
+	# board), but if it ever happened the roster must still match the board.
+	_fleet = _fleet.slice(0, _ship_health.size())
+
+
+func _try_layout() -> bool:
 	for ship: int in range(_fleet.size()):
 		var length: int = _fleet[ship]
 		var placed: bool = false
@@ -90,7 +118,7 @@ func _place_fleet() -> void:
 			var horizontal: bool = randi() % 2 == 0
 			var span: int = _size - length
 			if span < 0:
-				break
+				return false
 			var row: int = randi() % (_size if horizontal else span + 1)
 			var column: int = randi() % (span + 1 if horizontal else _size)
 			if not _fits(row, column, length, horizontal):
@@ -101,15 +129,11 @@ func _place_fleet() -> void:
 				_ship_at[r * _size + c] = ship
 			placed = true
 			break
-		# A fleet that cannot be placed would leave a ship with zero cells and
-		# make the round unwinnable, so drop it from the roster instead.
-		_ship_health.append(length if placed else 0)
-		if placed:
-			_total_ship_cells += length
-	# Ships that failed placement count as already sunk.
-	for ship: int in range(_ship_health.size()):
-		if _ship_health[ship] == 0:
-			_sunk += 1
+		if not placed:
+			return false
+		_ship_health.append(length)
+		_total_ship_cells += length
+	return true
 
 
 func _fits(row: int, column: int, length: int, horizontal: bool) -> bool:
@@ -181,7 +205,7 @@ func _on_cell_pressed(index: int) -> void:
 		_ship_health[ship] -= 1
 		if _ship_health[ship] <= 0:
 			_sunk += 1
-			_reveal_sunk(ship)
+			_reveal_sunk(ship, index)
 			_set_status("SHIP SUNK", ARCADE_CORE)
 		else:
 			_set_status("HIT", ARCADE)
@@ -189,18 +213,20 @@ func _on_cell_pressed(index: int) -> void:
 	_pop(_cells[index])
 	_refresh_labels()
 	if _sunk >= _ship_health.size():
-		_end_run(true, "fleet sunk in %d shots" % _shots)
+		_end_run(true, "fleet sunk in %d %s" % [_shots, "shot" if _shots == 1 else "shots"])
 	elif _shots >= _shot_budget:
 		_end_run(false, "%d of %d ships sunk" % [_sunk, _ship_health.size()])
 
 
 ## A sunk ship's cells become one solid slab, so a finished ship reads as a
 ## single mass rather than a scatter of hits.
-func _reveal_sunk(ship: int) -> void:
+func _reveal_sunk(ship: int, just_hit: int) -> void:
 	for index: int in range(_ship_at.size()):
-		if _ship_at[index] == ship:
-			_cells[index].icon = SHOT_SUNK
-			_pop(_cells[index])
+		if _ship_at[index] != ship:
+			continue
+		_cells[index].icon = SHOT_SUNK
+		if index != just_hit:
+			_pop(_cells[index])  # the caller pops the cell that was just hit
 
 
 func _pop(cell: Button) -> void:
@@ -228,12 +254,8 @@ func _set_status(text: String, color: Color) -> void:
 func _end_run(won: bool, detail: String) -> void:
 	for cell: Button in _cells:
 		cell.disabled = true
-	# Snap animated properties to their resting values BEFORE reporting: the
-	# host's teardown() kills managed tweens rather than completing them, so a
-	# pop still in flight would freeze its cell mid-scale under the banner
-	# (pattern §Minigame Teardown corollary).
-	for cell: Button in _cells:
-		cell.scale = Vector2.ONE
+	# In-flight pops are settled by the base teardown(), which the host calls on
+	# every terminal path — including a forfeit, which never reaches here.
 	# Win: scaled across the range a real round actually occupies — from a
 	# perfect salvo (every shot a hit) down to scraping in on the last shot.
 	# Scoring perfection/shots instead would peg almost every win near the

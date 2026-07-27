@@ -319,10 +319,15 @@ kills it.
 Teardown *kills* managed tweens rather than completing them (completing them
 would fire callbacks, e.g. flipping a card face-up after the run ended). So a
 tween that animates *toward* the correct final value leaves that value unset if
-the run ends in the same frame the tween starts — Connect Four's winning disc
-froze at its 0.4 start scale under the banner, on every single run. Snap
-animated properties to their resting values at the top of the game's end
-routine, before reporting.
+the run ends before it finishes — Connect Four's winning disc froze at its 0.4
+start scale under the banner, on every single run.
+`teardown()` therefore restores `scale` to `Vector2.ONE` across the whole
+subtree after killing tweens. This lives in the **base class, not in each
+game's end routine**: a forfeit reaches `_finish` through `force_quit()` and
+never runs that routine, so a hand-rolled snap silently misses the QUIT path —
+which is exactly how all three games shipped frozen mid-animation on forfeit
+until it was caught. A game whose resting scale is not `Vector2.ONE` overrides
+`teardown()` and calls `super()`.
 Two Godot behaviours this pattern exists to survive, both found in review:
 a **flat `Button` never draws its styleboxes**, so state applied that way is
 silently discarded; and a **disabled `Button` dims its icon to 40%**, so a

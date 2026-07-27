@@ -360,13 +360,8 @@ func _end_run(won: bool, detail: String, drawn: bool = false) -> void:
 	_busy = true
 	for button: Button in _column_buttons:
 		button.disabled = true
-	# Settle any in-flight drop BEFORE reporting. The winning disc is placed and
-	# the run ends in the same frame, so its tween has not stepped yet — and the
-	# host's teardown() kills managed tweens, which would freeze that disc at its
-	# 0.4 start scale under the banner. A tween must never own a resting state
-	# that outlives the run.
-	for cell: TextureRect in _cells:
-		cell.scale = Vector2.ONE
+	# In-flight drops are settled by the base teardown(), which the host calls on
+	# every terminal path — including a forfeit, which never reaches here.
 	# Win: a faster win is worth more (8 moves pays full, 16 pays the floor).
 	# Loss: credit the longest line actually built, so a near-miss beats a rout
 	# once the host applies its LOSS_FLOOR.

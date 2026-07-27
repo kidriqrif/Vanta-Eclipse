@@ -52,6 +52,13 @@ func teardown() -> void:
 		if tween != null and tween.is_valid():
 			tween.kill()
 	_managed_tweens.clear()
+	# Killing a tween leaves its property wherever it stopped, so a pop, drop or
+	# flip caught mid-flight would freeze the board shrunken or squashed under
+	# the result banner. Every game's animations start from an off-rest scale
+	# and return to ONE, so restoring it here settles all of them — on EVERY
+	# terminal path, including a forfeit, which never runs a game's end routine.
+	# A game whose resting scale is not ONE must override this and call super().
+	_snap_rest(self)
 	_quiesce(self)
 	set_process(false)
 	set_physics_process(false)
@@ -78,6 +85,13 @@ func create_managed_tween() -> Tween:
 ## Disabling the buttons is the load-bearing half: setting mouse_filter on the
 ## root does NOT stop its children from receiving taps (picking checks children
 ## first), so without this a resolved game still answers input.
+func _snap_rest(node: Node) -> void:
+	for child: Node in node.get_children():
+		if child is Control:
+			(child as Control).scale = Vector2.ONE
+		_snap_rest(child)
+
+
 func _quiesce(node: Node) -> void:
 	for child: Node in node.get_children():
 		if child is Timer:
