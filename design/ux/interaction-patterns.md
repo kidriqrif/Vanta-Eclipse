@@ -315,6 +315,14 @@ banner. `Minigame.create_managed_tween()` records the tween so `teardown()`
 kills it.
 **Check:** inside `scripts/minigames/`, `create_tween()` should appear only in
 `create_managed_tween()` itself.
+**Corollary — a tween must never own a resting state that outlives the run.**
+Teardown *kills* managed tweens rather than completing them (completing them
+would fire callbacks, e.g. flipping a card face-up after the run ended). So a
+tween that animates *toward* the correct final value leaves that value unset if
+the run ends in the same frame the tween starts — Connect Four's winning disc
+froze at its 0.4 start scale under the banner, on every single run. Snap
+animated properties to their resting values at the top of the game's end
+routine, before reporting.
 Two Godot behaviours this pattern exists to survive, both found in review:
 a **flat `Button` never draws its styleboxes**, so state applied that way is
 silently discarded; and a **disabled `Button` dims its icon to 40%**, so a

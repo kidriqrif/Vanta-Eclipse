@@ -26,6 +26,9 @@ const DEFAULT_ROWS: int = 6
 ## How long the AI "thinks" before dropping, so its turn is legible.
 const AI_THINK: float = 0.55
 const DROP_TIME: float = 0.22
+## The column stylebox's left+right content margins, subtracted when sizing a
+## cell so it stays square inside its column.
+const CELL_INSET: float = 12.0
 ## Chance the AI plays a loose move INSTEAD OF its strategic one. It still
 ## always takes a win and always blocks; this only relaxes the positional play,
 ## which is the dial that makes it beatable without making it look broken.
@@ -48,7 +51,9 @@ var _think_timer: Timer
 
 ## Board shape and AI difficulty are data on the definition.
 func setup(context: Dictionary) -> void:
-	_columns = clampi(int(context.get("columns", DEFAULT_COLUMNS)), 4, 9)
+	# Ceiling of 7: at the 120px column minimum, more than seven columns cannot
+	# fit the 1000px body and the HBox would push them off-screen.
+	_columns = clampi(int(context.get("columns", DEFAULT_COLUMNS)), 4, 7)
 	_rows = clampi(int(context.get("rows", DEFAULT_ROWS)), 4, 8)
 	_blunder = clampf(float(context.get("ai_blunder", AI_BLUNDER_CHANCE)), 0.0, 1.0)
 
@@ -63,7 +68,21 @@ func _ready() -> void:
 	_board.resize(_columns * _rows)
 	_board.fill(EMPTY)
 	_build_board()
+	_board_row.resized.connect(_fit_cells)
+	_fit_cells()
 	_set_status("YOUR TURN", ARCADE)
+
+
+## Keep cells square. The columns share the width evenly but the row is free to
+## grow tall, so without this a cell is ~136 wide by ~262 high: the disc draws
+## at its width and leaves a gap above and below, and a vertical four stops
+## reading as connected.
+func _fit_cells() -> void:
+	if _column_buttons.is_empty():
+		return
+	var side: float = maxf(96.0, _column_buttons[0].size.x - CELL_INSET)
+	for cell: TextureRect in _cells:
+		cell.custom_minimum_size = Vector2(0, side)
 
 
 # --- Board ---------------------------------------------------------------------
@@ -77,18 +96,19 @@ func _build_board() -> void:
 		button.custom_minimum_size = Vector2(120, 0)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		var style := StyleBoxFlat.new()
-		style.bg_color = BOARD_BG
-		style.set_corner_radius_all(14)
-		style.set_content_margin_all(6)
-		for state: String in ["normal", "hover", "pressed", "disabled"]:
-			button.add_theme_stylebox_override(state, style)
+		# Distinct styleboxes per state: a full column must not look identical
+		# to a playable one, and a tap needs press feedback.
+		button.add_theme_stylebox_override("normal", _column_style(false, false))
+		button.add_theme_stylebox_override("hover", _column_style(true, false))
+		button.add_theme_stylebox_override("pressed", _column_style(true, false))
+		button.add_theme_stylebox_override("disabled", _column_style(false, true))
 		button.pressed.connect(_on_column_pressed.bind(column))
 		_board_row.add_child(button)
 		_column_buttons.append(button)
 
 		var stack := VBoxContainer.new()
 		stack.add_theme_constant_override("separation", 8)
+		stack.alignment = BoxContainer.ALIGNMENT_CENTER
 		stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		stack.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		button.add_child(stack)
@@ -98,10 +118,27 @@ func _build_board() -> void:
 			cell.custom_minimum_size = Vector2(0, 96)
 			cell.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			cell.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			cell.size_flags_vertical = Control.SIZE_EXPAND_FILL
+			cell.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			stack.add_child(cell)
 			_cells.append(cell)  # appended column-major; _cell_at() re-maps
+
+
+func _column_style(lit: bool, full: bool) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.set_corner_radius_all(14)
+	style.set_content_margin_all(6)
+	style.bg_color = BOARD_BG
+	style.set_border_width_all(2)
+	if full:
+		# A full column reads as closed: dimmer ground, no accent edge.
+		style.bg_color = Color(BOARD_BG.r, BOARD_BG.g, BOARD_BG.b, BOARD_BG.a * 0.5)
+		style.border_color = Color(0.235, 0.18, 0.361, 0.5)
+	elif lit:
+		style.border_color = ARCADE
+	else:
+		style.border_color = Color(ARCADE.r, ARCADE.g, ARCADE.b, 0.35)
+	return style
 
 
 ## Cells are built column-major but addressed row-major.
@@ -149,7 +186,7 @@ func _on_column_pressed(column: int) -> void:
 		_end_run(true, "won in %d moves" % _player_moves)
 		return
 	if _valid_columns().is_empty():
-		_end_run(false, "board full")
+		_end_draw()
 		return
 	_set_status("OPPONENT THINKING", MUTED)
 	_refresh_columns()
@@ -159,7 +196,7 @@ func _on_column_pressed(column: int) -> void:
 func _on_ai_think_done() -> void:
 	var column: int = _ai_choose_column()
 	if column < 0:
-		_end_run(false, "board full")
+		_end_draw()
 		return
 	var row: int = _landing_row(column)
 	_place(row, column, AI)
@@ -167,7 +204,7 @@ func _on_ai_think_done() -> void:
 		_end_run(false, "opponent connected four")
 		return
 	if _valid_columns().is_empty():
-		_end_run(false, "board full")
+		_end_draw()
 		return
 	_busy = false
 	_set_status("YOUR TURN", ARCADE)
@@ -311,11 +348,25 @@ func _weighted_centre(options: Array[int]) -> int:
 # --- Reporting ------------------------------------------------------------------
 
 
-func _end_run(won: bool, detail: String) -> void:
+## A filled board is a tie. The framework's Outcome has no DRAW — a draw is
+## not a win, so it pays the loss floor — but the copy must never call a tie a
+## defeat, and the longest-line credit already pays it honestly.
+func _end_draw() -> void:
+	_end_run(false, "a draw — board full", true)
+
+
+func _end_run(won: bool, detail: String, drawn: bool = false) -> void:
 	_think_timer.stop()
 	_busy = true
 	for button: Button in _column_buttons:
 		button.disabled = true
+	# Settle any in-flight drop BEFORE reporting. The winning disc is placed and
+	# the run ends in the same frame, so its tween has not stepped yet — and the
+	# host's teardown() kills managed tweens, which would freeze that disc at its
+	# 0.4 start scale under the banner. A tween must never own a resting state
+	# that outlives the run.
+	for cell: TextureRect in _cells:
+		cell.scale = Vector2.ONE
 	# Win: a faster win is worth more (8 moves pays full, 16 pays the floor).
 	# Loss: credit the longest line actually built, so a near-miss beats a rout
 	# once the host applies its LOSS_FLOOR.
@@ -324,7 +375,8 @@ func _end_run(won: bool, detail: String) -> void:
 		performance = clampf(8.0 / float(maxi(1, _player_moves)), 0.5, 1.0)
 	else:
 		performance = clampf(float(_longest_run(PLAYER) - 1) / float(CONNECT - 1), 0.0, 1.0)
-	_set_status("YOU WIN" if won else "DEFEATED", ARCADE_CORE if won else MUTED)
+	var headline: String = "YOU WIN" if won else ("DRAW" if drawn else "DEFEATED")
+	_set_status(headline, ARCADE_CORE if won else MUTED)
 	_finish(
 		Outcome.WIN if won else Outcome.LOSS, performance, float(_player_moves), detail
 	)
