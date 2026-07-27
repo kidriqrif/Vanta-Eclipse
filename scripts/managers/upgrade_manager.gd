@@ -98,6 +98,12 @@ func buy(id: StringName) -> bool:
 	return true
 
 
+## Clear every purchased upgrade on an Eclipse (Milestone 8). The shop is a
+## run-scoped economy; prestige rebuilds it from scratch. PrestigeManager only.
+func reset_for_prestige() -> void:
+	_levels.clear()
+
+
 ## Sum of all ADDITIVE bonuses for a stat across owned upgrade levels.
 func get_stat_additive(stat: StringName) -> float:
 	var total: float = 0.0

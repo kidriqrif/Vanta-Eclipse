@@ -27,7 +27,8 @@ func get_tap_damage() -> float:
 	var damage: float = flat * UpgradeManager.get_stat_multiplier(&"tap_damage")
 	damage *= 1.0 + EquipmentManager.get_affix_sum(&"tap_pct") \
 		+ RelicManager.get_effect_additive(&"tap_pct") \
-		+ PetManager.get_active_bonus_additive(&"tap_pct")
+		+ PetManager.get_active_bonus_additive(&"tap_pct") \
+		+ SkillTreeManager.get_stat_additive(&"tap_pct")
 	return damage
 
 
@@ -43,7 +44,8 @@ func get_crit_multiplier() -> float:
 	var mult: float = BASE_CRIT_MULTIPLIER + UpgradeManager.get_stat_additive(&"crit_damage")
 	return mult + EquipmentManager.get_affix_sum(&"crit_damage") \
 		+ RelicManager.get_effect_additive(&"crit_damage") \
-		+ PetManager.get_active_bonus_additive(&"crit_damage")
+		+ PetManager.get_active_bonus_additive(&"crit_damage") \
+		+ SkillTreeManager.get_stat_additive(&"crit_damage")
 
 
 ## Multiplier applied to all essence earned from kills.
@@ -51,6 +53,7 @@ func get_essence_gain_multiplier() -> float:
 	var mult: float = UpgradeManager.get_stat_multiplier(&"essence_gain")
 	mult *= 1.0 + EquipmentManager.get_affix_sum(&"essence")
 	mult *= 1.0 + PetManager.get_active_bonus_additive(&"essence")
+	mult *= 1.0 + SkillTreeManager.get_stat_additive(&"essence")
 	mult *= RelicManager.get_effect_multiplier(&"essence")
 	return mult
 
@@ -60,7 +63,8 @@ func get_essence_gain_multiplier() -> float:
 func get_boss_damage_multiplier() -> float:
 	return 1.0 + EquipmentManager.get_affix_sum(&"boss") \
 		+ RelicManager.get_effect_additive(&"boss") \
-		+ PetManager.get_active_bonus_additive(&"boss")
+		+ PetManager.get_active_bonus_additive(&"boss") \
+		+ SkillTreeManager.get_stat_additive(&"boss")
 
 
 ## Fraction of the live essence rate paid out for time away. The Eclipse
@@ -68,7 +72,11 @@ func get_boss_damage_multiplier() -> float:
 ## TODO(Milestone 8): prestige upgrades raise this.
 ## TODO(Milestone 14): the "double offline rewards" ad multiplies it.
 func get_offline_multiplier() -> float:
-	return BASE_OFFLINE_EFFICIENCY * RelicManager.get_offline_multiplier()
+	# Deep Rest (Ascendant Power) raises the base efficiency; the Eclipse Heart
+	# relic multiplies the result.
+	var base: float = BASE_OFFLINE_EFFICIENCY \
+		+ SkillTreeManager.get_stat_additive(&"offline_efficiency")
+	return base * RelicManager.get_offline_multiplier()
 
 
 ## Expected damage of one hit averaged over crit probability — the basis

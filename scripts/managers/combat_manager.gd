@@ -156,6 +156,19 @@ func resume_spawning() -> void:
 		_do_respawn()
 
 
+## Drop the run back to Dark Forest level 1 on an Eclipse (Milestone 8) and
+## spawn a fresh enemy. total_kills is a lifetime stat and is kept. Any boss
+## fight in progress is voided cleanly. PrestigeManager only.
+func reset_for_prestige() -> void:
+	_alive = false
+	_boss_timer_running = false
+	_boss_time_remaining = 0.0
+	_boss_entry_held = false
+	state = State.NORMAL
+	enemy_level = 1
+	_spawn_enemy_at(1)
+
+
 ## Called by the UI when the CHALLENGE BOSS button is tapped.
 func request_boss_challenge() -> void:
 	if state != State.FARM_MODE:

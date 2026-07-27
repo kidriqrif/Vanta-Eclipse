@@ -88,7 +88,17 @@ func consume_pending_offline_rewards() -> Dictionary:
 ## The single source both the live timer and the offline math read, so a
 ## faster-auto-attack relic doubles offline earning exactly as it does live.
 func get_effective_attack_interval() -> float:
-	return AUTO_ATTACK_INTERVAL / maxf(0.0001, RelicManager.get_attack_speed_mult())
+	# Twin Fang (relic) and Swift Hunt (Ascendant Power) both quicken the tick;
+	# they multiply, and offline pay reads the same interval so it scales too.
+	var speed: float = RelicManager.get_attack_speed_mult() \
+		* SkillTreeManager.get_attack_speed_mult()
+	return AUTO_ATTACK_INTERVAL / maxf(0.0001, speed)
+
+
+## Away-time cap, extended by the Long Slumber power (Milestone 8).
+func get_offline_cap_seconds() -> int:
+	var bonus_hours: int = int(SkillTreeManager.get_stat_additive(&"offline_cap_hours"))
+	return OFFLINE_CAP_SECONDS + bonus_hours * 3600
 
 
 func get_live_essence_rate() -> float:
@@ -102,6 +112,19 @@ func get_live_essence_rate() -> float:
 	)
 	var essence_per_kill: float = CombatManager.get_essence_reward(level)
 	return essence_per_kill / maxf(0.0001, seconds_per_kill)
+
+
+## Re-base auto-attack on an Eclipse (Milestone 8): a new run re-earns the
+## level-15 unlock, UNLESS the Eternal Reflex power keeps it on from the start.
+## Pending offline state is dropped with the reset. PrestigeManager only.
+func reset_for_prestige() -> void:
+	auto_attack_unlocked = SkillTreeManager.has_flag(&"auto_attack_start")
+	_pending_offline_rewards = {}
+	if auto_attack_unlocked:
+		_attack_timer.start()
+	else:
+		_attack_timer.stop()
+	_refresh_attack_interval()
 
 
 func _refresh_attack_interval() -> void:
@@ -180,8 +203,9 @@ func _check_offline_rewards() -> void:
 	var elapsed: int = maxi(0, int(Time.get_unix_time_from_system()) - last_save)
 	if elapsed < MIN_OFFLINE_SECONDS:
 		return
-	var was_capped: bool = elapsed > OFFLINE_CAP_SECONDS
-	var rewarded_seconds: int = mini(elapsed, OFFLINE_CAP_SECONDS)
+	var cap_seconds: int = get_offline_cap_seconds()
+	var was_capped: bool = elapsed > cap_seconds
+	var rewarded_seconds: int = mini(elapsed, cap_seconds)
 	var amount: float = floor(
 		get_live_essence_rate() * rewarded_seconds * PlayerStats.get_offline_multiplier()
 	)

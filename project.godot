@@ -31,11 +31,13 @@ UpgradeManager="*res://scripts/managers/upgrade_manager.gd"
 EquipmentManager="*res://scripts/managers/equipment_manager.gd"
 RelicManager="*res://scripts/managers/relic_manager.gd"
 PetManager="*res://scripts/managers/pet_manager.gd"
+SkillTreeManager="*res://scripts/managers/skill_tree_manager.gd"
 PlayerStats="*res://scripts/managers/player_stats.gd"
 SceneManager="*res://scripts/managers/scene_manager.gd"
 WorldManager="*res://scripts/managers/world_manager.gd"
 CombatManager="*res://scripts/managers/combat_manager.gd"
 IdleManager="*res://scripts/managers/idle_manager.gd"
+PrestigeManager="*res://scripts/managers/prestige_manager.gd"
 
 [debug]
 

@@ -82,6 +82,14 @@ func add(currency: StringName, amount: float) -> void:
 	EventBus.currency_changed.emit(currency, _balances[currency])
 
 
+## Wipe the run currency on an Eclipse (Milestone 8). Only Eclipse Essence is
+## a run-scoped balance; Void Crystals, Astral Shards, and Void Scraps are all
+## kept across prestige. Called by PrestigeManager only.
+func reset_run_currency() -> void:
+	_balances[ESSENCE] = 0.0
+	EventBus.currency_changed.emit(ESSENCE, 0.0)
+
+
 ## Attempt to spend. Returns false (and changes nothing) if the balance is
 ## too low — callers decide how to present that to the player.
 func try_spend(currency: StringName, amount: float) -> bool:

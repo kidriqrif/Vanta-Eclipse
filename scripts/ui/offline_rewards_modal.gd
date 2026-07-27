@@ -30,7 +30,7 @@ func _ready() -> void:
 	_set_exact_shown(false)
 	_duration_label.text = "Away for %s" % GameManager.format_duration_rough(_seconds_away)
 	_cap_label.text = "(offline earnings cap at %dh)" \
-		% int(IdleManager.OFFLINE_CAP_SECONDS / 3600.0)
+		% int(IdleManager.get_offline_cap_seconds() / 3600.0)
 	# The cap line only appears when the cap actually reduced the reward —
 	# and then always plainly, never as a silently shortened time (§6).
 	_cap_label.visible = _was_capped

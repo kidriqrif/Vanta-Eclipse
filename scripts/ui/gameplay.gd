@@ -16,6 +16,7 @@ const WORLD_UNLOCK_MODAL_SCENE: PackedScene = preload(
 )
 const BOSS_SKULL_TEXTURE: Texture2D = preload("res://sprites/ui/boss_skull_icon.svg")
 const LOOT_TOAST_SCENE: PackedScene = preload("res://scenes/gear/loot_toast.tscn")
+const ECLIPSE_TEXTURE: Texture2D = preload("res://sprites/ui/eclipse_icon.svg")
 
 ## Where the last tap landed, so its damage number spawns under the finger.
 var _last_tap_position: Vector2 = Vector2.ZERO
@@ -43,6 +44,7 @@ var _active_loot_toast: Node
 @onready var _essence_label: Label = %EssenceLabel
 @onready var _upgrades_button: Button = %UpgradesButton
 @onready var _gear_button: Button = %GearButton
+@onready var _eclipse_button: Button = %EclipseButton
 @onready var _count_pill: PanelContainer = %CountPill
 @onready var _count_label: Label = %CountLabel
 @onready var _shop_panel: UpgradeShopPanel = %UpgradeShopPanel
@@ -86,7 +88,13 @@ func _ready() -> void:
 	EventBus.pet_evolved.connect(_on_pet_evolved)
 	EventBus.pet_leveled.connect(_on_pet_leveled)
 	EventBus.active_pet_changed.connect(_on_active_pet_changed)
+	EventBus.eclipse_available.connect(_on_eclipse_available)
+	EventBus.eclipse_performed.connect(_on_eclipse_performed)
 	_companion_button.pressed.connect(_on_companion_pressed)
+	_eclipse_button.pressed.connect(_on_eclipse_pressed)
+	_eclipse_button.icon = ECLIPSE_TEXTURE
+	_eclipse_button.add_theme_color_override("font_color", Color(0.4, 0.86, 0.85, 1))
+	_eclipse_button.visible = PrestigeManager.is_unlocked()
 	_apply_world_palette()
 	_update_count_pill()
 	_update_companion()
@@ -263,6 +271,26 @@ func _on_gear_pressed() -> void:
 
 func _on_companion_pressed() -> void:
 	SceneManager.change_scene(SceneManager.SCENE_PETS)
+
+
+func _on_eclipse_pressed() -> void:
+	SceneManager.change_scene(SceneManager.SCENE_ECLIPSE)
+
+
+func _on_eclipse_available() -> void:
+	# One-time live crossing: reveal the door and announce it (UX §2).
+	_eclipse_button.visible = true
+	SettingsManager.vibrate(45)
+	var banner: ResultBanner = RESULT_BANNER_SCENE.instantiate()
+	banner.setup(ECLIPSE_TEXTURE, "THE ECLIPSE AWAITS",
+		"Collapse your run into permanent power.", true)
+	_show_banner(banner)
+
+
+func _on_eclipse_performed(_reward: float, _count: int) -> void:
+	# The Eclipse screen owns the celebration and the return here; on arrival
+	# _ready re-reads the unlocked state. Kept for symmetry / future use.
+	_eclipse_button.visible = PrestigeManager.is_unlocked()
 
 
 func _on_relic_dropped(id: StringName) -> void:

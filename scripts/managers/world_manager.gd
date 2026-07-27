@@ -106,6 +106,14 @@ func get_pending_unlock_world() -> WorldDefinition:
 	return null
 
 
+## Re-lock world progression on an Eclipse (Milestone 8): the player re-climbs
+## the worlds each run. Called by PrestigeManager only.
+func reset_for_prestige() -> void:
+	highest_unlocked_index = 0
+	unlock_celebration_pending = ""
+	unlock_celebration_payout = 0.0
+
+
 ## Called by the UI when the World Unlock modal's ENTER is tapped.
 func acknowledge_unlock_celebration() -> void:
 	unlock_celebration_pending = ""

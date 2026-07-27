@@ -122,6 +122,19 @@ signal active_pet_changed(id: StringName)
 ## can be granted from the same estimate (never re-derived).
 signal offline_kills_estimated(kills: int)
 
+# --- Prestige & Ascendant Powers (Milestone 8) ---
+
+## Fired once, on the first live crossing of the Eclipse unlock level, so the
+## gameplay screen can announce it and reveal the ECLIPSE door.
+signal eclipse_available
+
+## Fired after an Eclipse completes. The crystals are already granted and the
+## run is already reset.
+signal eclipse_performed(reward: float, prestige_count: int)
+
+## Fired after an Ascendant Power level is bought.
+signal skill_purchased(id: StringName, new_level: int)
+
 # --- UI presentation facts (Milestone 5) ---
 # Emitted by overlays (shop panel, blocking modals) so managers can defer
 # moments that need an unobstructed screen. Presentation facts, not state.
