@@ -38,6 +38,9 @@ var _unlock_presentation_queued: bool = false
 ## Depth-1 banner queue so layer-50 transients never stack.
 var _active_banner: ResultBanner
 var _queued_banner: ResultBanner
+## Whole seconds of play time currently shown, so _process can skip the
+## string build on the ~59 frames per second that would not change it.
+var _displayed_play_second: int = -1
 ## The currently-visible loot toast, so quick drops collapse into it.
 var _active_loot_toast: Node
 
@@ -128,8 +131,15 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	var time_text: String = GameManager.format_time(GameManager.total_play_time)
-	_play_time_label.text = time_text
+	# Only touch the label when the displayed second actually changes. Assigning
+	# it every frame allocated a new String and dirtied the label's layout 60
+	# times a second for a value that moves once — the same guard
+	# countdown_timer_bar.gd uses.
+	var second: int = int(GameManager.total_play_time)
+	if second == _displayed_play_second:
+		return
+	_displayed_play_second = second
+	_play_time_label.text = GameManager.format_time(GameManager.total_play_time)
 
 
 # --- Input -------------------------------------------------------------------

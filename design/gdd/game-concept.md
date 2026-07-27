@@ -74,8 +74,14 @@ Later worlds introduce the *new* mechanics of their own milestones.
 - Milestone 12: Void Salvo (Battleship) minigame — DONE
 - Milestone 13: the Journal — quests, dailies, achievements — DONE
 - Milestone 14: monetization architecture (STUB providers — see below) — DONE
+- Milestone 15: optimization pass, Android export config, release checklist — DONE
 
 **Milestone 14 caveat:** ads and purchases run on stub providers. Real
 AdMob/Play Billing integration, receipt validation, and flipping
 `MonetizationManager.USE_STUB_PROVIDERS` to false are Milestone 15 work.
 Nothing in this build charges money or shows a real ad.
+
+**Release readiness:** see `design/RELEASE-CHECKLIST.md`. The game is
+feature-complete but NOT submittable — real ads/billing, app identity,
+signing, store assets and a privacy policy are all still required, and none
+could be done in-repo.
