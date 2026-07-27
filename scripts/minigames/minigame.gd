@@ -22,6 +22,8 @@ enum Outcome { WIN, LOSS, QUIT }
 
 ## Guards the emit-once contract — _finish() is a no-op after the first call.
 var _finished: bool = false
+## Tweens started through create_managed_tween(), so teardown() can kill them.
+var _managed_tweens: Array[Tween] = []
 
 
 ## Override to receive host context (difficulty, modifiers, ...). Called
@@ -46,11 +48,29 @@ func force_quit() -> void:
 ## your own quiescing, and call super() first.
 func teardown() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for tween: Tween in _managed_tweens:
+		if tween != null and tween.is_valid():
+			tween.kill()
+	_managed_tweens.clear()
 	_quiesce(self)
 	set_process(false)
 	set_physics_process(false)
 	set_process_input(false)
 	set_process_unhandled_input(false)
+
+
+## Start a tween the framework can stop. Use this instead of create_tween():
+## the SceneTree drives tweens independently of process_mode, so an unmanaged
+## one keeps animating after a run resolves and can flip a card or drop a piece
+## underneath the result banner.
+func create_managed_tween() -> Tween:
+	var tween: Tween = create_tween()
+	_managed_tweens.append(tween)
+	# Keep the list from growing across a long run.
+	_managed_tweens = _managed_tweens.filter(
+		func(t: Tween) -> bool: return t != null and t.is_valid()
+	)
+	return tween
 
 
 ## Stop every child Timer and disable every child button.

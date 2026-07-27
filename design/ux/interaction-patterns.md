@@ -305,9 +305,25 @@ input, so a game that has reported its result keeps running underneath it —
 timers fire, taps register. The host therefore calls `teardown()` the moment
 a run resolves; the base implementation stops every child Timer and refuses
 input, and subclasses override for anything extra (calling `super()` first).
-**Consequence — child Timers are the required timing idiom.** A
-`get_tree().create_timer()` belongs to the SceneTree, not the game, so
-teardown cannot reach it and it fires after the run has ended.
-**Implementation:** `Minigame.teardown()` in `scripts/minigames/minigame.gd`;
-called from `_on_game_finished` in `scripts/ui/minigame_host.gd`; three child
-Timers in `scripts/minigames/void_reflex.gd` as the reference.
+**Consequence — child Timers and `create_managed_tween()` are the required
+timing idioms.** A `get_tree().create_timer()` belongs to the SceneTree, not
+the game, so teardown cannot reach it and it fires after the run has ended.
+The same is true of `create_tween()`: the SceneTree drives tweens
+independently of `process_mode`, so an unmanaged one keeps animating after a
+run resolves — flipping a card or dropping a piece underneath the result
+banner. `Minigame.create_managed_tween()` records the tween so `teardown()`
+kills it.
+**Check:** inside `scripts/minigames/`, `create_tween()` should appear only in
+`create_managed_tween()` itself.
+Two Godot behaviours this pattern exists to survive, both found in review:
+a **flat `Button` never draws its styleboxes**, so state applied that way is
+silently discarded; and a **disabled `Button` dims its icon to 40%**, so a
+"locked in" state fades out unless `icon_disabled_color` is overridden.
+**Records are for completed runs only** — a loss or forfeit is not comparable
+to a run that met the objective, and in a `lower_is_better` game a loss scores
+the worst possible value, which would otherwise be written in as the first
+"best".
+**Implementation:** `Minigame.teardown()` / `create_managed_tween()` in
+`scripts/minigames/minigame.gd`; called from `_on_game_finished` in
+`scripts/ui/minigame_host.gd`; child Timers in
+`scripts/minigames/void_reflex.gd` and `memory_match.gd` as the reference.

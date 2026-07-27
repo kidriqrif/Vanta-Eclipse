@@ -9,15 +9,16 @@ extends Minigame
 ## Score is ATTEMPTS, and the definition sets lower_is_better — fewer is a
 ## better record.
 
-const FACE_PATHS: Array[String] = [
-	"res://sprites/minigames/face_circle.svg",
-	"res://sprites/minigames/face_square.svg",
-	"res://sprites/minigames/face_triangle.svg",
-	"res://sprites/minigames/face_diamond.svg",
-	"res://sprites/minigames/face_cross.svg",
-	"res://sprites/minigames/face_hexagon.svg",
+const FACES: Array[Texture2D] = [
+	preload("res://sprites/minigames/face_circle.svg"),
+	preload("res://sprites/minigames/face_square.svg"),
+	preload("res://sprites/minigames/face_triangle.svg"),
+	preload("res://sprites/minigames/face_diamond.svg"),
+	preload("res://sprites/minigames/face_cross.svg"),
+	preload("res://sprites/minigames/face_hexagon.svg"),
 ]
 const CARD_BACK: Texture2D = preload("res://sprites/minigames/card_back.svg")
+const CARD_BG: Color = Color(0.078, 0.059, 0.122, 0.9)
 
 const ARCADE: Color = Color(0.65, 0.93, 0.42, 1)
 const ARCADE_CORE: Color = Color(0.83, 0.98, 0.7, 1)
@@ -49,7 +50,7 @@ var _hold_timer: Timer
 
 ## Board size and budget are data on the definition, never constants here.
 func setup(context: Dictionary) -> void:
-	_pairs = clampi(int(context.get("pairs", DEFAULT_PAIRS)), 2, FACE_PATHS.size())
+	_pairs = clampi(int(context.get("pairs", DEFAULT_PAIRS)), 2, FACES.size())
 	_budget = maxi(_pairs, int(context.get("attempt_budget", DEFAULT_BUDGET)))
 
 
@@ -87,11 +88,32 @@ func _make_card(index: int) -> Button:
 	var card := Button.new()
 	card.custom_minimum_size = Vector2(200, 200)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	card.expand_icon = true
 	card.icon = CARD_BACK
-	card.flat = true
+	# NOT flat: Godot skips every stylebox draw on a flat Button, which would
+	# silently discard the matched-card border applied later. A plain dark
+	# stylebox gives the same look while keeping that channel available.
+	card.add_theme_stylebox_override("normal", _card_style(false))
+	card.add_theme_stylebox_override("hover", _card_style(false))
+	card.add_theme_stylebox_override("pressed", _card_style(false))
+	card.add_theme_stylebox_override("disabled", _card_style(false))
 	card.pressed.connect(_on_card_pressed.bind(index))
 	return card
+
+
+func _card_style(matched: bool) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.set_corner_radius_all(14)
+	if matched:
+		style.bg_color = Color(0.16, 0.28, 0.11, 0.55)
+		style.set_border_width_all(3)
+		style.border_color = ARCADE
+	else:
+		style.bg_color = CARD_BG
+		style.set_border_width_all(2)
+		style.border_color = Color(0.235, 0.18, 0.361, 0.6)
+	return style
 
 
 func _set_card_face(index: int, face_up: bool) -> void:
@@ -99,10 +121,10 @@ func _set_card_face(index: int, face_up: bool) -> void:
 	# Flip reads as a horizontal squash-and-swap: the icon changes at the
 	# midpoint, so the card turns rather than blinking. One-shot, 0.24s total.
 	card.pivot_offset = card.size * 0.5
-	var tween: Tween = create_tween()
+	var tween: Tween = create_managed_tween()
 	tween.tween_property(card, "scale", Vector2(0.05, 1.0), FLIP_TIME)
 	tween.tween_callback(func() -> void:
-		card.icon = load(FACE_PATHS[_faces[index]]) if face_up else CARD_BACK
+		card.icon = FACES[_faces[index]] if face_up else CARD_BACK
 	)
 	tween.tween_property(card, "scale", Vector2.ONE, FLIP_TIME)
 
@@ -136,13 +158,12 @@ func _resolve_match(a: int, b: int) -> void:
 	for index: int in [a, b]:
 		# Matched cards stay face-up, are disabled, and gain an accent border —
 		# state carried by shape and interactivity, not colour alone.
-		var style := StyleBoxFlat.new()
-		style.bg_color = Color(0.16, 0.28, 0.11, 0.55)
-		style.set_corner_radius_all(14)
-		style.set_border_width_all(3)
-		style.border_color = ARCADE
+		var style: StyleBoxFlat = _card_style(true)
 		_cards[index].add_theme_stylebox_override("normal", style)
 		_cards[index].add_theme_stylebox_override("disabled", style)
+		# The icon must stay full-strength: Godot dims a disabled Button's icon
+		# to 40%, which would make a matched pair fade out rather than lock in.
+		_cards[index].add_theme_color_override("icon_disabled_color", Color.WHITE)
 		_cards[index].disabled = true
 	_status_label.text = "MATCH!"
 	_status_label.add_theme_color_override("font_color", ARCADE_CORE)
@@ -177,9 +198,12 @@ func _end_run(won: bool) -> void:
 	_hold_timer.stop()
 	for card: Button in _cards:
 		card.disabled = true
-	# Perfect play clears N pairs in N attempts, so efficiency is N/attempts.
-	# A win at the budget still pays something; a perfect run pays full.
-	var performance: float = float(_pairs) / float(maxi(1, _attempts)) if won else 0.0
+	# Win: efficiency, since perfect play clears N pairs in N attempts.
+	# Loss: credit the pairs actually found, so the host's LOSS_FLOOR has
+	# something to scale. Reporting 0 would make the floor a no-op and pay a
+	# near-miss exactly what it pays someone who found nothing.
+	var performance: float = float(_pairs) / float(maxi(1, _attempts)) if won \
+		else float(_matched) / float(_pairs)
 	var detail: String = "%d pairs in %d attempts" % [_matched, _attempts] if won \
 		else "%d of %d pairs" % [_matched, _pairs]
 	_status_label.text = "CLEARED" if won else "OUT OF ATTEMPTS"

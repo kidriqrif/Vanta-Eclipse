@@ -113,7 +113,7 @@ func _on_flare() -> void:
 	_state_label.add_theme_color_override("font_color", ARCADE)
 	if _flare_tween != null and _flare_tween.is_valid():
 		_flare_tween.kill()
-	_flare_tween = create_tween()
+	_flare_tween = create_managed_tween()
 	_flare_tween.tween_property(_sigil_icon, "scale", Vector2(1.25, 1.25), FLARE_TWEEN) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_window_timer.start(FLARE_WINDOW)

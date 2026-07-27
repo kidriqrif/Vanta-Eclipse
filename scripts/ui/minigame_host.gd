@@ -149,9 +149,12 @@ func _on_game_finished(result: Dictionary) -> void:
 
 	CurrencyManager.add(CurrencyManager.ESSENCE, payout)
 	EventBus.essence_earned.emit(payout, &"minigame")
-	# A forfeit is not a performance — it never sets a record.
+	# Records are for COMPLETED runs only. A loss or forfeit did not achieve the
+	# objective, so its score is not comparable to one that did — and for a
+	# lower_is_better game a loss scores the worst possible value, which would
+	# otherwise be written in as the first "best".
 	var is_best: bool = false
-	if outcome != Minigame.Outcome.QUIT:
+	if outcome == Minigame.Outcome.WIN:
 		is_best = MinigameManager.record_result(
 			_definition.id, float(result.get("score", 0.0))
 		)
