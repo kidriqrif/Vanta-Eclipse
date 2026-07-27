@@ -68,3 +68,4 @@ Later worlds introduce the *new* mechanics of their own milestones.
 - Milestone 6: equipment, inventory, loot tables, crafting — DONE
 - Milestone 7: relics, pets, passive bonuses — DONE
 - Milestone 8: prestige (Eclipse), Ascendant Powers skill tree — DONE
+- Milestone 9: the Arcade — minigame framework + Void Reflex — DONE
