@@ -112,7 +112,7 @@ func _ready() -> void:
 	_style_door_button(_arcade_button, ARCADE_TOKEN_TEXTURE, ARCADE_LIME, ARCADE_LIME_DEEP)
 	_arcade_button.visible = MinigameManager.is_arcade_unlocked()
 	_journal_button.pressed.connect(_on_journal_pressed)
-	_journal_button.icon = JOURNAL_TEXTURE
+	_style_journal_button()
 	_update_journal_pill()
 	_apply_world_palette()
 	_update_count_pill()
@@ -323,6 +323,21 @@ func _on_eclipse_pressed() -> void:
 
 func _on_arcade_pressed() -> void:
 	SceneManager.change_scene(SceneManager.SCENE_ARCADE)
+
+
+## The theme's button content margins (32/24) would squeeze the icon into a
+## ~32px box inside a 96px target. A tighter stylebox gives it the room the
+## spec asks for, the same fix the bottom-row doors use.
+func _style_journal_button() -> void:
+	_journal_button.icon = JOURNAL_TEXTURE
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.078, 0.157, 0.7)
+	style.set_corner_radius_all(14)
+	style.set_content_margin_all(8)
+	style.set_border_width_all(2)
+	style.border_color = Color(0.235, 0.18, 0.361, 0.7)
+	for state: String in ["normal", "hover", "pressed"]:
+		_journal_button.add_theme_stylebox_override(state, style)
 
 
 func _on_journal_pressed() -> void:

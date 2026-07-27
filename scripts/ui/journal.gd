@@ -44,6 +44,12 @@ func _ready() -> void:
 	# Opening the Journal is one of the two moments dailies can roll over, and
 	# it re-latches anything completed while the screen was closed.
 	QuestManager.refresh_dailies()
+	QuestManager.evaluate()
+	var tick := Timer.new()
+	tick.wait_time = 30.0
+	tick.timeout.connect(_refresh_reset_label)
+	add_child(tick)
+	tick.start()
 	_set_tab(QuestDefinition.Kind.QUEST)
 
 
@@ -56,11 +62,16 @@ func _set_tab(kind: QuestDefinition.Kind) -> void:
 	_style_tab(_daily_tab, kind == QuestDefinition.Kind.DAILY)
 	_style_tab(_achievements_tab, kind == QuestDefinition.Kind.ACHIEVEMENT)
 	_reset_label.visible = kind == QuestDefinition.Kind.DAILY
-	if _reset_label.visible:
-		_reset_label.text = "Resets in %s" % _format_reset(
-			QuestManager.seconds_until_daily_reset()
-		)
+	_refresh_reset_label()
 	_rebuild()
+
+
+func _refresh_reset_label() -> void:
+	if not _reset_label.visible:
+		return
+	_reset_label.text = "Resets in %s" % _format_reset(
+		QuestManager.seconds_until_daily_reset()
+	)
 
 
 func _style_tab(button: Button, active: bool) -> void:
@@ -73,8 +84,12 @@ func _style_tab(button: Button, active: bool) -> void:
 		style.border_color = IVORY
 	else:
 		style.bg_color = Color(0.1, 0.078, 0.157, 0.6)
-	for state: String in ["normal", "hover", "pressed", "focus"]:
-		button.add_theme_stylebox_override(state, style)
+	button.add_theme_stylebox_override("normal", style)
+	button.add_theme_stylebox_override("focus", style)
+	var lit: StyleBoxFlat = style.duplicate()
+	lit.bg_color = TAB_ACTIVE_BG if active else Color(0.14, 0.12, 0.21, 0.85)
+	button.add_theme_stylebox_override("hover", lit)
+	button.add_theme_stylebox_override("pressed", lit)
 	button.add_theme_color_override("font_color", IVORY if active else MUTED)
 	button.add_theme_color_override("font_hover_color", IVORY if active else MUTED)
 
@@ -120,8 +135,6 @@ func _make_row(definition: QuestDefinition) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.add_theme_stylebox_override("panel", _card_style(definition))
-	if QuestManager.is_claimed(definition):
-		card.modulate = Color(1, 1, 1, 0.75)
 
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 8)
@@ -189,9 +202,12 @@ func _make_row(definition: QuestDefinition) -> PanelContainer:
 
 func _card_style(definition: QuestDefinition) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = CARD_BG
 	style.set_corner_radius_all(14)
 	style.set_content_margin_all(16)
+	# A claimed card recedes by dimming its GROUND, never the whole card:
+	# modulate propagates to children and would take the text with it.
+	style.bg_color = Color(CARD_BG.r, CARD_BG.g, CARD_BG.b, CARD_BG.a * 0.55) \
+		if QuestManager.is_claimed(definition) else CARD_BG
 	# The spine brightens when a goal is claimable, so a reward waiting to be
 	# collected is scannable down the left edge before reading a word.
 	style.border_width_left = 4
@@ -225,7 +241,9 @@ func _make_action(definition: QuestDefinition) -> Control:
 
 func _progress_text(definition: QuestDefinition) -> String:
 	var current: float = QuestManager.get_progress(definition)
-	return "%s / %s" % [NumberFormat.format(current), NumberFormat.format(definition.target)]
+	return "%s / %s" % [
+		NumberFormat.format_exact(current), NumberFormat.format_exact(definition.target)
+	]
 
 
 func _reward_ink(definition: QuestDefinition) -> Color:
@@ -249,7 +267,13 @@ func _refresh_ready_pill() -> void:
 func _on_claim_pressed(id: StringName) -> void:
 	var text: String = QuestManager.claim(id)
 	if text == "":
-		return  # already claimed — the manager refuses, so a double-tap is safe
+		# Refused: already claimed (a safe double-tap), or a token reward with
+		# no room in the meter — say so rather than looking broken.
+		var definition: QuestDefinition = QuestManager.get_definition(id)
+		if definition != null and QuestManager.is_claimable(definition):
+			_reset_label.visible = true
+			_reset_label.text = "Arcade token meter is full — spend one first."
+		return
 	SettingsManager.vibrate(30)
 
 
@@ -258,18 +282,25 @@ func _on_goal_changed(id: StringName) -> void:
 
 
 func _on_goal_claimed(id: StringName, _reward_text: String) -> void:
-	var row: Control = _rows.get(id)
-	if row != null and is_instance_valid(row):
-		row.pivot_offset = row.size * 0.5
-		row.scale = Vector2(1.03, 1.03)
-		create_tween().tween_property(row, "scale", Vector2.ONE, 0.2) \
-			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	# A claimed quest advances the chain, so that tab needs a full rebuild;
-	# everything else re-dresses the single row in place.
+	# Re-dress first — that swaps in the row which shows "● CLAIMED" — and let
+	# _redress pop the REPLACEMENT. Popping the outgoing row would animate a
+	# node being freed in the same frame, which is no animation at all.
+	_redress(id, true)
+	# A claimed quest reveals the next link. Append it rather than rebuilding:
+	# a rebuild would reset the scroll position under the player's thumb.
 	if _tab == QuestDefinition.Kind.QUEST:
-		_rebuild()
-	else:
-		_redress(id)
+		_append_new_goals()
+
+
+## Add any goal now visible in this tab that has no row yet, preserving scroll.
+func _append_new_goals() -> void:
+	for definition: QuestDefinition in QuestManager.get_goals(_tab):
+		if _rows.has(definition.id):
+			continue
+		var row: PanelContainer = _make_row(definition)
+		_rows[definition.id] = row
+		_goal_list.add_child(row)
+	_refresh_ready_pill()
 
 
 func _on_dailies_rerolled() -> void:
@@ -278,7 +309,7 @@ func _on_dailies_rerolled() -> void:
 
 
 ## Replace one row in place, keeping the player's scroll position.
-func _redress(id: StringName) -> void:
+func _redress(id: StringName, pop: bool = false) -> void:
 	var row: Control = _rows.get(id)
 	var definition: QuestDefinition = QuestManager.get_definition(id)
 	if row == null or not is_instance_valid(row) or definition == null:
@@ -290,6 +321,13 @@ func _redress(id: StringName) -> void:
 	_goal_list.move_child(replacement, index)
 	_rows[id] = replacement
 	row.queue_free()
+	if pop:
+		# The incoming row is the one that animates; the outgoing one is being
+		# freed this frame and could not show a tween.
+		replacement.pivot_offset = replacement.size * 0.5
+		replacement.scale = Vector2(1.03, 1.03)
+		create_tween().tween_property(replacement, "scale", Vector2.ONE, 0.2) \
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_refresh_ready_pill()
 
 

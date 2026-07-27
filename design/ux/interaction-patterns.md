@@ -340,3 +340,19 @@ the worst possible value, which would otherwise be written in as the first
 `scripts/minigames/minigame.gd`; called from `_on_game_finished` in
 `scripts/ui/minigame_host.gd`; child Timers in
 `scripts/minigames/void_reflex.gd` and `memory_match.gd` as the reference.
+
+## Static Checks Beyond gdparse/gdlint
+**Why:** `gdparse` and `gdlint` validate syntax and style. They do **not**
+resolve calls, so two classes of runtime error pass both cleanly, and both have
+shipped at least once:
+- **Autoload member does not exist** — `RelicManager.get_owned_ids()` when the
+  method is `get_owned()`. It throws on every call site and aborts whatever
+  loop it sits in.
+- **Call-site arity mismatch** — changing `func _reveal_sunk(ship)` to take two
+  parameters without updating its caller.
+**The sweep therefore runs, on every milestone:** `gdparse` (syntax), `gdlint`
+(style), the `.tscn`/`.tres` structural validator (load_steps, resource paths,
+node parents), an **autoload member-existence check** built from
+`project.godot`'s autoload map, and a **call-site arity check** per script.
+Both extra checks have positive controls — reintroduce the original bug and
+confirm the checker trips.

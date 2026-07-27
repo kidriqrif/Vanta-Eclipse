@@ -11,6 +11,8 @@ extends Node
 const DEFINITION_DIR: String = "res://data/quests"
 const DAILY_COUNT: int = 3
 const SECONDS_PER_DAY: int = 86400
+## Bound on evaluate()'s fast-forward loop.
+const EVALUATE_PASSES: int = 32
 
 var _definitions: Array[QuestDefinition] = []
 var _definitions_by_id: Dictionary = {}
@@ -25,6 +27,8 @@ var _claimed: Dictionary = {}
 var _daily_ids: Array[StringName] = []
 var _daily_day: int = 0
 var _daily_baseline: Dictionary = {}
+## Last seen token count, so a decrease can be read as a spend.
+var _last_token_count: int = 0
 
 
 func _ready() -> void:
@@ -38,6 +42,7 @@ func _ready() -> void:
 	EventBus.minigame_finished.connect(_on_minigame_finished)
 	EventBus.eclipse_performed.connect(_on_eclipse_performed)
 	EventBus.upgrade_purchased.connect(_on_upgrade_purchased)
+	EventBus.arcade_tokens_changed.connect(_on_arcade_tokens_changed)
 
 
 func _load_definitions() -> void:
@@ -139,8 +144,11 @@ func get_goals(kind: QuestDefinition.Kind) -> Array[QuestDefinition]:
 	for definition: QuestDefinition in _definitions:
 		if definition.kind != kind:
 			continue
-		if kind == QuestDefinition.Kind.QUEST and not _claimed.has(definition.id):
-			# The first unclaimed link is the active one; stop after it.
+		if kind == QuestDefinition.Kind.QUEST \
+				and not _claimed.has(definition.id) \
+				and not _completed.has(definition.id):
+			# Everything done or awaiting a claim is shown; the first link that
+			# is neither is the active one, and the chain stops after it.
 			out.append(definition)
 			return out
 		out.append(definition)
@@ -202,6 +210,11 @@ func claim(id: StringName) -> String:
 	var definition: QuestDefinition = _definitions_by_id.get(id)
 	if definition == null or not is_claimable(definition):
 		return ""
+	if definition.reward_kind == QuestDefinition.RewardKind.ARCADE_TOKENS \
+			and not MinigameManager.has_token_room(int(definition.reward_amount)):
+		# Paying into a full meter would silently discard the reward. Refuse,
+		# so it stays claimable until there is room; the UI says why.
+		return ""
 	_claimed[id] = true
 	match definition.reward_kind:
 		QuestDefinition.RewardKind.ARCADE_TOKENS:
@@ -217,6 +230,9 @@ func claim(id: StringName) -> String:
 	SaveManager.save_game()
 	var text: String = definition.format_reward()
 	EventBus.goal_claimed.emit(id, text)
+	# Claiming a chain link reveals the next one, which an advanced save may
+	# already satisfy — latch it now rather than waiting for the next kill.
+	evaluate()
 	return text
 
 
@@ -233,7 +249,7 @@ func _snapshot(metric: StringName) -> float:
 		&"enemy_level":
 			return float(PrestigeManager.lifetime_peak_level)
 		&"relics_owned":
-			return float(RelicManager.get_owned_ids().size())
+			return float(RelicManager.get_owned().size())
 		&"pets_owned":
 			return float(PetManager.get_owned_ids().size())
 		&"crystals":
@@ -248,13 +264,23 @@ func _snapshot(metric: StringName) -> float:
 
 func _bump(metric: StringName, amount: float = 1.0) -> void:
 	_counters[metric] = float(_counters.get(metric, 0.0)) + amount
-	_evaluate()
+	evaluate()
 
 
 ## Latch any newly-complete goal in the ACTIVE set. Driven by signals and by
 ## opening the Journal — walking every definition every frame would be wasted
 ## work for a screen the player visits occasionally.
-func _evaluate() -> void:
+func evaluate() -> void:
+	# Repeat while anything latches: completing a chain link reveals the next,
+	# which may already be satisfied on an advanced save. Bounded so a data
+	# error can never spin here.
+	for _pass: int in range(EVALUATE_PASSES):
+		if not _evaluate_once():
+			return
+
+
+func _evaluate_once() -> bool:
+	var latched: bool = false
 	for kind: int in [
 		QuestDefinition.Kind.QUEST,
 		QuestDefinition.Kind.DAILY,
@@ -265,7 +291,9 @@ func _evaluate() -> void:
 				continue
 			if get_progress(definition) >= definition.target:
 				_completed[definition.id] = true
+				latched = true
 				EventBus.goal_completed.emit(definition.id)
+	return latched
 
 
 ## Draw a fresh daily set when the UTC day advances.
@@ -298,10 +326,11 @@ func refresh_dailies() -> void:
 
 
 func _on_game_loaded(_is_new_game: bool) -> void:
+	_last_token_count = MinigameManager.tokens
 	refresh_dailies()
 	# Latch everything an existing save already satisfies, so an advanced player
 	# is not walked back through the tutorial chain.
-	_evaluate()
+	evaluate()
 
 
 func _on_enemy_died(_level: int, _total_kills: int) -> void:
@@ -324,9 +353,20 @@ func _on_item_dropped(_item: Dictionary) -> void:
 
 
 func _on_minigame_finished(_id: StringName, outcome: int, _payout: float) -> void:
+	# A forfeit is not a game played — it would otherwise let a player farm the
+	# "play N games" daily by entering and quitting.
+	if outcome == Minigame.Outcome.QUIT:
+		return
 	_bump(&"minigames_played")
 	if outcome == Minigame.Outcome.WIN:
 		_bump(&"minigames_won")
+
+
+## Tokens only ever leave the meter by being spent on a game.
+func _on_arcade_tokens_changed(count: int) -> void:
+	if count < _last_token_count:
+		_bump(&"tokens_spent", float(_last_token_count - count))
+	_last_token_count = count
 
 
 func _on_eclipse_performed(_reward: float, _count: int) -> void:

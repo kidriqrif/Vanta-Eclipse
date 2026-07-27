@@ -165,6 +165,12 @@ func try_spend_token(cost: int = 1) -> bool:
 	return true
 
 
+## Whether a grant of this size would actually land rather than hit the cap.
+func has_token_room(count: int = 1) -> bool:
+	accrue_tokens()
+	return tokens + count <= TOKEN_CAP
+
+
 func grant_token(count: int = 1) -> void:
 	accrue_tokens()
 	var before: int = tokens

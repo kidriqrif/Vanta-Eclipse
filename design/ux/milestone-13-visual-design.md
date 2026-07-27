@@ -33,7 +33,10 @@ tones, so it does not read as a sixth power system competing for attention.
 
 - **Header:** BACK (180×96) · "JOURNAL" HeaderLabel@38 · an unclaimed pill
   (BadgePanel, "N READY" in ivory) shown only when something is claimable.
-- **Segmented control** (QUESTS | DAILY | ACHIEVEMENTS), the M8 pattern:
+- **Segmented control** (QUESTS | DAILY | **TROPHIES**), the M8 pattern:
+  ("ACHIEVEMENTS" measures 384px in Cinzel at the nav's 38px against 325px of
+  tab width; fitting it would mean dropping all three tabs to 30px. "TROPHIES"
+  fits at full navigation size and is the clearer label.)
   active = filled `(0.16,0.14,0.24)` ground, ivory text, and a 4px ivory
   underline; inactive = transparent, muted text. Word + fill + underline, so
   the active tab survives colour loss.
