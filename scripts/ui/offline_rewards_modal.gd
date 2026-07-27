@@ -76,6 +76,10 @@ func _on_double_pressed() -> void:
 	_double_button.disabled = true
 	_double_button.text = "WATCHING…"
 	var bonus: float = await MonetizationManager.run_offer(OFFER_ID, _amount)
+	# COLLECT stays live throughout the watch (one-tap dismiss is required), so
+	# this modal may already be gone when the offer resolves.
+	if not is_inside_tree():
+		return
 	if bonus <= 0.0:
 		# Declined, no fill, or an error: the base reward is untouched, so the
 		# modal simply drops the offer rather than reporting a failure.

@@ -10,4 +10,5 @@ description = "Double the Essence you just earned while away."
 reward_kind = 2
 reward_amount = 1.0
 daily_cap = 3
+contextual = true
 sort_order = 0

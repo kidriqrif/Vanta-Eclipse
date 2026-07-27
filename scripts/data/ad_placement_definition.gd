@@ -17,4 +17,8 @@ enum RewardKind {
 @export var reward_amount: float = 600.0
 ## Offers per UTC day. Keeps "grind ads" from ever being the optimal strategy.
 @export var daily_cap: int = 3
+## True when the offer only means anything at a specific moment (the offline
+## doubler needs a pending amount). Contextual placements are surfaced by that
+## moment's UI and never listed in the Shop, where they would grant nothing.
+@export var contextual: bool = false
 @export var sort_order: int = 0

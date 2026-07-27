@@ -12,6 +12,8 @@ const CARD_BG: Color = Color(0.1, 0.078, 0.157, 0.9)
 
 ## How often the "next token in" line and the PLAY buttons re-read the meter.
 const TICK_SECONDS: float = 1.0
+## The opt-in offer surfaced when the meter runs dry (M14 §2).
+const OFFER_ID: StringName = &"arcade_token"
 
 var _tick_timer: Timer
 ## id (StringName) -> the card's PLAY Button, so the tick can re-dress them
@@ -28,6 +30,7 @@ var _refreshing: bool = false
 @onready var _token_label: Label = %TokenLabel
 @onready var _next_token_label: Label = %NextTokenLabel
 @onready var _card_list: VBoxContainer = %CardList
+@onready var _offer_button: Button = %OfferButton
 @onready var _nebula: ColorRect = $VoidBackground/NebulaRect
 
 
@@ -40,6 +43,7 @@ func _ready() -> void:
 	_tick_timer.timeout.connect(_refresh_meter)
 	add_child(_tick_timer)
 	_tick_timer.start()
+	_offer_button.pressed.connect(_on_offer_pressed)
 	_build_cards()
 	_refresh_meter()
 
@@ -65,10 +69,37 @@ func _refresh_meter() -> void:
 		if is_instance_valid(button):
 			_dress_play_button(button, MinigameManager.get_definition(id))
 	_refreshing = false
+	_refresh_offer()
 	# Auto-attack keeps killing while this screen is open, so a locked card can
 	# cross its unlock level in place. Only then is a full rebuild warranted.
 	if _has_newly_unlocked():
 		_build_cards()
+
+
+## The opt-in token offer appears only when the meter is actually empty — the
+## moment it helps. It is a bonus, never a gate: tokens still regenerate on
+## their own timer whether or not the player ever taps it.
+func _refresh_offer() -> void:
+	var show: bool = MinigameManager.tokens <= 0 \
+		and MonetizationManager.can_offer(OFFER_ID)
+	_offer_button.visible = show
+	if show:
+		_offer_button.text = "CLAIM A TOKEN · FREE" if MonetizationManager.ads_removed() \
+			else "WATCH FOR A TOKEN"
+
+
+func _on_offer_pressed() -> void:
+	if MonetizationManager.is_busy():
+		return
+	_offer_button.disabled = true
+	_offer_button.text = "WATCHING…"
+	var granted: float = await MonetizationManager.run_offer(OFFER_ID)
+	if not is_inside_tree():
+		return
+	_offer_button.disabled = false
+	if granted > 0.0:
+		SettingsManager.vibrate(30)
+	_refresh_meter()
 
 
 func _has_newly_unlocked() -> bool:

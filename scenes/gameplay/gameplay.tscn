@@ -124,7 +124,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(96, 96)
 layout_mode = 2
 size_flags_vertical = 0
-text = "+"
+text = "SHOP"
 
 [node name="MenuButton" type="Button" parent="MarginContainer/GameplayVBox/TopBar"]
 unique_name_in_owner = true

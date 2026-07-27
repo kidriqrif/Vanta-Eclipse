@@ -40,16 +40,28 @@ Player-friendly. **No mechanic is ever pay-gated.** Ads and purchases only
 |---|---|---|---|
 | `offline_double` | the offline-rewards modal | double the essence just granted | 3 |
 | `arcade_token` | the Arcade, when the meter is empty | +1 Arcade Token | 3 |
-| `essence_boost` | gameplay, a quiet button | 10 minutes of essence at the live rate | 5 |
+| `essence_boost` | the Shop | 10 minutes of essence at the live rate | 5 |
 
 Each placement is a `.tres`, so tuning caps or adding a placement is data.
 Rewards use the seconds-of-live-rate pricing the Arcade and Journal proved, so
 they stay proportionate forever.
 
+**`offline_double` is contextual.** It needs a pending amount to multiply, so
+it is surfaced only by the modal that has one, and is never listed in the Shop
+where watching it would grant nothing. More generally: **a watch that yields
+nothing never costs a daily offer** — the use is counted after the grant, not
+before it.
+
+**`essence_boost` lives in the Shop rather than on a gameplay button.** The
+combat screen already carries four doors and a companion; an essence offer is
+not urgent enough to earn permanent space there, and putting it in front of the
+player during play would edge toward the nagging this stance rejects.
+
 The offline modal's flow: the base reward is **already granted and stated**
 before the offer appears. The button reads "WATCH · DOUBLE IT" and the modal's
-dismiss remains a single tap at all times. Declining is never punished, never
-re-prompted.
+dismiss remains a single tap at all times — including during a watch, which is
+why the resume path checks the modal still exists. Declining is never punished,
+never re-prompted.
 
 ## 3. Purchases
 
@@ -64,8 +76,13 @@ one-tap bonus, permanently, with the daily caps still applying so it cannot
 break the economy. Nobody who buys it loses access to anything, and nobody who
 doesn't is gated.
 
-Entitlements persist in the save under `"purchases"` and are **kept across an
-Eclipse** — they are account-level, not run-level.
+Entitlements persist in the save under `"shop"` and are **kept across an
+Eclipse** — they are account-level, not run-level. Non-consumables (both
+entitlements and one-time bundles like the Starter Pack) record ownership, so a
+bundle cannot be bought twice and a restore has something to restore. On load,
+entitlements are deliberately **not** filtered against the loaded definitions:
+a product `.tres` that failed to load must never silently erase something the
+player paid for.
 
 ## 4. Cosmetics — tap trails
 
@@ -84,11 +101,13 @@ and are never required for anything else.
 ## 5. The Shop screen
 Reached from a SHOP button in the top bar beside JOURNAL.
 
-- **Segmented control:** OFFERS | COSMETICS.
-- **OFFERS:** the three ad placements (each showing its remaining daily count),
-  then the purchase products. `remove_ads` shows as owned once bought.
-- **COSMETICS:** a card per cosmetic, with an OWNED / EQUIP / price state and a
-  live preview swatch.
+- **Segmented control:** OFFERS | TRAILS. ("TRAILS" names what they
+  actually are; "COSMETICS" names a category the player never sees.)
+- A **Restore Purchases** entry, which both stores require.
+- **OFFERS:** the non-contextual ad placements (each showing its remaining
+  daily count), then the purchase products, then Restore Purchases.
+- **TRAILS:** a card per cosmetic, with an OWNED / EQUIP / price state and a
+  live preview swatch of the trail and damage-number colours.
 - **The dev banner** at the top while stubs are live: "Development build —
   purchases are simulated and not charged." It is not subtle, on purpose.
 

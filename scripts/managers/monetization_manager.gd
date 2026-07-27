@@ -114,9 +114,10 @@ func load_save_data(data: Dictionary) -> void:
 	_ad_day = maxi(0, int(data.get("ad_day", 0)))
 	_entitlements.clear()
 	for raw: String in data.get("entitlements", []):
-		var product: StringName = StringName(raw)
-		if _products_by_id.has(product):
-			_entitlements[product] = true
+		# Deliberately NOT filtered against the loaded definitions: a product
+		# .tres that failed to load must never silently erase something the
+		# player paid for. An unknown entitlement is inert but preserved.
+		_entitlements[StringName(raw)] = true
 	_owned_cosmetics.clear()
 	for raw: String in data.get("owned_cosmetics", []):
 		var cosmetic: StringName = StringName(raw)
@@ -129,12 +130,14 @@ func load_save_data(data: Dictionary) -> void:
 # --- Reads --------------------------------------------------------------------
 
 
-func get_placements() -> Array[AdPlacementDefinition]:
-	return _placements
-
-
-func get_placement(id: StringName) -> AdPlacementDefinition:
-	return _placements_by_id.get(id)
+## Placements the Shop may list — contextual ones are surfaced by the moment
+## they belong to (the offline modal), where they have something to act on.
+func get_shop_placements() -> Array[AdPlacementDefinition]:
+	var out: Array[AdPlacementDefinition] = []
+	for placement: AdPlacementDefinition in _placements:
+		if not placement.contextual:
+			out.append(placement)
+	return out
 
 
 func get_products() -> Array[ShopProductDefinition]:
@@ -143,10 +146,6 @@ func get_products() -> Array[ShopProductDefinition]:
 
 func get_cosmetics() -> Array[CosmeticDefinition]:
 	return _cosmetics
-
-
-func get_cosmetic(id: StringName) -> CosmeticDefinition:
-	return _cosmetics_by_id.get(id)
 
 
 func owns_cosmetic(id: StringName) -> bool:
@@ -164,6 +163,13 @@ func get_equipped_cosmetic_id() -> StringName:
 
 func has_entitlement(id: StringName) -> bool:
 	return _entitlements.has(id)
+
+
+## Non-consumables (entitlements and one-time bundles) already owned. Shard
+## packs are consumable and always re-purchasable.
+func is_one_time_owned(product: ShopProductDefinition) -> bool:
+	return product.kind != ShopProductDefinition.Kind.SHARDS \
+		and _entitlements.has(product.id)
 
 
 ## Owning remove_ads turns every offer into a free, instant one-tap bonus. It
@@ -209,10 +215,15 @@ func run_offer(id: StringName, pending_amount: float = 0.0) -> float:
 	if not watched:
 		_busy = false
 		return 0.0
-	# Count the use only on a completed watch, so a failed or dismissed ad
-	# never burns one of the player's daily offers.
-	_ad_uses[id] = int(_ad_uses.get(id, 0)) + 1
 	var granted: float = _grant(placement, pending_amount)
+	if granted <= 0.0:
+		# A watch that yielded nothing must not cost the player an offer. This
+		# is reachable when a contextual placement is run without its context.
+		_busy = false
+		return 0.0
+	# Count the use only on a completed watch that actually paid, so a failed,
+	# dismissed, or empty offer never burns one of the daily offers.
+	_ad_uses[id] = int(_ad_uses.get(id, 0)) + 1
 	SaveManager.save_game()
 	_busy = false
 	EventBus.ad_reward_granted.emit(id, granted)
@@ -249,14 +260,17 @@ func purchase(id: StringName) -> bool:
 	var product: ShopProductDefinition = _products_by_id.get(id)
 	if product == null or _busy:
 		return false
-	if product.kind == ShopProductDefinition.Kind.ENTITLEMENT and _entitlements.has(id):
+	if is_one_time_owned(product):
 		return false
 	_busy = true
 	var bought: bool = await _billing.purchase(id)
 	if not bought:
 		_busy = false
 		return false
-	if product.kind == ShopProductDefinition.Kind.ENTITLEMENT:
+	if product.kind != ShopProductDefinition.Kind.SHARDS:
+		# Entitlements AND one-time bundles are both non-consumable: without a
+		# record, a bundle could be bought forever and a restore could never
+		# give it back.
 		_entitlements[id] = true
 	if product.crystals > 0.0:
 		CurrencyManager.add(CurrencyManager.VOID_CRYSTALS, product.crystals)
@@ -293,6 +307,25 @@ func equip_cosmetic(id: StringName) -> void:
 	_equipped_cosmetic = id
 	SaveManager.save_game()
 	EventBus.cosmetic_equipped.emit(id)
+
+
+## Re-grant non-consumables the store says this account owns. Both platforms
+## require a restore path; the stub owns nothing, so this is a no-op until the
+## real billing provider lands.
+func restore_purchases() -> int:
+	if _busy:
+		return 0
+	_busy = true
+	var owned: Array[StringName] = await _billing.restore_purchases()
+	var restored: int = 0
+	for id: StringName in owned:
+		if not _entitlements.has(id):
+			_entitlements[id] = true
+			restored += 1
+	if restored > 0:
+		SaveManager.save_game()
+	_busy = false
+	return restored
 
 
 ## Purchases and cosmetics are account-level, never run-level.

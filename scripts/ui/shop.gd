@@ -85,10 +85,11 @@ func _rebuild() -> void:
 		child.queue_free()
 	_pending_label = null
 	if _offers_tab_active:
-		for placement: AdPlacementDefinition in MonetizationManager.get_placements():
+		for placement: AdPlacementDefinition in MonetizationManager.get_shop_placements():
 			_item_list.add_child(_make_offer_card(placement))
 		for product: ShopProductDefinition in MonetizationManager.get_products():
 			_item_list.add_child(_make_product_card(product))
+		_item_list.add_child(_make_restore_card())
 	else:
 		for cosmetic: CosmeticDefinition in MonetizationManager.get_cosmetics():
 			_item_list.add_child(_make_cosmetic_card(cosmetic))
@@ -178,8 +179,7 @@ func _make_offer_card(placement: AdPlacementDefinition) -> PanelContainer:
 func _make_product_card(product: ShopProductDefinition) -> PanelContainer:
 	var card: PanelContainer = _card()
 	var box: VBoxContainer = _body(card)
-	var owned: bool = product.kind == ShopProductDefinition.Kind.ENTITLEMENT \
-		and MonetizationManager.has_entitlement(product.id)
+	var owned: bool = MonetizationManager.is_one_time_owned(product)
 	_title_row(box, product.display_name, "" if owned else product.price_text, IVORY)
 	_description(box, product.description)
 	if owned:
@@ -193,6 +193,28 @@ func _make_product_card(product: ShopProductDefinition) -> PanelContainer:
 		return card
 	var button: Button = _action_button("BUY", true)
 	button.pressed.connect(_on_purchase_pressed.bind(product.id, button))
+	box.add_child(button)
+	return card
+
+
+## Both stores require a restore path for non-consumables.
+func _make_restore_card() -> PanelContainer:
+	var card: PanelContainer = _card()
+	var box: VBoxContainer = _body(card)
+	_title_row(box, "Restore Purchases", "", MUTED)
+	_description(box, "Re-apply anything this account already owns.")
+	var button: Button = _action_button("RESTORE", true)
+	button.pressed.connect(func() -> void:
+		button.disabled = true
+		button.text = "RESTORING…"
+		var restored: int = await MonetizationManager.restore_purchases()
+		if not is_inside_tree():
+			return
+		if restored > 0:
+			_rebuild()
+		else:
+			button.text = "NOTHING TO RESTORE"
+	)
 	box.add_child(button)
 	return card
 
@@ -248,10 +270,13 @@ func _make_cosmetic_card(cosmetic: CosmeticDefinition) -> PanelContainer:
 		"BUY" if affordable else "NEED MORE SHARDS", affordable
 	)
 	if affordable:
+		# equip_cosmetic emits cosmetic_equipped, which rebuilds; buying without
+		# equipping still needs one, so only that branch asks for it.
 		buy.pressed.connect(func() -> void:
 			if MonetizationManager.buy_cosmetic(cosmetic.id):
 				MonetizationManager.equip_cosmetic(cosmetic.id)
-			_rebuild()
+			else:
+				_rebuild()
 		)
 	box.add_child(buy)
 	return card
@@ -264,11 +289,30 @@ func _on_offer_pressed(id: StringName, button: Button) -> void:
 	if MonetizationManager.is_busy():
 		return
 	button.disabled = true
-	button.text = "WATCHING…"
+	_run_countdown(button)
 	var granted: float = await MonetizationManager.run_offer(id)
+	# BACK is deliberately live during a watch, so this scene may already be
+	# gone. Touching its nodes (or buzzing on the next screen) after that would
+	# be a bug the player sees.
+	if not is_inside_tree():
+		return
 	if granted > 0.0:
 		SettingsManager.vibrate(30)
 	_rebuild()
+
+
+## Tick a visible numeric countdown on the button for the length of the watch.
+## A bare spinner would leave the player with no idea how long this takes.
+func _run_countdown(button: Button) -> void:
+	var remaining: int = int(ceil(StubAdProvider.SIMULATED_WATCH_SECONDS)) \
+		if MonetizationManager.USE_STUB_PROVIDERS else 0
+	if MonetizationManager.ads_removed() or remaining <= 0:
+		button.text = "CLAIMING…"
+		return
+	while remaining > 0 and is_instance_valid(button) and is_inside_tree():
+		button.text = "WATCHING · %ds" % remaining
+		await get_tree().create_timer(1.0).timeout
+		remaining -= 1
 
 
 func _on_purchase_pressed(id: StringName, button: Button) -> void:
@@ -277,6 +321,8 @@ func _on_purchase_pressed(id: StringName, button: Button) -> void:
 	button.disabled = true
 	button.text = "PURCHASING…"
 	var bought: bool = await MonetizationManager.purchase(id)
+	if not is_inside_tree():
+		return
 	if bought:
 		SettingsManager.vibrate(40)
 	_rebuild()

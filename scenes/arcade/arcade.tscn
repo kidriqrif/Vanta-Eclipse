@@ -91,6 +91,13 @@ theme_override_font_sizes/font_size = 24
 text = "Next token in 30m"
 horizontal_alignment = 1
 
+[node name="OfferButton" type="Button" parent="MarginContainer/VBox"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+text = "WATCH FOR A TOKEN"
+
 [node name="CardScroll" type="ScrollContainer" parent="MarginContainer/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
