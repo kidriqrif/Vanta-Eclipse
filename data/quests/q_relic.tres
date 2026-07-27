@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="QuestDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/quest_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"q_relic"
+display_name = "The Seal Breaks"
+description = "Recover your first relic."
+kind = 0
+metric = &"relics_owned"
+metric_shape = 1
+target = 1.0
+reward_kind = 0
+reward_amount = 420.0
+sort_order = 6

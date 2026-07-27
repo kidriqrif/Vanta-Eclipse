@@ -146,6 +146,18 @@ signal arcade_unlocked
 ## Fired by the host after a run is paid out and recorded.
 signal minigame_finished(id: StringName, outcome: int, payout: float)
 
+# --- The Journal (Milestone 13) ---
+
+## Fired the first time a goal's progress reaches its target. The reward is NOT
+## granted here — it waits to be claimed.
+signal goal_completed(id: StringName)
+
+## Fired after a completed goal's reward is claimed and paid.
+signal goal_claimed(id: StringName, reward_text: String)
+
+## Fired when the daily set is redrawn for a new UTC day.
+signal dailies_rerolled
+
 # --- UI presentation facts (Milestone 5) ---
 # Emitted by overlays (shop panel, blocking modals) so managers can defer
 # moments that need an unobstructed screen. Presentation facts, not state.

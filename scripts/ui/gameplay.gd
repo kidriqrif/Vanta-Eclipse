@@ -18,6 +18,7 @@ const BOSS_SKULL_TEXTURE: Texture2D = preload("res://sprites/ui/boss_skull_icon.
 const LOOT_TOAST_SCENE: PackedScene = preload("res://scenes/gear/loot_toast.tscn")
 const ECLIPSE_TEXTURE: Texture2D = preload("res://sprites/ui/eclipse_icon.svg")
 const ARCADE_TOKEN_TEXTURE: Texture2D = preload("res://sprites/ui/arcade_token_icon.svg")
+const JOURNAL_TEXTURE: Texture2D = preload("res://sprites/ui/journal_icon.svg")
 ## The prestige accent, scoped to the Eclipse door here (visual §1).
 const ECLIPSE_CRYSTAL: Color = Color(0.4, 0.86, 0.85, 1)
 const ECLIPSE_CRYSTAL_DEEP: Color = Color(0.16, 0.44, 0.47, 1)
@@ -53,6 +54,9 @@ var _active_loot_toast: Node
 @onready var _gear_button: Button = %GearButton
 @onready var _eclipse_button: Button = %EclipseButton
 @onready var _arcade_button: Button = %ArcadeButton
+@onready var _journal_button: Button = %JournalButton
+@onready var _journal_pill: PanelContainer = %JournalPill
+@onready var _journal_count: Label = %JournalCount
 @onready var _count_pill: PanelContainer = %CountPill
 @onready var _count_label: Label = %CountLabel
 @onready var _shop_panel: UpgradeShopPanel = %UpgradeShopPanel
@@ -98,6 +102,8 @@ func _ready() -> void:
 	EventBus.active_pet_changed.connect(_on_active_pet_changed)
 	EventBus.eclipse_available.connect(_on_eclipse_available)
 	EventBus.arcade_unlocked.connect(_on_arcade_unlocked)
+	EventBus.goal_completed.connect(_on_journal_changed)
+	EventBus.goal_claimed.connect(_on_journal_claimed)
 	_companion_button.pressed.connect(_on_companion_pressed)
 	_eclipse_button.pressed.connect(_on_eclipse_pressed)
 	_style_eclipse_button()
@@ -105,6 +111,9 @@ func _ready() -> void:
 	_arcade_button.pressed.connect(_on_arcade_pressed)
 	_style_door_button(_arcade_button, ARCADE_TOKEN_TEXTURE, ARCADE_LIME, ARCADE_LIME_DEEP)
 	_arcade_button.visible = MinigameManager.is_arcade_unlocked()
+	_journal_button.pressed.connect(_on_journal_pressed)
+	_journal_button.icon = JOURNAL_TEXTURE
+	_update_journal_pill()
 	_apply_world_palette()
 	_update_count_pill()
 	_update_companion()
@@ -314,6 +323,27 @@ func _on_eclipse_pressed() -> void:
 
 func _on_arcade_pressed() -> void:
 	SceneManager.change_scene(SceneManager.SCENE_ARCADE)
+
+
+func _on_journal_pressed() -> void:
+	SceneManager.change_scene(SceneManager.SCENE_JOURNAL)
+
+
+## The Journal badge is a durable record — it reads the unclaimed count rather
+## than counting fired signals, so a reward can never be lost to a missed
+## banner (the same rule as the GEAR pill and the companion NEW badge).
+func _update_journal_pill() -> void:
+	var count: int = QuestManager.get_unclaimed_count()
+	_journal_pill.visible = count > 0
+	_journal_count.text = str(count)
+
+
+func _on_journal_changed(_id: StringName) -> void:
+	_update_journal_pill()
+
+
+func _on_journal_claimed(_id: StringName, _reward_text: String) -> void:
+	_update_journal_pill()
 
 
 func _on_arcade_unlocked() -> void:

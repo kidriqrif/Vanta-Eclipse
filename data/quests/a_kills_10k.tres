@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="QuestDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/quest_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"a_kills_10k"
+display_name = "Void Devourer"
+description = "Slay 10,000 void creatures."
+kind = 2
+metric = &"kills"
+metric_shape = 0
+target = 10000.0
+reward_kind = 2
+reward_amount = 3.0
+sort_order = 1

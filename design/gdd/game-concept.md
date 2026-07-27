@@ -72,3 +72,4 @@ Later worlds introduce the *new* mechanics of their own milestones.
 - Milestone 10: Memory Match minigame — DONE
 - Milestone 11: Connect Four minigame — DONE
 - Milestone 12: Void Salvo (Battleship) minigame — DONE
+- Milestone 13: the Journal — quests, dailies, achievements — DONE

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="QuestDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/quest_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"q_ascendant"
+display_name = "Ascendant"
+description = "Buy 5 levels of Ascendant Powers."
+kind = 0
+metric = &"skill_levels"
+metric_shape = 1
+target = 5.0
+reward_kind = 2
+reward_amount = 4.0
+sort_order = 10
