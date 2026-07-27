@@ -28,5 +28,13 @@ extends Resource
 
 @export var token_cost: int = 1
 
+## How this game's score ranks. Most games want a high score; a "fewest moves"
+## or "fastest time" game sets this so records compare the other way.
+@export var lower_is_better: bool = false
+
+## Per-game configuration handed to Minigame.setup() — board size, difficulty,
+## piece counts, whatever the game needs. Keeps tuning in data, not code.
+@export var context: Dictionary = {}
+
 ## Position in the hub list (lower = higher up).
 @export var sort_order: int = 0

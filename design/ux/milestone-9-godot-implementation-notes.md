@@ -76,8 +76,9 @@ Because `SceneManager.change_scene` takes only a path, the host reads which
 game to load from a manager field set by the hub: `MinigameManager.pending_id`
 (cleared on read). The host then:
 1. `def = get_definition(pending_id)`; if null → return to the hub.
-2. `load(def.scene_path).instantiate()`, `setup({})`, connect `finished`,
-   add to the body container.
+2. `load(def.scene_path).instantiate()`, `setup(def.context.duplicate(true))`
+   — per-game tuning is data on the definition, never code — connect
+   `finished`, add to the body container.
 3. On `finished`: disconnect, compute payout (applying `LOSS_FLOOR` for
    non-wins), `CurrencyManager.add(ESSENCE, payout)`,
    `EventBus.essence_earned.emit(payout, &"minigame")` (the source StringName

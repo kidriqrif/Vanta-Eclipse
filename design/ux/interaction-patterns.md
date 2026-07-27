@@ -279,3 +279,35 @@ explicitly (including the list's own VBox in the scene). Only real controls
 (Buttons) stay STOP. Setting a parent to IGNORE never blocks its children:
 picking checks children first.
 **Implementation:** `scripts/ui/eclipse.gd` (all builders).
+
+## Font-Safe Glyphs
+**Applies to:** every string that reaches a Button or a `HeaderLabel` /
+`TitleLabel`.
+**Behavior:** the theme sets Cinzel on `Button/fonts/font` and the header
+label variations, and Cinzel is a 220-codepoint Latin display face. It does
+**not** contain `◈ ◆ ★ ● →`, so those render as `.notdef` boxes there —
+verified against `fonts/cinzel-latin-700-normal.woff2`. Only `·` (U+00B7)
+and `—` (U+2014) among the punctuation we use are Cinzel-safe.
+Therefore: **buttons and headers spell it out** ("PLAY · 1 TOKEN",
+"NEED 12 MORE", "TAP AGAIN: 12 FOR +24"), while decorative glyphs live only
+in plain Labels, which fall back to Godot's built-in face because the theme
+sets no `default_font`. Where a glyph would be identity rather than
+decoration (a currency mark), prefer the actual **icon** beside the number —
+it is a stronger cue than a character and cannot go missing.
+**Check:** `grep -rE '(button|Button)\.text\s*=.*[◈◆★●→]' scripts/` must
+come back empty.
+
+## Minigame Teardown
+**Used in:** the Arcade host/minigame contract. Future: any embedded,
+self-contained mode that reports a result to a frame around it.
+**Behavior:** a result banner is a layer-50 transient and does **not** block
+input, so a game that has reported its result keeps running underneath it —
+timers fire, taps register. The host therefore calls `teardown()` the moment
+a run resolves; the base implementation stops every child Timer and refuses
+input, and subclasses override for anything extra (calling `super()` first).
+**Consequence — child Timers are the required timing idiom.** A
+`get_tree().create_timer()` belongs to the SceneTree, not the game, so
+teardown cannot reach it and it fires after the run has ended.
+**Implementation:** `Minigame.teardown()` in `scripts/minigames/minigame.gd`;
+called from `_on_game_finished` in `scripts/ui/minigame_host.gd`; three child
+Timers in `scripts/minigames/void_reflex.gd` as the reference.

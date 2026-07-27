@@ -24,7 +24,12 @@ Hue ≈ 92°, a clear 87° from crystal teal (≈179°) and well clear of amber
 (≈45°). As always the accent carries *identity*, never *state* — every state
 also carries a word or glyph.
 
-**Glyph:** `◈` precedes every token figure ("◈ 3 / 5", "PLAY ◈ 1").
+**Glyph:** `◈` marks token figures — **in Labels only**. Cinzel (the Button
+and Header face) has no `◈ ◆ ★ ● →`, so those render as `.notdef` boxes in any
+button or header text. Buttons therefore spell the unit out ("PLAY · 1 TOKEN",
+"NEED 12 MORE"); only `·` and `—` are Cinzel-safe punctuation. The token meter
+uses the token **icon** beside "3 / 5" rather than the glyph, which is a
+stronger cue than a character anyway.
 
 ## 2. Assets (SVG, gradients only, no filters, readable at 64px)
 - `sprites/ui/arcade_token_icon.svg` — a rounded rhombus token: arcade-deep

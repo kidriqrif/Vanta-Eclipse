@@ -133,6 +133,11 @@ that round. Win = 3+ hits. `performance` = mean normalized reaction across
 hits (a 250ms reaction ≈ 1.0, 900ms ≈ 0.0), so a sharp player earns near the
 full `reward_seconds`. `detail` reads "4 of 5 · avg 312ms".
 
+A flare left untapped for 2.5s auto-misses and moves on, so an interrupted
+run always reaches an end instead of waiting forever for a tap that is not
+coming. Taps register on PRESS, not release: billing a slow finger-lift as
+reaction time would penalise players with motor impairments for no reason.
+
 Deliberately: no failure state that ends the run early, no timer pressure
 beyond the round itself, and a full run is ~15 seconds.
 

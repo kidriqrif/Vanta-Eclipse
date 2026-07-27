@@ -79,11 +79,13 @@ func _has_newly_unlocked() -> bool:
 	return false
 
 
+## Compact and register-neutral: this reads inside a sentence ("Next token in
+## <1m") AND inside an all-caps button face ("NEXT TOKEN <1m").
 func _format_wait(seconds: int) -> String:
 	@warning_ignore("integer_division")
 	var minutes: int = seconds / 60
 	if minutes < 1:
-		return "under a minute"
+		return "<1m"
 	return "%dm" % minutes
 
 
@@ -195,7 +197,7 @@ func _dress_play_button(button: Button, definition: MinigameDefinition) -> void:
 	if MinigameManager.has_token(definition.token_cost):
 		button.disabled = false
 		button.theme_type_variation = &"PrimaryButton"
-		button.text = "PLAY   ◈ %d" % definition.token_cost
+		button.text = "PLAY · %d TOKEN" % definition.token_cost
 		return
 	button.disabled = true
 	button.theme_type_variation = &""

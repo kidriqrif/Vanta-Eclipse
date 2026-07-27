@@ -58,7 +58,7 @@ func _refresh_commons_button() -> void:
 	_salvage_commons_button.disabled = count == 0
 	if _commons_armed and count > 0:
 		var yield_each: int = EquipmentManager.get_salvage_yield(EquipmentManager.Rarity.COMMON)
-		_salvage_commons_button.text = "TAP AGAIN: %d → +%d" % [count, count * yield_each]
+		_salvage_commons_button.text = "TAP AGAIN: %d FOR +%d" % [count, count * yield_each]
 	else:
 		_commons_armed = false
 		_salvage_commons_button.text = "Salvage Commons (%d)" % count

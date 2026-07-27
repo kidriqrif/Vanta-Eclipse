@@ -223,7 +223,8 @@ func _on_collapse_pressed() -> void:
 		return
 	if not _collapse_armed:
 		_collapse_armed = true
-		_collapse_button.text = "TAP AGAIN · +%d ◆ · RESETS RUN" % PrestigeManager.crystal_reward()
+		_collapse_button.text = "TAP AGAIN · +%d CRYSTALS · RESETS RUN" \
+			% PrestigeManager.crystal_reward()
 		_style_collapse(true)
 		_disarm_timer.start(ARM_SECONDS)
 		return
@@ -375,11 +376,11 @@ func _make_action(def: SkillNodeDefinition, maxed: bool, locked: bool) -> Contro
 	button.size_flags_horizontal = Control.SIZE_SHRINK_END
 	if SkillTreeManager.can_buy(def.id):
 		button.theme_type_variation = &"PrimaryButton"
-		button.text = "BUY   ◆ %d" % cost
+		button.text = "BUY · %d" % cost
 		button.pressed.connect(func() -> void: SkillTreeManager.buy(def.id))
 	else:
 		button.disabled = true
-		button.text = "NEED %d ◆" % cost
+		button.text = "NEED %d MORE" % cost
 	return button
 
 

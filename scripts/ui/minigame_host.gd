@@ -23,6 +23,7 @@ var _disarm_timer: Timer
 
 @onready var _quit_button: Button = %QuitButton
 @onready var _title_label: Label = %TitleLabel
+@onready var _header_spacer: Control = %HeaderSpacer
 @onready var _game_body: Control = %GameBody
 
 
@@ -61,7 +62,8 @@ func _load_game() -> void:
 		return
 	_game = instance
 	# setup() before add_child, so the game's _ready() can rely on its context.
-	_game.setup({})
+	# The context is data, from the definition — tuning never lives in code.
+	_game.setup(_definition.context.duplicate(true))
 	_game.finished.connect(_on_game_finished)
 	_game.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_game_body.add_child(_game)
@@ -93,6 +95,11 @@ func _disarm_quit() -> void:
 
 
 func _style_quit(armed: bool) -> void:
+	# The armed face is much wider than "QUIT", so it takes the header to
+	# itself for the 2.5s arm window rather than shoving the title off centre.
+	# (Reserving space for it instead would clip longer game titles.)
+	_title_label.visible = not armed
+	_header_spacer.visible = not armed
 	if not armed:
 		for state: String in ["normal", "hover", "pressed"]:
 			_quit_button.remove_theme_stylebox_override(state)
@@ -119,11 +126,18 @@ func _on_game_finished(result: Dictionary) -> void:
 	_resolved = true
 	# The contract says emit-once, but disconnecting makes the host safe even
 	# against a misbehaving game.
-	if _game != null and is_instance_valid(_game) \
-			and _game.finished.is_connected(_on_game_finished):
-		_game.finished.disconnect(_on_game_finished)
+	if _game != null and is_instance_valid(_game):
+		if _game.finished.is_connected(_on_game_finished):
+			_game.finished.disconnect(_on_game_finished)
+		# Freeze the board: the banner does not block input, so without this a
+		# forfeited game keeps ticking and accepting taps underneath it.
+		_game.teardown()
 	_quit_button.disabled = true
 	_disarm_timer.stop()
+	# Never leave the armed face on a button that can no longer be tapped.
+	if _quit_armed:
+		_disarm_quit()
+		_quit_button.disabled = true
 
 	var outcome: int = int(result.get("outcome", Minigame.Outcome.LOSS))
 	var won: bool = outcome == Minigame.Outcome.WIN
@@ -135,9 +149,12 @@ func _on_game_finished(result: Dictionary) -> void:
 
 	CurrencyManager.add(CurrencyManager.ESSENCE, payout)
 	EventBus.essence_earned.emit(payout, &"minigame")
-	var is_best: bool = MinigameManager.record_result(
-		_definition.id, float(result.get("score", 0.0))
-	)
+	# A forfeit is not a performance — it never sets a record.
+	var is_best: bool = false
+	if outcome != Minigame.Outcome.QUIT:
+		is_best = MinigameManager.record_result(
+			_definition.id, float(result.get("score", 0.0))
+		)
 	SaveManager.save_game()
 	EventBus.minigame_finished.emit(_definition.id, outcome, payout)
 	SettingsManager.vibrate(40 if won else 15)

@@ -166,8 +166,12 @@ func grant_token(count: int = 1) -> void:
 	accrue_tokens()
 	var before: int = tokens
 	tokens = mini(TOKEN_CAP, tokens + count)
-	if tokens != before:
-		EventBus.arcade_tokens_changed.emit(tokens)
+	if tokens == before:
+		return  # at cap: absorbed silently, nothing to persist
+	EventBus.arcade_tokens_changed.emit(tokens)
+	# Persist the grant itself. WorldManager saves earlier in the boss-win
+	# chain, so without this the token would be lost to a force-kill.
+	SaveManager.save_game()
 
 
 # --- Payout & records --------------------------------------------------------
@@ -190,10 +194,20 @@ func has_best(id: StringName) -> bool:
 
 
 ## Record a run's score. Returns true when it beat the previous best.
+## A first run only sets a record if it actually scored — otherwise a forfeit
+## would write "Best: 0" permanently and claim a new record doing it.
 func record_result(id: StringName, score: float) -> bool:
-	if not _definitions_by_id.has(id):
+	var definition: MinigameDefinition = _definitions_by_id.get(id)
+	if definition == null:
 		return false
-	if _best.has(id) and score <= float(_best[id]):
+	if not _best.has(id):
+		if score <= 0.0:
+			return false
+		_best[id] = score
+		return true
+	var previous: float = float(_best[id])
+	var beaten: bool = score < previous if definition.lower_is_better else score > previous
+	if not beaten:
 		return false
 	_best[id] = score
 	return true
