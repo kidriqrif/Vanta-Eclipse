@@ -66,3 +66,5 @@ Later worlds introduce the *new* mechanics of their own milestones.
 - Milestone 4: auto attacks, idle mechanics, offline progression — DONE
 - Milestone 5: boss battles, world progression, unlock system — DONE
 - Milestone 6: equipment, inventory, loot tables, crafting — DONE
+- Milestone 7: relics, pets, passive bonuses — DONE
+- Milestone 8: prestige (Eclipse), Ascendant Powers skill tree — DONE

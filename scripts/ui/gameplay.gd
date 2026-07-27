@@ -17,6 +17,9 @@ const WORLD_UNLOCK_MODAL_SCENE: PackedScene = preload(
 const BOSS_SKULL_TEXTURE: Texture2D = preload("res://sprites/ui/boss_skull_icon.svg")
 const LOOT_TOAST_SCENE: PackedScene = preload("res://scenes/gear/loot_toast.tscn")
 const ECLIPSE_TEXTURE: Texture2D = preload("res://sprites/ui/eclipse_icon.svg")
+## The prestige accent, scoped to the Eclipse door here (visual §1).
+const ECLIPSE_CRYSTAL: Color = Color(0.4, 0.86, 0.85, 1)
+const ECLIPSE_CRYSTAL_DEEP: Color = Color(0.16, 0.44, 0.47, 1)
 
 ## Where the last tap landed, so its damage number spawns under the finger.
 var _last_tap_position: Vector2 = Vector2.ZERO
@@ -89,11 +92,9 @@ func _ready() -> void:
 	EventBus.pet_leveled.connect(_on_pet_leveled)
 	EventBus.active_pet_changed.connect(_on_active_pet_changed)
 	EventBus.eclipse_available.connect(_on_eclipse_available)
-	EventBus.eclipse_performed.connect(_on_eclipse_performed)
 	_companion_button.pressed.connect(_on_companion_pressed)
 	_eclipse_button.pressed.connect(_on_eclipse_pressed)
-	_eclipse_button.icon = ECLIPSE_TEXTURE
-	_eclipse_button.add_theme_color_override("font_color", Color(0.4, 0.86, 0.85, 1))
+	_style_eclipse_button()
 	_eclipse_button.visible = PrestigeManager.is_unlocked()
 	_apply_world_palette()
 	_update_count_pill()
@@ -273,6 +274,22 @@ func _on_companion_pressed() -> void:
 	SceneManager.change_scene(SceneManager.SCENE_PETS)
 
 
+## The prestige door wears the crystal-deep tint so it reads as the special
+## entrance, not a routine bottom-row button (visual §4).
+func _style_eclipse_button() -> void:
+	_eclipse_button.icon = ECLIPSE_TEXTURE
+	_eclipse_button.add_theme_color_override("font_color", ECLIPSE_CRYSTAL)
+	_eclipse_button.add_theme_color_override("font_hover_color", ECLIPSE_CRYSTAL)
+	var style := StyleBoxFlat.new()
+	style.bg_color = ECLIPSE_CRYSTAL_DEEP
+	style.set_corner_radius_all(14)
+	style.set_content_margin_all(12)
+	style.set_border_width_all(2)
+	style.border_color = Color(ECLIPSE_CRYSTAL.r, ECLIPSE_CRYSTAL.g, ECLIPSE_CRYSTAL.b, 0.6)
+	for state: String in ["normal", "hover", "pressed"]:
+		_eclipse_button.add_theme_stylebox_override(state, style)
+
+
 func _on_eclipse_pressed() -> void:
 	SceneManager.change_scene(SceneManager.SCENE_ECLIPSE)
 
@@ -285,12 +302,9 @@ func _on_eclipse_available() -> void:
 	banner.setup(ECLIPSE_TEXTURE, "THE ECLIPSE AWAITS",
 		"Collapse your run into permanent power.", true)
 	_show_banner(banner)
-
-
-func _on_eclipse_performed(_reward: float, _count: int) -> void:
-	# The Eclipse screen owns the celebration and the return here; on arrival
-	# _ready re-reads the unlocked state. Kept for symmetry / future use.
-	_eclipse_button.visible = PrestigeManager.is_unlocked()
+	# eclipse_performed is deliberately NOT handled here: the Eclipse screen is
+	# current when it fires, so this scene isn't in the tree. It owns the
+	# celebration, and _ready re-reads is_unlocked() when gameplay returns.
 
 
 func _on_relic_dropped(id: StringName) -> void:

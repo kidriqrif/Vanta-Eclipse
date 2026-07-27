@@ -243,3 +243,39 @@ PrimaryButton hover glow; the empty relic slot dims its sigil
 (`modulate.a 0.30`, shadow 8) so it never reads as attuned.
 **Implementation:** `ALLY_VIOLET`/`STANDARD` in `scripts/ui/pets.gd`;
 `_make_relic_tile()` in `scripts/ui/gear.gd`.
+
+## Segmented Panel Switch
+**Used in:** the Eclipse screen (ASCEND | POWERS). Future: any screen with
+two or three sibling views that share one context header.
+**Behavior:** one row of equal-width buttons (h=96) above a stack of
+panels; exactly one panel is visible. The active segment is marked three
+ways so it survives color loss — a filled background, the brighter label
+color, and a 4px underline bar in the family accent. The segment's own word
+is its label, so the active view is always named. Switching never reloads
+data; both panels are built once and toggled.
+**Implementation:** `_set_active_tab()` / `_style_tab()` in
+`scripts/ui/eclipse.gd`.
+
+## Reset/Kept Disclosure
+**Used in:** the Eclipse (prestige) commit. Future: any irreversible action
+that trades something away for something permanent.
+**Behavior:** the screen states the full cost *before* the action is
+reachable — two labelled columns (RESETS / KEPT) listing every affected
+system in plain words, always visible, never behind a disclosure toggle.
+The commit itself then uses the **Two-Tap Arm** pattern, whose armed face
+discloses the yield ("TAP AGAIN · +N ◆ · RESETS RUN"). The player can never
+be surprised by what an irreversible act costs them.
+**Implementation:** `_make_summary_column()` / `_on_collapse_pressed()` in
+`scripts/ui/eclipse.gd`.
+
+## Scroll-Safe Built Content
+**Used in:** every list built in code inside a `ScrollContainer` (Eclipse
+powers/ascend, gear, pets).
+**Behavior:** nodes created in GDScript default to `MOUSE_FILTER_STOP`, and
+a STOP child **swallows a touch-drag that begins on it** — so a card body or
+label silently kills drag-scrolling from that point. Every non-interactive
+node built in code therefore sets `mouse_filter = MOUSE_FILTER_IGNORE`
+explicitly (including the list's own VBox in the scene). Only real controls
+(Buttons) stay STOP. Setting a parent to IGNORE never blocks its children:
+picking checks children first.
+**Implementation:** `scripts/ui/eclipse.gd` (all builders).

@@ -57,7 +57,6 @@ func _ready() -> void:
 	_powers_tab.pressed.connect(func() -> void: _set_active_tab(false))
 	EventBus.currency_changed.connect(_on_currency_changed)
 	EventBus.skill_purchased.connect(_on_skill_purchased)
-	EventBus.eclipse_performed.connect(_on_eclipse_performed)
 	_update_crystal_label()
 	_build_ascend()
 	_build_powers()
@@ -87,7 +86,7 @@ func _style_tab(button: Button, active: bool) -> void:
 	if active:
 		style.bg_color = CRYSTAL_DEEP
 		style.border_width_bottom = 4
-		style.border_color = CRYSTAL_CORE
+		style.border_color = CRYSTAL
 	else:
 		style.bg_color = Color(0.1, 0.078, 0.157, 0.6)
 	for state: String in ["normal", "hover", "pressed", "focus"]:
@@ -108,38 +107,29 @@ func _build_ascend() -> void:
 	icon.custom_minimum_size = Vector2(0, 150)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ascend_box.add_child(icon)
 
 	var can: bool = PrestigeManager.can_eclipse()
 	var reward: int = PrestigeManager.crystal_reward()
 
-	var lead := Label.new()
-	lead.text = "Collapsing this run yields" if can else "Not ready to collapse"
-	lead.add_theme_color_override("font_color", MUTED)
-	lead.add_theme_font_size_override("font_size", 28)
-	lead.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var lead := _centered_label(
+		"Collapsing this run yields" if can else "Not ready to collapse", 28, MUTED
+	)
 	_ascend_box.add_child(lead)
 
-	var yield_label := Label.new()
-	if can:
-		yield_label.text = "◆ %s Void Crystals" % NumberFormat.format(float(reward))
-	else:
-		yield_label.text = "Reach Lv. %d this run" % PrestigeManager.ECLIPSE_UNLOCK_LEVEL
-	yield_label.add_theme_color_override("font_color", CRYSTAL)
-	yield_label.add_theme_font_size_override("font_size", 48)
-	yield_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_ascend_box.add_child(yield_label)
+	var yield_text: String = "◆ %s Void Crystals" % NumberFormat.format(float(reward)) if can \
+		else "Reach Lv. %d this run" % PrestigeManager.ECLIPSE_UNLOCK_LEVEL
+	_ascend_box.add_child(_centered_label(yield_text, 48, CRYSTAL))
 
-	var peak := Label.new()
-	peak.text = "Run peak: Lv. %d" % PrestigeManager.run_peak_level
-	peak.add_theme_color_override("font_color", MUTED)
-	peak.add_theme_font_size_override("font_size", 24)
-	peak.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_ascend_box.add_child(peak)
+	_ascend_box.add_child(_centered_label(
+		"Run peak: Lv. %d" % PrestigeManager.run_peak_level, 24, MUTED
+	))
 
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 16)
 	columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	columns.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ascend_box.add_child(columns)
 	columns.add_child(_make_summary_column("RESETS", WARM_MUTED, [
 		"Eclipse Essence", "All upgrades", "World progress", "Auto-Attack*",
@@ -153,6 +143,7 @@ func _build_ascend() -> void:
 	note.add_theme_color_override("font_color", MUTED)
 	note.add_theme_font_size_override("font_size", 24)
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ascend_box.add_child(note)
 
 	_collapse_armed = false
@@ -170,6 +161,7 @@ func _build_ascend() -> void:
 func _make_summary_column(title: String, accent: Color, items: Array) -> PanelContainer:
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var style := StyleBoxFlat.new()
 	style.bg_color = CARD_BG
 	style.set_corner_radius_all(14)
@@ -177,11 +169,13 @@ func _make_summary_column(title: String, accent: Color, items: Array) -> PanelCo
 	panel.add_theme_stylebox_override("panel", style)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 8)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(box)
 	var header := Label.new()
 	header.text = title
 	header.add_theme_color_override("font_color", accent)
 	header.add_theme_font_size_override("font_size", 26)
+	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(header)
 	for item: String in items:
 		var row := Label.new()
@@ -189,8 +183,22 @@ func _make_summary_column(title: String, accent: Color, items: Array) -> PanelCo
 		row.add_theme_color_override("font_color", IVORY)
 		row.add_theme_font_size_override("font_size", 24)
 		row.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(row)
 	return panel
+
+
+## A centered display label. Always MOUSE_FILTER_IGNORE: these sit inside the
+## touch-drag ScrollContainers, and a STOP child swallows a drag begun on it.
+func _centered_label(text: String, size: int, color: Color) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_color_override("font_color", color)
+	label.add_theme_font_size_override("font_size", size)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return label
 
 
 func _style_collapse(armed: bool) -> void:
@@ -257,12 +265,26 @@ func _build_powers() -> void:
 		_powers_list.add_child(_make_node_card(def))
 
 
-func _make_branch_header(title: String) -> Label:
+## Branch heading plus the hairline rule that separates the tree's sections
+## (visual §3B).
+func _make_branch_header(title: String) -> VBoxContainer:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var header := Label.new()
 	header.text = title.to_upper()
 	header.theme_type_variation = &"HeaderLabel"
 	header.add_theme_font_size_override("font_size", 30)
-	return header
+	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(header)
+	var rule := Panel.new()
+	rule.custom_minimum_size = Vector2(0, 2)
+	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var rule_style := StyleBoxFlat.new()
+	rule_style.bg_color = Color(CRYSTAL.r, CRYSTAL.g, CRYSTAL.b, 0.35)
+	rule.add_theme_stylebox_override("panel", rule_style)
+	box.add_child(rule)
+	return box
 
 
 func _make_node_card(def: SkillNodeDefinition) -> PanelContainer:
@@ -271,38 +293,48 @@ func _make_node_card(def: SkillNodeDefinition) -> PanelContainer:
 	var locked: bool = not SkillTreeManager.prereq_met(def.id)
 
 	var card := PanelContainer.new()
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var style := StyleBoxFlat.new()
-	style.bg_color = CARD_BG
 	style.set_corner_radius_all(14)
 	style.set_content_margin_all(16)
-	style.border_color = CRYSTAL
 	style.border_width_left = 4  # the prestige "one class" spine on every card
-	card.add_theme_stylebox_override("panel", style)
+	# A locked node recedes by dimming its BACKGROUND and spine, never the text:
+	# modulating the whole card would drag the effect line under the contrast
+	# floor. The state is carried by the "REQUIRES …" word regardless.
 	if locked:
-		card.modulate = Color(1, 1, 1, 0.55)
+		style.bg_color = Color(CARD_BG.r, CARD_BG.g, CARD_BG.b, CARD_BG.a * 0.55)
+		style.border_color = Color(CRYSTAL.r, CRYSTAL.g, CRYSTAL.b, 0.4)
+	else:
+		style.bg_color = CARD_BG
+		style.border_color = CRYSTAL
+	card.add_theme_stylebox_override("panel", style)
 
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.add_child(box)
 
 	# Row 1: name + state marker.
 	var name_row := HBoxContainer.new()
 	name_row.add_theme_constant_override("separation", 12)
+	name_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(name_row)
 	var name_label := Label.new()
 	name_label.text = def.display_name
 	name_label.add_theme_color_override("font_color", IVORY)
 	name_label.add_theme_font_size_override("font_size", 30)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	name_row.add_child(name_label)
 	var marker := Label.new()
 	if maxed:
 		marker.text = "● MAXED"
 		marker.add_theme_color_override("font_color", CRYSTAL_CORE)
 	else:
-		marker.text = "Lv. %d / %d" % [level, def.max_level]
+		marker.text = "● Lv. %d / %d" % [level, def.max_level]
 		marker.add_theme_color_override("font_color", CRYSTAL)
 	marker.add_theme_font_size_override("font_size", 24)
+	marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	name_row.add_child(marker)
 
 	# Row 2: effect line.
@@ -311,6 +343,7 @@ func _make_node_card(def: SkillNodeDefinition) -> PanelContainer:
 	effect.add_theme_color_override("font_color", MUTED)
 	effect.add_theme_font_size_override("font_size", 24)
 	effect.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	effect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(effect)
 
 	# Row 3: action.
@@ -324,6 +357,7 @@ func _make_action(def: SkillNodeDefinition, maxed: bool, locked: bool) -> Contro
 		done.text = "● MAXED"
 		done.add_theme_color_override("font_color", CRYSTAL_CORE)
 		done.add_theme_font_size_override("font_size", 26)
+		done.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		return done
 	if locked:
 		var req := Label.new()
@@ -333,6 +367,7 @@ func _make_action(def: SkillNodeDefinition, maxed: bool, locked: bool) -> Contro
 		req.add_theme_color_override("font_color", WARM_MUTED)
 		req.add_theme_font_size_override("font_size", 24)
 		req.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		req.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		return req
 	var cost: int = int(SkillTreeManager.get_cost(def.id))
 	var button := Button.new()
@@ -372,12 +407,6 @@ func _on_currency_changed(currency: StringName, _balance: float) -> void:
 func _on_skill_purchased(_id: StringName, _new_level: int) -> void:
 	SettingsManager.vibrate(20)
 	_build_powers()
-
-
-func _on_eclipse_performed(_reward: float, _count: int) -> void:
-	# The scene transition back to gameplay is driven by the celebration
-	# banner's exit in _celebrate_and_return; nothing else to do here.
-	pass
 
 
 func _apply_world_palette() -> void:

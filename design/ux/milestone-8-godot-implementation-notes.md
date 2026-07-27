@@ -82,12 +82,17 @@ State: `prestige_count:int`, `run_peak_level:int` (this run's high-water
 mark), `lifetime_peak_level:int`, `_unlock_announced:bool`. Save section
 `"prestige"`.
 
-- Track peak: connect `enemy_spawned` and `enemy_died`; raise
-  `run_peak_level`/`lifetime_peak_level` from the level seen. On the first
-  live crossing of `ECLIPSE_UNLOCK_LEVEL` (50), if not announced, set the
-  flag, save, and emit `eclipse_available` (gameplay shows the banner + the
-  button). On load, a save already past 50 sets `_unlock_announced=true`
-  silently (grandfather — no banner on load).
+- Track peak: connect `enemy_spawned` **only** (inside `_on_game_loaded`, so
+  CombatManager's load-time spawn is never read as a live crossing — the same
+  discipline IdleManager uses). `enemy_died` is deliberately not connected: it
+  carries the *pre*-increment level, so it can never exceed the last spawned
+  frontier. Each handler raises `run_peak_level`/`lifetime_peak_level` from
+  `CombatManager.enemy_level` (the frontier), not the spawn's `level` argument
+  — in farm mode the spawn is a level below the wall being fought.
+  On the first live crossing of `ECLIPSE_UNLOCK_LEVEL` (50), set the flag,
+  save, and emit `eclipse_available` (gameplay shows the banner + the button).
+  On load, a save already past 50 sets `_unlock_announced=true` silently
+  (grandfather — no banner on load).
 - `is_unlocked() -> lifetime_peak_level >= ECLIPSE_UNLOCK_LEVEL`.
 - `can_eclipse() -> run_peak_level >= ECLIPSE_UNLOCK_LEVEL`.
 - `crystal_reward() -> max(1, floor(BASE_CRYSTALS * (run_peak/GATE)^EXP *
@@ -133,14 +138,16 @@ upward; PrestigeManager is the orchestrator.
   the existing scene-transition test (no ui_overlay plumbing — same as gear
   and pets).
 - COLLAPSE uses the Two-Tap Arm pattern; on commit call
-  `PrestigeManager.perform_eclipse()`, show the celebration banner via the
-  gameplay banner queue *after* returning, then
-  `SceneManager.change_scene(SCENE_GAMEPLAY)`.
+  `PrestigeManager.perform_eclipse()`, then show the celebration banner **on
+  the Eclipse screen** and return to gameplay on that banner's `tree_exited`.
+  (The banner cannot be queued on gameplay: that scene is not in the tree
+  while the Eclipse screen is current.)
 - Gameplay: an `EclipseButton` in `BottomRow` (hidden until
-  `PrestigeManager.is_unlocked()`); `_on_eclipse_available` shows the banner
-  and reveals the button; `_on_eclipse_performed` fires the celebration
-  banner. `is_unlocked()` checked in `_ready` too so a returning unlocked
-  save shows the button without a banner.
+  `PrestigeManager.is_unlocked()`, styled with the crystal-deep prestige
+  tint); `_on_eclipse_available` shows the unlock banner and reveals the
+  button. `eclipse_performed` is deliberately **not** handled in gameplay —
+  `_ready` re-reads `is_unlocked()` when the scene returns, so a returning
+  unlocked save shows the button without a banner.
 
 ## 8. EventBus additions
 ```
