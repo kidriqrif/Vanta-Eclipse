@@ -3,8 +3,10 @@ extends Resource
 ## Data asset describing one enemy type. Designers add new enemies by creating
 ## a .tres file in data/enemies/ — no code changes needed.
 ##
-## TODO(Milestone 5): add world_id so each world pulls its own enemy pool.
-## TODO(Milestone 6): add loot table reference.
+## Note: a world names its own roster via WorldDefinition.enemy_definition_paths
+## rather than each enemy naming its world, and loot is generated from the kill
+## LEVEL by EquipmentManager rather than a per-enemy table. Both were considered
+## here and deliberately solved on the other side.
 
 ## Stable identifier used in code and (later) loot tables. Never rename.
 @export var id: StringName = &""

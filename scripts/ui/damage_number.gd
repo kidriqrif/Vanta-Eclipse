@@ -9,8 +9,9 @@ extends Label
 ##   fx_layer.add_child(number)
 ##   number.position = hit_position - number.size * 0.5
 ##
-## TODO(Milestone 15): pool these instead of instantiate/free if profiling
-## shows pressure at very high attack speeds.
+## TODO(post-release): pool these instead of instantiate/free IF profiling on
+## a real device shows pressure at very high attack speeds. Measured, not
+## assumed — the M15 pass found this cost negligible by inspection.
 
 const NORMAL_COLOR: Color = Color(0.95, 0.93, 1.0)
 const CRIT_COLOR: Color = Color(1.0, 0.8, 0.25)

@@ -326,7 +326,7 @@ func _on_boss_fight_won(level: int, _payout: float, is_world_boss: bool) -> void
 	_boss_in_progress = false
 	var weights: Array[float] = WORLD_BOSS_WEIGHTS if is_world_boss else BOSS_WEIGHTS
 	_drop(generate_item(level, _roll_rarity(weights)))
-	# TODO(Milestone 6 polish): surface the world-boss drop inside the
+	# TODO(polish): surface the world-boss drop inside the
 	# WorldUnlockModal; for now it enters inventory + the count pill.
 
 

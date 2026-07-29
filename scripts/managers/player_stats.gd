@@ -5,8 +5,8 @@ extends Node
 ## Every stat is exposed through a get_*() function on purpose: each layer of
 ## the game stacks its modifiers inside these functions, and no calling code
 ## ever needs to change. Milestone 3 adds the upgrade layer.
-## Milestone 6 adds the equipment layer; Milestone 7 the relic + pet layers.
-## TODO(Milestone 8): add prestige and skill tree bonuses.
+## Milestone 6 adds the equipment layer, Milestone 7 the relic + pet layers,
+## and Milestone 8 the Ascendant Powers layer.
 
 const BASE_TAP_DAMAGE: float = 1.0
 const BASE_CRIT_CHANCE: float = 0.05
@@ -68,9 +68,9 @@ func get_boss_damage_multiplier() -> float:
 
 
 ## Fraction of the live essence rate paid out for time away. The Eclipse
-## Heart relic multiplies this (x3 -> 1.5).
-## TODO(Milestone 8): prestige upgrades raise this.
-## TODO(Milestone 14): the "double offline rewards" ad multiplies it.
+## Heart relic multiplies this (x3 -> 1.5), and the Deep Rest power raises the
+## base. The offline-doubler ad is NOT applied here: it doubles the amount
+## already granted, at the modal, rather than the rate that produced it.
 func get_offline_multiplier() -> float:
 	# Deep Rest (Ascendant Power) raises the base efficiency; the Eclipse Heart
 	# relic multiplies the result.

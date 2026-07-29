@@ -2,8 +2,9 @@ class_name BillingProvider
 extends RefCounted
 ## The whole contract between the game and whatever processes purchases.
 ##
-## TODO(Milestone 15): add PlayBillingProvider implementing this against the
-## Godot Google Play Billing plugin, INCLUDING server-side receipt validation.
+## TODO(pre-release, BLOCKING): add PlayBillingProvider implementing this
+## against the Godot Google Play Billing plugin, INCLUDING server-side receipt
+## validation (see design/RELEASE-CHECKLIST.md).
 ## A client-only "purchase succeeded" is trivially spoofable and must never be
 ## trusted for anything that costs real money.
 

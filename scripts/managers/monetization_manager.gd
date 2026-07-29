@@ -8,11 +8,12 @@ extends Node
 ## punished. Offers are capped per day so "grind ads" is never optimal.
 ##
 ## DEVELOPMENT BUILD: while USE_STUB_PROVIDERS is true, nothing is charged and
-## no real ad is shown — see scripts/monetization/stub_*.gd. Milestone 15 must
-## implement the real providers, add receipt validation, and flip the flag.
+## no real ad is shown — see scripts/monetization/stub_*.gd. Real providers,
+## receipt validation, and flipping the flag are blocking release work.
 
-## TODO(Milestone 15): set false once AdMobProvider and PlayBillingProvider
-## exist. The Shop shows a development banner while this is true.
+## TODO(pre-release, BLOCKING): set false once AdMobProvider and
+## PlayBillingProvider exist (see design/RELEASE-CHECKLIST.md). The Shop shows a development banner
+## while this is true.
 const USE_STUB_PROVIDERS: bool = true
 
 const PLACEMENT_DIR: String = "res://data/ads"

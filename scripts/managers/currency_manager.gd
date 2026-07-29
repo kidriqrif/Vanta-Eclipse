@@ -14,10 +14,10 @@ extends Node
 ## Main currency, earned from kills (Milestone 3+).
 const ESSENCE: StringName = &"essence"
 
-## Prestige currency. TODO(Milestone 8): earned by prestiging.
+## Prestige currency, earned by collapsing a run into the Eclipse (M8).
 const VOID_CRYSTALS: StringName = &"void_crystals"
 
-## Premium currency. TODO(Milestone 14): purchases and rewarded ads.
+## Premium currency, bought in the Shop and spent on cosmetics (M14).
 const ASTRAL_SHARDS: StringName = &"astral_shards"
 
 ## Crafting material from salvaging gear (Milestone 6). Spent at the Forge.

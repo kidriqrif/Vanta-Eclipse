@@ -89,7 +89,7 @@ func set_haptics_enabled(value: bool) -> void:
 
 ## Vibrate the device for the given duration, respecting the player's setting.
 ## Safe to call on any platform — it does nothing on desktop.
-## TODO(Milestone 2): call this from combat hits and boss kills.
+
 func vibrate(duration_ms: int) -> void:
 	if haptics_enabled and OS.has_feature("mobile"):
 		Input.vibrate_handheld(duration_ms)

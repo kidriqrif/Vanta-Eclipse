@@ -6,8 +6,9 @@ extends RefCounted
 ## lives in MonetizationManager, so swapping the stub for a real SDK is one new
 ## subclass and one line in the manager, with no caller touched.
 ##
-## TODO(Milestone 15): add AdMobProvider implementing this against the Godot
-## Android AdMob plugin, and flip MonetizationManager.USE_STUB_PROVIDERS.
+## TODO(pre-release, BLOCKING): add AdMobProvider implementing this against the
+## Godot Android AdMob plugin, then flip MonetizationManager.USE_STUB_PROVIDERS
+## to false (see design/RELEASE-CHECKLIST.md).
 
 
 ## Show a rewarded ad. Returns true only if it was watched to completion —

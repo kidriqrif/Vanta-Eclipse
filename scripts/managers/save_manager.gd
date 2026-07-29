@@ -81,7 +81,7 @@ func save_game() -> bool:
 
 
 ## Build the complete save document as JSON text. This is also exactly what a
-## cloud-save provider would upload. TODO(Milestone 15): wire into Play Games
+## cloud-save provider would upload. TODO(post-release): wire into Play Games
 ## cloud saves.
 func get_full_save_text() -> String:
 	var sections: Dictionary = {}
@@ -102,8 +102,9 @@ func has_save() -> bool:
 
 
 ## Permanently delete all saved progress (both main file and backup).
-## TODO(Milestone 8): expose in Settings behind a confirmation dialog, and use
-## as part of the prestige flow where appropriate.
+## TODO(post-release): expose in Settings behind a Two-Tap Arm confirm. The
+## Eclipse deliberately does NOT use this — prestige resets run state through
+## each manager's reset_for_prestige(), never by destroying the save.
 func delete_save() -> void:
 	if FileAccess.file_exists(SAVE_PATH):
 		DirAccess.remove_absolute(SAVE_PATH)
@@ -153,8 +154,8 @@ func _try_load_from(path: String) -> bool:
 		if sections.has(section_id) and typeof(sections[section_id]) == TYPE_DICTIONARY:
 			_saveables[section_id].load_save_data(sections[section_id])
 
+	# IdleManager reads last_save_unix to price offline progression.
 	last_save_unix = int(document.get("saved_at_unix", 0))
-	# TODO(Milestone 4): use saved_at_unix here to calculate offline progression.
 	return true
 
 

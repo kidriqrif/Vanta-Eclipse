@@ -3,8 +3,8 @@ extends RefCounted
 ## Static helpers for displaying the huge numbers incremental games produce.
 ## 1234 -> "1.23K", 5600000 -> "5.6M", and so on.
 ##
-## TODO(Milestone 8): switch to scientific notation once values pass the
-## last suffix (prestige-level numbers).
+## TODO(future): the suffix table tops out near 1e36. Deep prestige runs can
+## pass that; switch to scientific notation before they do.
 
 const SUFFIXES: Array[String] = [
 	"", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc",

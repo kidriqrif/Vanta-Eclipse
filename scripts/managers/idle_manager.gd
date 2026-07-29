@@ -16,8 +16,8 @@ const AUTO_ATTACK_INTERVAL: float = 1.0
 const MIN_OFFLINE_SECONDS: int = 60
 
 ## Longest away period that earns essence. Stated plainly in the popup
-## whenever it actually reduced the reward (UX spec §6).
-## TODO(Milestone 8): prestige upgrades extend this cap.
+## whenever it actually reduced the reward (UX spec §6). The Long Slumber
+## power extends it — see get_offline_cap_seconds().
 const OFFLINE_CAP_SECONDS: int = 8 * 3600
 
 var auto_attack_unlocked: bool = false
