@@ -356,3 +356,34 @@ node parents), an **autoload member-existence check** built from
 `project.godot`'s autoload map, and a **call-site arity check** per script.
 Both extra checks have positive controls — reintroduce the original bug and
 confirm the checker trips.
+
+**Extended by the debug pass** into three grouped checkers, `tools/check_scripts.py`
+(unique names, EventBus signal arity, connected-handler existence, `res://`
+literals, autoload load order), `tools/check_data.py` (`.tres` property names,
+enum ranges, id uniqueness, cross-references, definition reachability), and
+`tools/check_wiring.py` (granted stats consumed, goal metrics fed, enum values
+dispatched). The three wiring checks are the ones worth their weight: each
+describes a feature that loads, renders, charges the player and does nothing —
+a relic granting a stat key nothing reads, a goal whose metric is never fed, a
+`reward_kind` with no branch. None of it raises; nothing else in the toolchain
+sees it.
+
+**Three traps found while writing those checkers, all of which make a check
+silently vacuous rather than wrong:**
+- A GDScript string regex that does not exclude `\n` lets one apostrophe in
+  prose (`# doesn't`) open a fake string that swallows every following line of
+  real code. Coverage dropped ~18% with no symptom.
+- Matching a parameter list with `.*?` misses every signature wrapped across
+  lines — which is most long handlers here — so the arity check quietly passed
+  whatever it could not see. Use `[^)]*`, which spans newlines.
+- `.tres` has **no comment syntax**. A mutation that leaves a trailing
+  `# original` makes the value unparseable, so the checker skips the field
+  instead of rejecting it: the positive control passes for the wrong reason.
+**Therefore `tools/selftest_checks.py`** injects one real defect per check into
+a throwaway copy of the project and requires every one to be rejected. A check
+that cannot fail is worse than no check, because it is believed.
+
+**One harness bug of the same family:** a stage written `check | sed 's/^/   /'`
+reports **sed's** exit status, so `|| status=1` never fired and two stages of
+`validate_all.sh` could not fail the sweep. `set -o pipefail` is load-bearing
+in that script.

@@ -60,9 +60,14 @@ repository — each item needs an account, a credential, a device, or an SDK.
       (`SaveManager`), so a crash mid-write cannot corrupt progress.
 - [x] Every manager's save section defaults cleanly when absent, so old saves
       load without migration.
-- [x] Static sweep green: `gdparse`, `gdlint`, the scene/resource structural
-      validator, the autoload member-existence check, and the call-site arity
-      check (`tools/`).
+- [x] Static sweep green: `bash tools/validate_all.sh` — `gdparse`, `gdlint`,
+      the scene/resource structural validator, autoload member-existence,
+      call-site arity, plus the debug-pass checkers `check_scripts.py`,
+      `check_data.py` and `check_wiring.py`, and the font-safe glyph check.
+      Every one of those checkers has a positive control in
+      `tools/selftest_checks.py`, which injects 13 real defects into a copy of
+      the project and requires each to be rejected — so a green sweep means the
+      checks ran, not merely that they printed OK.
 
 ---
 
@@ -71,6 +76,9 @@ repository — each item needs an account, a credential, a device, or an SDK.
 - [ ] **Play on a real low-end device.** Nothing in this project has ever been
       run — it is validated statically, not empirically. Frame pacing, touch
       accuracy, battery draw and the actual feel of every screen are unverified.
+      The static sweep is deliberately broad, but it can only compare what the
+      files say to each other; no amount of it substitutes for one session on
+      hardware.
 - [ ] Cloud saves via Play Games Services. `SaveManager.get_full_save_text()`
       already returns exactly the document a provider would upload.
 - [ ] Audio. There is none: `SettingsManager` carries volume settings and the

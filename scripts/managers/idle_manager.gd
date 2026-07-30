@@ -82,8 +82,6 @@ func consume_pending_offline_rewards() -> Dictionary:
 	return pending
 
 
-## Essence per second the auto-attacker earns at current stats,
-## before the offline multiplier is applied.
 ## Effective seconds between auto-attacks after cadence relics (Twin Fang).
 ## The single source both the live timer and the offline math read, so a
 ## faster-auto-attack relic doubles offline earning exactly as it does live.
@@ -101,6 +99,9 @@ func get_offline_cap_seconds() -> int:
 	return OFFLINE_CAP_SECONDS + bonus_hours * 3600
 
 
+## Essence per second the auto-attacker earns at current stats, before the
+## offline multiplier is applied. Rewards across the game are priced in
+## SECONDS of this rate, so they never go stale as the player grows.
 func get_live_essence_rate() -> float:
 	# Priced at the EFFECTIVE kill level: at a boss wall the auto-attacker
 	# is really killing gate-1 enemies, and offline pay must mirror that
