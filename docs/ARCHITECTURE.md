@@ -11,7 +11,10 @@ All long-lived game logic lives in autoload managers under `scripts/managers/`.
 Scenes (screens) are throwaway views: they read data from managers, display it,
 and forward player input back to managers. **Scenes never own game state.**
 
-Load order matters — each autoload may only rely on the ones above it:
+Load order matters. This table is the declaration order in `project.godot` and
+is verified against it by `tools/check_architecture.py` — if you add, remove, or
+reorder an autoload, update this table in the same commit or the validation
+sweep fails.
 
 | Order | Autoload | File | Responsibility |
 | --- | --- | --- | --- |
@@ -21,21 +24,34 @@ Load order matters — each autoload may only rely on the ones above it:
 | 4 | `GameManager` | `game_manager.gd` | Game version, play time, session count, pause. Deliberately small. |
 | 5 | `CurrencyManager` | `currency_manager.gd` | All currency balances (essence, void crystals, astral shards). Only add()/try_spend() may change them. |
 | 6 | `UpgradeManager` | `upgrade_manager.gd` | Upgrade definitions + owned levels; answers stat-modifier queries. |
-| 7 | `PlayerStats` | `player_stats.gd` | All player combat stats behind `get_*()` functions; each layer (upgrades, equipment, ...) stacks inside them. |
-| 8 | `CombatManager` | `combat_manager.gd` | Enemy state, damage rules, kill/respawn loop, essence rewards, infinite scaling. |
-| 8 | `SceneManager` | `scene_manager.gd` | Scene switching with fade + threaded loading. Above the combat managers so they may compare scene-path constants (M5). |
-| 9 | `WorldManager` | `world_manager.gd` | World definitions, unlock progression (grandfather migration), palettes, essence multipliers. |
-| 10 | `CombatManager` | `combat_manager.gd` | Three-state combat machine (normal/boss/farm), gates, countdown, rewards, world-driven rosters. |
-| 6b | `EquipmentManager` | `equipment_manager.gd` | Inventory, equipped items, procedural generation, drops, salvage, forge. Between UpgradeManager and PlayerStats so PlayerStats reads its affix sums; items are serialized dicts, affix/slot pools are `.tres`. |
-| 11 | `IdleManager` | `idle_manager.gd` | Auto-attack unlock/ticking, offline-reward eligibility and granting (priced at the effective farm level), app-resume hook. Last on purpose: its `enemy_spawned` connection order relative to CombatManager's `game_loaded` handler is load-bearing (see its comments). |
+| 7 | `EquipmentManager` | `equipment_manager.gd` | Inventory, equipped items, procedural generation, drops, salvage, forge. Ahead of `PlayerStats` so it can read the affix sums; items are serialized dicts, affix/slot pools are `.tres`. |
+| 8 | `RelicManager` | `relic_manager.gd` | Relic collection, the active relic, and the awaken state. Ahead of `PlayerStats`/`IdleManager`, which read its effect-query getters. |
+| 9 | `PetManager` | `pet_manager.gd` | Pet roster, active pet, XP/level/evolution. Ahead of `PlayerStats`, which reads its bonus getter. |
+| 10 | `SkillTreeManager` | `skill_tree_manager.gd` | Ascendant Powers definitions and purchased levels. Ahead of `PlayerStats`. Powers are PERMANENT — they never reset on an Eclipse. |
+| 11 | `PlayerStats` | `player_stats.gd` | All player combat stats behind `get_*()` functions; every layer above (upgrades, equipment, relics, pets, powers) stacks inside them. |
+| 12 | `SceneManager` | `scene_manager.gd` | Scene switching with fade + threaded loading. Ahead of the combat managers so they may compare scene-path constants (M5). |
+| 13 | `WorldManager` | `world_manager.gd` | World definitions, unlock progression (grandfather migration), palettes, essence multipliers. Never calls upward. |
+| 14 | `CombatManager` | `combat_manager.gd` | Three-state combat machine (normal/boss/farm), gates, countdown, rewards, world-driven rosters. |
+| 15 | `IdleManager` | `idle_manager.gd` | Auto-attack unlock/ticking, offline-reward eligibility and granting (priced at the effective farm level), app-resume hook. Its `enemy_spawned` connection order relative to CombatManager's `game_loaded` handler is load-bearing (see its comments). |
+| 16 | `MinigameManager` | `minigame_manager.gd` | The Arcade: minigame definitions, the Arcade Token meter, per-game records, payout pricing. After `IdleManager`, whose live essence rate prices every reward. |
+| 17 | `QuestManager` | `quest_manager.gd` | The Journal: quest chain, daily set, achievements. After `MinigameManager`, whose token grant it pays with. |
+| 18 | `MonetizationManager` | `monetization_manager.gd` | Opt-in ad offers, purchases, entitlements, cosmetics. No mechanic is ever pay-gated (GDD stance, non-negotiable). |
+| 19 | `PrestigeManager` | `prestige_manager.gd` | The Eclipse loop: run peak level, Void Crystal payout, and resetting the run-scoped managers. Loads last because it reaches across all of them. |
 
 ## Communication rules
 
 1. **UI → manager**: direct calls (`SettingsManager.music_volume = 0.5`).
 2. **Manager → anyone**: signals on `EventBus`, never direct references to
    scenes. Managers must work even when no UI exists.
-3. **System → system**: prefer `EventBus` signals; direct calls only downward
-   in the load-order table.
+3. **System → system**: prefer `EventBus` signals. For direct calls the rule is
+   about *when*, not merely direction:
+   * **Inside `_ready()`** an autoload may only touch autoloads above it — the
+     ones below do not exist yet. `tools/check_scripts.py` enforces this.
+   * **At runtime** every autoload exists, so a call in either direction is
+     safe. Upward calls are still the exception and should earn their place:
+     today only `SaveManager` → `GameManager.GAME_VERSION` (a `const`, read
+     while building the save document) and `QuestManager` →
+     `PrestigeManager.lifetime_peak_level` (a goal-metric snapshot).
 
 This is what keeps the codebase scalable: a new system can be added by creating
 a manager, registering a save section, and emitting/listening on the EventBus —
@@ -54,12 +70,23 @@ The save file (`user://savegame.json`) is one versioned JSON document:
         "game": { "total_play_time": 123.4, "launch_count": 2, "created_at_unix": 1789000000 },
         "combat": { "enemy_level": 14, "total_kills": 13 },
         "currencies": { "essence": 250.0, "void_crystals": 0.0, "astral_shards": 0.0 },
-        "upgrades": { "void_claws": 5, "dark_focus": 2 },
-        "idle": { "auto_attack_unlocked": true },
-        "world": { "highest_unlocked_index": 1, "unlock_celebration_pending": "", "unlock_celebration_payout": 0.0 }
+        "upgrades": { "void_claws": 5, "dark_focus": 2 }
     }
 }
 ```
+
+Fourteen sections are registered, one per owning manager. The set is verified
+against the code by `tools/check_architecture.py`:
+
+| Section | Owner | Section | Owner |
+| --- | --- | --- | --- |
+| `game` | `GameManager` | `relics` | `RelicManager` |
+| `currencies` | `CurrencyManager` | `pets` | `PetManager` |
+| `upgrades` | `UpgradeManager` | `skills` | `SkillTreeManager` |
+| `equipment` | `EquipmentManager` | `arcade` | `MinigameManager` |
+| `world` | `WorldManager` | `journal` | `QuestManager` |
+| `combat` | `CombatManager` | `shop` | `MonetizationManager` |
+| `idle` | `IdleManager` | `prestige` | `PrestigeManager` |
 
 * Any system with persistent data calls
   `SaveManager.register_saveable("section_id", self)` in `_ready()` and

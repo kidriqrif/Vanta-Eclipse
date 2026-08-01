@@ -23,7 +23,11 @@ import tempfile
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 # Everything the checkers read. Copied rather than mutated in place so a failed
 # run can never leave the real project damaged.
-COPY = ["project.godot", "scripts", "data", "tools", "scenes", "ui", "resources"]
+COPY = [
+    "project.godot", "scripts", "data", "tools", "scenes", "ui", "resources",
+    # check_architecture.py compares docs/ARCHITECTURE.md against the code.
+    "docs",
+]
 
 # Anchors are exact and complete: .tres has no comment syntax, so a mutation
 # that leaves a trailing "# original" makes the value unparseable and the
@@ -124,6 +128,27 @@ MUTATIONS: list[Mutation] = [
         "\tACHIEVEMENT,\n}",
         "\tACHIEVEMENT,\n\tWEEKLY,\n}",
     ),
+    (
+        "check_architecture.py",
+        "autoload table: a row names the wrong manager",
+        "docs/ARCHITECTURE.md",
+        "| 19 | `PrestigeManager` |",
+        "| 19 | `PrestigeMgr` |",
+    ),
+    (
+        "check_architecture.py",
+        "autoload table: an autoload loses its row (the drift that started this)",
+        "docs/ARCHITECTURE.md",
+        "| 18 | `MonetizationManager` | `monetization_manager.gd` |",
+        "| 18 | SKIPPED |",
+    ),
+    (
+        "check_architecture.py",
+        "save sections: a section is attributed to the wrong manager",
+        "docs/ARCHITECTURE.md",
+        "| `combat` | `CombatManager` | `shop` | `MonetizationManager` |",
+        "| `combat` | `CombatManager` | `shop` | `UpgradeManager` |",
+    ),
 ]
 
 # The enum-dispatch mutation needs data pointing at the new member as well.
@@ -140,7 +165,10 @@ def baseline() -> bool:
     """Every checker must pass on the real project, or the mutations below
     prove nothing."""
     ok = True
-    for checker in ["check_scripts.py", "check_data.py", "check_wiring.py"]:
+    for checker in [
+        "check_scripts.py", "check_data.py", "check_wiring.py",
+        "check_architecture.py",
+    ]:
         result = subprocess.run(
             [sys.executable, str(ROOT / "tools" / checker)],
             capture_output=True,

@@ -63,7 +63,10 @@ echo "6. content library (properties, enums, ids, reachability)"
 echo "7. data-to-code wiring (stats, metrics, enum dispatch)"
 "$PY" tools/check_wiring.py | sed 's/^/   /' || status=1
 
-echo "8. font-safe glyphs in button text"
+echo "8. architecture docs match the code (autoloads, save sections)"
+"$PY" tools/check_architecture.py | sed 's/^/   /' || status=1
+
+echo "9. font-safe glyphs in button text"
 "$PY" - <<'PYEOF' || status=1
 import re, pathlib, sys
 UNSAFE = "◈◆★●→"   # absent from Cinzel, the Button/Header face

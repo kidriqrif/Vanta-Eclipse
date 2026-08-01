@@ -18,13 +18,15 @@ folder. That folder is intentionally not committed (see `.gitignore`).
 | Folder | Contents |
 | --- | --- |
 | `scenes/` | One subfolder per screen (`main_menu/`, `settings/`, `gameplay/`) |
-| `scripts/managers/` | Autoload singletons: EventBus, Settings, Save, Game, Scene managers |
+| `scripts/managers/` | The 19 autoload singletons — see the load-order table in `docs/ARCHITECTURE.md` |
+| `scripts/data/` | `Resource` subclasses defining the shape of every `.tres` |
 | `scripts/ui/` | Scripts attached to UI scenes |
+| `scripts/minigames/` | The Arcade minigames (Milestone 9+) |
 | `ui/theme/` | The shared dark-fantasy UI theme |
-| `audio/`, `sprites/`, `animations/`, `effects/` | Game assets (filled in later milestones) |
-| `minigames/` | Self-contained minigame modules (Milestone 9+) |
-| `resources/`, `data/` | Equipment, relic, pet definitions and game data (Milestone 6+) |
-| `docs/` | Architecture and development documentation |
+| `audio/`, `sprites/`, `animations/`, `effects/`, `resources/` | Game assets |
+| `data/` | All game content as `.tres`: enemies, upgrades, affixes, relics, pets, skills, quests, worlds, minigames, products |
+| `tools/` | The validation sweep (`validate_all.sh`) and its checkers |
+| `docs/`, `design/` | Architecture documentation and the UX/GDD specs |
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the systems fit together.
 
