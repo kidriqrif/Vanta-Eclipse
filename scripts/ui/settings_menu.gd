@@ -77,8 +77,15 @@ func _update_last_save_label() -> void:
 	if seconds_ago < 5:
 		_last_save_label.text = "Last saved: just now"
 	elif seconds_ago < 60:
-		_last_save_label.text = "Last saved: %d seconds ago" % seconds_ago
+		_last_save_label.text = "Last saved: %s ago" % _plural(seconds_ago, "second")
 	elif seconds_ago < 3600:
-		_last_save_label.text = "Last saved: %d minutes ago" % (seconds_ago / 60)
+		_last_save_label.text = "Last saved: %s ago" % _plural(seconds_ago / 60, "minute")
 	else:
-		_last_save_label.text = "Last saved: %d hours ago" % (seconds_ago / 3600)
+		_last_save_label.text = "Last saved: %s ago" % _plural(seconds_ago / 3600, "hour")
+
+
+## "1 hour" / "2 hours". Every branch above hits the singular case for a full
+## unit each time (the first minute after a save, the first hour, and so on),
+## so "1 hours ago" was on screen more often than not.
+func _plural(count: int, noun: String) -> String:
+	return "%d %s" % [count, noun if count == 1 else noun + "s"]

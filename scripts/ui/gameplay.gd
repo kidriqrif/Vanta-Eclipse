@@ -523,7 +523,12 @@ func _update_count_pill() -> void:
 	# their own entry (the companion NEW badge), so they are counted there.
 	var count: int = EquipmentManager.get_unseen_count() + RelicManager.get_unseen_count()
 	_count_pill.visible = count > 0
-	_count_label.text = "%d NEW" % count
+	# The count alone, not "%d NEW". The bottom row carries four buttons on a
+	# 1080-wide phone, so each is ~250px and GEAR's label sits centred in it —
+	# a pill wide enough for the word covered that label completely. This is
+	# the same corner badge the Journal button already uses, and a pink pill
+	# on the Gear door reads as "something new" without spelling it out.
+	_count_label.text = str(count)
 
 
 func _on_menu_pressed() -> void:

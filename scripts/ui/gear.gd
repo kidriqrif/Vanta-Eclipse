@@ -8,6 +8,11 @@ const INSPECTOR_CARD_SCENE: PackedScene = preload("res://scenes/gear/inspector_c
 const LOCK_GLYPH: Texture2D = preload("res://sprites/ui/lock_glyph.svg")
 const RELIC_SLOT_ICON: Texture2D = preload("res://sprites/ui/slot_relic.svg")
 const SLOT_TILE_SIZE: Vector2 = Vector2(236, 250)
+## Breathing room between a tile's border and its text.
+const TILE_PAD: float = 14.0
+## Extra bottom inset on a sealed tile, so its flavour line clears the lock
+## glyph pinned in the bottom-right corner instead of running under it.
+const TILE_LOCK_CLEARANCE: float = 58.0
 const ROW_HEIGHT: float = 140.0
 const ARM_SECONDS: float = 2.5
 const EQUIP_BG: Color = Color(0.086, 0.063, 0.133, 0.92)
@@ -77,6 +82,28 @@ func _rebuild_slots() -> void:
 
 
 ## The awakened relic tile (gold Aureate frame) — opens the Relic Collection.
+## A tile's centred content column, inset from the tile border.
+##
+## PRESET_FULL_RECT on its own spans the tile's ENTIRE rect and ignores the
+## stylebox content margin, so a label sits flush against the border: the
+## sealed relic slot's "Relics awaken in the Astral Temple" ran past both edges
+## and wrapped straight under the lock glyph, and an equipped tile's affix line
+## filled the tile exactly edge to edge. Both only show up at the real phone
+## aspect, where the tile is 236px and not the ~540 a stretched window implies.
+func _make_tile_box(tile: Button, bottom_inset: float) -> VBoxContainer:
+	var box := VBoxContainer.new()
+	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	box.add_theme_constant_override("separation", 6)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	box.offset_left = TILE_PAD
+	box.offset_top = TILE_PAD
+	box.offset_right = -TILE_PAD
+	box.offset_bottom = -bottom_inset
+	tile.add_child(box)
+	return box
+
+
 func _make_relic_tile() -> Button:
 	var tile := Button.new()
 	tile.custom_minimum_size = SLOT_TILE_SIZE
@@ -94,12 +121,7 @@ func _make_relic_tile() -> Button:
 	tile.add_theme_stylebox_override("hover", style)
 	tile.add_theme_stylebox_override("pressed", style)
 
-	var box := VBoxContainer.new()
-	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_theme_constant_override("separation", 6)
-	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	tile.add_child(box)
+	var box: VBoxContainer = _make_tile_box(tile, TILE_PAD)
 
 	var kicker := Label.new()
 	kicker.text = "RELIC"
@@ -164,12 +186,9 @@ func _make_slot_tile(slot: SlotDefinition) -> Button:
 	tile.add_theme_stylebox_override("hover", style)
 	tile.add_theme_stylebox_override("pressed", style)
 
-	var box := VBoxContainer.new()
-	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_theme_constant_override("separation", 6)
-	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	tile.add_child(box)
+	var box: VBoxContainer = _make_tile_box(
+		tile, TILE_LOCK_CLEARANCE if slot.sealed else TILE_PAD
+	)
 
 	var icon := TextureRect.new()
 	icon.texture = slot.icon
@@ -178,7 +197,11 @@ func _make_slot_tile(slot: SlotDefinition) -> Button:
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if slot.sealed:
+		# A sealed tile carries three things the others do not have room for
+		# at once — icon, name AND a wrapped sentence — in the same 236x250.
+		# The icon yields, since the lock glyph already says "sealed".
 		icon.modulate = Color(0.4, 0.4, 0.45, 1)
+		icon.custom_minimum_size = Vector2(62, 62)
 	box.add_child(icon)
 
 	var name_label := Label.new()
@@ -191,7 +214,7 @@ func _make_slot_tile(slot: SlotDefinition) -> Button:
 		var flavor := Label.new()
 		flavor.text = slot.sealed_flavor
 		flavor.add_theme_color_override("font_color", UIPalette.muted())
-		flavor.add_theme_font_size_override("font_size", 24)
+		flavor.add_theme_font_size_override("font_size", 20)
 		flavor.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		flavor.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(flavor)
@@ -218,6 +241,9 @@ func _make_slot_tile(slot: SlotDefinition) -> Button:
 		stat.add_theme_color_override("font_color", UIPalette.muted())
 		stat.add_theme_font_size_override("font_size", 24)
 		stat.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		# The longest affix names ("Boss Damage +29%") fill the tile exactly,
+		# and the next one along would simply run off it.
+		stat.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(stat)
 		tile.pressed.connect(_open_card.bind(equipped, true))
 	else:

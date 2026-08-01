@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-# Launch the real game on a real renderer and screenshot it.
+# Launch the real game on a real renderer and screenshot every screen in it.
 #
 #   bash tools/screenshot_run.sh [output_dir]
+#   VANTA_SHOT_ONLY=gear bash tools/screenshot_run.sh   # one screen, fast loop
 #
 # The static sweep (validate_all.sh) and a `--headless` boot together prove the
 # scripts parse, the resources load, and the managers start. Neither compiles a
 # shader: --headless uses the dummy rasterizer. This runs the game windowed on
-# the real Vulkan backend, drives it to the gameplay screen, lands some taps,
-# and writes PNGs you can actually look at.
+# the real Vulkan backend, walks it through every screen, panel, minigame and
+# transient, and writes PNGs you can actually look at.
 #
 # It registers tools/screenshot_harness.gd as the last autoload and ALWAYS puts
 # project.godot back, including on crash or Ctrl-C.
@@ -63,15 +64,39 @@ echo "Godot:  $BIN"
 echo "Shots:  $OUT_DIR"
 echo
 
+# Stale shots are worse than none: a screen that stops being reached leaves its
+# old PNG sitting there looking like a pass. Only on a FULL run, though — a
+# filtered run writes one screen and would otherwise delete the other 26,
+# which reads as "the rest of the game stopped rendering".
+if [ -z "${VANTA_SHOT_ONLY:-}" ]; then
+	rm -f "$OUT_DIR"/*.png
+fi
+
+# Import first, always. A newly added .svg has no .import sidecar and no entry
+# in .godot/imported/, so every reference to it fails to load — and because the
+# theme is one resource, ONE unimported sprite takes the whole theme down and
+# the game boots unstyled. The static sweep cannot see this: the file is on
+# disk and the path resolves, so every checker is green while nothing renders.
+# .godot/ is gitignored, so a fresh clone is always in exactly this state.
+"$BIN" --headless --path "$PROJECT_DIR" --import >/dev/null 2>&1
+
 # Hard cap: if the harness ever fails to reach its own quit(), the window would
-# otherwise stay open forever waiting for input that never comes.
-timeout 120 env VANTA_SHOT_DIR="$OUT_DIR" "$BIN" \
+# otherwise stay open forever waiting for input that never comes. The full walk
+# is ~60s; the margin is for first-run shader compilation.
+# 540x960 rather than the project's native 1080x1920, because a window cannot
+# exceed the desktop: asking for 1920 tall on a 1080p monitor silently gives a
+# 1080x1050 window, and with stretch/aspect="expand" the game then renders a
+# near-SQUARE viewport. Every screenshot still looks plausible, so the wrong
+# aspect ratio is invisible — it just quietly invalidates every judgement about
+# vertical layout. Half scale keeps the exact 9:16 the phone has; canvas_items
+# stretch means the layout is identical, only the raster is smaller.
+timeout 300 env VANTA_SHOT_DIR="$OUT_DIR" VANTA_SHOT_ONLY="${VANTA_SHOT_ONLY:-}" "$BIN" \
 	--path "$PROJECT_DIR" \
-	--resolution ${SHOT_RES:-1080x1920} \
+	--resolution ${SHOT_RES:-540x960} \
 	--position 40,20 2>&1 | grep -v 'reimport\|loading_editor'
 
 if [ "${PIPESTATUS[0]}" = "124" ]; then
-	echo "TIMED OUT after 120s — the harness never quit." >&2
+	echo "TIMED OUT after 300s — the harness never quit." >&2
 fi
 
 echo

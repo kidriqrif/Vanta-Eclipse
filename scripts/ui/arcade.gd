@@ -5,6 +5,12 @@ extends Control
 ## scene-transition test. Never required to progress.
 
 const ARCADE: Color = Color(0.65, 0.93, 0.42, 1)
+## The lime deep/core pair the PLAY button is built from, matching the door
+## button that leads here (gameplay.gd) and the Eclipse screen's own treatment.
+const ARCADE_DEEP: Color = Color(0.24, 0.42, 0.16, 1)
+const ARCADE_CORE: Color = Color(0.83, 0.98, 0.7, 1)
+## Dark enough on the lime fill to clear the 7:1 the theme holds itself to.
+const ARCADE_ON_ACCENT: Color = Color(0.05, 0.12, 0.03, 1)
 const WARM_MUTED: Color = Color(0.78, 0.62, 0.62, 1)
 const CARD_BG: Color = Color(0.1, 0.078, 0.157, 0.9)
 
@@ -226,12 +232,39 @@ func _dress_play_button(button: Button, definition: MinigameDefinition) -> void:
 	if MinigameManager.has_token(definition.token_cost):
 		button.disabled = false
 		button.theme_type_variation = &"PrimaryButton"
+		_paint_lime(button)
 		button.text = "PLAY · %d TOKEN" % definition.token_cost
 		return
 	button.disabled = true
 	button.theme_type_variation = &""
+	for state: String in ["normal", "hover", "pressed"]:
+		button.remove_theme_stylebox_override(state)
+	button.remove_theme_color_override("font_color")
+	button.remove_theme_color_override("font_hover_color")
 	var remaining: int = MinigameManager.seconds_until_next_token()
 	button.text = "NEXT TOKEN %s" % _format_wait(remaining) if remaining > 0 else "NO TOKENS"
+
+
+## Repaint a PrimaryButton in the Arcade's lime.
+##
+## "Each door keeps its own accent — the tints never mix" is the rule the
+## gameplay door buttons follow and that the Eclipse screen carries through to
+## its COLLAPSE button. The Arcade was the one screen that stopped at the door:
+## every card, icon and rule here is lime, and then the primary action on all
+## four of them came out in the global pink.
+func _paint_lime(button: Button) -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = ARCADE
+	style.set_corner_radius_all(28)
+	style.set_content_margin_all(16)
+	style.border_width_bottom = 8
+	style.border_color = ARCADE_DEEP
+	style.shadow_color = Color(ARCADE.r, ARCADE.g, ARCADE.b, 0.32)
+	style.shadow_size = 22
+	for state: String in ["normal", "hover", "pressed"]:
+		button.add_theme_stylebox_override(state, style)
+	button.add_theme_color_override("font_color", ARCADE_ON_ACCENT)
+	button.add_theme_color_override("font_hover_color", ARCADE_ON_ACCENT)
 
 
 func _on_play_pressed(definition: MinigameDefinition) -> void:

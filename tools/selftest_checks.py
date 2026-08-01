@@ -196,6 +196,21 @@ MUTATIONS: list[Mutation] = [
         "void fragment() {",
         "uniform float unused_knob = 1.0;\n\nvoid fragment() {",
     ),
+    (
+        "check_ui.py",
+        "stylebox sized by margin loses its height (the invisible slider)",
+        "ui/theme/main_theme.tres",
+        "content_margin_top = 11.0\ncontent_margin_right = 0.0\n"
+        "content_margin_bottom = 11.0\nbg_color = Color(0.116, 0.096, 0.164, 1)",
+        "bg_color = Color(0.116, 0.096, 0.164, 1)",
+    ),
+    (
+        "check_ui.py",
+        "screen title drifts onto the muted secondary-text style",
+        "scenes/journal/journal.tscn",
+        'theme_type_variation = &"TitleLabel"',
+        'theme_type_variation = &"HeaderLabel"',
+    ),
 ]
 
 # The enum-dispatch mutation needs data pointing at the new member as well.

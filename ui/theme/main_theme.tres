@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=25 format=3]
+[gd_resource type="Theme" load_steps=27 format=3]
 
 ; Vanta Eclipse UI theme — chunky mobile shapes on a researched dark palette.
 ;
@@ -36,6 +36,10 @@
 [ext_resource type="FontFile" path="res://fonts/nunito-latin-900-normal.woff2" id="1"]
 [ext_resource type="FontFile" path="res://fonts/nunito-latin-800-normal.woff2" id="2"]
 [ext_resource type="FontFile" path="res://fonts/nunito-latin-700-normal.woff2" id="3"]
+; The grabber is an ICON, not a stylebox — no StyleBox setting can reach it, so
+; leaving it out means the engine default: a small pale dot with no relation to
+; this palette.
+[ext_resource type="Texture2D" path="res://sprites/ui/slider_grabber.svg" id="4"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
 content_margin_left = 34.0
@@ -118,7 +122,16 @@ corner_radius_bottom_left = 28
 shadow_color = Color(0.008, 0.004, 0.02, 0.55)
 shadow_size = 14
 
+; A slider's track is drawn at the height of THIS stylebox's minimum size, and
+; a StyleBoxFlat with no content margins has a minimum size of zero. Without
+; these four lines the track and its fill both render as a hairline: the three
+; volume sliders in Settings were a single 4px dot on an empty row, with no
+; visible track, no fill and nothing to suggest they could be dragged.
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_slider_track"]
+content_margin_left = 0.0
+content_margin_top = 11.0
+content_margin_right = 0.0
+content_margin_bottom = 11.0
 bg_color = Color(0.116, 0.096, 0.164, 1)
 corner_radius_top_left = 10
 corner_radius_top_right = 10
@@ -126,6 +139,10 @@ corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_slider_fill"]
+content_margin_left = 0.0
+content_margin_top = 11.0
+content_margin_right = 0.0
+content_margin_bottom = 11.0
 bg_color = Color(0.93, 0.43, 0.863, 1)
 corner_radius_top_left = 10
 corner_radius_top_right = 10
@@ -218,6 +235,22 @@ corner_radius_top_right = 32
 corner_radius_bottom_right = 32
 corner_radius_bottom_left = 32
 shadow_color = Color(0.004, 0.002, 0.012, 0.7)
+shadow_size = 30
+
+; Sliding overlays (the Forge, the Relics list, the Upgrade shop) COVER the
+; screen behind them rather than floating over a scrim, so unlike every other
+; PanelContainer they have to be fully opaque. At the shared 0.92 the Gear
+; inventory list showed straight through the Forge's own header, which reads as
+; a rendering fault rather than as depth.
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_overlay_panel"]
+content_margin_left = 28.0
+content_margin_top = 26.0
+content_margin_right = 28.0
+content_margin_bottom = 26.0
+bg_color = Color(0.064, 0.052, 0.094, 1)
+corner_radius_top_left = 32
+corner_radius_top_right = 32
+shadow_color = Color(0.004, 0.002, 0.012, 0.75)
 shadow_size = 30
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_boss_pb_bg"]
@@ -329,6 +362,8 @@ DangerButton/fonts/font = ExtResource("2")
 DangerButton/styles/hover = SubResource("StyleBoxFlat_danger_hover")
 DangerButton/styles/normal = SubResource("StyleBoxFlat_danger_normal")
 DangerButton/styles/pressed = SubResource("StyleBoxFlat_danger_pressed")
+HSlider/icons/grabber = ExtResource("4")
+HSlider/icons/grabber_highlight = ExtResource("4")
 HSlider/styles/grabber_area = SubResource("StyleBoxFlat_slider_fill")
 HSlider/styles/grabber_area_highlight = SubResource("StyleBoxFlat_slider_fill")
 HSlider/styles/slider = SubResource("StyleBoxFlat_slider_track")
@@ -341,6 +376,8 @@ Label/font_sizes/font_size = 32
 Label/fonts/font = ExtResource("3")
 ModalCard/base_type = &"PanelContainer"
 ModalCard/styles/panel = SubResource("StyleBoxFlat_modal_card")
+OverlayPanel/base_type = &"PanelContainer"
+OverlayPanel/styles/panel = SubResource("StyleBoxFlat_overlay_panel")
 PanelContainer/styles/panel = SubResource("StyleBoxFlat_panel")
 PanelTitle/base_type = &"Label"
 PanelTitle/colors/font_color = Color(0.91, 0.896, 0.944, 1)

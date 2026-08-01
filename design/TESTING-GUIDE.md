@@ -47,15 +47,42 @@ error. Send me that text.
 
 ```bash
 GODOT=/path/to/godot bash tools/screenshot_run.sh [output_dir]
+VANTA_SHOT_ONLY=gear bash tools/screenshot_run.sh   # one screen, fast loop
 ```
 
-Runs the game windowed on the real renderer, drives it to the gameplay screen,
-lands six taps, and writes three PNGs (menu, idle, combat). It registers
+Runs the game windowed on the real renderer and walks **every** screen, panel,
+minigame and transient in it — 27 PNGs, in two passes. The first is the cold
+save a new player boots into, where the empty states are the thing being
+checked; the second seeds a late-game save and re-shoots the screens whose job
+is rendering content, plus the doors a cold save hides. It registers
 `tools/screenshot_harness.gd` as the last autoload and restores `project.godot`
 afterwards, including on crash or Ctrl-C. Output defaults to `.godot-shots/`,
 which is gitignored.
 
-Three things this covers that nothing else does:
+Coverage is the whole game rather than a sample because a defect confined to
+one screen is exactly what static checks pass and nobody notices: Gear can be
+broken for a week while gameplay looks perfect.
+
+**The window cannot be bigger than your desktop.** Asking for the project's
+native 1080x1920 on a 1080p monitor silently gives a ~1080x1050 window, and
+`stretch/aspect="expand"` then renders a near-*square* viewport — in one
+measured case 2468x1920, well over twice the intended width. The screenshots
+still look entirely plausible, which is what makes it dangerous: every
+judgement about layout is quietly wrong and nothing says so. `SHOT_RES`
+therefore defaults to **540x960** — exact 9:16, half scale, identical layout —
+and the harness prints the viewport aspect on every run and shouts if it does
+not match the phone. It found a real bug the moment it was fixed: the Gear
+badge covering its own button label, invisible at the stretched aspect because
+the bottom row was twice as wide as a phone ever gives it.
+
+The script also runs `--headless --import` first. A newly added `.svg` has no
+import sidecar, so every reference to it fails — and because the theme is one
+resource, **one** unimported sprite takes the whole theme down and the game
+boots unstyled, while the static sweep stays green because the file is on disk
+and the path resolves. `.godot/` is gitignored, so a fresh clone is always in
+exactly that state.
+
+Three more things this covers that nothing else does:
 
 * **Shaders actually compile.** `--headless` uses the dummy rasterizer and
   never compiles one, so a clean headless boot says nothing about `effects/`.
@@ -66,9 +93,9 @@ Three things this covers that nothing else does:
   now a tinted ground glow.
 * **It is cheap to repeat.** Re-run it after any visual change.
 
-Expect `11 ObjectDB instances were leaked at exit`. That is the harness
-quitting mid-`await`, not the game — a plain `--headless --quit-after 300`
-boot exits clean, which is the check to run if you want to be sure.
+Expect a handful of `ObjectDB instances were leaked at exit`. That is the
+harness quitting mid-`await`, not the game — a plain `--headless --quit-after
+300` boot exits clean, which is the check to run if you want to be sure.
 
 ---
 

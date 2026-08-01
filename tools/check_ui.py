@@ -119,10 +119,72 @@ def check_variations_used() -> tuple[list[str], list[str]]:
     return problems, [f"{len(variations)} type variations"]
 
 
+# A widget whose look comes from a StyleBox that Godot sizes from its own
+# minimum size. Give one no content margins and it draws as a hairline: the
+# three volume sliders in Settings rendered as a single 4px dot on an empty
+# row — no track, no fill, nothing to say they could be dragged. The theme
+# looked complete (the styles WERE assigned) and the screen was empty, which
+# is why this survived a full palette pass and two rounds of screenshots.
+SIZED_BY_MARGIN = {
+    "StyleBoxFlat_slider_track": "HSlider track",
+    "StyleBoxFlat_slider_fill": "HSlider fill",
+}
+MARGIN = re.compile(r"content_margin_(top|bottom)\s*=\s*([\d.]+)")
+
+
+def check_styleboxes_have_height() -> tuple[list[str], list[str]]:
+    text = THEME.read_text(encoding="utf-8")
+    problems: list[str] = []
+    for box_id, label in sorted(SIZED_BY_MARGIN.items()):
+        block = re.search(
+            rf'\[sub_resource type="StyleBoxFlat" id="{box_id}"\](.*?)(?=\n\[|\Z)',
+            text, re.S,
+        )
+        if block is None:
+            problems.append(f"{label}: no stylebox '{box_id}' in the theme")
+            continue
+        margins = {k: float(v) for k, v in MARGIN.findall(block.group(1))}
+        height = margins.get("top", 0.0) + margins.get("bottom", 0.0)
+        if height <= 0.0:
+            problems.append(
+                f"{label} ('{box_id}'): no vertical content margin, so Godot "
+                f"draws it at zero height — it will be invisible on screen"
+            )
+    return problems, [f"{len(SIZED_BY_MARGIN)} margin-sized styleboxes"]
+
+
+# Every full screen carries its name in a HeaderRow/TitleLabel node. Six of
+# them had drifted onto HeaderLabel — the MUTED SECONDARY TEXT role — so half
+# the game's screens announced themselves in dim grey body text while the
+# other half used the neon display face. Each scene looked deliberate alone;
+# only side by side was it obviously an accident.
+TITLE_NODE = re.compile(
+    r'\[node name="TitleLabel"[^\]]*\]\n((?:(?!\[node)[^\n]*\n)*)'
+)
+
+
+def check_screen_titles() -> tuple[list[str], list[str]]:
+    problems: list[str] = []
+    count = 0
+    for scene in scenes():
+        for body in TITLE_NODE.findall(scene.read_text(encoding="utf-8")):
+            count += 1
+            variation = re.search(r'theme_type_variation = &"(\w+)"', body)
+            got = variation.group(1) if variation else "(none)"
+            if got != "TitleLabel":
+                problems.append(
+                    f"{scene.relative_to(ROOT)}: TitleLabel node uses "
+                    f"'{got}' — screen titles all use the TitleLabel variation"
+                )
+    return problems, [f"{count} screen titles"]
+
+
 CHECKS = [
     ("no stale palette copies", check_stale_palette),
     ("sprites are referenced", check_sprites_referenced),
     ("theme variations are used", check_variations_used),
+    ("margin-sized styleboxes have height", check_styleboxes_have_height),
+    ("screen titles use the title style", check_screen_titles),
 ]
 
 

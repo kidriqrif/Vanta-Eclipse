@@ -197,6 +197,25 @@ label.
   *variations* (`PrimaryButton`, `TitleLabel`, `HeaderLabel`) give screens a
   consistent look — set `theme_type_variation` on a node instead of
   hand-overriding fonts and colors.
+* Every full screen names itself with a `TitleLabel` node carrying the
+  `TitleLabel` variation. Six screens had drifted onto `HeaderLabel` — the
+  muted *secondary text* role — so half the game announced itself in dim grey
+  body text. Each scene looked deliberate on its own; only side by side was it
+  obviously an accident. `tools/check_ui.py` now fails the sweep on it.
+* Sliding overlays (Forge, Relics, Upgrade shop) take the `OverlayPanel`
+  variation, not the default `PanelContainer`. They cover the screen behind
+  them rather than floating over a scrim, so they must be fully opaque; at the
+  shared 0.92 alpha the Gear inventory showed straight through the Forge's own
+  header and read as a rendering fault.
+* A StyleBox that Godot sizes from its own minimum size — `HSlider`'s track and
+  fill — **needs explicit `content_margin_top`/`bottom`**, or it draws at zero
+  height. Without them the three Settings volume sliders rendered as a single
+  4px dot: the styles *were* assigned, so the theme looked complete while the
+  screen was empty. Also checked by `check_ui.py`.
+* A door's accent is scoped to that door and never mixes (Eclipse teal, Arcade
+  lime). That includes the destination screen's own primary action, not just
+  the button that leads there — the Arcade was lime everywhere except its four
+  PLAY buttons, which came out in the global pink.
 
 ### Giving flat art depth
 
