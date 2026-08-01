@@ -4,37 +4,43 @@ extends Control
 ## but never modifies combat state itself.
 ##
 ## Animation layers (kept on separate nodes so tweens never fight):
-##   ContactShadow — the ground plate, counter-animated against the hover
+##   GroundGlow    — the ground pool, counter-animated against the hover
 ##   SpriteHolder  — spawn pop-in, idle hover, death collapse
 ##   EnemySprite   — hit squash, flash, and crit wiggle
 ##
 ## The sprite wears effects/dimensional_sprite.gdshader, which derives a
 ## surface normal from the art's own alpha and lights it. Two things here feed
 ## it: the rim is retinted per enemy from EnemyDefinition.glow_color, and the
-## contact shadow below grounds the result — without a shadow a lit sprite
-## reads as a sticker floating on the backdrop, however good the shading is.
+## ground glow below grounds the result — without it a lit sprite reads as a
+## sticker floating on the backdrop, however good the shading is.
+##
+## It is a GLOW, not a shadow, and that is not a stylistic choice: the void
+## backdrop is already near-black, so a dark contact shadow was invisible on
+## it (confirmed by screenshotting a real run). These creatures emit light —
+## pooling their own glow_color on the ground reads correctly AND is visible.
 
 const FLASH_COLOR: Color = Color(2.2, 1.9, 3.0)
 
-## Contact-shadow rest state, and how far it thins at the top of the hover.
-## A rising object casts a smaller, fainter shadow; animating that against the
-## bob is what turns a vertical slide into an object leaving the ground.
-const SHADOW_ALPHA: float = 0.55
-const SHADOW_LIFT_ALPHA: float = 0.34
-const SHADOW_LIFT_SCALE: float = 0.86
+## Ground-glow rest state, and how far it thins at the top of the hover.
+## Light falls off with distance, so a rising creature pools a smaller, fainter
+## glow; animating that against the bob is what turns a vertical slide into an
+## object leaving the ground.
+const GLOW_ALPHA: float = 0.38
+const GLOW_LIFT_ALPHA: float = 0.20
+const GLOW_LIFT_SCALE: float = 0.84
 
 var _idle_tween: Tween
 var _hit_tween: Tween
 ## Bosses render larger (EnemyDefinition.view_scale); every transform
 ## animation works relative to this base.
 var _base_scale: Vector2 = Vector2.ONE
-## The shadow tracks view_scale too, so a boss casts a boss-sized plate.
-var _shadow_scale: Vector2 = Vector2.ONE
+## The glow tracks view_scale too, so a boss pools a boss-sized light.
+var _glow_scale: Vector2 = Vector2.ONE
 
 @onready var _sprite_holder: Control = %SpriteHolder
 @onready var _sprite: TextureRect = %EnemySprite
 @onready var _death_particles: CPUParticles2D = %DeathParticles
-@onready var _contact_shadow: TextureRect = %ContactShadow
+@onready var _ground_glow: TextureRect = %GroundGlow
 
 
 func _ready() -> void:
@@ -50,7 +56,7 @@ func _ready() -> void:
 		_start_idle()
 	else:
 		_sprite_holder.modulate.a = 0.0
-		_contact_shadow.modulate.a = 0.0
+		_ground_glow.modulate.a = 0.0
 
 
 # --- Signal handlers ---------------------------------------------------------
@@ -63,13 +69,13 @@ func _on_enemy_spawned(definition: EnemyDefinition, _level: int, _max_hp: float)
 
 	_sprite_holder.scale = _base_scale * 0.5
 	_sprite_holder.modulate.a = 0.0
-	_contact_shadow.modulate.a = 0.0
+	_ground_glow.modulate.a = 0.0
 	var spawn_tween: Tween = create_tween().set_parallel(true)
 	spawn_tween.tween_property(_sprite_holder, "scale", _base_scale, 0.3) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	spawn_tween.tween_property(_sprite_holder, "modulate:a", 1.0, 0.2)
-	# The plate arrives with the enemy; _start_idle then takes it over.
-	spawn_tween.tween_property(_contact_shadow, "modulate:a", SHADOW_ALPHA, 0.3)
+	# The pool arrives with the enemy; _start_idle then takes it over.
+	spawn_tween.tween_property(_ground_glow, "modulate:a", GLOW_ALPHA, 0.3)
 	spawn_tween.chain().tween_callback(_start_idle)
 
 
@@ -104,9 +110,9 @@ func _on_enemy_died(_level: int, _total_kills: int) -> void:
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	death_tween.tween_property(_sprite_holder, "modulate:a", 0.0, 0.3)
 	death_tween.tween_property(_sprite_holder, "rotation", 0.3, 0.3)
-	# The plate collapses with the body — a shadow outliving its caster is
-	# the one thing that would break the grounding this exists to sell.
-	death_tween.tween_property(_contact_shadow, "modulate:a", 0.0, 0.22)
+	# The pool dies with the body — light outliving its source is the one
+	# thing that would break the grounding this exists to sell.
+	death_tween.tween_property(_ground_glow, "modulate:a", 0.0, 0.22)
 
 
 ## The withdraw micro-state (M5 UX spec §4B): the enemy LEAVES — no
@@ -120,7 +126,7 @@ func _on_enemy_withdrawn() -> void:
 	withdraw_tween.tween_property(_sprite_holder, "scale", _base_scale * 0.7, 0.4) \
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	withdraw_tween.tween_property(_sprite_holder, "modulate:a", 0.0, 0.4)
-	withdraw_tween.tween_property(_contact_shadow, "modulate:a", 0.0, 0.4)
+	withdraw_tween.tween_property(_ground_glow, "modulate:a", 0.0, 0.4)
 
 
 # --- Internals ---------------------------------------------------------------
@@ -144,32 +150,37 @@ func _show_enemy(definition: EnemyDefinition) -> void:
 	if sprite_material != null:
 		sprite_material.set_shader_parameter(&"rim_color", definition.glow_color)
 
-	_shadow_scale = Vector2.ONE * definition.view_scale
-	_contact_shadow.scale = _shadow_scale
-	_contact_shadow.modulate.a = SHADOW_ALPHA
+	# Same source as the rim: the pool is this creature's own light on the
+	# ground, so it is tinted rather than darkened.
+	_glow_scale = Vector2.ONE * definition.view_scale
+	_ground_glow.scale = _glow_scale
+	_ground_glow.modulate = Color(
+		definition.glow_color.r, definition.glow_color.g,
+		definition.glow_color.b, GLOW_ALPHA
+	)
 
 
 func _start_idle() -> void:
 	_kill_tween(_idle_tween)
 	_idle_tween = create_tween().set_loops()
-	# Rise: the plate tightens and fades in the same 1.4s on the same curve,
-	# so the two never drift apart and the enemy reads as leaving the ground.
+	# Rise: the pool tightens and dims in the same 1.4s on the same curve, so
+	# the two never drift apart and the enemy reads as leaving the ground.
 	_idle_tween.tween_property(_sprite_holder, "position:y", -16.0, 1.4) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_idle_tween.parallel().tween_property(_contact_shadow, "scale",
-			_shadow_scale * SHADOW_LIFT_SCALE, 1.4) \
+	_idle_tween.parallel().tween_property(_ground_glow, "scale",
+			_glow_scale * GLOW_LIFT_SCALE, 1.4) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_idle_tween.parallel().tween_property(_contact_shadow, "modulate:a",
-			SHADOW_LIFT_ALPHA, 1.4) \
+	_idle_tween.parallel().tween_property(_ground_glow, "modulate:a",
+			GLOW_LIFT_ALPHA, 1.4) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	# Fall.
 	_idle_tween.tween_property(_sprite_holder, "position:y", 0.0, 1.4) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_idle_tween.parallel().tween_property(_contact_shadow, "scale",
-			_shadow_scale, 1.4) \
+	_idle_tween.parallel().tween_property(_ground_glow, "scale",
+			_glow_scale, 1.4) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	_idle_tween.parallel().tween_property(_contact_shadow, "modulate:a",
-			SHADOW_ALPHA, 1.4) \
+	_idle_tween.parallel().tween_property(_ground_glow, "modulate:a",
+			GLOW_ALPHA, 1.4) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 

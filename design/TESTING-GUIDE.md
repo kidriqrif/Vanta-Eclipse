@@ -43,6 +43,33 @@ If the enemy sprite looks wrong, **first test**: select `EnemySprite` in
 renders correctly, the shader is the fault and the Output panel has the compile
 error. Send me that text.
 
+### Automating Stage 0
+
+```bash
+GODOT=/path/to/godot bash tools/screenshot_run.sh [output_dir]
+```
+
+Runs the game windowed on the real renderer, drives it to the gameplay screen,
+lands six taps, and writes three PNGs (menu, idle, combat). It registers
+`tools/screenshot_harness.gd` as the last autoload and restores `project.godot`
+afterwards, including on crash or Ctrl-C. Output defaults to `.godot-shots/`,
+which is gitignored.
+
+Three things this covers that nothing else does:
+
+* **Shaders actually compile.** `--headless` uses the dummy rasterizer and
+  never compiles one, so a clean headless boot says nothing about `effects/`.
+* **The result is visible.** A screenshot is the only artifact that shows
+  whether the screen looks like anything. The first real run of this project
+  proved the point: every static check was green, yet the enemy's contact
+  shadow was invisible — a near-black shadow on a near-black backdrop. It is
+  now a tinted ground glow.
+* **It is cheap to repeat.** Re-run it after any visual change.
+
+Expect `11 ObjectDB instances were leaked at exit`. That is the harness
+quitting mid-`await`, not the game — a plain `--headless --quit-after 300`
+boot exits clean, which is the check to run if you want to be sure.
+
 ---
 
 ## Stage 1 — Desktop playthrough

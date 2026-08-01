@@ -20,3 +20,6 @@ desktop.ini
 # Personal Claude Code settings (the auto-push hook is a local workflow,
 # not something a fresh clone should inherit)
 .claude/settings.local.json
+
+# Screenshots from tools/screenshot_run.sh
+.godot-shots/
