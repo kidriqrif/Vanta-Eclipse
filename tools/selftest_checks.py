@@ -157,16 +157,16 @@ def apply(work: pathlib.Path, target: str, find: str | None, replace: str) -> bo
     path = work / target
     if find is None:
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(replace)
+        path.write_text(replace, encoding="utf-8")
         return True
     if not path.exists():
         print(f"    (mutation target missing: {target})")
         return False
-    text = path.read_text()
+    text = path.read_text(encoding="utf-8")
     if find not in text:
         print(f"    (anchor not found in {target}: {find!r})")
         return False
-    path.write_text(text.replace(find, replace, 1))
+    path.write_text(text.replace(find, replace, 1), encoding="utf-8")
     return True
 
 

@@ -53,6 +53,15 @@ func change_scene(scene_path: String) -> void:
 		push_error("SceneManager: failed to load scene: %s" % scene_path)
 		await _fade_in()
 		_is_transitioning = false
+		# Listeners parked their state on scene_transition_started and are
+		# waiting for the matching finish. Without this CombatManager leaves
+		# _gameplay_current false forever, _check_held_entry can never fire,
+		# and enemies silently stop spawning with no visible cause. The scene
+		# never actually changed, so report the one we are still on — not the
+		# one that failed to load.
+		var current_scene: Node = get_tree().current_scene
+		if current_scene != null:
+			EventBus.scene_transition_finished.emit(current_scene.scene_file_path)
 		return
 
 	get_tree().change_scene_to_packed(packed_scene)

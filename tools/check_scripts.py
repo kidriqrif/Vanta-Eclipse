@@ -59,7 +59,7 @@ def check_unique_names() -> tuple[list[str], list[str]]:
     problems: list[str] = []
     count = 0
     for tscn in sorted(ROOT.rglob("*.tscn")):
-        text = tscn.read_text()
+        text = tscn.read_text(encoding="utf-8")
         uniques: set[str] = set()
         current = None
         for line in text.splitlines():
@@ -84,7 +84,7 @@ def check_unique_names() -> tuple[list[str], list[str]]:
             continue
         # Strings are stripped so printf specifiers (%d, %s) are not mistaken
         # for node references, and the name must start with a capital.
-        src = strip_strings(gd.read_text())
+        src = strip_strings(gd.read_text(encoding="utf-8"))
         for m in re.finditer(r"%([A-Z]\w*)", src):
             count += 1
             if m.group(1) in uniques:
@@ -101,7 +101,7 @@ def check_unique_names() -> tuple[list[str], list[str]]:
 
 
 def check_signal_arity() -> tuple[list[str], list[str]]:
-    bus = (ROOT / "scripts/managers/event_bus.gd").read_text()
+    bus = (ROOT / "scripts/managers/event_bus.gd").read_text(encoding="utf-8")
     sig: dict[str, int] = {}
     for m in re.finditer(r"^signal (\w+)\s*(?:\(([^)]*)\))?", bus, re.M):
         params = (m.group(2) or "").strip()
@@ -109,7 +109,7 @@ def check_signal_arity() -> tuple[list[str], list[str]]:
 
     problems: list[str] = []
     for gd in scripts():
-        src = gd.read_text()
+        src = gd.read_text(encoding="utf-8")
         funcs = func_params(src)
         for m in re.finditer(r"EventBus\.(\w+)\.connect\(\s*([^)\n]+?)\s*\)", src):
             name, target = m.group(1), m.group(2).strip()
@@ -138,7 +138,7 @@ def check_signal_arity() -> tuple[list[str], list[str]]:
                     f"{where}  {name} emits {arity} arg(s), {fname}() takes {req}..{total}"
                 )
 
-    all_src = "\n".join(p.read_text() for p in scripts())
+    all_src = "\n".join(p.read_text(encoding="utf-8") for p in scripts())
     never = sorted(s for s in sig if f"{s}.emit(" not in all_src)
     if never:
         problems.append("never emitted (dead signals): " + ", ".join(never))
@@ -154,7 +154,7 @@ def check_handlers() -> tuple[list[str], list[str]]:
     connect = re.compile(r"\.connect\(\s*([A-Za-z_]\w*)\s*[,)]")
     bound = re.compile(r"\.connect\(\s*([A-Za-z_]\w*)\.bind\(")
     for gd in scripts():
-        text = gd.read_text()
+        text = gd.read_text(encoding="utf-8")
         body = COMMENT.sub("", strip_strings(text))
         local = func_params(text)
         for m in list(connect.finditer(body)) + list(bound.finditer(body)):
@@ -180,7 +180,7 @@ def check_script_paths() -> tuple[list[str], list[str]]:
     problems: list[str] = []
     files = dirs = 0
     for gd in scripts():
-        src = gd.read_text()
+        src = gd.read_text(encoding="utf-8")
         for m in re.finditer(r'"(res://[^"]+)"', src):
             path = m.group(1)
             line = src[: m.start()].count("\n") + 1
@@ -202,7 +202,7 @@ def check_script_paths() -> tuple[list[str], list[str]]:
 def check_load_order() -> tuple[list[str], list[str]]:
     order: list[str] = []
     paths: dict[str, pathlib.Path] = {}
-    for line in (ROOT / "project.godot").read_text().splitlines():
+    for line in (ROOT / "project.godot").read_text(encoding="utf-8").splitlines():
         m = re.match(r'^(\w+)="\*(res://[^"]+)"$', line.strip())
         if m:
             order.append(m.group(1))
@@ -211,7 +211,7 @@ def check_load_order() -> tuple[list[str], list[str]]:
 
     problems: list[str] = []
     for name in order:
-        src = paths[name].read_text()
+        src = paths[name].read_text(encoding="utf-8")
         m = re.search(r"^func _ready\(\).*?(?=^func |\Z)", src, re.M | re.S)
         if not m:
             continue

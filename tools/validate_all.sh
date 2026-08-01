@@ -12,41 +12,68 @@ set -o pipefail
 cd "$(dirname "$0")/.."
 status=0
 
-echo "1. gdparse"
-for f in $(find scripts -name '*.gd'); do
-  gdparse "$f" >/dev/null 2>&1 || { echo "   FAIL $f"; status=1; }
+# Pick an interpreter. On Windows `python3` is usually the Microsoft Store
+# alias stub: it EXISTS on PATH and exits non-zero with an ad, so presence
+# alone is not enough — each candidate has to actually execute something.
+PY=""
+for candidate in "${PYTHON:-}" python3 python; do
+  [ -n "$candidate" ] || continue
+  if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c "" >/dev/null 2>&1; then
+    PY="$candidate"
+    break
+  fi
 done
-[ $status -eq 0 ] && echo "   OK"
+if [ -z "$PY" ]; then
+  echo "no working python found (tried \$PYTHON, python3, python)" >&2
+  exit 1
+fi
+
+echo "1. gdparse"
+if command -v gdparse >/dev/null 2>&1; then
+  parse_failed=0
+  for f in $(find scripts -name '*.gd'); do
+    gdparse "$f" >/dev/null 2>&1 || { echo "   FAIL $f"; parse_failed=1; status=1; }
+  done
+  [ $parse_failed -eq 0 ] && echo "   OK"
+else
+  # Without this guard a missing gdtoolkit prints FAIL for every file in the
+  # project, which reads as 40 broken scripts rather than one absent tool.
+  echo "   SKIPPED (gdparse not installed: pip install gdtoolkit)"
+fi
 
 echo "2. gdlint"
-gdlint $(find scripts -name '*.gd') 2>&1 | tail -2 | sed 's/^/   /'
+if command -v gdlint >/dev/null 2>&1; then
+  gdlint $(find scripts -name '*.gd') 2>&1 | tail -2 | sed 's/^/   /'
+else
+  echo "   SKIPPED (gdlint not installed: pip install gdtoolkit)"
+fi
 
 echo "3. scene/resource structure"
-python3 tools/validate_godot_files.py . | sed 's/^/   /' || status=1
+"$PY" tools/validate_godot_files.py . | sed 's/^/   /' || status=1
 
 echo "4. autoload members exist"
-python3 tools/check_autoload_calls.py | sed 's/^/   /' || status=1
+"$PY" tools/check_autoload_calls.py | sed 's/^/   /' || status=1
 
 echo "5. GDScript semantics (names, arity, handlers, paths, load order)"
-python3 tools/check_scripts.py | sed 's/^/   /' || status=1
+"$PY" tools/check_scripts.py | sed 's/^/   /' || status=1
 
 echo "6. content library (properties, enums, ids, reachability)"
-python3 tools/check_data.py | sed 's/^/   /' || status=1
+"$PY" tools/check_data.py | sed 's/^/   /' || status=1
 
 echo "7. data-to-code wiring (stats, metrics, enum dispatch)"
-python3 tools/check_wiring.py | sed 's/^/   /' || status=1
+"$PY" tools/check_wiring.py | sed 's/^/   /' || status=1
 
 echo "8. font-safe glyphs in button text"
-python3 - <<'PY' || status=1
+"$PY" - <<'PYEOF' || status=1
 import re, pathlib, sys
 UNSAFE = "◈◆★●→"   # absent from Cinzel, the Button/Header face
 bad = []
 for gd in pathlib.Path("scripts").rglob("*.gd"):
-    for i, l in enumerate(gd.read_text().splitlines(), 1):
+    for i, l in enumerate(gd.read_text(encoding="utf-8").splitlines(), 1):
         if re.search(r'(button|Button)\w*\.text\s*=', l) and any(c in UNSAFE for c in l):
             bad.append(f"   {gd}:{i}")
 print("   OK" if not bad else "\n".join(bad))
 sys.exit(1 if bad else 0)
-PY
+PYEOF
 
 exit $status

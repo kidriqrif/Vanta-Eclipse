@@ -13,6 +13,11 @@ const DAILY_COUNT: int = 3
 const SECONDS_PER_DAY: int = 86400
 ## Bound on evaluate()'s fast-forward loop.
 const EVALUATE_PASSES: int = 32
+## How often the UTC day is re-checked. Load and Journal-open were the only
+## two rollover moments, so a session left running across UTC midnight kept
+## serving yesterday's goals — claims included. refresh_dailies() returns on
+## its first comparison when the day hasn't moved, so this costs nothing.
+const DAILY_ROLLOVER_POLL_SECONDS: float = 60.0
 
 var _definitions: Array[QuestDefinition] = []
 var _definitions_by_id: Dictionary = {}
@@ -29,6 +34,7 @@ var _daily_day: int = 0
 var _daily_baseline: Dictionary = {}
 ## Last seen token count, so a decrease can be read as a spend.
 var _last_token_count: int = 0
+var _daily_rollover_timer: Timer
 
 
 func _ready() -> void:
@@ -43,6 +49,10 @@ func _ready() -> void:
 	EventBus.eclipse_performed.connect(_on_eclipse_performed)
 	EventBus.upgrade_purchased.connect(_on_upgrade_purchased)
 	EventBus.arcade_tokens_changed.connect(_on_arcade_tokens_changed)
+	_daily_rollover_timer = Timer.new()
+	_daily_rollover_timer.wait_time = DAILY_ROLLOVER_POLL_SECONDS
+	_daily_rollover_timer.timeout.connect(refresh_dailies)
+	add_child(_daily_rollover_timer)
 
 
 func _load_definitions() -> void:
@@ -328,6 +338,9 @@ func refresh_dailies() -> void:
 func _on_game_loaded(_is_new_game: bool) -> void:
 	_last_token_count = MinigameManager.tokens
 	refresh_dailies()
+	# Started only now, never in _ready: the poll must not draw a set before the
+	# save has restored _daily_day, or every launch would reroll on the spot.
+	_daily_rollover_timer.start()
 	# Latch everything an existing save already satisfies, so an advanced player
 	# is not walked back through the tutorial chain.
 	evaluate()

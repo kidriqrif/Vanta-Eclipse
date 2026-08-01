@@ -21,7 +21,7 @@ def res_path(res: str) -> Path:
 
 
 def check_scene_or_resource(path: Path) -> None:
-    text = path.read_text()
+    text = path.read_text(encoding="utf-8")
     rel = path.relative_to(ROOT)
 
     header = re.match(r"\[gd_(scene|resource)[^\]]*?format=3", text)
@@ -71,7 +71,7 @@ def check_scene_or_resource(path: Path) -> None:
 
 
 def check_project_godot() -> None:
-    text = (ROOT / "project.godot").read_text()
+    text = (ROOT / "project.godot").read_text(encoding="utf-8")
     for key in ("run/main_scene", "config/icon", "buses/default_bus_layout"):
         m = re.search(rf'{re.escape(key)}="(res://[^"]+)"', text)
         if m and not res_path(m.group(1)).exists():

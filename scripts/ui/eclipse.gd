@@ -380,7 +380,10 @@ func _make_action(def: SkillNodeDefinition, maxed: bool, locked: bool) -> Contro
 		button.pressed.connect(func() -> void: SkillTreeManager.buy(def.id))
 	else:
 		button.disabled = true
-		button.text = "NEED %d MORE" % cost
+		# maxed and locked returned above, so the only way can_buy() is false
+		# here is affordability — the shortfall, not the sticker price.
+		var owned: int = int(CurrencyManager.get_balance(CurrencyManager.VOID_CRYSTALS))
+		button.text = "NEED %d MORE" % maxi(1, cost - owned)
 	return button
 
 

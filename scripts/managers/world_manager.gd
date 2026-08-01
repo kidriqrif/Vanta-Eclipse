@@ -78,14 +78,21 @@ func is_world_boss_gate(level: int) -> bool:
 
 
 ## The boss EnemyDefinition path guarding a gate level.
+##
+## Past the last authored gate (110+ while only two worlds ship) the final
+## world boss repeats rather than erroring. Its HP scales off enemy_level in
+## _baseline_hp(), so the climb stays meaningful until a content drop adds
+## World 3 — the alternative is farming 109 forever behind a CHALLENGE BOSS
+## button that push_errors on every tap. Reusing a boss definition is already
+## the norm here: both shipped worlds repeat one at index 3.
 func get_boss_path_for_gate(gate_level: int) -> String:
 	var world: WorldDefinition = get_world_for_level(gate_level)
+	if world.boss_definition_paths.is_empty():
+		push_error("WorldManager: world '%s' defines no bosses" % world.id)
+		return ""
 	@warning_ignore("integer_division")
 	var index: int = (gate_level - (world.first_level - 1)) / 10 - 1
-	if index < 0 or index >= world.boss_definition_paths.size():
-		push_error("WorldManager: no boss defined for gate %d" % gate_level)
-		return ""
-	return world.boss_definition_paths[index]
+	return world.boss_definition_paths[clampi(index, 0, world.boss_definition_paths.size() - 1)]
 
 
 ## Silent migration (grandfather rule): called by CombatManager on load

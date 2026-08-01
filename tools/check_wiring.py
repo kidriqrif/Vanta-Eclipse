@@ -32,7 +32,7 @@ def consumer_source() -> str:
     for gd in sorted(ROOT.glob("scripts/**/*.gd")):
         if gd.parent.name == "data":
             continue
-        out += COMMENT.sub("", gd.read_text()) + "\n"
+        out += COMMENT.sub("", gd.read_text(encoding="utf-8")) + "\n"
     return out
 
 
@@ -61,13 +61,13 @@ STAT_CONSUMERS = [
 def check_stat_wiring() -> tuple[list[str], list[str]]:
     read_keys: set[str] = set()
     for rel in STAT_CONSUMERS:
-        read_keys |= set(re.findall(r'&"(\w+)"', (ROOT / rel).read_text()))
+        read_keys |= set(re.findall(r'&"(\w+)"', (ROOT / rel).read_text(encoding="utf-8")))
 
     problems: list[str] = []
     counted = 0
     for label, glob, pattern in STAT_SOURCES:
         for tres in sorted(ROOT.glob(glob)):
-            m = re.search(pattern, tres.read_text(), re.M)
+            m = re.search(pattern, tres.read_text(encoding="utf-8"), re.M)
             if not m:
                 continue
             counted += 1
@@ -83,7 +83,7 @@ def check_stat_wiring() -> tuple[list[str], list[str]]:
 
 
 def check_goal_metrics() -> tuple[list[str], list[str]]:
-    qm = (ROOT / "scripts/managers/quest_manager.gd").read_text()
+    qm = (ROOT / "scripts/managers/quest_manager.gd").read_text(encoding="utf-8")
     bumped = set(re.findall(r'_bump\(&"(\w+)"', qm))
     snap = re.search(r"func _snapshot\(.*?(?=^func )", qm, re.M | re.S)
     snapshotted = set(re.findall(r'&"(\w+)":', snap.group(0))) if snap else set()
@@ -91,7 +91,7 @@ def check_goal_metrics() -> tuple[list[str], list[str]]:
     problems: list[str] = []
     goals = 0
     for tres in sorted(ROOT.glob("data/quests/*.tres")):
-        text = tres.read_text()
+        text = tres.read_text(encoding="utf-8")
         metric = re.search(r'^metric = &"(\w*)"', text, re.M)
         shape = re.search(r"^metric_shape = (\d+)", text, re.M)
         if not metric:
@@ -139,7 +139,7 @@ def _class_name(stem: str) -> str:
 def check_enum_handling() -> tuple[list[str], list[str]]:
     enums: dict[str, dict[str, list[str]]] = {}
     for gd in sorted(ROOT.glob("scripts/data/*.gd")):
-        for m in re.finditer(r"enum\s+(\w+)\s*\{(.*?)\}", gd.read_text(), re.S):
+        for m in re.finditer(r"enum\s+(\w+)\s*\{(.*?)\}", gd.read_text(encoding="utf-8"), re.S):
             body = COMMENT.sub("", m.group(2))
             members = [p.split("=")[0].strip() for p in body.split(",") if p.split("=")[0].strip()]
             enums.setdefault(gd.stem, {})[m.group(1)] = members
@@ -147,7 +147,7 @@ def check_enum_handling() -> tuple[list[str], list[str]]:
     used: dict[tuple[str, str], set[str]] = collections.defaultdict(set)
     problems: list[str] = []
     for tres in sorted(ROOT.glob("data/**/*.tres")):
-        text = tres.read_text()
+        text = tres.read_text(encoding="utf-8")
         ext = {ident: p for p, ident in EXT_SCRIPT.findall(text)}
         ref = SCRIPT_REF.search(text)
         if not ref:

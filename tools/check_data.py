@@ -38,7 +38,7 @@ def definition_classes() -> dict[str, set[str]]:
     """class_name -> exported property names."""
     out: dict[str, set[str]] = {}
     for gd in ROOT.rglob("scripts/**/*.gd"):
-        src = gd.read_text()
+        src = gd.read_text(encoding="utf-8")
         cn = re.search(r"^class_name\s+(\w+)", src, re.M)
         if not cn:
             continue
@@ -51,7 +51,7 @@ def definition_classes() -> dict[str, set[str]]:
 
 def parse(path: pathlib.Path) -> tuple[str, dict[str, str]]:
     """(script stem, {field: raw value}) for one .tres."""
-    text = path.read_text()
+    text = path.read_text(encoding="utf-8")
     ext = {ident: p for p, ident in EXT_SCRIPT.findall(text)}
     m = SCRIPT_REF.search(text)
     stem = pathlib.Path(ext.get(m.group(1), "?")).stem if m else "?"
@@ -67,7 +67,7 @@ def check_properties() -> tuple[list[str], list[str]]:
     problems: list[str] = []
     checked = 0
     for tres in tres_files():
-        text = tres.read_text()
+        text = tres.read_text(encoding="utf-8")
         m = re.search(r'script_class="(\w+)"', text)
         if not m:
             continue
@@ -93,7 +93,7 @@ def check_values() -> tuple[list[str], list[str]]:
     enum_props: dict[str, dict[str, int]] = {}
     path_props: dict[str, set[str]] = {}
     for gd in ROOT.rglob("scripts/**/*.gd"):
-        src = gd.read_text()
+        src = gd.read_text(encoding="utf-8")
         cn = re.search(r"^class_name\s+(\w+)", src, re.M)
         if not cn:
             continue
@@ -118,7 +118,7 @@ def check_values() -> tuple[list[str], list[str]]:
     problems: list[str] = []
     n_enum = n_path = 0
     for tres in tres_files():
-        text = tres.read_text()
+        text = tres.read_text(encoding="utf-8")
         m = re.search(r'script_class="(\w+)"', text)
         if not m or m.group(1) not in enum_props:
             continue
@@ -207,8 +207,8 @@ def check_ids() -> tuple[list[str], list[str]]:
 
 
 def check_reachability() -> tuple[list[str], list[str]]:
-    corpus = "\n".join(p.read_text() for p in ROOT.glob("scripts/**/*.gd"))
-    corpus += "\n" + "\n".join(p.read_text() for p in tres_files())
+    corpus = "\n".join(p.read_text(encoding="utf-8") for p in ROOT.glob("scripts/**/*.gd"))
+    corpus += "\n" + "\n".join(p.read_text(encoding="utf-8") for p in tres_files())
 
     problems: list[str] = []
     scanned = named = 0

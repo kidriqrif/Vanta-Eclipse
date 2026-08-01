@@ -44,6 +44,11 @@ func _ready() -> void:
 	EventBus.scene_transition_finished.connect(_on_scene_transition_finished)
 	# Twin Fang and any future cadence relic re-time the tick live.
 	EventBus.active_relic_changed.connect(_on_active_relic_changed)
+	# Swift Hunt quickens the same tick. get_effective_attack_interval() picks
+	# the new rate up immediately (so offline pay scales at once), but a running
+	# Timer keeps its old wait_time until something writes it — without this the
+	# live auto-attack ignores every Swift Hunt level for the whole session.
+	EventBus.skill_purchased.connect(_on_skill_purchased)
 	_refresh_attack_interval()
 	# Deliberately NOT connecting enemy_spawned here — see _on_game_loaded.
 
@@ -136,6 +141,12 @@ func _refresh_attack_interval() -> void:
 
 
 func _on_active_relic_changed(_id: StringName) -> void:
+	_refresh_attack_interval()
+
+
+func _on_skill_purchased(_id: StringName, _new_level: int) -> void:
+	# Cheap enough to run for every power: only Swift Hunt moves the interval,
+	# and _refresh_attack_interval() is an idempotent write.
 	_refresh_attack_interval()
 
 

@@ -48,7 +48,9 @@ var _next_item_id: int = 1
 ## True between boss spawn and its resolution, so the boss kill's normal
 ## enemy_died roll is suppressed (the guaranteed boss drop rides
 ## boss_fight_won instead). Tracked from signals — no upward CombatManager
-## call. Set true on every boss start (idempotent).
+## call. Set true on every boss start (idempotent), and cleared by either
+## resolution OR by leaving the scene, which voids the fight without
+## emitting one (see _on_scene_transition_started).
 var _boss_in_progress: bool = false
 
 var _affixes: Array[AffixDefinition] = []
@@ -73,6 +75,7 @@ func _ready() -> void:
 	EventBus.boss_fight_started.connect(_on_boss_fight_started)
 	EventBus.boss_fight_won.connect(_on_boss_fight_won)
 	EventBus.boss_fight_failed.connect(_on_boss_fight_failed)
+	EventBus.scene_transition_started.connect(_on_scene_transition_started)
 	_recompute_sums()
 
 
@@ -319,6 +322,15 @@ func _on_boss_fight_started(
 
 
 func _on_boss_fight_failed(_level: int) -> void:
+	_boss_in_progress = false
+
+
+func _on_scene_transition_started(_scene_path: String) -> void:
+	# CombatManager voids an in-progress boss on this same signal without
+	# emitting won/failed (combat_manager.gd:357), so this is the only clear
+	# on that path. Reachable by tapping ECLIPSE mid-boss: nothing else ever
+	# resets the flag — not even prestige — so leaving it latched suppresses
+	# EVERY normal drop for the rest of the run.
 	_boss_in_progress = false
 
 

@@ -9,7 +9,7 @@ import re, pathlib, sys
 
 root = pathlib.Path(".")
 autoloads = {}
-for line in (root / "project.godot").read_text().splitlines():
+for line in (root / "project.godot").read_text(encoding="utf-8").splitlines():
     m = re.match(r'^(\w+)="\*(res://[^"]+)"$', line.strip())
     if m:
         autoloads[m.group(1)] = root / m.group(2).replace("res://", "")
@@ -21,7 +21,7 @@ BUILTINS = {
 }
 methods = {}
 for name, path in autoloads.items():
-    src = path.read_text() if path.exists() else ""
+    src = path.read_text(encoding="utf-8") if path.exists() else ""
     methods[name] = set(re.findall(r'^(?:static )?func (\w+)\(', src, re.M)) | \
                     set(re.findall(r'^(?:@\w+\s+)?var (\w+)', src, re.M)) | \
                     set(re.findall(r'^const (\w+)', src, re.M)) | \
@@ -30,7 +30,7 @@ for name, path in autoloads.items():
 
 problems = []
 for gd in sorted(root.rglob("scripts/**/*.gd")):
-    src = gd.read_text()
+    src = gd.read_text(encoding="utf-8")
     for m in re.finditer(r'\b(' + "|".join(autoloads) + r')\.(\w+)', src):
         owner, member = m.group(1), m.group(2)
         if member in methods[owner] or member in BUILTINS:

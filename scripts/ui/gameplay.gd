@@ -25,6 +25,14 @@ const ECLIPSE_CRYSTAL_DEEP: Color = Color(0.16, 0.44, 0.47, 1)
 ## The Arcade accent, scoped to the Arcade door here (M9 visual §1).
 const ARCADE_LIME: Color = Color(0.65, 0.93, 0.42, 1)
 const ARCADE_LIME_DEEP: Color = Color(0.24, 0.42, 0.16, 1)
+## Pending banners held while one plays. A Frozen-Ruins gate kill can fire
+## four in a single frame (BOSS FELLED → RELIC RECOVERED → MYTHIC DROP →
+## pet unlock); at ~2.2s each this caps the chain just under nine seconds.
+const MAX_QUEUED_BANNERS: int = 3
+## The equipped cosmetic's tap trail. Deliberately small and short: it fires
+## once per TAP (never on an auto-attack), so the finger sets the rate.
+const TAP_TRAIL_PARTICLES: int = 12
+const TAP_TRAIL_LIFETIME: float = 0.45
 
 ## Where the last tap landed, so its damage number spawns under the finger.
 var _last_tap_position: Vector2 = Vector2.ZERO
@@ -35,9 +43,9 @@ var _badge_pulse_tween: Tween
 var _modal_queue: Array[Callable] = []
 var _modal_active: bool = false
 var _unlock_presentation_queued: bool = false
-## Depth-1 banner queue so layer-50 transients never stack.
+## Banner queue so layer-50 transients never stack — they play in sequence.
 var _active_banner: ResultBanner
-var _queued_banner: ResultBanner
+var _queued_banners: Array[ResultBanner] = []
 ## Whole seconds of play time currently shown, so _process can skip the
 ## string build on the ~59 frames per second that would not change it.
 var _displayed_play_second: int = -1
@@ -152,6 +160,7 @@ func _on_combat_area_input(event: InputEvent) -> void:
 			and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		_last_tap_position = event.position
 		_has_tap_position = true
+		_spawn_tap_trail(event.position)
 		CombatManager.player_tap_attack()
 		_has_tap_position = false
 
@@ -584,10 +593,16 @@ func _undress_boss() -> void:
 	_dress_health_bar(false)
 
 
-## Depth-1 banner queue: layer-50 transients never stack (pattern §7.2).
+## Banner queue: layer-50 transients never stack, they play back to back
+## (pattern §7.2). A queued banner has been instantiate()d but not added to
+## the tree, so it is an orphan — anything dropped from the queue must be
+## freed explicitly or it leaks for the whole process lifetime.
 func _show_banner(banner: ResultBanner) -> void:
 	if _active_banner != null and is_instance_valid(_active_banner):
-		_queued_banner = banner
+		if _queued_banners.size() >= MAX_QUEUED_BANNERS:
+			banner.queue_free()
+			return
+		_queued_banners.append(banner)
 		return
 	_active_banner = banner
 	banner.tree_exited.connect(_on_banner_exited)
@@ -596,10 +611,20 @@ func _show_banner(banner: ResultBanner) -> void:
 
 func _on_banner_exited() -> void:
 	_active_banner = null
-	if _queued_banner != null and is_instance_valid(_queued_banner):
-		var next_banner: ResultBanner = _queued_banner
-		_queued_banner = null
-		_show_banner(next_banner)
+	while not _queued_banners.is_empty():
+		var next_banner: ResultBanner = _queued_banners.pop_front()
+		if is_instance_valid(next_banner):
+			_show_banner(next_banner)
+			return
+
+
+func _exit_tree() -> void:
+	# Queued banners are orphans (never added), so leaving the scene would
+	# strand them — freeing this node only reaps its actual children.
+	for banner: ResultBanner in _queued_banners:
+		if is_instance_valid(banner):
+			banner.queue_free()
+	_queued_banners.clear()
 
 
 ## One-at-a-time blocking-modal queue (UX spec §6: offline first, unlock
@@ -708,6 +733,44 @@ func _pop_essence_display() -> void:
 	_essence_pop_tween = create_tween()
 	_essence_pop_tween.tween_property(_essence_display, "scale", Vector2.ONE, 0.18) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## The equipped cosmetic's trail, thrown from the point the player tapped.
+## This is what the six "… Trail" products in the shop actually sell —
+## trail_color reached only the shop swatch before, so a paid cosmetic
+## delivered a tinted damage number and nothing else.
+##
+## Purely decorative by the cosmetic rule (cosmetic_definition.gd): it encodes
+## no state, so it never competes with the crit colour or an accent scope.
+func _spawn_tap_trail(at: Vector2) -> void:
+	var cosmetic: CosmeticDefinition = MonetizationManager.get_equipped_cosmetic()
+	if cosmetic == null:
+		return
+	var trail := CPUParticles2D.new()
+	trail.position = at
+	trail.one_shot = true
+	trail.explosiveness = 0.85
+	trail.amount = TAP_TRAIL_PARTICLES
+	trail.lifetime = TAP_TRAIL_LIFETIME
+	trail.direction = Vector2.UP
+	trail.spread = 180.0
+	trail.initial_velocity_min = 90.0
+	trail.initial_velocity_max = 240.0
+	trail.gravity = Vector2(0.0, 320.0)
+	trail.scale_amount_min = 2.0
+	trail.scale_amount_max = 4.0
+	# Fade over the particle's life so the trail dissolves instead of
+	# disappearing on a frame boundary.
+	# CPUParticles2D takes the Gradient itself — GradientTexture1D is the
+	# GPUParticles2D/ParticleProcessMaterial spelling and is silently wrong here.
+	var ramp := Gradient.new()
+	ramp.set_color(0, cosmetic.trail_color)
+	ramp.set_color(1, Color(cosmetic.trail_color, 0.0))
+	trail.color_ramp = ramp
+	_fx_layer.add_child(trail)
+	trail.emitting = true
+	# A one_shot emitter stops emitting but never frees itself.
+	get_tree().create_timer(TAP_TRAIL_LIFETIME + 0.2).timeout.connect(trail.queue_free)
 
 
 func _spawn_damage_number(amount: float, is_crit: bool) -> void:

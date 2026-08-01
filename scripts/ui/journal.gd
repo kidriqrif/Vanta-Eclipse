@@ -14,7 +14,15 @@ const ESSENCE_INK: Color = Color(0.655, 0.545, 0.98, 1)
 const TOKEN_INK: Color = Color(0.65, 0.93, 0.42, 1)
 const CRYSTAL_INK: Color = Color(0.4, 0.86, 0.85, 1)
 
+## How long a claim refusal borrows the reset label before the normal
+## "Resets in …" text is allowed back.
+const REFUSAL_HOLD_SECONDS: float = 4.0
+
 var _tab: QuestDefinition.Kind = QuestDefinition.Kind.QUEST
+## Ticks-msec deadline while a refusal owns the reset label ("" state = 0).
+## The 30s tick and _set_tab both honour it, so the explanation can neither
+## be overwritten mid-read nor stranded on a tab that has no reset time.
+var _refusal_until_msec: int = 0
 ## id -> the row that renders it, so a completion or claim re-dresses that row
 ## in place instead of rebuilding the list under the player's thumb.
 var _rows: Dictionary = {}
@@ -58,6 +66,9 @@ func _ready() -> void:
 
 func _set_tab(kind: QuestDefinition.Kind) -> void:
 	_tab = kind
+	# Changing tabs answers the refusal — drop it so the label below is
+	# governed purely by the new tab.
+	_refusal_until_msec = 0
 	_style_tab(_quests_tab, kind == QuestDefinition.Kind.QUEST)
 	_style_tab(_daily_tab, kind == QuestDefinition.Kind.DAILY)
 	_style_tab(_achievements_tab, kind == QuestDefinition.Kind.ACHIEVEMENT)
@@ -67,11 +78,35 @@ func _set_tab(kind: QuestDefinition.Kind) -> void:
 
 
 func _refresh_reset_label() -> void:
+	# A refusal is borrowing the label; don't overwrite it with a reset time
+	# the player never asked about (and which is wrong outside DAILY).
+	if Time.get_ticks_msec() < _refusal_until_msec:
+		return
 	if not _reset_label.visible:
 		return
 	_reset_label.text = "Resets in %s" % _format_reset(
 		QuestManager.seconds_until_daily_reset()
 	)
+
+
+## Borrow the reset label to explain a refused claim. The label is DAILY-only
+## furniture, so this has to hand it back afterwards — claiming from
+## ACHIEVEMENTS otherwise leaves a stray "Resets in 7h" on a tab that has no
+## reset at all.
+func _show_refusal(text: String) -> void:
+	_refusal_until_msec = Time.get_ticks_msec() + int(REFUSAL_HOLD_SECONDS * 1000.0)
+	_reset_label.visible = true
+	_reset_label.text = text
+	get_tree().create_timer(REFUSAL_HOLD_SECONDS).timeout.connect(_end_refusal)
+
+
+func _end_refusal() -> void:
+	# A tab change (or a second refusal) may have moved on already.
+	if Time.get_ticks_msec() < _refusal_until_msec:
+		return
+	_refusal_until_msec = 0
+	_reset_label.visible = _tab == QuestDefinition.Kind.DAILY
+	_refresh_reset_label()
 
 
 func _style_tab(button: Button, active: bool) -> void:
@@ -271,8 +306,7 @@ func _on_claim_pressed(id: StringName) -> void:
 		# no room in the meter — say so rather than looking broken.
 		var definition: QuestDefinition = QuestManager.get_definition(id)
 		if definition != null and QuestManager.is_claimable(definition):
-			_reset_label.visible = true
-			_reset_label.text = "Arcade token meter is full — spend one first."
+			_show_refusal("Arcade token meter is full — spend one first.")
 		return
 	SettingsManager.vibrate(30)
 
