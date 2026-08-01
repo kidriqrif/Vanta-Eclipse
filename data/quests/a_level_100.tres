@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="QuestDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/quest_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"a_level_100"
+display_name = "Frozen Depths"
+description = "Reach enemy level 100."
+kind = 2
+metric = &"enemy_level"
+metric_shape = 1
+target = 100.0
+reward_kind = 2
+reward_amount = 4.0
+sort_order = 3

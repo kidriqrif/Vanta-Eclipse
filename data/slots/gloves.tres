@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="SlotDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/slot_definition.gd" id="1"]
+[ext_resource type="Texture2D" path="res://sprites/ui/slot_gloves.svg" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"gloves"
+display_name = "Gloves"
+icon = ExtResource("2")
+sealed = false
+sealed_flavor = ""

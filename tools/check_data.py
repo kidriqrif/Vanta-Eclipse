@@ -1,0 +1,262 @@
+#!/usr/bin/env python3
+"""Integrity checks for the .tres content library under data/.
+
+Godot is forgiving with resources in exactly the ways that hurt: a misspelled
+property is dropped without a word, an out-of-range enum is undefined, and a
+duplicate id quietly erases whichever definition loaded first. None of it
+raises, so the failure reaches the player as content that simply is not there.
+
+  1. property names   — must be an @export on the resource's own script.
+  2. enum + paths     — enums in range, path strings resolving on disk.
+  3. ids              — present, and unique within a definition class.
+  4. cross-references — prereq_id / cosmetic_id must name a real definition,
+                        and every res:// a .tres names must exist.
+  5. reachability     — every data/ directory is loaded by some manager, so no
+                        definition sits on disk invisible to the game.
+"""
+
+import collections
+import pathlib
+import re
+import sys
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+
+BASE_PROPS = {"resource_local_to_scene", "resource_name", "resource_path", "script"}
+EXT_SCRIPT = re.compile(
+    r'\[ext_resource type="Script"[^\]]*path="([^"]+)"[^\]]*id="([^"]+)"'
+)
+SCRIPT_REF = re.compile(r'script\s*=\s*ExtResource\("([^"]+)"\)')
+FIELD = re.compile(r"^([a-z_]\w*)\s*=\s*(.+)$", re.M)
+
+
+def tres_files() -> list[pathlib.Path]:
+    return sorted(ROOT.glob("data/**/*.tres"))
+
+
+def definition_classes() -> dict[str, set[str]]:
+    """class_name -> exported property names."""
+    out: dict[str, set[str]] = {}
+    for gd in ROOT.rglob("scripts/**/*.gd"):
+        src = gd.read_text()
+        cn = re.search(r"^class_name\s+(\w+)", src, re.M)
+        if not cn:
+            continue
+        props = set(
+            re.findall(r"^@export(?:_\w+)?(?:\([^)]*\))?\s+var\s+(\w+)", src, re.M)
+        )
+        out[cn.group(1)] = props | BASE_PROPS
+    return out
+
+
+def parse(path: pathlib.Path) -> tuple[str, dict[str, str]]:
+    """(script stem, {field: raw value}) for one .tres."""
+    text = path.read_text()
+    ext = {ident: p for p, ident in EXT_SCRIPT.findall(text)}
+    m = SCRIPT_REF.search(text)
+    stem = pathlib.Path(ext.get(m.group(1), "?")).stem if m else "?"
+    body = text.split("[resource]", 1)[-1]
+    return stem, dict(FIELD.findall(body))
+
+
+# --- 1. property names exist on the script ------------------------------------
+
+
+def check_properties() -> tuple[list[str], list[str]]:
+    exports = definition_classes()
+    problems: list[str] = []
+    checked = 0
+    for tres in tres_files():
+        text = tres.read_text()
+        m = re.search(r'script_class="(\w+)"', text)
+        if not m:
+            continue
+        klass = m.group(1)
+        if klass not in exports:
+            problems.append(f"{tres.relative_to(ROOT)}: no class_name {klass} anywhere")
+            continue
+        checked += 1
+        body = text.split("[resource]", 1)[-1]
+        for pm in re.finditer(r"^(\w+)\s*=", body, re.M):
+            if pm.group(1) not in exports[klass]:
+                problems.append(
+                    f"{tres.relative_to(ROOT)}: '{pm.group(1)}' is not an "
+                    f"@export on {klass} — the value is dropped on load"
+                )
+    return problems, [f"{checked} resources against {len(exports)} classes"]
+
+
+# --- 2. enum ranges and path strings ------------------------------------------
+
+
+def check_values() -> tuple[list[str], list[str]]:
+    enum_props: dict[str, dict[str, int]] = {}
+    path_props: dict[str, set[str]] = {}
+    for gd in ROOT.rglob("scripts/**/*.gd"):
+        src = gd.read_text()
+        cn = re.search(r"^class_name\s+(\w+)", src, re.M)
+        if not cn:
+            continue
+        enums: dict[str, int] = {}
+        for em in re.finditer(r"^enum\s+(\w+)\s*\{(.*?)\}", src, re.M | re.S):
+            # Comments are stripped FIRST: a member name usually sits on the
+            # line after its doc comment, and splitting on commas before
+            # stripping loses the member entirely and undercounts the enum.
+            body = "\n".join(line.split("#")[0] for line in em.group(2).splitlines())
+            enums[em.group(1)] = len([x for x in body.split(",") if x.strip()])
+        props: dict[str, int] = {}
+        paths: set[str] = set()
+        for pm in re.finditer(r"^@export\s+var\s+(\w+)\s*:\s*(\w+)", src, re.M):
+            prop, typ = pm.group(1), pm.group(2)
+            if typ in enums:
+                props[prop] = enums[typ]
+            if typ == "String" and ("path" in prop or "scene" in prop):
+                paths.add(prop)
+        enum_props[cn.group(1)] = props
+        path_props[cn.group(1)] = paths
+
+    problems: list[str] = []
+    n_enum = n_path = 0
+    for tres in tres_files():
+        text = tres.read_text()
+        m = re.search(r'script_class="(\w+)"', text)
+        if not m or m.group(1) not in enum_props:
+            continue
+        klass = m.group(1)
+        body = text.split("[resource]", 1)[-1]
+        for pm in re.finditer(r"^(\w+)\s*=\s*(.+)$", body, re.M):
+            prop, raw = pm.group(1), pm.group(2).strip()
+            if prop in enum_props[klass]:
+                n_enum += 1
+                if not re.fullmatch(r"-?\d+", raw):
+                    problems.append(f"{tres.relative_to(ROOT)}: {prop} = {raw} is not an int")
+                    continue
+                high = enum_props[klass][prop]
+                if not 0 <= int(raw) < high:
+                    problems.append(
+                        f"{tres.relative_to(ROOT)}: {prop} = {raw} out of range "
+                        f"(enum has {high} members)"
+                    )
+            if prop in path_props[klass]:
+                n_path += 1
+                sm = re.match(r'"(res://[^"]+)"', raw)
+                if sm and not (ROOT / sm.group(1).removeprefix("res://")).exists():
+                    problems.append(
+                        f"{tres.relative_to(ROOT)}: {prop} points at missing {sm.group(1)}"
+                    )
+    return problems, [f"{n_enum} enum values, {n_path} path strings"]
+
+
+# --- 3 + 4. ids, uniqueness, cross-references ---------------------------------
+
+# .tres field -> the definition class whose ids it must name.
+XREF = {
+    "prereq_id": "skill_node_definition",
+    "cosmetic_id": "cosmetic_definition",
+}
+# .tres fields holding res:// paths (single or array).
+PATH_FIELDS = ("enemy_definition_paths", "boss_definition_paths", "scene_path")
+
+
+def check_ids() -> tuple[list[str], list[str]]:
+    defs: dict[str, dict[str, str]] = collections.defaultdict(dict)
+    problems: list[str] = []
+    for tres in tres_files():
+        cls, fields = parse(tres)
+        ident = fields.get("id", "").strip().strip("&").strip('"')
+        rel = tres.relative_to(ROOT)
+        if not ident:
+            problems.append(f"{rel} ({cls}): no id set")
+            continue
+        if ident in defs[cls]:
+            problems.append(
+                f"{cls} id '{ident}' used twice: {defs[cls][ident]} and {rel} "
+                f"— whichever loads second erases the other"
+            )
+        defs[cls][ident] = str(rel)
+
+    array_inner = re.compile(r"\[(.*?)\]", re.S)
+    for tres in tres_files():
+        cls, fields = parse(tres)
+        rel = tres.relative_to(ROOT)
+        for field, target in XREF.items():
+            if field not in fields:
+                continue
+            inner = array_inner.search(fields[field])
+            src = inner.group(1) if inner else fields[field]
+            for ident in [s for s in re.findall(r'&?"([^"]+)"', src) if s]:
+                if ident not in defs.get(target, {}):
+                    problems.append(
+                        f"{rel}: {field} names {target} '{ident}', which does not exist"
+                    )
+        for field in PATH_FIELDS:
+            if field not in fields:
+                continue
+            for ref in re.findall(r'"(res://[^"]+)"', fields[field]):
+                if not (ROOT / ref.removeprefix("res://")).exists():
+                    problems.append(f"{rel}: {field} points at missing {ref}")
+
+    total = sum(len(v) for v in defs.values())
+    info = [f"{total} definitions across {len(defs)} classes"]
+    for cls in sorted(defs):
+        info.append(f"{cls.replace('_definition', '')}={len(defs[cls])}")
+    return problems, ["; ".join(info[:1]) + " (" + ", ".join(info[1:]) + ")"]
+
+
+# --- 5. every definition is reachable -----------------------------------------
+
+
+def check_reachability() -> tuple[list[str], list[str]]:
+    corpus = "\n".join(p.read_text() for p in ROOT.glob("scripts/**/*.gd"))
+    corpus += "\n" + "\n".join(p.read_text() for p in tres_files())
+
+    problems: list[str] = []
+    scanned = named = 0
+    directories = sorted({p.parent for p in tres_files()})
+    for directory in directories:
+        rel = directory.relative_to(ROOT).as_posix()
+        files = sorted(directory.glob("*.tres"))
+        # A bare directory path, NOT merely the prefix of a longer file path:
+        # "res://data/enemies/void_wisp.tres" contains "res://data/enemies".
+        if re.search(r"res://" + re.escape(rel) + r"(?![\w/.-])", corpus):
+            scanned += 1
+            continue
+        orphans = [f for f in files if f.name not in corpus]
+        if orphans:
+            for orphan in orphans:
+                problems.append(
+                    f"{orphan.relative_to(ROOT)}: neither its directory is scanned "
+                    f"nor the file named — invisible in game"
+                )
+        else:
+            named += 1
+    return problems, [
+        f"{len(directories)} directories ({scanned} scanned, {named} explicitly listed)"
+    ]
+
+
+CHECKS = [
+    ("property names", check_properties),
+    ("enum ranges + paths", check_values),
+    ("ids + cross-references", check_ids),
+    ("definition reachability", check_reachability),
+]
+
+
+def main() -> int:
+    failed = 0
+    for label, fn in CHECKS:
+        problems, info = fn()
+        note = "; ".join(info)
+        if problems:
+            failed += 1
+            print(f"{label}: FAIL ({note})")
+            for problem in problems:
+                print(f"    {problem}")
+        else:
+            print(f"{label}: OK ({note})")
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

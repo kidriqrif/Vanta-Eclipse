@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EnemyDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_definition.gd" id="1"]
+[ext_resource type="Texture2D" path="res://sprites/enemies/hollow_sentinel.svg" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"hollow_sentinel"
+display_name = "Hollow Sentinel"
+texture = ExtResource("2")
+hp_multiplier = 1.0
+glow_color = Color(0.576, 0.773, 0.992, 1)
+is_boss = false
+view_scale = 1.0

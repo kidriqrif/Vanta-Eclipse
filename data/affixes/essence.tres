@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AffixDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/affix_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"essence"
+stat = &"essence"
+display_template = "Essence Gain +{value}"
+min_value = 0.04
+max_value = 0.12
+is_percent = true
+level_scale = 0.0

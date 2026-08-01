@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ShopProductDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/shop_product_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"starter_pack"
+store_id = "vanta_starter_pack"
+display_name = "Starter Pack"
+description = "25 Void Crystals, 5 Arcade Tokens, and the Ember Trail."
+kind = 1
+price_text = "$2.99"
+crystals = 25.0
+tokens = 5
+cosmetic_id = &"trail_ember"
+sort_order = 1

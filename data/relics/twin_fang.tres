@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="RelicDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/relic_definition.gd" id="1"]
+[ext_resource type="Texture2D" path="res://sprites/ui/relic_twin_fang.svg" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"twin_fang"
+display_name = "Twin Fang"
+sigil = ExtResource("2")
+effect_id = &"attack_speed"
+effect_value = 2.0
+effect_description = "Auto-attacks strike twice as fast."
+flavor = "Two strikes where there was one."
+drop_weight = 1.0

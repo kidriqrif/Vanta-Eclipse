@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="aura" cx="50%" cy="45%" r="50%">
+      <stop offset="0.28" stop-color="#f0562a" stop-opacity="0.18"/>
+      <stop offset="0.5" stop-color="#8b5cf6" stop-opacity="0.32"/>
+      <stop offset="0.8" stop-color="#8b5cf6" stop-opacity="0.1"/>
+      <stop offset="1" stop-color="#8b5cf6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="trunk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a1b4a"/>
+      <stop offset="0.5" stop-color="#1e1240"/>
+      <stop offset="1" stop-color="#120826"/>
+    </linearGradient>
+    <radialGradient id="eye" cx="50%" cy="50%" r="50%">
+      <stop offset="0.2" stop-color="#ffe3d4"/>
+      <stop offset="0.55" stop-color="#fb923c"/>
+      <stop offset="1" stop-color="#fb923c" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="256" cy="230" r="244" fill="url(#aura)"/>
+  <polygon points="256,64 206,18 236,80" fill="#120826"/>
+  <polygon points="256,64 306,18 276,80" fill="#120826"/>
+  <polygon points="218,88 132,34 208,122" fill="#1e1240"/>
+  <polygon points="294,88 380,34 304,122" fill="#1e1240"/>
+  <polygon points="196,120 96,96 194,156" fill="#120826"/>
+  <polygon points="316,120 416,96 318,156" fill="#120826"/>
+  <path fill="url(#trunk)" d="M256 64
+    C 306 96 322 170 316 260
+    C 312 340 300 400 282 436
+    L 296 470 L 268 452 L 256 476 L 244 452 L 216 470 L 230 436
+    C 212 400 200 340 196 260
+    C 190 170 206 96 256 64 Z"/>
+  <path fill="#1e1240" d="M204 420 C 186 448 160 464 130 470 C 164 466 196 452 216 434 Z"/>
+  <path fill="#1e1240" d="M308 420 C 326 448 352 464 382 470 C 348 466 316 452 296 434 Z"/>
+  <ellipse cx="256" cy="160" rx="52" ry="66" fill="#04060a"/>
+  <ellipse cx="234" cy="148" rx="17" ry="21" fill="url(#eye)" transform="rotate(-8 234 148)"/>
+  <ellipse cx="278" cy="148" rx="17" ry="21" fill="url(#eye)" transform="rotate(8 278 148)"/>
+  <ellipse cx="235" cy="147" rx="6" ry="9" fill="#fff4ec"/>
+  <ellipse cx="277" cy="147" rx="6" ry="9" fill="#fff4ec"/>
+</svg>

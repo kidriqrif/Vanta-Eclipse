@@ -1,0 +1,15 @@
+# Normalize line endings to LF for all text files so the project
+# behaves identically on Windows, macOS, and Linux.
+* text=auto eol=lf
+
+# Binary assets — never touch their bytes.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ttf binary
+*.otf binary
+*.wav binary
+*.ogg binary
+*.mp3 binary
+*.zip binary

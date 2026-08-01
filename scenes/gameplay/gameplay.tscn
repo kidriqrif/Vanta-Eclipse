@@ -1,0 +1,411 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/gameplay.gd" id="1"]
+[ext_resource type="Theme" path="res://ui/theme/main_theme.tres" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/common/void_background.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/enemy_view.tscn" id="4"]
+[ext_resource type="Texture2D" path="res://sprites/ui/essence_icon.svg" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/upgrade_shop_panel.tscn" id="6"]
+[ext_resource type="Texture2D" path="res://sprites/ui/auto_attack_icon.svg" id="7"]
+[ext_resource type="Texture2D" path="res://sprites/ui/boss_skull_icon.svg" id="8"]
+[ext_resource type="PackedScene" path="res://scenes/common/countdown_timer_bar.tscn" id="9"]
+
+[node name="Gameplay" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2")
+script = ExtResource("1")
+
+[node name="VoidBackground" parent="." instance=ExtResource("3")]
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 28
+
+[node name="GameplayVBox" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="TopBar" type="HBoxContainer" parent="MarginContainer/GameplayVBox"]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="WorldVBox" type="VBoxContainer" parent="MarginContainer/GameplayVBox/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="WorldLabel" type="Label" parent="MarginContainer/GameplayVBox/TopBar/WorldVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HeaderLabel"
+theme_override_font_sizes/font_size = 38
+text = "DARK FOREST"
+
+[node name="StageLabel" type="Label" parent="MarginContainer/GameplayVBox/TopBar/WorldVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.62, 0.57, 0.75, 1)
+theme_override_font_sizes/font_size = 26
+text = "Enemy Lv. 1"
+
+[node name="AutoAttackBadge" type="PanelContainer" parent="MarginContainer/GameplayVBox/TopBar/WorldVBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+theme_type_variation = &"BadgePanel"
+
+[node name="BadgeHBox" type="HBoxContainer" parent="MarginContainer/GameplayVBox/TopBar/WorldVBox/AutoAttackBadge"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="BadgeIcon" type="TextureRect" parent="MarginContainer/GameplayVBox/TopBar/WorldVBox/AutoAttackBadge/BadgeHBox"]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("7")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BadgeLabel" type="Label" parent="MarginContainer/GameplayVBox/TopBar/WorldVBox/AutoAttackBadge/BadgeHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.369, 0.918, 0.831, 1)
+theme_override_font_sizes/font_size = 24
+text = "AUTO-ATTACK ACTIVE"
+
+[node name="JournalButton" type="Button" parent="MarginContainer/GameplayVBox/TopBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 2
+size_flags_vertical = 0
+expand_icon = true
+
+[node name="JournalPill" type="PanelContainer" parent="MarginContainer/GameplayVBox/TopBar/JournalButton"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -62.0
+offset_top = -8.0
+offset_right = 8.0
+offset_bottom = 34.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_type_variation = &"BadgePanel"
+
+[node name="JournalCount" type="Label" parent="MarginContainer/GameplayVBox/TopBar/JournalButton/JournalPill"]
+unique_name_in_owner = true
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.906, 0.886, 0.973, 1)
+theme_override_font_sizes/font_size = 24
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ShopButton" type="Button" parent="MarginContainer/GameplayVBox/TopBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 2
+size_flags_vertical = 0
+text = "SHOP"
+
+[node name="MenuButton" type="Button" parent="MarginContainer/GameplayVBox/TopBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 96)
+layout_mode = 2
+size_flags_vertical = 0
+text = "MENU"
+
+[node name="EssenceDisplay" type="HBoxContainer" parent="MarginContainer/GameplayVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 12
+
+[node name="EssenceIcon" type="TextureRect" parent="MarginContainer/GameplayVBox/EssenceDisplay"]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+texture = ExtResource("5")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="EssenceLabel" type="Label" parent="MarginContainer/GameplayVBox/EssenceDisplay"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 42
+text = "0"
+vertical_alignment = 1
+
+[node name="EnemyNameLabel" type="Label" parent="MarginContainer/GameplayVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HeaderLabel"
+theme_override_colors/font_color = Color(0.906, 0.886, 0.973, 1)
+theme_override_font_sizes/font_size = 42
+text = "Gloom Wisp"
+horizontal_alignment = 1
+
+[node name="BossPlate" type="HBoxContainer" parent="MarginContainer/GameplayVBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+theme_override_constants/separation = 14
+
+[node name="BossSkullIcon" type="TextureRect" parent="MarginContainer/GameplayVBox/BossPlate"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("8")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BossNameLabel" type="Label" parent="MarginContainer/GameplayVBox/BossPlate"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HeaderLabel"
+theme_override_colors/font_color = Color(0.984, 0.573, 0.235, 1)
+theme_override_colors/font_outline_color = Color(0.486, 0.176, 0.071, 0.8)
+theme_override_colors/font_shadow_color = Color(0.02, 0.01, 0.05, 0.5)
+theme_override_constants/outline_size = 6
+theme_override_constants/shadow_offset_x = 0
+theme_override_constants/shadow_offset_y = 4
+theme_override_font_sizes/font_size = 42
+text = "HOLLOW WARDEN"
+
+[node name="HealthBar" type="ProgressBar" parent="MarginContainer/GameplayVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+max_value = 1.0
+value = 1.0
+show_percentage = false
+
+[node name="HealthLabel" type="Label" parent="MarginContainer/GameplayVBox/HealthBar"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 26
+text = "4 / 4"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TimerBar" parent="MarginContainer/GameplayVBox" instance=ExtResource("9")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="CombatArea" type="Control" parent="MarginContainer/GameplayVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="EnemyView" parent="MarginContainer/GameplayVBox/CombatArea" instance=ExtResource("4")]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -270.0
+offset_right = 250.0
+offset_bottom = 230.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CompanionButton" type="Button" parent="MarginContainer/GameplayVBox/CombatArea"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -248.0
+offset_right = 208.0
+offset_bottom = -48.0
+grow_vertical = 0
+flat = true
+expand_icon = true
+
+[node name="LevelPill" type="PanelContainer" parent="MarginContainer/GameplayVBox/CombatArea/CompanionButton"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -64.0
+offset_top = -54.0
+offset_right = 64.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_type_variation = &"BadgePanel"
+
+[node name="LevelLabel" type="Label" parent="MarginContainer/GameplayVBox/CombatArea/CompanionButton/LevelPill"]
+unique_name_in_owner = true
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.545, 0.361, 0.965, 1)
+theme_override_font_sizes/font_size = 26
+text = "Lv. 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="NewPill" type="PanelContainer" parent="MarginContainer/GameplayVBox/CombatArea/CompanionButton"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -96.0
+offset_top = 6.0
+offset_right = -6.0
+offset_bottom = 48.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_type_variation = &"BadgePanel"
+
+[node name="NewLabel" type="Label" parent="MarginContainer/GameplayVBox/CombatArea/CompanionButton/NewPill"]
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.545, 0.361, 0.965, 1)
+theme_override_font_sizes/font_size = 24
+text = "NEW"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FxLayer" type="Control" parent="MarginContainer/GameplayVBox/CombatArea"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="KillsLabel" type="Label" parent="MarginContainer/GameplayVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.62, 0.57, 0.75, 1)
+theme_override_font_sizes/font_size = 26
+text = "Void creatures slain: 0"
+horizontal_alignment = 1
+
+[node name="ChallengeBossButton" type="Button" parent="MarginContainer/GameplayVBox"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+theme_type_variation = &"PrimaryButton"
+text = "CHALLENGE BOSS"
+
+[node name="BottomRow" type="HBoxContainer" parent="MarginContainer/GameplayVBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="GearButton" type="Button" parent="MarginContainer/GameplayVBox/BottomRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "GEAR"
+
+[node name="CountPill" type="PanelContainer" parent="MarginContainer/GameplayVBox/BottomRow/GearButton"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -118.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 50.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_type_variation = &"BadgePanel"
+
+[node name="CountLabel" type="Label" parent="MarginContainer/GameplayVBox/BottomRow/GearButton/CountPill"]
+unique_name_in_owner = true
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.655, 0.545, 0.98, 1)
+theme_override_font_sizes/font_size = 24
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="UpgradesButton" type="Button" parent="MarginContainer/GameplayVBox/BottomRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "UPGRADES"
+
+[node name="EclipseButton" type="Button" parent="MarginContainer/GameplayVBox/BottomRow"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ECLIPSE"
+expand_icon = true
+
+[node name="ArcadeButton" type="Button" parent="MarginContainer/GameplayVBox/BottomRow"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ARCADE"
+expand_icon = true
+
+[node name="FooterBar" type="HBoxContainer" parent="MarginContainer/GameplayVBox"]
+layout_mode = 2
+
+[node name="SessionLabel" type="Label" parent="MarginContainer/GameplayVBox/FooterBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.55, 0.51, 0.68, 1)
+theme_override_font_sizes/font_size = 24
+text = "Session #1"
+
+[node name="PlayTimeLabel" type="Label" parent="MarginContainer/GameplayVBox/FooterBar"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.51, 0.68, 1)
+theme_override_font_sizes/font_size = 24
+text = "0m 00s"
+horizontal_alignment = 2
+
+[node name="UpgradeShopPanel" parent="." instance=ExtResource("6")]
+unique_name_in_owner = true

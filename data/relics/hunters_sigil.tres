@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="RelicDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/relic_definition.gd" id="1"]
+[ext_resource type="Texture2D" path="res://sprites/ui/relic_hunters_sigil.svg" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"hunters_sigil"
+display_name = "Hunter's Sigil"
+sigil = ExtResource("2")
+effect_id = &"boss_pct"
+effect_value = 0.5
+effect_description = "Boss damage increased by 50%."
+flavor = "Forged to fell the mighty."
+drop_weight = 1.0

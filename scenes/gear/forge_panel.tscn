@@ -1,0 +1,92 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/forge_panel.gd" id="1"]
+
+[node name="ForgePanel" type="Control"]
+layout_mode = 3
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 40.0
+offset_bottom = 1050.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+script = ExtResource("1")
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelVBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="HeaderRow" type="HBoxContainer" parent="Panel/PanelVBox"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="HeaderLabel" type="Label" parent="Panel/PanelVBox/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HeaderLabel"
+theme_override_colors/font_color = Color(0.906, 0.886, 0.973, 1)
+theme_override_font_sizes/font_size = 38
+text = "THE FORGE"
+vertical_alignment = 1
+
+[node name="ForgeCloseButton" type="Button" parent="Panel/PanelVBox/HeaderRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 96)
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "CLOSE"
+
+[node name="PromptLabel" type="Label" parent="Panel/PanelVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.62, 0.57, 0.75, 1)
+theme_override_font_sizes/font_size = 26
+text = "Forge a random item for a slot at your current level."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="SlotScroll" type="ScrollContainer" parent="Panel/PanelVBox"]
+custom_minimum_size = Vector2(0, 264)
+layout_mode = 2
+vertical_scroll_mode = 0
+
+[node name="SlotRow" type="HBoxContainer" parent="Panel/PanelVBox/SlotScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="CostLabel" type="Label" parent="Panel/PanelVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "0 / 20 Void Scraps"
+horizontal_alignment = 1
+
+[node name="OddsLabel" type="Label" parent="Panel/PanelVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.62, 0.57, 0.75, 1)
+theme_override_font_sizes/font_size = 24
+text = "Common 74%  ·  Rare 20%  ·  Epic 5%  ·  Legendary 0.9%  ·  Mythic 0.1%"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="ForgeButton" type="Button" parent="Panel/PanelVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+theme_type_variation = &"PrimaryButton"
+text = "FORGE"
+
+[node name="Spacer" type="Control" parent="Panel/PanelVBox"]
+layout_mode = 2
+size_flags_vertical = 3

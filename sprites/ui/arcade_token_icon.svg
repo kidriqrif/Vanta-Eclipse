@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <radialGradient id="tglow" cx="50%" cy="50%" r="50%">
+      <stop offset="0.3" stop-color="#a6ed6b" stop-opacity="0.45"/>
+      <stop offset="0.72" stop-color="#a6ed6b" stop-opacity="0.13"/>
+      <stop offset="1" stop-color="#a6ed6b" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="tbody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d4fab3"/>
+      <stop offset="0.5" stop-color="#a6ed6b"/>
+      <stop offset="1" stop-color="#3d6b29"/>
+    </linearGradient>
+  </defs>
+  <circle cx="64" cy="64" r="60" fill="url(#tglow)"/>
+  <!-- rounded rhombus token: deep rim, lime body -->
+  <path d="M64 16 L112 64 L64 112 L16 64 Z" fill="#3d6b29" stroke="#2b4a1c" stroke-width="3"
+        stroke-linejoin="round"/>
+  <path d="M64 26 L102 64 L64 102 L26 64 Z" fill="url(#tbody)" stroke-linejoin="round"/>
+  <!-- inner spark -->
+  <path d="M64 46 L82 64 L64 82 L46 64 Z" fill="#d4fab3" fill-opacity="0.9"/>
+  <path d="M64 56 L72 64 L64 72 L56 64 Z" fill="#3d6b29" fill-opacity="0.55"/>
+</svg>

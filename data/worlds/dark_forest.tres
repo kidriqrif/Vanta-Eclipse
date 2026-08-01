@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="WorldDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/world_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"dark_forest"
+display_name = "Dark Forest"
+first_level = 1
+enemy_definition_paths = Array[String](["res://data/enemies/gloom_wisp.tres", "res://data/enemies/thorn_fiend.tres", "res://data/enemies/shade_stalker.tres"])
+boss_definition_paths = Array[String](["res://data/enemies/elder_gloom_wisp.tres", "res://data/enemies/elder_thorn_fiend.tres", "res://data/enemies/elder_shade_stalker.tres", "res://data/enemies/elder_thorn_fiend.tres", "res://data/enemies/hollow_sovereign.tres"])
+deep_color = Color(0.016, 0.008, 0.035, 1)
+nebula_color = Color(0.1, 0.05, 0.22, 1)
+accent_color = Color(0.36, 0.19, 0.66, 1)
+essence_multiplier = 1.0

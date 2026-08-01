@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="RelicDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/relic_definition.gd" id="1"]
+[ext_resource type="Texture2D" path="res://sprites/ui/relic_eclipse_heart.svg" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"eclipse_heart"
+display_name = "Eclipse Heart"
+sigil = ExtResource("2")
+effect_id = &"offline_mult"
+effect_value = 3.0
+effect_description = "Offline rewards are tripled."
+flavor = "It beats in the dark between sessions."
+drop_weight = 1.0

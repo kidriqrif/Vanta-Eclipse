@@ -1,0 +1,343 @@
+extends Control
+## The Journal — quests, dailies and achievements behind one segmented control.
+## A full SceneManager scene, so it holds any boss gate through the existing
+## scene-transition test. Reads QuestManager and asks it to claim; it never
+## grants anything itself.
+
+const IVORY: Color = Color(0.906, 0.886, 0.973, 1)
+const MUTED: Color = Color(0.62, 0.57, 0.75, 1)
+const CARD_BG: Color = Color(0.1, 0.078, 0.157, 0.9)
+const TAB_ACTIVE_BG: Color = Color(0.16, 0.14, 0.24, 1)
+## Each reward figure wears the colour of the family that reward belongs to —
+## the Journal itself claims no accent (visual §1).
+const ESSENCE_INK: Color = Color(0.655, 0.545, 0.98, 1)
+const TOKEN_INK: Color = Color(0.65, 0.93, 0.42, 1)
+const CRYSTAL_INK: Color = Color(0.4, 0.86, 0.85, 1)
+
+var _tab: QuestDefinition.Kind = QuestDefinition.Kind.QUEST
+## id -> the row that renders it, so a completion or claim re-dresses that row
+## in place instead of rebuilding the list under the player's thumb.
+var _rows: Dictionary = {}
+
+@onready var _back_button: Button = %BackButton
+@onready var _ready_pill: PanelContainer = %ReadyPill
+@onready var _ready_label: Label = %ReadyLabel
+@onready var _quests_tab: Button = %QuestsTab
+@onready var _daily_tab: Button = %DailyTab
+@onready var _achievements_tab: Button = %AchievementsTab
+@onready var _reset_label: Label = %ResetLabel
+@onready var _goal_list: VBoxContainer = %GoalList
+@onready var _nebula: ColorRect = $VoidBackground/NebulaRect
+
+
+func _ready() -> void:
+	_apply_world_palette()
+	_back_button.pressed.connect(_on_back_pressed)
+	_quests_tab.pressed.connect(func() -> void: _set_tab(QuestDefinition.Kind.QUEST))
+	_daily_tab.pressed.connect(func() -> void: _set_tab(QuestDefinition.Kind.DAILY))
+	_achievements_tab.pressed.connect(
+		func() -> void: _set_tab(QuestDefinition.Kind.ACHIEVEMENT)
+	)
+	EventBus.goal_completed.connect(_on_goal_changed)
+	EventBus.goal_claimed.connect(_on_goal_claimed)
+	EventBus.dailies_rerolled.connect(_on_dailies_rerolled)
+	# Opening the Journal is one of the two moments dailies can roll over, and
+	# it re-latches anything completed while the screen was closed.
+	QuestManager.refresh_dailies()
+	QuestManager.evaluate()
+	var tick := Timer.new()
+	tick.wait_time = 30.0
+	tick.timeout.connect(_refresh_reset_label)
+	add_child(tick)
+	tick.start()
+	_set_tab(QuestDefinition.Kind.QUEST)
+
+
+# --- Tabs ---------------------------------------------------------------------
+
+
+func _set_tab(kind: QuestDefinition.Kind) -> void:
+	_tab = kind
+	_style_tab(_quests_tab, kind == QuestDefinition.Kind.QUEST)
+	_style_tab(_daily_tab, kind == QuestDefinition.Kind.DAILY)
+	_style_tab(_achievements_tab, kind == QuestDefinition.Kind.ACHIEVEMENT)
+	_reset_label.visible = kind == QuestDefinition.Kind.DAILY
+	_refresh_reset_label()
+	_rebuild()
+
+
+func _refresh_reset_label() -> void:
+	if not _reset_label.visible:
+		return
+	_reset_label.text = "Resets in %s" % _format_reset(
+		QuestManager.seconds_until_daily_reset()
+	)
+
+
+func _style_tab(button: Button, active: bool) -> void:
+	var style := StyleBoxFlat.new()
+	style.set_corner_radius_all(12)
+	style.set_content_margin_all(10)
+	if active:
+		style.bg_color = TAB_ACTIVE_BG
+		style.border_width_bottom = 4
+		style.border_color = IVORY
+	else:
+		style.bg_color = Color(0.1, 0.078, 0.157, 0.6)
+	button.add_theme_stylebox_override("normal", style)
+	button.add_theme_stylebox_override("focus", style)
+	var lit: StyleBoxFlat = style.duplicate()
+	lit.bg_color = TAB_ACTIVE_BG if active else Color(0.14, 0.12, 0.21, 0.85)
+	button.add_theme_stylebox_override("hover", lit)
+	button.add_theme_stylebox_override("pressed", lit)
+	button.add_theme_color_override("font_color", IVORY if active else MUTED)
+	button.add_theme_color_override("font_hover_color", IVORY if active else MUTED)
+
+
+func _format_reset(seconds: int) -> String:
+	@warning_ignore("integer_division")
+	var hours: int = seconds / 3600
+	if hours >= 1:
+		return "%dh" % hours
+	@warning_ignore("integer_division")
+	var minutes: int = seconds / 60
+	return "%dm" % maxi(1, minutes)
+
+
+# --- List ---------------------------------------------------------------------
+
+
+func _rebuild() -> void:
+	for child in _goal_list.get_children():
+		child.queue_free()
+	_rows.clear()
+	var goals: Array[QuestDefinition] = QuestManager.get_goals(_tab)
+	if goals.is_empty():
+		_goal_list.add_child(_muted_label("Nothing here yet."))
+	for definition: QuestDefinition in goals:
+		var row: PanelContainer = _make_row(definition)
+		_rows[definition.id] = row
+		_goal_list.add_child(row)
+	_refresh_ready_pill()
+
+
+func _muted_label(text: String) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_color_override("font_color", MUTED)
+	label.add_theme_font_size_override("font_size", 26)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return label
+
+
+func _make_row(definition: QuestDefinition) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.add_theme_stylebox_override("panel", _card_style(definition))
+
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 8)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.add_child(box)
+
+	# Row 1: name + reward, the reward in its own family's colour.
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 12)
+	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(top)
+	var name_label := Label.new()
+	name_label.text = definition.display_name
+	name_label.add_theme_color_override("font_color", IVORY)
+	name_label.add_theme_font_size_override("font_size", 30)
+	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top.add_child(name_label)
+	var reward := Label.new()
+	reward.text = definition.format_reward()
+	reward.add_theme_color_override("font_color", _reward_ink(definition))
+	reward.add_theme_font_size_override("font_size", 24)
+	reward.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top.add_child(reward)
+
+	# Row 2: description.
+	var description := Label.new()
+	description.text = definition.description
+	description.add_theme_color_override("font_color", MUTED)
+	description.add_theme_font_size_override("font_size", 24)
+	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	description.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(description)
+
+	# Row 3: progress bar + the numeric, which is never omitted.
+	var progress_row := HBoxContainer.new()
+	progress_row.add_theme_constant_override("separation", 12)
+	progress_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(progress_row)
+	var bar := ProgressBar.new()
+	bar.custom_minimum_size = Vector2(0, 28)
+	bar.show_percentage = false
+	bar.max_value = maxf(1.0, definition.target)
+	bar.value = QuestManager.get_progress(definition)
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = IVORY
+	fill.set_corner_radius_all(12)
+	bar.add_theme_stylebox_override("fill", fill)
+	progress_row.add_child(bar)
+	var figure := Label.new()
+	figure.text = _progress_text(definition)
+	figure.add_theme_color_override("font_color", MUTED)
+	figure.add_theme_font_size_override("font_size", 24)
+	figure.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	figure.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	progress_row.add_child(figure)
+
+	# Row 4: the action, when there is one.
+	box.add_child(_make_action(definition))
+	return card
+
+
+func _card_style(definition: QuestDefinition) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.set_corner_radius_all(14)
+	style.set_content_margin_all(16)
+	# A claimed card recedes by dimming its GROUND, never the whole card:
+	# modulate propagates to children and would take the text with it.
+	style.bg_color = Color(CARD_BG.r, CARD_BG.g, CARD_BG.b, CARD_BG.a * 0.55) \
+		if QuestManager.is_claimed(definition) else CARD_BG
+	# The spine brightens when a goal is claimable, so a reward waiting to be
+	# collected is scannable down the left edge before reading a word.
+	style.border_width_left = 4
+	style.border_color = IVORY if QuestManager.is_claimable(definition) \
+		else Color(IVORY.r, IVORY.g, IVORY.b, 0.35)
+	return style
+
+
+func _make_action(definition: QuestDefinition) -> Control:
+	if QuestManager.is_claimable(definition):
+		var claim := Button.new()
+		claim.custom_minimum_size = Vector2(220, 96)
+		claim.size_flags_horizontal = Control.SIZE_SHRINK_END
+		claim.theme_type_variation = &"PrimaryButton"
+		claim.text = "CLAIM"
+		claim.pressed.connect(_on_claim_pressed.bind(definition.id))
+		return claim
+	var marker := Label.new()
+	marker.add_theme_font_size_override("font_size", 24)
+	marker.size_flags_horizontal = Control.SIZE_SHRINK_END
+	marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if QuestManager.is_claimed(definition):
+		marker.text = "● CLAIMED"
+		marker.add_theme_color_override("font_color", MUTED)
+	else:
+		# Incomplete: the numeric above already carries the state, so this row
+		# stays empty rather than repeating it.
+		marker.text = ""
+	return marker
+
+
+func _progress_text(definition: QuestDefinition) -> String:
+	var current: float = QuestManager.get_progress(definition)
+	return "%s / %s" % [
+		NumberFormat.format_exact(current), NumberFormat.format_exact(definition.target)
+	]
+
+
+func _reward_ink(definition: QuestDefinition) -> Color:
+	match definition.reward_kind:
+		QuestDefinition.RewardKind.ARCADE_TOKENS:
+			return TOKEN_INK
+		QuestDefinition.RewardKind.VOID_CRYSTALS:
+			return CRYSTAL_INK
+	return ESSENCE_INK
+
+
+func _refresh_ready_pill() -> void:
+	var count: int = QuestManager.get_unclaimed_count()
+	_ready_pill.visible = count > 0
+	_ready_label.text = "%d READY" % count
+
+
+# --- Signals ------------------------------------------------------------------
+
+
+func _on_claim_pressed(id: StringName) -> void:
+	var text: String = QuestManager.claim(id)
+	if text == "":
+		# Refused: already claimed (a safe double-tap), or a token reward with
+		# no room in the meter — say so rather than looking broken.
+		var definition: QuestDefinition = QuestManager.get_definition(id)
+		if definition != null and QuestManager.is_claimable(definition):
+			_reset_label.visible = true
+			_reset_label.text = "Arcade token meter is full — spend one first."
+		return
+	SettingsManager.vibrate(30)
+
+
+func _on_goal_changed(id: StringName) -> void:
+	_redress(id)
+
+
+func _on_goal_claimed(id: StringName, _reward_text: String) -> void:
+	# Re-dress first — that swaps in the row which shows "● CLAIMED" — and let
+	# _redress pop the REPLACEMENT. Popping the outgoing row would animate a
+	# node being freed in the same frame, which is no animation at all.
+	_redress(id, true)
+	# A claimed quest reveals the next link. Append it rather than rebuilding:
+	# a rebuild would reset the scroll position under the player's thumb.
+	if _tab == QuestDefinition.Kind.QUEST:
+		_append_new_goals()
+
+
+## Add any goal now visible in this tab that has no row yet, preserving scroll.
+func _append_new_goals() -> void:
+	for definition: QuestDefinition in QuestManager.get_goals(_tab):
+		if _rows.has(definition.id):
+			continue
+		var row: PanelContainer = _make_row(definition)
+		_rows[definition.id] = row
+		_goal_list.add_child(row)
+	_refresh_ready_pill()
+
+
+func _on_dailies_rerolled() -> void:
+	if _tab == QuestDefinition.Kind.DAILY:
+		_rebuild()
+
+
+## Replace one row in place, keeping the player's scroll position.
+func _redress(id: StringName, pop: bool = false) -> void:
+	var row: Control = _rows.get(id)
+	var definition: QuestDefinition = QuestManager.get_definition(id)
+	if row == null or not is_instance_valid(row) or definition == null:
+		_refresh_ready_pill()
+		return
+	var index: int = row.get_index()
+	var replacement: PanelContainer = _make_row(definition)
+	_goal_list.add_child(replacement)
+	_goal_list.move_child(replacement, index)
+	_rows[id] = replacement
+	row.queue_free()
+	if pop:
+		# The incoming row is the one that animates; the outgoing one is being
+		# freed this frame and could not show a tween.
+		replacement.pivot_offset = replacement.size * 0.5
+		replacement.scale = Vector2(1.03, 1.03)
+		create_tween().tween_property(replacement, "scale", Vector2.ONE, 0.2) \
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_refresh_ready_pill()
+
+
+func _apply_world_palette() -> void:
+	var world: WorldDefinition = WorldManager.get_world_for_level(CombatManager.enemy_level)
+	var material: ShaderMaterial = _nebula.material
+	material.set_shader_parameter("deep_color", world.deep_color)
+	material.set_shader_parameter("nebula_color", world.nebula_color)
+	material.set_shader_parameter("accent_color", world.accent_color)
+
+
+func _on_back_pressed() -> void:
+	SceneManager.change_scene(SceneManager.SCENE_GAMEPLAY)

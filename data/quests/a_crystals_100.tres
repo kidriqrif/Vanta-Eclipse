@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="QuestDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/quest_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"a_crystals_100"
+display_name = "Crystalline Hoard"
+description = "Hold 100 Void Crystals at once."
+kind = 2
+metric = &"crystals"
+metric_shape = 1
+target = 100.0
+reward_kind = 2
+reward_amount = 5.0
+sort_order = 9
