@@ -157,18 +157,39 @@ beatable on arrival with escalating tension; the level-50 world boss is a
   bundled), in three weights: 900 for display, 800 for anything pressable,
   700 for body. It replaced Cinzel, whose Roman-inscription capitals were the
   single biggest source of the old "fantasy serif" read.
-* The look is **neon arcade shapes at chunky mobile weight**, and two rules
-  hold it together (both encoded in `main_theme.tres`):
-  * **Neon** is a saturated fill over near-black plus a coloured
-    `shadow_color` at a large `shadow_size`. `StyleBoxFlat`'s shadow is the
-    only bloom available without a full-screen pass, so it does the work.
-  * **Chunk** is a large corner radius plus a thick *bottom* border that
-    reads as a pressable lip; pressed states shrink that lip and shift the
-    content margin down, so the button physically sinks.
-* Hierarchy: the primary action is a **filled** cyan button, secondary
-  actions are **outlined**. Accent roles are fixed — cyan is
-  primary/affirmative, magenta is premium/prestige, red is threat, and
-  violet is retained so the per-world nebula palettes still harmonise.
+* **Shape**: a large corner radius plus a thick *bottom* border reading as a
+  pressable lip; pressed states shrink the lip and shift the content margin
+  down, so the button sinks. Glow is a coloured `shadow_color` at a large
+  `shadow_size` — `StyleBoxFlat`'s shadow is the only bloom available without
+  a full-screen pass. Hierarchy is **filled primary, outlined secondary**.
+
+### The colour system
+
+This project has **five** independent colour systems, not one: the theme, the
+rarity tiers (`rarity_style.gd`), the per-world nebula palettes
+(`data/worlds/*.tres`), the enemy `glow_color`s, and the sprite shader's rim.
+The first attempt at a restyle changed only the theme and produced a mess. Four
+rules keep them coherent, and none of them is taste:
+
+1. **One accent hue, used sparingly.** Never several saturated accents at equal
+   weight. Everything else is a violet-tinted near-neutral ramp, so the brand
+   is carried as a *tint* rather than as competing colour.
+2. **The UI accent must not duplicate a game-world colour.** Rarity occupies
+   198° Rare, 270° Epic, 43° Legendary, 347° Mythic; enemy glows add 142°,
+   199–212° and 27°. A UI accent landing on one of those makes a button look
+   like an item rarity. The accent sits at **308°** — the largest free gap,
+   38° from Epic and 39° from Mythic.
+3. **Desaturate for dark.** Every game colour is 92–96% saturated, which
+   vibrates against dark surfaces. UI chrome stays well below that.
+4. **Measure contrast, don't eyeball it.** Body text 15:1 on surface, dim text
+   7:1, and the label on the accent button 7.4:1 (the 7:1 target for critical
+   interactive text, above WCAG AA's 4.5:1).
+
+Semantics deliberately **reuse** the game's own colours rather than inventing
+more: the boss bar is elder-enemy orange, which is an association rather than a
+collision, and the normal enemy bar is a rose desaturated 61 points below
+Mythic so a large dull fill can never be mistaken for a small vivid rarity
+label.
 * Note that `design/ux/milestone-*.md` predate this restyle and describe the
   Cinzel-era treatment. They are kept as the design record of each
   milestone; `main_theme.tres` is the authority on what actually ships.
