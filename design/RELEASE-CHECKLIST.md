@@ -5,6 +5,10 @@ consistent, but it is NOT ready to submit to Google Play.** Everything under
 "Blockers" must be done first, and none of it could be done inside this
 repository — each item needs an account, a credential, a device, or an SDK.
 
+This file lists *what must exist*. `TESTING-GUIDE.md` lists *what must be
+proven*, staged from "does it launch at all" through to production rollout —
+start there, because the project has still never been run.
+
 ---
 
 ## BLOCKERS — must be done before any store submission
@@ -77,11 +81,13 @@ repository — each item needs an account, a credential, a device, or an SDK.
 ## Recommended before launch (not blocking)
 
 - [ ] **Play on a real low-end device.** Nothing in this project has ever been
-      run — it is validated statically, not empirically. Frame pacing, touch
-      accuracy, battery draw and the actual feel of every screen are unverified.
-      The static sweep is deliberately broad, but it can only compare what the
-      files say to each other; no amount of it substitutes for one session on
-      hardware.
+      run — there is not even a `.godot/` import cache — so it is validated
+      statically, not empirically. Frame pacing, touch accuracy, battery draw
+      and the actual feel of every screen are unverified. The static sweep is
+      deliberately broad, but it can only compare what the files say to each
+      other; no amount of it substitutes for one session on hardware.
+      `TESTING-GUIDE.md` Stage 2 covers this; note that a shader which compiles
+      on desktop can still fail on a mobile GPU.
 - [ ] Cloud saves via Play Games Services. `SaveManager.get_full_save_text()`
       already returns exactly the document a provider would upload.
 - [ ] Audio. There is none: `SettingsManager` carries volume settings and the
