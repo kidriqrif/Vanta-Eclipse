@@ -96,11 +96,6 @@ func get_full_save_text() -> String:
 	return JSON.stringify(document, "\t")
 
 
-## True if a save file exists on disk.
-func has_save() -> bool:
-	return FileAccess.file_exists(SAVE_PATH) or FileAccess.file_exists(BACKUP_PATH)
-
-
 ## Permanently delete all saved progress (both main file and backup).
 ## TODO(post-release): expose in Settings behind a Two-Tap Arm confirm. The
 ## Eclipse deliberately does NOT use this — prestige resets run state through

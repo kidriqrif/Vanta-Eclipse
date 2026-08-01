@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/forge_panel.gd" id="1"]
+[ext_resource type="Texture2D" path="res://sprites/ui/forge_icon.svg" id="2"]
 
 [node name="ForgePanel" type="Control"]
 layout_mode = 3
@@ -31,11 +32,19 @@ theme_override_constants/separation = 18
 layout_mode = 2
 theme_override_constants/separation = 20
 
+[node name="ForgeIcon" type="TextureRect" parent="Panel/PanelVBox/HeaderRow"]
+custom_minimum_size = Vector2(46, 46)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("2")
+expand_mode = 1
+stretch_mode = 5
+
 [node name="HeaderLabel" type="Label" parent="Panel/PanelVBox/HeaderRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_type_variation = &"HeaderLabel"
-theme_override_colors/font_color = Color(0.906, 0.886, 0.973, 1)
+theme_type_variation = &"PanelTitle"
 theme_override_font_sizes/font_size = 38
 text = "THE FORGE"
 vertical_alignment = 1
@@ -49,7 +58,7 @@ text = "CLOSE"
 
 [node name="PromptLabel" type="Label" parent="Panel/PanelVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.62, 0.57, 0.75, 1)
+theme_type_variation = &"HeaderLabel"
 theme_override_font_sizes/font_size = 26
 text = "Forge a random item for a slot at your current level."
 horizontal_alignment = 1
@@ -74,7 +83,7 @@ horizontal_alignment = 1
 
 [node name="OddsLabel" type="Label" parent="Panel/PanelVBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.62, 0.57, 0.75, 1)
+theme_type_variation = &"HeaderLabel"
 theme_override_font_sizes/font_size = 24
 text = "Common 74%  ·  Rare 20%  ·  Epic 5%  ·  Legendary 0.9%  ·  Mythic 0.1%"
 horizontal_alignment = 1

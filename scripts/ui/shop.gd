@@ -4,9 +4,6 @@ extends Control
 ## Nothing here gates a mechanic. Offers are bonuses the player may decline
 ## freely; cosmetics change nothing but the look of a tap.
 
-const IVORY: Color = Color(0.906, 0.886, 0.973, 1)
-const MUTED: Color = Color(0.62, 0.57, 0.75, 1)
-const WARN: Color = Color(0.98, 0.75, 0.45, 1)
 const CARD_BG: Color = Color(0.1, 0.078, 0.157, 0.9)
 const TAB_ACTIVE_BG: Color = Color(0.16, 0.14, 0.24, 1)
 
@@ -33,6 +30,13 @@ func _ready() -> void:
 	EventBus.currency_changed.connect(_on_currency_changed)
 	EventBus.purchase_completed.connect(func(_id: StringName) -> void: _rebuild())
 	EventBus.cosmetic_equipped.connect(func(_id: StringName) -> void: _rebuild())
+	# Watching an ad burns one of that placement's daily offers, so the
+	# "N left" line every offer row renders from offers_left() goes stale the
+	# moment a reward is granted. The other two monetization signals already
+	# rebuild here; this one was emitted and listened to by nothing.
+	EventBus.ad_reward_granted.connect(
+		func(_id: StringName, _amount: float) -> void: _rebuild()
+	)
 	_refresh_shards()
 	_set_tab(true)
 
@@ -51,7 +55,7 @@ func _style_tab(button: Button, active: bool) -> void:
 	if active:
 		style.bg_color = TAB_ACTIVE_BG
 		style.border_width_bottom = 4
-		style.border_color = IVORY
+		style.border_color = UIPalette.ink()
 	else:
 		style.bg_color = Color(0.1, 0.078, 0.157, 0.6)
 	button.add_theme_stylebox_override("normal", style)
@@ -60,8 +64,10 @@ func _style_tab(button: Button, active: bool) -> void:
 	lit.bg_color = TAB_ACTIVE_BG if active else Color(0.14, 0.12, 0.21, 0.85)
 	button.add_theme_stylebox_override("hover", lit)
 	button.add_theme_stylebox_override("pressed", lit)
-	button.add_theme_color_override("font_color", IVORY if active else MUTED)
-	button.add_theme_color_override("font_hover_color", IVORY if active else MUTED)
+	button.add_theme_color_override("font_color", UIPalette.ink() if active else UIPalette.muted())
+	button.add_theme_color_override(
+		"font_hover_color", UIPalette.ink() if active else UIPalette.muted()
+	)
 
 
 func _refresh_shards() -> void:
@@ -103,7 +109,7 @@ func _card() -> PanelContainer:
 	style.set_corner_radius_all(14)
 	style.set_content_margin_all(16)
 	style.border_width_left = 4
-	style.border_color = Color(IVORY.r, IVORY.g, IVORY.b, 0.35)
+	style.border_color = Color(UIPalette.ink().r, UIPalette.ink().g, UIPalette.ink().b, 0.35)
 	card.add_theme_stylebox_override("panel", style)
 	return card
 
@@ -123,7 +129,7 @@ func _title_row(box: VBoxContainer, title: String, right: String, ink: Color) ->
 	box.add_child(row)
 	var name_label := Label.new()
 	name_label.text = title
-	name_label.add_theme_color_override("font_color", IVORY)
+	name_label.add_theme_color_override("font_color", UIPalette.ink())
 	name_label.add_theme_font_size_override("font_size", 30)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -141,7 +147,7 @@ func _title_row(box: VBoxContainer, title: String, right: String, ink: Color) ->
 func _description(box: VBoxContainer, text: String) -> void:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_color_override("font_color", MUTED)
+	label.add_theme_color_override("font_color", UIPalette.muted())
 	label.add_theme_font_size_override("font_size", 24)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -163,7 +169,7 @@ func _make_offer_card(placement: AdPlacementDefinition) -> PanelContainer:
 	var card: PanelContainer = _card()
 	var box: VBoxContainer = _body(card)
 	var left: int = MonetizationManager.offers_left(placement.id)
-	_title_row(box, placement.display_name, "%d LEFT TODAY" % left, MUTED)
+	_title_row(box, placement.display_name, "%d LEFT TODAY" % left, UIPalette.muted())
 	_description(box, placement.description)
 	# Owning remove_ads turns the watch into a one-tap grant — the word on the
 	# button changes so the state is never carried by colour alone.
@@ -180,12 +186,12 @@ func _make_product_card(product: ShopProductDefinition) -> PanelContainer:
 	var card: PanelContainer = _card()
 	var box: VBoxContainer = _body(card)
 	var owned: bool = MonetizationManager.is_one_time_owned(product)
-	_title_row(box, product.display_name, "" if owned else product.price_text, IVORY)
+	_title_row(box, product.display_name, "" if owned else product.price_text, UIPalette.ink())
 	_description(box, product.description)
 	if owned:
 		var marker := Label.new()
 		marker.text = "● OWNED"
-		marker.add_theme_color_override("font_color", MUTED)
+		marker.add_theme_color_override("font_color", UIPalette.muted())
 		marker.add_theme_font_size_override("font_size", 24)
 		marker.size_flags_horizontal = Control.SIZE_SHRINK_END
 		marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -201,7 +207,7 @@ func _make_product_card(product: ShopProductDefinition) -> PanelContainer:
 func _make_restore_card() -> PanelContainer:
 	var card: PanelContainer = _card()
 	var box: VBoxContainer = _body(card)
-	_title_row(box, "Restore Purchases", "", MUTED)
+	_title_row(box, "Restore Purchases", "", UIPalette.muted())
 	_description(box, "Re-apply anything this account already owns.")
 	var button: Button = _action_button("RESTORE", true)
 	button.pressed.connect(func() -> void:
@@ -225,7 +231,7 @@ func _make_cosmetic_card(cosmetic: CosmeticDefinition) -> PanelContainer:
 	var owned: bool = MonetizationManager.owns_cosmetic(cosmetic.id)
 	var equipped: bool = MonetizationManager.get_equipped_cosmetic_id() == cosmetic.id
 	var price: String = "" if owned else "%s Shards" % NumberFormat.format(cosmetic.shard_price)
-	_title_row(box, cosmetic.display_name, price, IVORY)
+	_title_row(box, cosmetic.display_name, price, UIPalette.ink())
 
 	# A live swatch of the actual trail and damage-number colours.
 	var swatch_row := HBoxContainer.new()
@@ -243,7 +249,7 @@ func _make_cosmetic_card(cosmetic: CosmeticDefinition) -> PanelContainer:
 		swatch_row.add_child(swatch)
 	var swatch_note := Label.new()
 	swatch_note.text = "trail · numbers"
-	swatch_note.add_theme_color_override("font_color", MUTED)
+	swatch_note.add_theme_color_override("font_color", UIPalette.muted())
 	swatch_note.add_theme_font_size_override("font_size", 24)
 	swatch_note.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	swatch_note.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -252,7 +258,7 @@ func _make_cosmetic_card(cosmetic: CosmeticDefinition) -> PanelContainer:
 	if equipped:
 		var marker := Label.new()
 		marker.text = "● EQUIPPED"
-		marker.add_theme_color_override("font_color", IVORY)
+		marker.add_theme_color_override("font_color", UIPalette.ink())
 		marker.add_theme_font_size_override("font_size", 24)
 		marker.size_flags_horizontal = Control.SIZE_SHRINK_END
 		marker.mouse_filter = Control.MOUSE_FILTER_IGNORE

@@ -142,6 +142,18 @@ def check_signal_arity() -> tuple[list[str], list[str]]:
     never = sorted(s for s in sig if f"{s}.emit(" not in all_src)
     if never:
         problems.append("never emitted (dead signals): " + ", ".join(never))
+
+    # The mirror case, and the one that actually shipped a bug: a signal that
+    # IS emitted but that nothing connects to. It fires into the void, so the
+    # thing meant to react never does — ad_reward_granted was emitted on every
+    # rewarded watch while the Shop's "N left today" line went stale, because
+    # its two sibling monetization signals were wired and it was not.
+    unheard = sorted(
+        s for s in sig
+        if f"{s}.emit(" in all_src and f"{s}.connect(" not in all_src
+    )
+    if unheard:
+        problems.append("emitted but nothing connects: " + ", ".join(unheard))
     return problems, [f"{len(sig)} signals scanned"]
 
 

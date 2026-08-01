@@ -4,8 +4,6 @@ extends Control
 ## scene-transition test. Reads QuestManager and asks it to claim; it never
 ## grants anything itself.
 
-const IVORY: Color = Color(0.906, 0.886, 0.973, 1)
-const MUTED: Color = Color(0.62, 0.57, 0.75, 1)
 const CARD_BG: Color = Color(0.1, 0.078, 0.157, 0.9)
 const TAB_ACTIVE_BG: Color = Color(0.16, 0.14, 0.24, 1)
 ## Each reward figure wears the colour of the family that reward belongs to —
@@ -116,7 +114,7 @@ func _style_tab(button: Button, active: bool) -> void:
 	if active:
 		style.bg_color = TAB_ACTIVE_BG
 		style.border_width_bottom = 4
-		style.border_color = IVORY
+		style.border_color = UIPalette.ink()
 	else:
 		style.bg_color = Color(0.1, 0.078, 0.157, 0.6)
 	button.add_theme_stylebox_override("normal", style)
@@ -125,8 +123,10 @@ func _style_tab(button: Button, active: bool) -> void:
 	lit.bg_color = TAB_ACTIVE_BG if active else Color(0.14, 0.12, 0.21, 0.85)
 	button.add_theme_stylebox_override("hover", lit)
 	button.add_theme_stylebox_override("pressed", lit)
-	button.add_theme_color_override("font_color", IVORY if active else MUTED)
-	button.add_theme_color_override("font_hover_color", IVORY if active else MUTED)
+	button.add_theme_color_override("font_color", UIPalette.ink() if active else UIPalette.muted())
+	button.add_theme_color_override(
+		"font_hover_color", UIPalette.ink() if active else UIPalette.muted()
+	)
 
 
 func _format_reset(seconds: int) -> String:
@@ -159,7 +159,7 @@ func _rebuild() -> void:
 func _muted_label(text: String) -> Label:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_color_override("font_color", MUTED)
+	label.add_theme_color_override("font_color", UIPalette.muted())
 	label.add_theme_font_size_override("font_size", 26)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -183,7 +183,7 @@ func _make_row(definition: QuestDefinition) -> PanelContainer:
 	box.add_child(top)
 	var name_label := Label.new()
 	name_label.text = definition.display_name
-	name_label.add_theme_color_override("font_color", IVORY)
+	name_label.add_theme_color_override("font_color", UIPalette.ink())
 	name_label.add_theme_font_size_override("font_size", 30)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -198,7 +198,7 @@ func _make_row(definition: QuestDefinition) -> PanelContainer:
 	# Row 2: description.
 	var description := Label.new()
 	description.text = definition.description
-	description.add_theme_color_override("font_color", MUTED)
+	description.add_theme_color_override("font_color", UIPalette.muted())
 	description.add_theme_font_size_override("font_size", 24)
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	description.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -218,13 +218,13 @@ func _make_row(definition: QuestDefinition) -> PanelContainer:
 	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var fill := StyleBoxFlat.new()
-	fill.bg_color = IVORY
+	fill.bg_color = UIPalette.ink()
 	fill.set_corner_radius_all(12)
 	bar.add_theme_stylebox_override("fill", fill)
 	progress_row.add_child(bar)
 	var figure := Label.new()
 	figure.text = _progress_text(definition)
-	figure.add_theme_color_override("font_color", MUTED)
+	figure.add_theme_color_override("font_color", UIPalette.muted())
 	figure.add_theme_font_size_override("font_size", 24)
 	figure.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	figure.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -246,8 +246,8 @@ func _card_style(definition: QuestDefinition) -> StyleBoxFlat:
 	# The spine brightens when a goal is claimable, so a reward waiting to be
 	# collected is scannable down the left edge before reading a word.
 	style.border_width_left = 4
-	style.border_color = IVORY if QuestManager.is_claimable(definition) \
-		else Color(IVORY.r, IVORY.g, IVORY.b, 0.35)
+	style.border_color = UIPalette.ink() if QuestManager.is_claimable(definition) \
+		else Color(UIPalette.ink().r, UIPalette.ink().g, UIPalette.ink().b, 0.35)
 	return style
 
 
@@ -266,7 +266,7 @@ func _make_action(definition: QuestDefinition) -> Control:
 	marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if QuestManager.is_claimed(definition):
 		marker.text = "● CLAIMED"
-		marker.add_theme_color_override("font_color", MUTED)
+		marker.add_theme_color_override("font_color", UIPalette.muted())
 	else:
 		# Incomplete: the numeric above already carries the state, so this row
 		# stays empty rather than repeating it.

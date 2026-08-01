@@ -5,8 +5,6 @@ extends Control
 ## scene-transition test. Never required to progress.
 
 const ARCADE: Color = Color(0.65, 0.93, 0.42, 1)
-const IVORY: Color = Color(0.906, 0.886, 0.973, 1)
-const MUTED: Color = Color(0.62, 0.57, 0.75, 1)
 const WARM_MUTED: Color = Color(0.78, 0.62, 0.62, 1)
 const CARD_BG: Color = Color(0.1, 0.078, 0.157, 0.9)
 
@@ -177,7 +175,7 @@ func _make_card(definition: MinigameDefinition) -> PanelContainer:
 	top.add_child(icon)
 	var name_label := Label.new()
 	name_label.text = definition.display_name
-	name_label.add_theme_color_override("font_color", IVORY)
+	name_label.add_theme_color_override("font_color", UIPalette.ink())
 	name_label.add_theme_font_size_override("font_size", 30)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -195,7 +193,7 @@ func _make_card(definition: MinigameDefinition) -> PanelContainer:
 	# Row 2: description.
 	var description := Label.new()
 	description.text = definition.description
-	description.add_theme_color_override("font_color", MUTED)
+	description.add_theme_color_override("font_color", UIPalette.muted())
 	description.add_theme_font_size_override("font_size", 24)
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	description.mouse_filter = Control.MOUSE_FILTER_IGNORE

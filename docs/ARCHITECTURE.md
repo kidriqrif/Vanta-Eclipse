@@ -21,7 +21,7 @@ sweep fails.
 | 1 | `EventBus` | `event_bus.gd` | Global signals. No logic, no state. |
 | 2 | `SettingsManager` | `settings_manager.gd` | Player preferences (`user://settings.cfg`), audio bus volumes, haptics. |
 | 3 | `SaveManager` | `save_manager.gd` | Versioned JSON save file, autosave, atomic writes, migrations. |
-| 4 | `GameManager` | `game_manager.gd` | Game version, play time, session count, pause. Deliberately small. |
+| 4 | `GameManager` | `game_manager.gd` | Game version, play time, session count. Deliberately small &mdash; it does NOT pause: an idle game must keep running. |
 | 5 | `CurrencyManager` | `currency_manager.gd` | All currency balances (essence, void crystals, astral shards). Only add()/try_spend() may change them. |
 | 6 | `UpgradeManager` | `upgrade_manager.gd` | Upgrade definitions + owned levels; answers stat-modifier queries. |
 | 7 | `EquipmentManager` | `equipment_manager.gd` | Inventory, equipped items, procedural generation, drops, salvage, forge. Ahead of `PlayerStats` so it can read the affix sums; items are serialized dicts, affix/slot pools are `.tres`. |

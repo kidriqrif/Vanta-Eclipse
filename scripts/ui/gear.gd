@@ -13,7 +13,6 @@ const ARM_SECONDS: float = 2.5
 const EQUIP_BG: Color = Color(0.086, 0.063, 0.133, 0.92)
 const EMPTY_BG: Color = Color(0.06, 0.05, 0.09, 0.85)
 const SEALED_BG: Color = Color(0.05, 0.045, 0.07, 0.9)
-const MUTED: Color = Color(0.62, 0.57, 0.75)
 
 var _commons_armed: bool = false
 
@@ -133,7 +132,7 @@ func _make_relic_tile() -> Button:
 		icon.modulate = Color(0.7, 0.62, 0.35, 0.30)
 		style.shadow_size = 8
 		sub.text = "Tap to attune"
-		sub.add_theme_color_override("font_color", MUTED)
+		sub.add_theme_color_override("font_color", UIPalette.muted())
 	tile.pressed.connect(_relic_panel.toggle)
 	return tile
 
@@ -191,7 +190,7 @@ func _make_slot_tile(slot: SlotDefinition) -> Button:
 	if slot.sealed:
 		var flavor := Label.new()
 		flavor.text = slot.sealed_flavor
-		flavor.add_theme_color_override("font_color", MUTED)
+		flavor.add_theme_color_override("font_color", UIPalette.muted())
 		flavor.add_theme_font_size_override("font_size", 24)
 		flavor.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		flavor.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -216,7 +215,7 @@ func _make_slot_tile(slot: SlotDefinition) -> Button:
 		box.add_child(pips)
 		var stat := Label.new()
 		stat.text = RarityStyle.key_stat_line(equipped)
-		stat.add_theme_color_override("font_color", MUTED)
+		stat.add_theme_color_override("font_color", UIPalette.muted())
 		stat.add_theme_font_size_override("font_size", 24)
 		stat.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		box.add_child(stat)
@@ -224,7 +223,7 @@ func _make_slot_tile(slot: SlotDefinition) -> Button:
 	else:
 		var empty := Label.new()
 		empty.text = "Empty"
-		empty.add_theme_color_override("font_color", MUTED)
+		empty.add_theme_color_override("font_color", UIPalette.muted())
 		empty.add_theme_font_size_override("font_size", 24)
 		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		box.add_child(empty)
@@ -296,7 +295,7 @@ func _make_inventory_row(item: Dictionary) -> Button:
 	info.add_child(name_label)
 	var stat := Label.new()
 	stat.text = RarityStyle.key_stat_line(item)
-	stat.add_theme_color_override("font_color", MUTED)
+	stat.add_theme_color_override("font_color", UIPalette.muted())
 	stat.add_theme_font_size_override("font_size", 24)
 	info.add_child(stat)
 

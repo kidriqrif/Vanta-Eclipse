@@ -22,7 +22,6 @@ const CARD_BG: Color = Color(0.078, 0.059, 0.122, 0.9)
 
 const ARCADE: Color = Color(0.65, 0.93, 0.42, 1)
 const ARCADE_CORE: Color = Color(0.83, 0.98, 0.7, 1)
-const MUTED: Color = Color(0.62, 0.57, 0.75, 1)
 
 const DEFAULT_PAIRS: int = 6
 const DEFAULT_BUDGET: int = 12
@@ -144,7 +143,7 @@ func _on_card_pressed(index: int) -> void:
 		_resolve_match(a, b)
 	else:
 		_status_label.text = "NO MATCH"
-		_status_label.add_theme_color_override("font_color", MUTED)
+		_status_label.add_theme_color_override("font_color", UIPalette.muted())
 		_hold_timer.start(MISMATCH_HOLD)
 	_refresh_labels()
 
@@ -207,7 +206,7 @@ func _end_run(won: bool) -> void:
 	var detail: String = "%d pairs in %d attempts" % [_matched, _attempts] if won \
 		else "%d of %d pairs" % [_matched, _pairs]
 	_status_label.text = "CLEARED" if won else "OUT OF ATTEMPTS"
-	_status_label.add_theme_color_override("font_color", ARCADE_CORE if won else MUTED)
+	_status_label.add_theme_color_override("font_color", ARCADE_CORE if won else UIPalette.muted())
 	_finish(
 		Outcome.WIN if won else Outcome.LOSS, performance, float(_attempts), detail
 	)

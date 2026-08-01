@@ -57,7 +57,7 @@ text = "DARK FOREST"
 [node name="StageLabel" type="Label" parent="MarginContainer/GameplayVBox/TopBar/WorldVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.62, 0.57, 0.75, 1)
+theme_type_variation = &"HeaderLabel"
 theme_override_font_sizes/font_size = 26
 text = "Enemy Lv. 1"
 
@@ -113,7 +113,6 @@ theme_type_variation = &"BadgePanel"
 [node name="JournalCount" type="Label" parent="MarginContainer/GameplayVBox/TopBar/JournalButton/JournalPill"]
 unique_name_in_owner = true
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.906, 0.886, 0.973, 1)
 theme_override_font_sizes/font_size = 24
 text = "0"
 horizontal_alignment = 1
@@ -156,8 +155,7 @@ vertical_alignment = 1
 [node name="EnemyNameLabel" type="Label" parent="MarginContainer/GameplayVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_type_variation = &"HeaderLabel"
-theme_override_colors/font_color = Color(0.906, 0.886, 0.973, 1)
+theme_type_variation = &"PanelTitle"
 theme_override_font_sizes/font_size = 42
 text = "Gloom Wisp"
 horizontal_alignment = 1
@@ -315,7 +313,7 @@ mouse_filter = 2
 [node name="KillsLabel" type="Label" parent="MarginContainer/GameplayVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.62, 0.57, 0.75, 1)
+theme_type_variation = &"HeaderLabel"
 theme_override_font_sizes/font_size = 26
 text = "Void creatures slain: 0"
 horizontal_alignment = 1

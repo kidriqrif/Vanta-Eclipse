@@ -13,7 +13,6 @@ const CELL_EMPTY: Texture2D = preload("res://sprites/minigames/cell_empty.svg")
 
 const ARCADE: Color = Color(0.65, 0.93, 0.42, 1)
 const ARCADE_CORE: Color = Color(0.83, 0.98, 0.7, 1)
-const MUTED: Color = Color(0.62, 0.57, 0.75, 1)
 const BOARD_BG: Color = Color(0.078, 0.059, 0.122, 0.9)
 
 const EMPTY: int = 0
@@ -188,7 +187,7 @@ func _on_column_pressed(column: int) -> void:
 	if _valid_columns().is_empty():
 		_end_draw()
 		return
-	_set_status("OPPONENT THINKING", MUTED)
+	_set_status("OPPONENT THINKING", UIPalette.muted())
 	_refresh_columns()
 	_think_timer.start(AI_THINK)
 
@@ -371,7 +370,7 @@ func _end_run(won: bool, detail: String, drawn: bool = false) -> void:
 	else:
 		performance = clampf(float(_longest_run(PLAYER) - 1) / float(CONNECT - 1), 0.0, 1.0)
 	var headline: String = "YOU WIN" if won else ("DRAW" if drawn else "DEFEATED")
-	_set_status(headline, ARCADE_CORE if won else MUTED)
+	_set_status(headline, ARCADE_CORE if won else UIPalette.muted())
 	_finish(
 		Outcome.WIN if won else Outcome.LOSS, performance, float(_player_moves), detail
 	)

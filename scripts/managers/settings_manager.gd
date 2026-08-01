@@ -60,27 +60,23 @@ func _notification(what: int) -> void:
 func set_master_volume(value: float) -> void:
 	master_volume = clampf(value, 0.0, 1.0)
 	_apply_bus_volume(BUS_MASTER, master_volume)
-	EventBus.setting_changed.emit("master_volume", master_volume)
 	_queue_save()
 
 
 func set_music_volume(value: float) -> void:
 	music_volume = clampf(value, 0.0, 1.0)
 	_apply_bus_volume(BUS_MUSIC, music_volume)
-	EventBus.setting_changed.emit("music_volume", music_volume)
 	_queue_save()
 
 
 func set_sfx_volume(value: float) -> void:
 	sfx_volume = clampf(value, 0.0, 1.0)
 	_apply_bus_volume(BUS_SFX, sfx_volume)
-	EventBus.setting_changed.emit("sfx_volume", sfx_volume)
 	_queue_save()
 
 
 func set_haptics_enabled(value: bool) -> void:
 	haptics_enabled = value
-	EventBus.setting_changed.emit("haptics_enabled", haptics_enabled)
 	_queue_save()
 
 

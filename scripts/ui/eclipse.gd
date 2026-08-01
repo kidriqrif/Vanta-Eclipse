@@ -11,8 +11,6 @@ const ECLIPSE_TEXTURE: Texture2D = preload("res://sprites/ui/eclipse_icon.svg")
 const CRYSTAL: Color = Color(0.4, 0.86, 0.85, 1)
 const CRYSTAL_CORE: Color = Color(0.76, 0.97, 0.96, 1)
 const CRYSTAL_DEEP: Color = Color(0.16, 0.44, 0.47, 1)
-const IVORY: Color = Color(0.906, 0.886, 0.973, 1)
-const MUTED: Color = Color(0.62, 0.57, 0.75, 1)
 const WARM_MUTED: Color = Color(0.78, 0.62, 0.62, 1)
 const CARD_BG: Color = Color(0.1, 0.078, 0.157, 0.9)
 
@@ -91,8 +89,8 @@ func _style_tab(button: Button, active: bool) -> void:
 		style.bg_color = Color(0.1, 0.078, 0.157, 0.6)
 	for state: String in ["normal", "hover", "pressed", "focus"]:
 		button.add_theme_stylebox_override(state, style)
-	button.add_theme_color_override("font_color", CRYSTAL_CORE if active else MUTED)
-	button.add_theme_color_override("font_hover_color", CRYSTAL_CORE if active else MUTED)
+	button.add_theme_color_override("font_color", CRYSTAL_CORE if active else UIPalette.muted())
+	button.add_theme_color_override("font_hover_color", CRYSTAL_CORE if active else UIPalette.muted())
 
 
 # --- ASCEND panel -------------------------------------------------------------
@@ -114,7 +112,7 @@ func _build_ascend() -> void:
 	var reward: int = PrestigeManager.crystal_reward()
 
 	var lead := _centered_label(
-		"Collapsing this run yields" if can else "Not ready to collapse", 28, MUTED
+		"Collapsing this run yields" if can else "Not ready to collapse", 28, UIPalette.muted()
 	)
 	_ascend_box.add_child(lead)
 
@@ -123,7 +121,7 @@ func _build_ascend() -> void:
 	_ascend_box.add_child(_centered_label(yield_text, 48, CRYSTAL))
 
 	_ascend_box.add_child(_centered_label(
-		"Run peak: Lv. %d" % PrestigeManager.run_peak_level, 24, MUTED
+		"Run peak: Lv. %d" % PrestigeManager.run_peak_level, 24, UIPalette.muted()
 	))
 
 	var columns := HBoxContainer.new()
@@ -140,7 +138,7 @@ func _build_ascend() -> void:
 
 	var note := Label.new()
 	note.text = "*Auto-Attack is re-earned at Lv. 15 — unless Eternal Reflex is owned."
-	note.add_theme_color_override("font_color", MUTED)
+	note.add_theme_color_override("font_color", UIPalette.muted())
 	note.add_theme_font_size_override("font_size", 24)
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -180,7 +178,7 @@ func _make_summary_column(title: String, accent: Color, items: Array) -> PanelCo
 	for item: String in items:
 		var row := Label.new()
 		row.text = "· %s" % item
-		row.add_theme_color_override("font_color", IVORY)
+		row.add_theme_color_override("font_color", UIPalette.ink())
 		row.add_theme_font_size_override("font_size", 24)
 		row.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -322,7 +320,7 @@ func _make_node_card(def: SkillNodeDefinition) -> PanelContainer:
 	box.add_child(name_row)
 	var name_label := Label.new()
 	name_label.text = def.display_name
-	name_label.add_theme_color_override("font_color", IVORY)
+	name_label.add_theme_color_override("font_color", UIPalette.ink())
 	name_label.add_theme_font_size_override("font_size", 30)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -341,7 +339,7 @@ func _make_node_card(def: SkillNodeDefinition) -> PanelContainer:
 	# Row 2: effect line.
 	var effect := Label.new()
 	effect.text = _effect_line(def, level)
-	effect.add_theme_color_override("font_color", MUTED)
+	effect.add_theme_color_override("font_color", UIPalette.muted())
 	effect.add_theme_font_size_override("font_size", 24)
 	effect.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	effect.mouse_filter = Control.MOUSE_FILTER_IGNORE

@@ -10,7 +10,6 @@ const RESULT_BANNER_SCENE: PackedScene = preload("res://scenes/common/result_ban
 
 const ARCADE: Color = Color(0.65, 0.93, 0.42, 1)
 const ARCADE_CORE: Color = Color(0.83, 0.98, 0.7, 1)
-const ARCADE_DEEP: Color = Color(0.24, 0.42, 0.16, 1)
 
 ## How long the armed QUIT confirm stays hot before disarming.
 const ARM_SECONDS: float = 2.5

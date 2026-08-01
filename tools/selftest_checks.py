@@ -29,6 +29,8 @@ COPY = [
     "docs",
     # check_shaders.py reads .gdshader files and the materials driving them.
     "effects",
+    # check_ui.py walks sprites and the fonts the theme references.
+    "sprites", "fonts",
 ]
 
 # Anchors are exact and complete: .tres has no comment syntax, so a mutation
@@ -166,6 +168,28 @@ MUTATIONS: list[Mutation] = [
         'shader = ExtResource("1")\nshader_parameter/bevel_radius_typo = 7.0',
     ),
     (
+        "check_scripts.py",
+        "signal emitted but nothing connects to it",
+        "scripts/ui/shop.gd",
+        "EventBus.ad_reward_granted.connect(",
+        "EventBus.ad_reward_granted_unwired.connect(",
+    ),
+    (
+        "check_ui.py",
+        "scene re-hardcodes a colour the theme already defines",
+        "scenes/gear/gear.tscn",
+        '[node name="EmptyLabel"',
+        'theme_override_colors/font_color = Color(0.91, 0.896, 0.944, 1)\n'
+        '[node name="EmptyLabel"',
+    ),
+    (
+        "check_ui.py",
+        "sprite referenced by nothing",
+        "sprites/ui/_orphan_probe.svg",
+        None,
+        '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"></svg>',
+    ),
+    (
         "check_shaders.py",
         "dead uniform: declared, tunable, read by nothing",
         "effects/dimensional_sprite.gdshader",
@@ -190,7 +214,7 @@ def baseline() -> bool:
     ok = True
     for checker in [
         "check_scripts.py", "check_data.py", "check_wiring.py",
-        "check_architecture.py", "check_shaders.py",
+        "check_architecture.py", "check_shaders.py", "check_ui.py",
     ]:
         result = subprocess.run(
             [sys.executable, str(ROOT / "tools" / checker)],

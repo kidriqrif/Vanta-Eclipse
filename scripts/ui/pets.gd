@@ -4,12 +4,10 @@ extends Control
 ## scene, so it holds any boss gate through the existing scene-transition
 ## test (no ui_overlay plumbing). Never required to progress.
 
-const MUTED: Color = Color(0.62, 0.57, 0.75, 1)
 ## The single companion-class color (visual §2.5/§5). Pets never borrow the
 ## boss-ember threat accent or any per-species tint — growth wears one color.
 const ALLY_VIOLET: Color = Color(0.545, 0.361, 0.965, 1)
 ## Standard data-label ink (visual §2.5, §4-verified contrast).
-const STANDARD: Color = Color(0.906, 0.886, 0.973, 1)
 
 @onready var _showcase: VBoxContainer = %ShowcaseBox
 @onready var _roster: VBoxContainer = %RosterList
@@ -44,7 +42,7 @@ func _build_showcase() -> void:
 	if active == &"":
 		var none := Label.new()
 		none.text = "No active companion."
-		none.add_theme_color_override("font_color", MUTED)
+		none.add_theme_color_override("font_color", UIPalette.muted())
 		none.add_theme_font_size_override("font_size", 28)
 		none.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_showcase.add_child(none)
@@ -94,7 +92,7 @@ func _build_showcase() -> void:
 
 	var bonus := Label.new()
 	bonus.text = _bonus_text(def, level)
-	bonus.add_theme_color_override("font_color", STANDARD)
+	bonus.add_theme_color_override("font_color", UIPalette.ink())
 	bonus.add_theme_font_size_override("font_size", 28)
 	bonus.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_showcase.add_child(bonus)
@@ -102,7 +100,7 @@ func _build_showcase() -> void:
 	if stage < def.evolution_levels.size():
 		var next_evo := Label.new()
 		next_evo.text = "Evolves at Lv. %d" % def.evolution_levels[stage]
-		next_evo.add_theme_color_override("font_color", MUTED)
+		next_evo.add_theme_color_override("font_color", UIPalette.muted())
 		next_evo.add_theme_font_size_override("font_size", 24)
 		next_evo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_showcase.add_child(next_evo)
@@ -187,7 +185,7 @@ func _make_roster_row(id: StringName, is_active: bool) -> Button:
 		name_row.add_child(new_pill)
 	var bonus := Label.new()
 	bonus.text = _bonus_text(def, PetManager.get_level(id))
-	bonus.add_theme_color_override("font_color", MUTED)
+	bonus.add_theme_color_override("font_color", UIPalette.muted())
 	bonus.add_theme_font_size_override("font_size", 24)
 	info.add_child(bonus)
 

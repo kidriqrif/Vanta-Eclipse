@@ -10,7 +10,6 @@ const CLOSED_TOP: float = 40.0
 const OPEN_BOTTOM: float = 0.0
 const CLOSED_BOTTOM: float = 1050.0
 const SLIDE_TIME: float = 0.28
-const AFFORD_COLOR: Color = Color(0.906, 0.886, 0.973)
 const DENY_COLOR: Color = Color(0.9, 0.4, 0.45)
 
 var _is_open: bool = false
@@ -101,7 +100,7 @@ func _refresh() -> void:
 		cost_text += "  ·  Need %s more" % NumberFormat.format(cost - balance)
 	_cost_label.text = cost_text
 	_cost_label.add_theme_color_override(
-		"font_color", AFFORD_COLOR if affordable else DENY_COLOR
+		"font_color", UIPalette.ink() if affordable else DENY_COLOR
 	)
 	_forge_button.text = "FORGE  ·  Item Lv. %d" % CombatManager.enemy_level
 	_forge_button.disabled = not affordable or _selected_slot == &""

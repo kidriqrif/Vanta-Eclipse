@@ -63,7 +63,6 @@ theme_type_variation = &"BadgePanel"
 [node name="ReadyLabel" type="Label" parent="MarginContainer/VBox/HeaderRow/ReadyPill"]
 unique_name_in_owner = true
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.906, 0.886, 0.973, 1)
 theme_override_font_sizes/font_size = 26
 text = "0 READY"
 vertical_alignment = 1
@@ -98,7 +97,7 @@ unique_name_in_owner = true
 visible = false
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.62, 0.57, 0.75, 1)
+theme_type_variation = &"HeaderLabel"
 theme_override_font_sizes/font_size = 24
 text = "Resets in 4h"
 horizontal_alignment = 1

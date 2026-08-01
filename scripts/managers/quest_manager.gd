@@ -179,10 +179,6 @@ func get_progress(definition: QuestDefinition) -> float:
 	return clampf(raw, 0.0, definition.target)
 
 
-func is_complete(definition: QuestDefinition) -> bool:
-	return _completed.has(definition.id)
-
-
 func is_claimed(definition: QuestDefinition) -> bool:
 	return _claimed.has(definition.id)
 

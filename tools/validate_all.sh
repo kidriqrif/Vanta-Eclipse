@@ -69,7 +69,10 @@ echo "8. architecture docs match the code (autoloads, save sections)"
 echo "9. shaders and material parameters"
 "$PY" tools/check_shaders.py | sed 's/^/   /' || status=1
 
-echo "10. font-safe glyphs in button text"
+echo "10. UI theme discipline and asset reachability"
+"$PY" tools/check_ui.py | sed 's/^/   /' || status=1
+
+echo "11. font-safe glyphs in button text"
 "$PY" - <<'PYEOF' || status=1
 import re, pathlib, sys
 # These were absent from Cinzel, the old Button/Header face. Nunito replaced

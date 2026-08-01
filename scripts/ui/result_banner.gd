@@ -12,9 +12,7 @@ const WIN_BORDER: Color = Color(0.655, 0.545, 0.98, 0.9)
 const WIN_SHADOW: Color = Color(0.545, 0.361, 0.965, 0.3)
 const NEUTRAL_BORDER: Color = Color(0.29, 0.22, 0.44, 0.8)
 const NEUTRAL_SHADOW: Color = Color(0.02, 0.01, 0.05, 0.5)
-const WIN_HEADLINE_COLOR: Color = Color(0.93, 0.91, 1, 1)
 const WIN_HEADLINE_OUTLINE: Color = Color(0.42, 0.26, 0.8, 0.55)
-const NEUTRAL_HEADLINE_COLOR: Color = Color(0.906, 0.886, 0.973, 1)
 
 var _icon: Texture2D
 var _headline: String = ""
@@ -48,11 +46,11 @@ func _ready() -> void:
 	stylebox.shadow_size = 18 if _is_win else 12
 	_panel.add_theme_stylebox_override("panel", stylebox)
 	if _is_win:
-		_headline_label.add_theme_color_override("font_color", WIN_HEADLINE_COLOR)
+		_headline_label.add_theme_color_override("font_color", UIPalette.title())
 		_headline_label.add_theme_color_override("font_outline_color", WIN_HEADLINE_OUTLINE)
 		_headline_label.add_theme_constant_override("outline_size", 6)
 	else:
-		_headline_label.add_theme_color_override("font_color", NEUTRAL_HEADLINE_COLOR)
+		_headline_label.add_theme_color_override("font_color", UIPalette.ink())
 
 	_panel.pivot_offset = _panel.size * 0.5
 	_panel.scale = Vector2.ZERO

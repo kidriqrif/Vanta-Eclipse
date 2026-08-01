@@ -11,7 +11,6 @@ const CLOSED_BOTTOM: float = 1050.0
 const SLIDE_TIME: float = 0.28
 const RELIC_IVORY: Color = Color(0.984, 0.906, 0.659, 1)
 const RELIC_GOLD: Color = Color(0.961, 0.769, 0.318, 1)
-const MUTED: Color = Color(0.62, 0.57, 0.75, 1)
 
 var _is_open: bool = false
 var _slide_tween: Tween
@@ -119,7 +118,7 @@ func _make_row(def: RelicDefinition, is_active: bool) -> PanelContainer:
 		name_row.add_child(active_pill)
 	var effect := Label.new()
 	effect.text = def.effect_description
-	effect.add_theme_color_override("font_color", MUTED)
+	effect.add_theme_color_override("font_color", UIPalette.muted())
 	effect.add_theme_font_size_override("font_size", 24)
 	effect.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info.add_child(effect)

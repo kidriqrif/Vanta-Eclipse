@@ -120,7 +120,7 @@ theme_override_constants/separation = 12
 [node name="EmptyLabel" type="Label" parent="MarginContainer/VBox/InventoryScroll/InventoryList"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.62, 0.57, 0.75, 1)
+theme_type_variation = &"HeaderLabel"
 theme_override_font_sizes/font_size = 26
 text = "No items yet — defeat enemies to find gear."
 horizontal_alignment = 1

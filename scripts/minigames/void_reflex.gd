@@ -21,7 +21,6 @@ const FLARE_TWEEN: float = 0.15
 
 const ARCADE: Color = Color(0.65, 0.93, 0.42, 1)
 const ARCADE_CORE: Color = Color(0.83, 0.98, 0.7, 1)
-const MUTED: Color = Color(0.62, 0.57, 0.75, 1)
 
 var _round: int = 0
 var _hits: int = 0
@@ -100,7 +99,7 @@ func _set_resting() -> void:
 	_sigil_icon.scale = Vector2.ONE
 	_sigil_ring.visible = false
 	_state_label.text = "WAIT"
-	_state_label.add_theme_color_override("font_color", MUTED)
+	_state_label.add_theme_color_override("font_color", UIPalette.muted())
 
 
 func _on_flare() -> void:
@@ -124,7 +123,7 @@ func _on_flare_expired() -> void:
 	if not _flared:
 		return
 	_result_label.text = "Missed"
-	_result_label.add_theme_color_override("font_color", MUTED)
+	_result_label.add_theme_color_override("font_color", UIPalette.muted())
 	_next_round()
 
 
@@ -135,7 +134,7 @@ func _on_sigil_pressed() -> void:
 		# Jumped the gun: this round is a miss, but the run continues.
 		_wait_timer.stop()
 		_result_label.text = "Too early!"
-		_result_label.add_theme_color_override("font_color", MUTED)
+		_result_label.add_theme_color_override("font_color", UIPalette.muted())
 		_next_round()
 		return
 	_window_timer.stop()
@@ -172,7 +171,7 @@ func _end_run() -> void:
 	if _hits > 0:
 		detail += " · avg %dms" % int((_reaction_sum / float(_hits)) * 1000.0)
 	_state_label.text = "COMPLETE"
-	_state_label.add_theme_color_override("font_color", ARCADE_CORE if won else MUTED)
+	_state_label.add_theme_color_override("font_color", ARCADE_CORE if won else UIPalette.muted())
 	_finish(
 		Outcome.WIN if won else Outcome.LOSS, performance, float(_hits), detail
 	)

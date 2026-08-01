@@ -7,7 +7,7 @@ extends Resource
 @export var id: StringName = &""
 @export var display_name: String = ""
 @export var trail_color: Color = Color(0.655, 0.545, 0.98, 1)
-@export var number_color: Color = Color(0.906, 0.886, 0.973, 1)
+@export var number_color: Color = Color(0.91, 0.896, 0.944, 1)
 ## Astral Shards to buy it. 0 = granted (the default, or a bundle reward).
 @export var shard_price: float = 0.0
 @export var sort_order: int = 0

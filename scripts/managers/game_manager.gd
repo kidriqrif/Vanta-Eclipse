@@ -52,12 +52,6 @@ func load_save_data(data: Dictionary) -> void:
 # --- Public helpers ----------------------------------------------------------
 
 
-## Pause or unpause the whole game tree. Managers keep running because they
-## set process_mode to PROCESS_MODE_ALWAYS.
-func set_game_paused(paused: bool) -> void:
-	get_tree().paused = paused
-
-
 ## Coarse duration for "you were away" copy, deliberately without seconds
 ## (UX spec design/ux/milestone-4-idle-offline.md §4C):
 ## 42m · 3h 42m · 2d 5h.

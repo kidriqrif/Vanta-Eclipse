@@ -11,7 +11,6 @@ extends Node
 
 enum Rarity { COMMON, RARE, EPIC, LEGENDARY, MYTHIC }
 
-const RARITY_NAMES: Array[String] = ["Common", "Rare", "Epic", "Legendary", "Mythic"]
 const RARITY_AFFIX_COUNT: Array[int] = [1, 2, 3, 4, 5]
 const RARITY_MULT: Array[float] = [1.0, 1.15, 1.3, 1.5, 1.75]
 const RARITY_SALVAGE: Array[int] = [2, 5, 12, 30, 75]

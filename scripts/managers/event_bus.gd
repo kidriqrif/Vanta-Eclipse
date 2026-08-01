@@ -19,11 +19,6 @@ signal game_loaded(is_new_game: bool)
 ## Fired every time a save finishes (autosave, manual save, or save-on-exit).
 signal game_saved(success: bool)
 
-# --- Settings (Milestone 1) ---
-
-## Fired whenever a setting value changes (e.g. "music_volume", 0.8).
-signal setting_changed(setting_name: String, value: Variant)
-
 # --- Scene flow (Milestone 1) ---
 
 ## Fired when a scene transition begins (screen starts fading to black).

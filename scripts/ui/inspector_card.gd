@@ -14,7 +14,6 @@ signal salvage_requested(item_id: int)
 const ARM_SECONDS: float = 2.5
 const UP_COLOR: Color = Color(0.4, 0.85, 0.5)
 const DOWN_COLOR: Color = Color(0.9, 0.4, 0.45)
-const MUTED: Color = Color(0.62, 0.57, 0.75)
 
 var _item: Dictionary
 var _is_equipped: bool
@@ -117,7 +116,7 @@ func _build_info() -> void:
 	if _info_subtitle != "":
 		var sub := Label.new()
 		sub.text = _info_subtitle
-		sub.add_theme_color_override("font_color", MUTED)
+		sub.add_theme_color_override("font_color", UIPalette.muted())
 		sub.add_theme_font_size_override("font_size", 26)
 		sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_body.add_child(sub)
@@ -148,7 +147,7 @@ func _build_header(rarity: int) -> void:
 
 	var sub := Label.new()
 	sub.text = "Item Level %d" % int(_item["item_level"])
-	sub.add_theme_color_override("font_color", MUTED)
+	sub.add_theme_color_override("font_color", UIPalette.muted())
 	sub.add_theme_font_size_override("font_size", 26)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_body.add_child(sub)
@@ -174,7 +173,7 @@ func _build_compare() -> void:
 		return
 	var header := Label.new()
 	header.text = "vs equipped:"
-	header.add_theme_color_override("font_color", MUTED)
+	header.add_theme_color_override("font_color", UIPalette.muted())
 	header.add_theme_font_size_override("font_size", 24)
 	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_body.add_child(header)
