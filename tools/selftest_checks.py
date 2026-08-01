@@ -27,6 +27,8 @@ COPY = [
     "project.godot", "scripts", "data", "tools", "scenes", "ui", "resources",
     # check_architecture.py compares docs/ARCHITECTURE.md against the code.
     "docs",
+    # check_shaders.py reads .gdshader files and the materials driving them.
+    "effects",
 ]
 
 # Anchors are exact and complete: .tres has no comment syntax, so a mutation
@@ -149,6 +151,27 @@ MUTATIONS: list[Mutation] = [
         "| `combat` | `CombatManager` | `shop` | `MonetizationManager` |",
         "| `combat` | `CombatManager` | `shop` | `UpgradeManager` |",
     ),
+    (
+        "check_shaders.py",
+        "runtime parameter: set_shader_parameter names no uniform",
+        "scripts/ui/enemy_view.gd",
+        'set_shader_parameter(&"rim_color"',
+        'set_shader_parameter(&"rim_colour"',
+    ),
+    (
+        "check_shaders.py",
+        "material parameter: a .tres sets a knob the shader does not declare",
+        "effects/dimensional_sprite_material.tres",
+        'shader = ExtResource("1")',
+        'shader = ExtResource("1")\nshader_parameter/bevel_radius_typo = 7.0',
+    ),
+    (
+        "check_shaders.py",
+        "dead uniform: declared, tunable, read by nothing",
+        "effects/dimensional_sprite.gdshader",
+        "void fragment() {",
+        "uniform float unused_knob = 1.0;\n\nvoid fragment() {",
+    ),
 ]
 
 # The enum-dispatch mutation needs data pointing at the new member as well.
@@ -167,7 +190,7 @@ def baseline() -> bool:
     ok = True
     for checker in [
         "check_scripts.py", "check_data.py", "check_wiring.py",
-        "check_architecture.py",
+        "check_architecture.py", "check_shaders.py",
     ]:
         result = subprocess.run(
             [sys.executable, str(ROOT / "tools" / checker)],

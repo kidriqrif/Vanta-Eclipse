@@ -368,6 +368,18 @@ a relic granting a stat key nothing reads, a goal whose metric is never fed, a
 `reward_kind` with no branch. None of it raises; nothing else in the toolchain
 sees it.
 
+**Extended again by the architecture pass** with two more, on the same
+principle — find what fails silently. `tools/check_architecture.py` compares
+`docs/ARCHITECTURE.md` against the code (the autoload table against
+`project.godot`, the save-section table against `register_saveable()` calls),
+because the document asserting itself to be "the first thing to read" had gone
+stale on the one thing it specified most precisely. `tools/check_shaders.py`
+covers the corner nothing read at all: `gdparse` and `gdlint` read GDScript and
+`check_data` reads `.tres`, so a `.gdshader` was unverified, and a
+`shader_parameter` or `set_shader_parameter()` naming a uniform that does not
+exist is discarded with no error anywhere — the tuning knob simply does
+nothing.
+
 **Three traps found while writing those checkers, all of which make a check
 silently vacuous rather than wrong:**
 - A GDScript string regex that does not exclude `\n` lets one apostrophe in

@@ -23,7 +23,8 @@ folder. That folder is intentionally not committed (see `.gitignore`).
 | `scripts/ui/` | Scripts attached to UI scenes |
 | `scripts/minigames/` | The Arcade minigames (Milestone 9+) |
 | `ui/theme/` | The shared dark-fantasy UI theme |
-| `audio/`, `sprites/`, `animations/`, `effects/`, `resources/` | Game assets |
+| `effects/` | Shaders: the nebula backdrop, and the sprite-lighting shader that gives the flat SVG art depth |
+| `audio/`, `sprites/`, `animations/`, `resources/` | Game assets |
 | `data/` | All game content as `.tres`: enemies, upgrades, affixes, relics, pets, skills, quests, worlds, minigames, products |
 | `tools/` | The validation sweep (`validate_all.sh`) and its checkers |
 | `docs/`, `design/` | Architecture documentation and the UX/GDD specs |

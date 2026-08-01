@@ -60,12 +60,15 @@ repository — each item needs an account, a credential, a device, or an SDK.
       (`SaveManager`), so a crash mid-write cannot corrupt progress.
 - [x] Every manager's save section defaults cleanly when absent, so old saves
       load without migration.
-- [x] Static sweep green: `bash tools/validate_all.sh` — `gdparse`, `gdlint`,
-      the scene/resource structural validator, autoload member-existence,
-      call-site arity, plus the debug-pass checkers `check_scripts.py`,
-      `check_data.py` and `check_wiring.py`, and the font-safe glyph check.
+- [x] Static sweep green: `bash tools/validate_all.sh` — ten stages: `gdparse`,
+      `gdlint`, the scene/resource structural validator, autoload
+      member-existence, call-site arity, plus the debug-pass checkers
+      `check_scripts.py`, `check_data.py` and `check_wiring.py`,
+      `check_architecture.py` (docs/ARCHITECTURE.md against the code),
+      `check_shaders.py` (shader structure and material parameters), and the
+      font-safe glyph check.
       Every one of those checkers has a positive control in
-      `tools/selftest_checks.py`, which injects 13 real defects into a copy of
+      `tools/selftest_checks.py`, which injects 19 real defects into a copy of
       the project and requires each to be rejected — so a green sweep means the
       checks ran, not merely that they printed OK.
 

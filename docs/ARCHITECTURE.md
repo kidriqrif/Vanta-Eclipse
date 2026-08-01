@@ -160,6 +160,39 @@ beatable on arrival with escalating tension; the level-50 world boss is a
   consistent look — set `theme_type_variation` on a node instead of
   hand-overriding fonts and colors.
 
+### Giving flat art depth
+
+The sprites are SVGs — clean shapes with a crisp alpha silhouette and no
+shading of their own. Rather than author a normal map per sprite,
+`effects/dimensional_sprite.gdshader` **derives the surface normal from the
+alpha channel**: the alpha gradient points into the shape, so its negation is
+the direction the surface faces, and sampling that gradient several pixels out
+turns a hard edge into a rounded bevel. That normal then drives Lambert
+diffuse, a rim term, and a Blinn-Phong highlight.
+
+This matters architecturally because it is *free to adopt*: any sprite in the
+project gets lit by assigning `effects/dimensional_sprite_material.tres`, with
+no new art and no per-sprite setup. The material is
+`resource_local_to_scene`, so a screen may retint its uniforms without
+affecting other users — `enemy_view.gd` retints `rim_color` per enemy from
+`EnemyDefinition.glow_color`.
+
+Two rules for anything that adopts it:
+
+1. **Modify `COLOR` in place; never rebuild it from `TEXTURE`.** Whatever Godot
+   put in `COLOR` already carries the node's modulate, so hit flashes, fades,
+   and every `modulate` tween keep working. The shader relies on this.
+2. **Light needs ground.** A lit sprite with no shadow reads as a sticker.
+   Pair the material with a contact shadow (`resources/textures/soft_dot.tres`
+   squashed into an ellipse) and counter-animate it against any hover — see
+   `enemy_view.gd`, where the plate tightens and fades on the same curve as
+   the bob.
+
+Budget: 8 texture taps, no branches, no loops, one pass — sized for the
+`mobile` renderer and low-end Android. `tools/check_shaders.py` guards the
+parts that fail silently: a `shader_parameter` or `set_shader_parameter()`
+naming a uniform that does not exist is discarded without an error anywhere.
+
 ## Conventions
 
 * Files and folders: `snake_case` (Godot style guide). Node names: `PascalCase`.

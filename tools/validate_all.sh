@@ -66,7 +66,10 @@ echo "7. data-to-code wiring (stats, metrics, enum dispatch)"
 echo "8. architecture docs match the code (autoloads, save sections)"
 "$PY" tools/check_architecture.py | sed 's/^/   /' || status=1
 
-echo "9. font-safe glyphs in button text"
+echo "9. shaders and material parameters"
+"$PY" tools/check_shaders.py | sed 's/^/   /' || status=1
+
+echo "10. font-safe glyphs in button text"
 "$PY" - <<'PYEOF' || status=1
 import re, pathlib, sys
 UNSAFE = "◈◆★●→"   # absent from Cinzel, the Button/Header face
