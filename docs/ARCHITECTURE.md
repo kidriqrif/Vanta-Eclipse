@@ -153,8 +153,25 @@ beatable on arrival with escalating tension; the level-50 world boss is a
 
 * Shared animated backdrop: `scenes/common/void_background.tscn`
   (nebula shader in `effects/` + drifting dust particles).
-* Display font: Cinzel Bold (`fonts/`, SIL OFL licensed — safe for
-  commercial use; license bundled).
+* Type: **Nunito** (`fonts/`, SIL OFL — safe for commercial use, license
+  bundled), in three weights: 900 for display, 800 for anything pressable,
+  700 for body. It replaced Cinzel, whose Roman-inscription capitals were the
+  single biggest source of the old "fantasy serif" read.
+* The look is **neon arcade shapes at chunky mobile weight**, and two rules
+  hold it together (both encoded in `main_theme.tres`):
+  * **Neon** is a saturated fill over near-black plus a coloured
+    `shadow_color` at a large `shadow_size`. `StyleBoxFlat`'s shadow is the
+    only bloom available without a full-screen pass, so it does the work.
+  * **Chunk** is a large corner radius plus a thick *bottom* border that
+    reads as a pressable lip; pressed states shrink that lip and shift the
+    content margin down, so the button physically sinks.
+* Hierarchy: the primary action is a **filled** cyan button, secondary
+  actions are **outlined**. Accent roles are fixed — cyan is
+  primary/affirmative, magenta is premium/prestige, red is threat, and
+  violet is retained so the per-world nebula palettes still harmonise.
+* Note that `design/ux/milestone-*.md` predate this restyle and describe the
+  Cinzel-era treatment. They are kept as the design record of each
+  milestone; `main_theme.tres` is the authority on what actually ships.
 * All widget styling comes from `ui/theme/main_theme.tres`. Theme
   *variations* (`PrimaryButton`, `TitleLabel`, `HeaderLabel`) give screens a
   consistent look — set `theme_type_variation` on a node instead of

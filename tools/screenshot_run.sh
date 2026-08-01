@@ -67,7 +67,7 @@ echo
 # otherwise stay open forever waiting for input that never comes.
 timeout 120 env VANTA_SHOT_DIR="$OUT_DIR" "$BIN" \
 	--path "$PROJECT_DIR" \
-	--resolution 608x1080 \
+	--resolution ${SHOT_RES:-1080x1920} \
 	--position 40,20 2>&1 | grep -v 'reimport\|loading_editor'
 
 if [ "${PIPESTATUS[0]}" = "124" ]; then

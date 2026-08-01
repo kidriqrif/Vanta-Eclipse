@@ -72,7 +72,11 @@ echo "9. shaders and material parameters"
 echo "10. font-safe glyphs in button text"
 "$PY" - <<'PYEOF' || status=1
 import re, pathlib, sys
-UNSAFE = "◈◆★●→"   # absent from Cinzel, the Button/Header face
+# These were absent from Cinzel, the old Button/Header face. Nunito replaced
+# it and its coverage of these has NOT been verified, so the ban is kept:
+# being over-strict costs a design choice, being under-strict ships .notdef
+# boxes to players.
+UNSAFE = "◈◆★●→"
 bad = []
 for gd in pathlib.Path("scripts").rglob("*.gd"):
     for i, l in enumerate(gd.read_text(encoding="utf-8").splitlines(), 1):

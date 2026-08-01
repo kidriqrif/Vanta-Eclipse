@@ -53,6 +53,17 @@ def check_scene_or_resource(path: Path) -> None:
         if rid not in sub_ids:
             errors.append(f'{rel}: SubResource("{rid}") is not declared')
 
+    # The other direction: a sub_resource nothing references. Godot does not
+    # complain — it loads the orphan, uses it nowhere, and the node silently
+    # falls back to an engine default that can look plausible. This is how a
+    # theme rewrite dropped all five Button/styles/* lines while still
+    # rendering buttons: they were Godot's defaults, not the ones defined
+    # right there in the file.
+    referenced = set(re.findall(r'SubResource\("([^"]+)"\)', text))
+    for rid in sub_resources:
+        if rid not in referenced:
+            errors.append(f'{rel}: sub_resource "{rid}" is declared but never referenced')
+
     # Node tree consistency (scenes only).
     nodes = re.findall(r'\[node name="([^"]+)" type="[^"]+"(?: parent="([^"]*)")?\]', text)
     known_paths = set()

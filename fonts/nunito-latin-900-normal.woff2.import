@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://67ysdfg5bxyl"
-path="res://.godot/imported/cinzel-latin-700-normal.woff2-3b4dd3d0ef5e2b7875402b6d7227256a.fontdata"
+uid="uid://tdw0b5lko3lh"
+path="res://.godot/imported/nunito-latin-900-normal.woff2-57334401d713624b9e73fe937a2e889d.fontdata"
 
 [deps]
 
-source_file="res://fonts/cinzel-latin-700-normal.woff2"
-dest_files=["res://.godot/imported/cinzel-latin-700-normal.woff2-3b4dd3d0ef5e2b7875402b6d7227256a.fontdata"]
+source_file="res://fonts/nunito-latin-900-normal.woff2"
+dest_files=["res://.godot/imported/nunito-latin-900-normal.woff2-57334401d713624b9e73fe937a2e889d.fontdata"]
 
 [params]
 
