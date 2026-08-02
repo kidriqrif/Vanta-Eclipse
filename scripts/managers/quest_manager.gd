@@ -227,6 +227,8 @@ func claim(id: StringName) -> String:
 			MinigameManager.grant_token(int(definition.reward_amount))
 		QuestDefinition.RewardKind.VOID_CRYSTALS:
 			CurrencyManager.add(CurrencyManager.VOID_CRYSTALS, definition.reward_amount)
+		QuestDefinition.RewardKind.ASTRAL_SHARDS:
+			CurrencyManager.add(CurrencyManager.ASTRAL_SHARDS, definition.reward_amount)
 		_:
 			var amount: float = maxf(1.0, floor(
 				IdleManager.get_live_essence_rate() * definition.reward_amount

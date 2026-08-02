@@ -9,4 +9,4 @@ id = &"gloom_wisp"
 display_name = "Gloom Wisp"
 texture = ExtResource("2")
 hp_multiplier = 0.85
-glow_color = Color(0.655, 0.545, 0.98, 1)
+glow_color = Color(0.702, 0.702, 0.741, 1)

@@ -9,6 +9,6 @@ id = &"elder_gloom_wisp"
 display_name = "Elder Gloom Wisp"
 texture = ExtResource("2")
 hp_multiplier = 0.85
-glow_color = Color(0.984, 0.573, 0.235, 1)
+glow_color = Color(1, 0.231, 0.188, 1)
 is_boss = true
 view_scale = 1.3

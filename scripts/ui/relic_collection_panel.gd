@@ -9,8 +9,11 @@ const CLOSED_TOP: float = 40.0
 const OPEN_BOTTOM: float = 0.0
 const CLOSED_BOTTOM: float = 1050.0
 const SLIDE_TIME: float = 0.28
-const RELIC_IVORY: Color = Color(0.984, 0.906, 0.659, 1)
-const RELIC_GOLD: Color = Color(0.961, 0.769, 0.318, 1)
+## Relics were gold — a third accent on a red-and-black screen. They stay
+## special by being the only thing here drawn in full white, with the accent
+## reserved for the one that is actually attuned.
+static func relic_ivory() -> Color: return Color.WHITE
+static func relic_gold() -> Color: return UIPalette.accent()
 
 var _is_open: bool = false
 var _slide_tween: Tween
@@ -82,7 +85,7 @@ func _make_row(def: RelicDefinition, is_active: bool) -> PanelContainer:
 	style.set_corner_radius_all(16)
 	style.set_content_margin_all(18)
 	style.set_border_width_all(2)
-	style.border_color = RELIC_GOLD if is_active else Color(0.78, 0.58, 0.2, 0.5)
+	style.border_color = relic_gold() if is_active else UIPalette.line()
 	row.add_theme_stylebox_override("panel", style)
 
 	var hbox := HBoxContainer.new()
@@ -107,13 +110,13 @@ func _make_row(def: RelicDefinition, is_active: bool) -> PanelContainer:
 	info.add_child(name_row)
 	var name_label := Label.new()
 	name_label.text = def.display_name
-	name_label.add_theme_color_override("font_color", RELIC_IVORY)
+	name_label.add_theme_color_override("font_color", relic_ivory())
 	name_label.add_theme_font_size_override("font_size", 30)
 	name_row.add_child(name_label)
 	if is_active:
 		var active_pill := Label.new()
 		active_pill.text = "● ACTIVE"
-		active_pill.add_theme_color_override("font_color", RELIC_GOLD)
+		active_pill.add_theme_color_override("font_color", relic_gold())
 		active_pill.add_theme_font_size_override("font_size", 24)
 		name_row.add_child(active_pill)
 	var effect := Label.new()

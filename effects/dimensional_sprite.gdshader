@@ -24,7 +24,7 @@ shader_type canvas_item;
 uniform vec2 light_direction = vec2(-0.55, -0.80);
 uniform float light_height : hint_range(0.15, 2.0) = 0.65;
 uniform vec3 light_color : source_color = vec3(1.00, 0.96, 0.92);
-uniform vec3 ambient_color : source_color = vec3(0.45, 0.41, 0.60);
+uniform vec3 ambient_color : source_color = vec3(0.42, 0.42, 0.46);
 
 // How far out the alpha gradient is sampled, in texels. This is the single
 // most important knob: it is the width of the bevel, so it decides whether
@@ -37,7 +37,7 @@ uniform float diffuse_strength : hint_range(0.0, 2.0) = 1.00;
 
 // Rim: the silhouette catching light. This is the term that most sells a
 // curved surface, so it is keyed off the normal rather than faked from UV.
-uniform vec3 rim_color : source_color = vec3(0.62, 0.48, 1.00);
+uniform vec3 rim_color : source_color = vec3(1.00, 0.231, 0.188);
 uniform float rim_strength : hint_range(0.0, 2.0) = 0.55;
 uniform float rim_power : hint_range(0.5, 8.0) = 2.60;
 

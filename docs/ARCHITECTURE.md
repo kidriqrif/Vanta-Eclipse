@@ -212,10 +212,22 @@ label.
   height. Without them the three Settings volume sliders rendered as a single
   4px dot: the styles *were* assigned, so the theme looked complete while the
   screen was empty. Also checked by `check_ui.py`.
-* A door's accent is scoped to that door and never mixes (Eclipse teal, Arcade
-  lime). That includes the destination screen's own primary action, not just
-  the button that leads there — the Arcade was lime everywhere except its four
-  PLAY buttons, which came out in the global pink.
+* **One accent, spent not sprayed.** The scheme is red on true-neutral black.
+  Red marks the primary action, the active state and danger, and nothing else;
+  everything the player is not currently being asked to do is neutral. That
+  restraint is most of what reads as "minimal" — the previous theme put its
+  accent on every border, title and pill at once.
+* The bright accent (`#FF3B30`) and the deep accent (`#A8101A`) are two jobs,
+  not two shades. The first has to be READ against black (5.4:1), the second
+  read THROUGH by white text on top of it (7.6:1). No single red clears both.
+* **Per-door accents are retired.** Eclipse teal and Arcade lime were two extra
+  neon hues on the busiest row in the game. Doors are told apart by icon and
+  label, which is what players navigate by. Rarity is likewise a VALUE ladder
+  now — grey to near-white — with chroma only on Mythic, which is safe because
+  `make_pip_row()` has always carried the tier by pip count.
+* Colour in the game world follows the same rule: ordinary enemies glow pale,
+  and only bosses burn red. Nebula backdrops are near-black, separated by
+  temperature and value rather than hue.
 * Every screen is a full-bleed background plus a root `MarginContainer` holding
   all the UI. Keep that shape: `SceneManager` insets **that node** by the
   display safe area, so a notch or gesture bar pushes the controls in while the

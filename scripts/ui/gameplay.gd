@@ -19,12 +19,12 @@ const LOOT_TOAST_SCENE: PackedScene = preload("res://scenes/gear/loot_toast.tscn
 const ECLIPSE_TEXTURE: Texture2D = preload("res://sprites/ui/eclipse_icon.svg")
 const ARCADE_TOKEN_TEXTURE: Texture2D = preload("res://sprites/ui/arcade_token_icon.svg")
 const JOURNAL_TEXTURE: Texture2D = preload("res://sprites/ui/journal_icon.svg")
-## The prestige accent, scoped to the Eclipse door here (visual §1).
-const ECLIPSE_CRYSTAL: Color = Color(0.4, 0.86, 0.85, 1)
-const ECLIPSE_CRYSTAL_DEEP: Color = Color(0.16, 0.44, 0.47, 1)
-## The Arcade accent, scoped to the Arcade door here (M9 visual §1).
-const ARCADE_LIME: Color = Color(0.65, 0.93, 0.42, 1)
-const ARCADE_LIME_DEEP: Color = Color(0.24, 0.42, 0.16, 1)
+## The per-door accents (Eclipse teal, Arcade lime) are RETIRED. Under a
+## one-accent scheme two extra neon hues on the busiest row of the game were
+## the loudest thing on screen and the first thing to break the red-and-black
+## read. The doors are still distinguishable — each keeps its own icon and
+## label, which is what players actually navigate by — and the single accent is
+## now spent on the thing being asked for rather than on the furniture.
 ## Pending banners held while one plays. A Frozen-Ruins gate kill can fire
 ## four in a single frame (BOSS FELLED → RELIC RECOVERED → MYTHIC DROP →
 ## pet unlock); at ~2.2s each this caps the chain just under nine seconds.
@@ -121,7 +121,7 @@ func _ready() -> void:
 	_style_eclipse_button()
 	_eclipse_button.visible = PrestigeManager.is_unlocked()
 	_arcade_button.pressed.connect(_on_arcade_pressed)
-	_style_door_button(_arcade_button, ARCADE_TOKEN_TEXTURE, ARCADE_LIME, ARCADE_LIME_DEEP)
+	_style_door_button(_arcade_button, ARCADE_TOKEN_TEXTURE)
 	_arcade_button.visible = MinigameManager.is_arcade_unlocked()
 	_journal_button.pressed.connect(_on_journal_pressed)
 	_style_journal_button()
@@ -316,26 +316,22 @@ func _on_companion_pressed() -> void:
 ## A "door" button wears its destination's family tint, so the special
 ## entrances in the bottom row read apart from the routine ones (visual §4).
 ## Each door keeps its own accent — the tints never mix.
-func _style_door_button(
-	button: Button, icon: Texture2D, accent: Color, deep: Color
-) -> void:
+func _style_door_button(button: Button, icon: Texture2D) -> void:
 	button.icon = icon
-	button.add_theme_color_override("font_color", accent)
-	button.add_theme_color_override("font_hover_color", accent)
+	button.add_theme_color_override("font_color", UIPalette.ink())
+	button.add_theme_color_override("font_hover_color", Color.WHITE)
 	var style := StyleBoxFlat.new()
-	style.bg_color = deep
-	style.set_corner_radius_all(14)
+	style.bg_color = UIPalette.surface()
+	style.set_corner_radius_all(6)
 	style.set_content_margin_all(12)
 	style.set_border_width_all(2)
-	style.border_color = Color(accent.r, accent.g, accent.b, 0.6)
+	style.border_color = UIPalette.line()
 	for state: String in ["normal", "hover", "pressed"]:
 		button.add_theme_stylebox_override(state, style)
 
 
 func _style_eclipse_button() -> void:
-	_style_door_button(
-		_eclipse_button, ECLIPSE_TEXTURE, ECLIPSE_CRYSTAL, ECLIPSE_CRYSTAL_DEEP
-	)
+	_style_door_button(_eclipse_button, ECLIPSE_TEXTURE)
 
 
 func _on_eclipse_pressed() -> void:
@@ -352,11 +348,11 @@ func _on_arcade_pressed() -> void:
 func _style_journal_button() -> void:
 	_journal_button.icon = JOURNAL_TEXTURE
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.1, 0.078, 0.157, 0.7)
-	style.set_corner_radius_all(14)
+	style.bg_color = UIPalette.surface()
+	style.set_corner_radius_all(6)
 	style.set_content_margin_all(8)
 	style.set_border_width_all(2)
-	style.border_color = Color(0.235, 0.18, 0.361, 0.7)
+	style.border_color = UIPalette.line()
 	for state: String in ["normal", "hover", "pressed"]:
 		_journal_button.add_theme_stylebox_override(state, style)
 

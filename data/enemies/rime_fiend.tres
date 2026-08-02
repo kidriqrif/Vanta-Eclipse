@@ -9,6 +9,6 @@ id = &"rime_fiend"
 display_name = "Rime Fiend"
 texture = ExtResource("2")
 hp_multiplier = 1.25
-glow_color = Color(0.576, 0.773, 0.992, 1)
+glow_color = Color(0.702, 0.702, 0.741, 1)
 is_boss = false
 view_scale = 1.0

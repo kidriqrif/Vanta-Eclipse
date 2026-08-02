@@ -4,16 +4,9 @@ extends Control
 ## A full SceneManager scene, so it holds any boss gate through the existing
 ## scene-transition test. Never required to progress.
 
-const ARCADE: Color = Color(0.65, 0.93, 0.42, 1)
-## The lime deep/core pair the PLAY button is built from, matching the door
-## button that leads here (gameplay.gd) and the Eclipse screen's own treatment.
-const ARCADE_DEEP: Color = Color(0.24, 0.42, 0.16, 1)
-const ARCADE_CORE: Color = Color(0.83, 0.98, 0.7, 1)
-## Dark enough on the lime fill to clear the 7:1 the theme holds itself to.
-const ARCADE_ON_ACCENT: Color = Color(0.05, 0.12, 0.03, 1)
-const WARM_MUTED: Color = Color(0.78, 0.62, 0.62, 1)
-const CARD_BG: Color = Color(0.1, 0.078, 0.157, 0.9)
-
+## The Arcade lime is retired with the other door accent; the screen now uses
+## the one accent and is told apart by its icons and its token meter.
+static func arcade() -> Color: return UIPalette.accent()
 ## How often the "next token in" line and the PLAY buttons re-read the meter.
 const TICK_SECONDS: float = 1.0
 ## The opt-in offer surfaced when the meter runs dry (M14 §2).
@@ -154,11 +147,11 @@ func _make_card(definition: MinigameDefinition) -> PanelContainer:
 	# A locked card recedes by dimming its BACKGROUND, never the whole card:
 	# modulating would drag the description under the contrast floor.
 	if unlocked:
-		style.bg_color = CARD_BG
-		style.border_color = ARCADE
+		style.bg_color = UIPalette.surface()
+		style.border_color = arcade()
 	else:
-		style.bg_color = Color(CARD_BG.r, CARD_BG.g, CARD_BG.b, CARD_BG.a * 0.55)
-		style.border_color = Color(ARCADE.r, ARCADE.g, ARCADE.b, 0.4)
+		style.bg_color = UIPalette.fade(UIPalette.surface(), 0.5)
+		style.border_color = UIPalette.line()
 	card.add_theme_stylebox_override("panel", style)
 
 	var box := VBoxContainer.new()
@@ -190,7 +183,7 @@ func _make_card(definition: MinigameDefinition) -> PanelContainer:
 	if MinigameManager.has_best(definition.id):
 		var best := Label.new()
 		best.text = "Best: %s" % NumberFormat.format(MinigameManager.get_best(definition.id))
-		best.add_theme_color_override("font_color", ARCADE)
+		best.add_theme_color_override("font_color", arcade())
 		best.add_theme_font_size_override("font_size", 24)
 		best.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		best.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -209,7 +202,7 @@ func _make_card(definition: MinigameDefinition) -> PanelContainer:
 	if not unlocked:
 		var locked := Label.new()
 		locked.text = "REACHES Lv. %d" % definition.unlock_level
-		locked.add_theme_color_override("font_color", WARM_MUTED)
+		locked.add_theme_color_override("font_color", UIPalette.muted())
 		locked.add_theme_font_size_override("font_size", 24)
 		locked.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(locked)
@@ -254,17 +247,13 @@ func _dress_play_button(button: Button, definition: MinigameDefinition) -> void:
 ## four of them came out in the global pink.
 func _paint_lime(button: Button) -> void:
 	var style := StyleBoxFlat.new()
-	style.bg_color = ARCADE
-	style.set_corner_radius_all(28)
+	style.bg_color = UIPalette.accent_deep()
+	style.set_corner_radius_all(6)
 	style.set_content_margin_all(16)
-	style.border_width_bottom = 8
-	style.border_color = ARCADE_DEEP
-	style.shadow_color = Color(ARCADE.r, ARCADE.g, ARCADE.b, 0.32)
-	style.shadow_size = 22
 	for state: String in ["normal", "hover", "pressed"]:
 		button.add_theme_stylebox_override(state, style)
-	button.add_theme_color_override("font_color", ARCADE_ON_ACCENT)
-	button.add_theme_color_override("font_hover_color", ARCADE_ON_ACCENT)
+	button.add_theme_color_override("font_color", Color.WHITE)
+	button.add_theme_color_override("font_hover_color", Color.WHITE)
 
 
 func _on_play_pressed(definition: MinigameDefinition) -> void:

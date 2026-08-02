@@ -4,12 +4,21 @@ extends RefCounted
 ## that carries rarity color-free. Used by slot tiles, inventory rows, the
 ## Inspector Card, and Loot Toasts so the system is defined once.
 
+## A VALUE ladder, not a rainbow. The tiers used to be five saturated hues
+## (blue / violet / gold / rose), which is four accents competing with the UI
+## and with each other. Here they climb in brightness and only the top tier is
+## allowed any chroma, so a Mythic drop is the one moment colour appears in the
+## inventory at all.
+##
+## This is safe to do because rarity never depended on colour: make_pip_row()
+## below draws (rarity + 1) pips, so the tier is carried by COUNT and the
+## colour has always been reinforcement.
 const COLORS: Array[Color] = [
-	Color(0.612, 0.639, 0.686, 1),  # Common
-	Color(0.22, 0.741, 0.973, 1),   # Rare
-	Color(0.753, 0.518, 0.988, 1),  # Epic
-	Color(0.984, 0.749, 0.141, 1),  # Legendary
-	Color(0.984, 0.353, 0.49, 1),   # Mythic
+	Color(0.404, 0.404, 0.435, 1),  # Common — recedes
+	Color(0.588, 0.588, 0.624, 1),  # Rare
+	Color(0.769, 0.769, 0.804, 1),  # Epic
+	Color(0.949, 0.949, 0.965, 1),  # Legendary — near white
+	Color(1.0, 0.231, 0.188, 1),    # Mythic — the accent, and only here
 ]
 const NAMES: Array[String] = ["Common", "Rare", "Epic", "Legendary", "Mythic"]
 

@@ -15,9 +15,6 @@ const TILE_PAD: float = 14.0
 const TILE_LOCK_CLEARANCE: float = 58.0
 const ROW_HEIGHT: float = 140.0
 const ARM_SECONDS: float = 2.5
-const EQUIP_BG: Color = Color(0.086, 0.063, 0.133, 0.92)
-const EMPTY_BG: Color = Color(0.06, 0.05, 0.09, 0.85)
-const SEALED_BG: Color = Color(0.05, 0.045, 0.07, 0.9)
 
 var _commons_armed: bool = false
 
@@ -81,7 +78,6 @@ func _rebuild_slots() -> void:
 			_slot_grid.add_child(_make_slot_tile(slot))
 
 
-## The awakened relic tile (gold Aureate frame) — opens the Relic Collection.
 ## A tile's centred content column, inset from the tile border.
 ##
 ## PRESET_FULL_RECT on its own spans the tile's ENTIRE rect and ignores the
@@ -104,19 +100,16 @@ func _make_tile_box(tile: Button, bottom_inset: float) -> VBoxContainer:
 	return box
 
 
+## The awakened relic tile — opens the Relic Collection.
 func _make_relic_tile() -> Button:
 	var tile := Button.new()
 	tile.custom_minimum_size = SLOT_TILE_SIZE
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.10, 0.086, 0.055, 0.92)
-	style.set_corner_radius_all(16)
+	style.bg_color = UIPalette.raised()
+	style.set_corner_radius_all(6)
 	style.set_content_margin_all(12)
 	style.set_border_width_all(3)
-	style.border_color = Color(0.961, 0.769, 0.318, 0.95)
-	style.shadow_color = Color(0.961, 0.769, 0.318, 0.3)
-	# 12 is the single sanctioned relic-glow step (visual §1.3/§5); the empty
-	# tile softens further below so it never out-glows an attuned one.
-	style.shadow_size = 12
+	style.border_color = UIPalette.ink()
 	tile.add_theme_stylebox_override("normal", style)
 	tile.add_theme_stylebox_override("hover", style)
 	tile.add_theme_stylebox_override("pressed", style)
@@ -125,7 +118,7 @@ func _make_relic_tile() -> Button:
 
 	var kicker := Label.new()
 	kicker.text = "RELIC"
-	kicker.add_theme_color_override("font_color", Color(0.984, 0.906, 0.659, 1))
+	kicker.add_theme_color_override("font_color", UIPalette.ink())
 	kicker.add_theme_font_size_override("font_size", 24)
 	kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(kicker)
@@ -151,8 +144,7 @@ func _make_relic_tile() -> Button:
 		# it down and dim the tile's own glow so it never reads as attuned
 		# (visual §1.3).
 		icon.texture = RELIC_SLOT_ICON
-		icon.modulate = Color(0.7, 0.62, 0.35, 0.30)
-		style.shadow_size = 8
+		icon.modulate = UIPalette.fade(UIPalette.muted(), 0.35)
 		sub.text = "Tap to attune"
 		sub.add_theme_color_override("font_color", UIPalette.muted())
 	tile.pressed.connect(_relic_panel.toggle)
@@ -164,14 +156,14 @@ func _make_slot_tile(slot: SlotDefinition) -> Button:
 	tile.custom_minimum_size = SLOT_TILE_SIZE
 	var equipped: Dictionary = EquipmentManager.get_equipped(slot.id)
 	var style := StyleBoxFlat.new()
-	style.set_corner_radius_all(16)
+	style.set_corner_radius_all(6)
 	style.set_content_margin_all(12)
 	if slot.sealed:
-		style.bg_color = SEALED_BG
+		style.bg_color = UIPalette.fade(UIPalette.surface(), 0.85)
 		style.set_border_width_all(2)
-		style.border_color = Color(0.2, 0.19, 0.24, 0.7)
+		style.border_color = UIPalette.fade(UIPalette.line(), 0.7)
 	elif not equipped.is_empty():
-		style.bg_color = EQUIP_BG
+		style.bg_color = UIPalette.raised()
 		style.set_border_width_all(3)
 		style.border_color = RarityStyle.color(int(equipped["rarity"]))
 		var glow: Color = RarityStyle.color(int(equipped["rarity"]))
@@ -179,9 +171,9 @@ func _make_slot_tile(slot: SlotDefinition) -> Button:
 		style.shadow_color = glow
 		style.shadow_size = 8
 	else:
-		style.bg_color = EMPTY_BG
+		style.bg_color = UIPalette.surface()
 		style.set_border_width_all(2)
-		style.border_color = Color(0.235, 0.18, 0.361, 0.6)
+		style.border_color = UIPalette.line()
 	tile.add_theme_stylebox_override("normal", style)
 	tile.add_theme_stylebox_override("hover", style)
 	tile.add_theme_stylebox_override("pressed", style)
@@ -275,7 +267,7 @@ func _make_inventory_row(item: Dictionary) -> Button:
 	var row := Button.new()
 	row.custom_minimum_size = Vector2(0, ROW_HEIGHT)
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.10, 0.078, 0.157, 0.9)
+	style.bg_color = UIPalette.fade(UIPalette.surface(), 0.9)
 	style.set_corner_radius_all(14)
 	style.set_content_margin_all(14)
 	style.content_margin_left = 22.0
@@ -329,7 +321,7 @@ func _make_inventory_row(item: Dictionary) -> Button:
 	if EquipmentManager.is_item_unseen(item):
 		var new_pill := Label.new()
 		new_pill.text = "NEW"
-		new_pill.add_theme_color_override("font_color", Color(0.655, 0.545, 0.98, 1))
+		new_pill.add_theme_color_override("font_color", Color.WHITE)
 		new_pill.add_theme_font_size_override("font_size", 24)
 		new_pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		hbox.add_child(new_pill)

@@ -4,13 +4,13 @@ extends Control
 ## scene-transition test. Reads QuestManager and asks it to claim; it never
 ## grants anything itself.
 
-const CARD_BG: Color = Color(0.1, 0.078, 0.157, 0.9)
-const TAB_ACTIVE_BG: Color = Color(0.16, 0.14, 0.24, 1)
+
 ## Each reward figure wears the colour of the family that reward belongs to —
 ## the Journal itself claims no accent (visual §1).
-const ESSENCE_INK: Color = Color(0.655, 0.545, 0.98, 1)
-const TOKEN_INK: Color = Color(0.65, 0.93, 0.42, 1)
-const CRYSTAL_INK: Color = Color(0.4, 0.86, 0.85, 1)
+## Reward text used to be tinted per currency — violet, lime, teal — which put
+## three accents in a list whose own words already say what the reward is. They
+## are one muted register now, except Astral Shards: those are the scarcest
+## thing the Journal hands out, so they get the accent and nothing else does.
 
 ## How long a claim refusal borrows the reset label before the normal
 ## "Resets in …" text is allowed back.
@@ -112,15 +112,15 @@ func _style_tab(button: Button, active: bool) -> void:
 	style.set_corner_radius_all(12)
 	style.set_content_margin_all(10)
 	if active:
-		style.bg_color = TAB_ACTIVE_BG
+		style.bg_color = UIPalette.raised()
 		style.border_width_bottom = 4
 		style.border_color = UIPalette.ink()
 	else:
-		style.bg_color = Color(0.1, 0.078, 0.157, 0.6)
+		style.bg_color = UIPalette.fade(UIPalette.surface(), 0.6)
 	button.add_theme_stylebox_override("normal", style)
 	button.add_theme_stylebox_override("focus", style)
 	var lit: StyleBoxFlat = style.duplicate()
-	lit.bg_color = TAB_ACTIVE_BG if active else Color(0.14, 0.12, 0.21, 0.85)
+	lit.bg_color = UIPalette.raised() if active else UIPalette.fade(UIPalette.surface(), 0.85)
 	button.add_theme_stylebox_override("hover", lit)
 	button.add_theme_stylebox_override("pressed", lit)
 	button.add_theme_color_override("font_color", UIPalette.ink() if active else UIPalette.muted())
@@ -241,8 +241,8 @@ func _card_style(definition: QuestDefinition) -> StyleBoxFlat:
 	style.set_content_margin_all(16)
 	# A claimed card recedes by dimming its GROUND, never the whole card:
 	# modulate propagates to children and would take the text with it.
-	style.bg_color = Color(CARD_BG.r, CARD_BG.g, CARD_BG.b, CARD_BG.a * 0.55) \
-		if QuestManager.is_claimed(definition) else CARD_BG
+	style.bg_color = UIPalette.fade(UIPalette.surface(), 0.5) \
+		if QuestManager.is_claimed(definition) else UIPalette.surface()
 	# The spine brightens when a goal is claimable, so a reward waiting to be
 	# collected is scannable down the left edge before reading a word.
 	style.border_width_left = 4
@@ -283,11 +283,9 @@ func _progress_text(definition: QuestDefinition) -> String:
 
 func _reward_ink(definition: QuestDefinition) -> Color:
 	match definition.reward_kind:
-		QuestDefinition.RewardKind.ARCADE_TOKENS:
-			return TOKEN_INK
-		QuestDefinition.RewardKind.VOID_CRYSTALS:
-			return CRYSTAL_INK
-	return ESSENCE_INK
+		QuestDefinition.RewardKind.ASTRAL_SHARDS:
+			return UIPalette.accent()
+	return UIPalette.muted()
 
 
 func _refresh_ready_pill() -> void:

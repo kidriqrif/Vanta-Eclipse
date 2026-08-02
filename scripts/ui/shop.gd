@@ -4,8 +4,6 @@ extends Control
 ## Nothing here gates a mechanic. Offers are bonuses the player may decline
 ## freely; cosmetics change nothing but the look of a tap.
 
-const CARD_BG: Color = Color(0.1, 0.078, 0.157, 0.9)
-const TAB_ACTIVE_BG: Color = Color(0.16, 0.14, 0.24, 1)
 
 var _offers_tab_active: bool = true
 var _pending_label: Label
@@ -53,15 +51,15 @@ func _style_tab(button: Button, active: bool) -> void:
 	style.set_corner_radius_all(12)
 	style.set_content_margin_all(10)
 	if active:
-		style.bg_color = TAB_ACTIVE_BG
+		style.bg_color = UIPalette.raised()
 		style.border_width_bottom = 4
 		style.border_color = UIPalette.ink()
 	else:
-		style.bg_color = Color(0.1, 0.078, 0.157, 0.6)
+		style.bg_color = UIPalette.fade(UIPalette.surface(), 0.6)
 	button.add_theme_stylebox_override("normal", style)
 	button.add_theme_stylebox_override("focus", style)
 	var lit: StyleBoxFlat = style.duplicate()
-	lit.bg_color = TAB_ACTIVE_BG if active else Color(0.14, 0.12, 0.21, 0.85)
+	lit.bg_color = UIPalette.raised() if active else Color(0.14, 0.12, 0.21, 0.85)
 	button.add_theme_stylebox_override("hover", lit)
 	button.add_theme_stylebox_override("pressed", lit)
 	button.add_theme_color_override("font_color", UIPalette.ink() if active else UIPalette.muted())
@@ -105,7 +103,7 @@ func _card() -> PanelContainer:
 	var card := PanelContainer.new()
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var style := StyleBoxFlat.new()
-	style.bg_color = CARD_BG
+	style.bg_color = UIPalette.surface()
 	style.set_corner_radius_all(14)
 	style.set_content_margin_all(16)
 	style.border_width_left = 4

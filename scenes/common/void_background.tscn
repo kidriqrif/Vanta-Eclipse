@@ -9,7 +9,7 @@ shader = ExtResource("1")
 
 [sub_resource type="Gradient" id="Gradient_mote"]
 offsets = PackedFloat32Array(0, 0.2, 0.8, 1)
-colors = PackedColorArray(1, 1, 1, 0, 0.75, 0.68, 1, 0.3, 0.75, 0.68, 1, 0.3, 1, 1, 1, 0)
+colors = PackedColorArray(1, 1, 1, 0, 0.82, 0.82, 0.85, 0.26, 0.82, 0.82, 0.85, 0.26, 1, 1, 1, 0)
 
 [node name="VoidBackground" type="Control"]
 layout_mode = 3

@@ -25,6 +25,13 @@ enum RewardKind {
 	ESSENCE_SECONDS,
 	ARCADE_TOKENS,
 	VOID_CRYSTALS,
+	## Astral Shards, the cosmetic currency. Trophies are the ONLY thing in the
+	## game that produces them: every other currency is earned by playing, and
+	## shards were purchase-only, which left five of the six tap trails
+	## permanently unobtainable and the Shop's TRAILS tab dead content for
+	## anyone who had not paid. Putting them on the mastery trophies gives the
+	## Journal an outlet it did not have and cosmetics a way in.
+	ASTRAL_SHARDS,
 }
 
 ## Stable identifier used in save files. Never rename after release.
@@ -62,6 +69,8 @@ func format_reward() -> String:
 		RewardKind.VOID_CRYSTALS:
 			var crystals: int = int(reward_amount)
 			return "+%d Void Crystal%s" % [crystals, "" if crystals == 1 else "s"]
+		RewardKind.ASTRAL_SHARDS:
+			return "+%d Astral Shards" % int(reward_amount)
 		_:
 			# Essence is priced in seconds of progress, so say it in those terms
 			# rather than as a figure that would be meaningless out of context.

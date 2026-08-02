@@ -8,11 +8,11 @@ extends Control
 const RESULT_BANNER_SCENE: PackedScene = preload("res://scenes/common/result_banner.tscn")
 const ECLIPSE_TEXTURE: Texture2D = preload("res://sprites/ui/eclipse_icon.svg")
 
-const CRYSTAL: Color = Color(0.4, 0.86, 0.85, 1)
-const CRYSTAL_CORE: Color = Color(0.76, 0.97, 0.96, 1)
-const CRYSTAL_DEEP: Color = Color(0.16, 0.44, 0.47, 1)
-const WARM_MUTED: Color = Color(0.78, 0.62, 0.62, 1)
-const CARD_BG: Color = Color(0.1, 0.078, 0.157, 0.9)
+## Eclipse used to carry its own teal. One accent now, so the prestige screen
+## reads in the same red as everything else and is told apart by its content.
+static func crystal() -> Color: return UIPalette.accent()
+static func crystal_core() -> Color: return Color.WHITE
+static func crystal_deep() -> Color: return UIPalette.accent_deep()
 
 ## How long the armed COLLAPSE confirm stays hot before disarming (§3A).
 const ARM_SECONDS: float = 2.5
@@ -82,15 +82,17 @@ func _style_tab(button: Button, active: bool) -> void:
 	style.set_corner_radius_all(12)
 	style.set_content_margin_all(10)
 	if active:
-		style.bg_color = CRYSTAL_DEEP
+		style.bg_color = crystal_deep()
 		style.border_width_bottom = 4
-		style.border_color = CRYSTAL
+		style.border_color = crystal()
 	else:
-		style.bg_color = Color(0.1, 0.078, 0.157, 0.6)
+		style.bg_color = UIPalette.fade(UIPalette.surface(), 0.6)
 	for state: String in ["normal", "hover", "pressed", "focus"]:
 		button.add_theme_stylebox_override(state, style)
-	button.add_theme_color_override("font_color", CRYSTAL_CORE if active else UIPalette.muted())
-	button.add_theme_color_override("font_hover_color", CRYSTAL_CORE if active else UIPalette.muted())
+	button.add_theme_color_override("font_color", crystal_core() if active else UIPalette.muted())
+	button.add_theme_color_override(
+		"font_hover_color", crystal_core() if active else UIPalette.muted()
+	)
 
 
 # --- ASCEND panel -------------------------------------------------------------
@@ -118,7 +120,7 @@ func _build_ascend() -> void:
 
 	var yield_text: String = "◆ %s Void Crystals" % NumberFormat.format(float(reward)) if can \
 		else "Reach Lv. %d this run" % PrestigeManager.ECLIPSE_UNLOCK_LEVEL
-	_ascend_box.add_child(_centered_label(yield_text, 48, CRYSTAL))
+	_ascend_box.add_child(_centered_label(yield_text, 48, crystal()))
 
 	_ascend_box.add_child(_centered_label(
 		"Run peak: Lv. %d" % PrestigeManager.run_peak_level, 24, UIPalette.muted()
@@ -129,10 +131,10 @@ func _build_ascend() -> void:
 	columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	columns.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ascend_box.add_child(columns)
-	columns.add_child(_make_summary_column("RESETS", WARM_MUTED, [
+	columns.add_child(_make_summary_column("RESETS", UIPalette.muted(), [
 		"Eclipse Essence", "All upgrades", "World progress", "Auto-Attack*",
 	]))
-	columns.add_child(_make_summary_column("KEPT", CRYSTAL, [
+	columns.add_child(_make_summary_column("KEPT", crystal(), [
 		"Void Crystals", "Ascendant Powers", "Equipment", "Relics", "Pets",
 	]))
 
@@ -161,7 +163,7 @@ func _make_summary_column(title: String, accent: Color, items: Array) -> PanelCo
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var style := StyleBoxFlat.new()
-	style.bg_color = CARD_BG
+	style.bg_color = UIPalette.surface()
 	style.set_corner_radius_all(14)
 	style.set_content_margin_all(16)
 	panel.add_theme_stylebox_override("panel", style)
@@ -203,16 +205,16 @@ func _style_collapse(armed: bool) -> void:
 	var style := StyleBoxFlat.new()
 	style.set_corner_radius_all(14)
 	style.set_content_margin_all(14)
-	style.bg_color = CRYSTAL_CORE if armed else CRYSTAL_DEEP
-	style.border_color = CRYSTAL_CORE
+	style.bg_color = crystal() if armed else crystal_deep()
+	style.border_color = crystal()
 	style.set_border_width_all(2 if armed else 0)
 	for state: String in ["normal", "hover", "pressed"]:
 		_collapse_button.add_theme_stylebox_override(state, style)
 	_collapse_button.add_theme_color_override(
-		"font_color", Color(0.04, 0.12, 0.13, 1) if armed else CRYSTAL_CORE
+		"font_color", Color.BLACK if armed else crystal_core()
 	)
 	_collapse_button.add_theme_color_override(
-		"font_hover_color", Color(0.04, 0.12, 0.13, 1) if armed else CRYSTAL_CORE
+		"font_hover_color", Color.BLACK if armed else crystal_core()
 	)
 
 
@@ -280,7 +282,7 @@ func _make_branch_header(title: String) -> VBoxContainer:
 	rule.custom_minimum_size = Vector2(0, 2)
 	rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var rule_style := StyleBoxFlat.new()
-	rule_style.bg_color = Color(CRYSTAL.r, CRYSTAL.g, CRYSTAL.b, 0.35)
+	rule_style.bg_color = UIPalette.fade(crystal(), 0.35)
 	rule.add_theme_stylebox_override("panel", rule_style)
 	box.add_child(rule)
 	return box
@@ -301,11 +303,11 @@ func _make_node_card(def: SkillNodeDefinition) -> PanelContainer:
 	# modulating the whole card would drag the effect line under the contrast
 	# floor. The state is carried by the "REQUIRES …" word regardless.
 	if locked:
-		style.bg_color = Color(CARD_BG.r, CARD_BG.g, CARD_BG.b, CARD_BG.a * 0.55)
-		style.border_color = Color(CRYSTAL.r, CRYSTAL.g, CRYSTAL.b, 0.4)
+		style.bg_color = UIPalette.fade(UIPalette.surface(), 0.5)
+		style.border_color = UIPalette.line()
 	else:
-		style.bg_color = CARD_BG
-		style.border_color = CRYSTAL
+		style.bg_color = UIPalette.surface()
+		style.border_color = crystal()
 	card.add_theme_stylebox_override("panel", style)
 
 	var box := VBoxContainer.new()
@@ -328,10 +330,10 @@ func _make_node_card(def: SkillNodeDefinition) -> PanelContainer:
 	var marker := Label.new()
 	if maxed:
 		marker.text = "● MAXED"
-		marker.add_theme_color_override("font_color", CRYSTAL_CORE)
+		marker.add_theme_color_override("font_color", crystal_core())
 	else:
 		marker.text = "● Lv. %d / %d" % [level, def.max_level]
-		marker.add_theme_color_override("font_color", CRYSTAL)
+		marker.add_theme_color_override("font_color", crystal())
 	marker.add_theme_font_size_override("font_size", 24)
 	marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	name_row.add_child(marker)
@@ -354,7 +356,7 @@ func _make_action(def: SkillNodeDefinition, maxed: bool, locked: bool) -> Contro
 	if maxed:
 		var done := Label.new()
 		done.text = "● MAXED"
-		done.add_theme_color_override("font_color", CRYSTAL_CORE)
+		done.add_theme_color_override("font_color", crystal_core())
 		done.add_theme_font_size_override("font_size", 26)
 		done.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		return done
@@ -363,7 +365,7 @@ func _make_action(def: SkillNodeDefinition, maxed: bool, locked: bool) -> Contro
 		var prereq: SkillNodeDefinition = SkillTreeManager.get_definition(def.prereq_id)
 		var prereq_name: String = prereq.display_name if prereq != null else String(def.prereq_id)
 		req.text = "REQUIRES %s Lv. %d" % [prereq_name, def.prereq_level]
-		req.add_theme_color_override("font_color", WARM_MUTED)
+		req.add_theme_color_override("font_color", UIPalette.muted())
 		req.add_theme_font_size_override("font_size", 24)
 		req.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		req.mouse_filter = Control.MOUSE_FILTER_IGNORE

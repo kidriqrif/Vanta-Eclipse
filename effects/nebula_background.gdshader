@@ -4,9 +4,9 @@ shader_type canvas_item;
 // stars, and a vignette. Pure math — no textures — so it costs almost no
 // memory and scales to any resolution. Tuned for mobile: 4 noise octaves.
 
-uniform vec3 deep_color : source_color = vec3(0.016, 0.008, 0.035);
-uniform vec3 nebula_color : source_color = vec3(0.10, 0.05, 0.22);
-uniform vec3 accent_color : source_color = vec3(0.36, 0.19, 0.66);
+uniform vec3 deep_color : source_color = vec3(0.024, 0.024, 0.028);
+uniform vec3 nebula_color : source_color = vec3(0.086, 0.082, 0.090);
+uniform vec3 accent_color : source_color = vec3(0.235, 0.145, 0.153);
 uniform float drift_speed : hint_range(0.0, 0.2) = 0.018;
 uniform float star_density : hint_range(0.9, 1.0) = 0.994;
 uniform float nebula_strength : hint_range(0.0, 1.0) = 1.0;

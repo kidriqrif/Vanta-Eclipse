@@ -3,20 +3,20 @@
        wide, with a beam entering flat and leaving as a fan. -->
   <defs>
     <radialGradient id="au" cx="50%" cy="50%" r="50%">
-      <stop offset="0.32" stop-color="#f5c451" stop-opacity="0.5"/>
-      <stop offset="0.70" stop-color="#f5c451" stop-opacity="0.14"/>
-      <stop offset="1" stop-color="#f5c451" stop-opacity="0"/>
+      <stop offset="0.32" stop-color="#c8c8d0" stop-opacity="0.5"/>
+      <stop offset="0.70" stop-color="#c8c8d0" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#c8c8d0" stop-opacity="0"/>
     </radialGradient>
     <linearGradient id="fr" x1="0.1" y1="0" x2="0.9" y2="1">
-      <stop offset="0" stop-color="#fff3cf"/>
-      <stop offset="0.42" stop-color="#f5c451"/>
-      <stop offset="1" stop-color="#8f6417"/>
+      <stop offset="0" stop-color="#f4f4f6"/>
+      <stop offset="0.42" stop-color="#c8c8d0"/>
+      <stop offset="1" stop-color="#4a4a52"/>
     </linearGradient>
     <linearGradient id="glass" x1="0.15" y1="0" x2="0.85" y2="1">
       <stop offset="0" stop-color="#ffffff"/>
-      <stop offset="0.3" stop-color="#fff3cf"/>
-      <stop offset="0.7" stop-color="#e0ac3e"/>
-      <stop offset="1" stop-color="#6f4c12"/>
+      <stop offset="0.3" stop-color="#f4f4f6"/>
+      <stop offset="0.7" stop-color="#a8a8b2"/>
+      <stop offset="1" stop-color="#3a3a42"/>
     </linearGradient>
   </defs>
   <circle cx="64" cy="64" r="62" fill="url(#au)"/>
@@ -27,17 +27,17 @@
     M64 16 L30 64 L64 112 L98 64 Z" fill-rule="evenodd"/>
 
   <!-- Incoming beam: one flat bar on the left. -->
-  <rect x="2" y="60" width="26" height="7" rx="3" fill="#fff8e2"/>
+  <rect x="2" y="60" width="26" height="7" rx="3" fill="#ededf0"/>
 
   <!-- The prism body, faceted. -->
   <polygon points="60,30 88,64 60,98 44,64" fill="url(#glass)"/>
   <polygon points="60,30 60,98 44,64" fill="#ffffff" fill-opacity="0.55"/>
-  <polygon points="60,30 88,64 60,64" fill="#fff3cf" fill-opacity="0.4"/>
-  <path fill="none" stroke="#fffaf0" stroke-width="2" stroke-opacity="0.8"
+  <polygon points="60,30 88,64 60,64" fill="#f4f4f6" fill-opacity="0.4"/>
+  <path fill="none" stroke="#ffffff" stroke-width="2" stroke-opacity="0.8"
         d="M60 30 L60 98"/>
 
   <!-- Outgoing fan: three diverging bars, widest at the edge. -->
-  <polygon points="86,58 122,44 124,52 88,64" fill="#fff8e2" fill-opacity="0.85"/>
-  <polygon points="88,64 126,64 126,72 88,70" fill="#f5c451" fill-opacity="0.8"/>
-  <polygon points="88,70 122,86 118,94 84,76" fill="#e0ac3e" fill-opacity="0.75"/>
+  <polygon points="86,58 122,44 124,52 88,64" fill="#ededf0" fill-opacity="0.85"/>
+  <polygon points="88,64 126,64 126,72 88,70" fill="#c8c8d0" fill-opacity="0.8"/>
+  <polygon points="88,70 122,86 118,94 84,76" fill="#a8a8b2" fill-opacity="0.75"/>
 </svg>

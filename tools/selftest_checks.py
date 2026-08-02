@@ -179,7 +179,7 @@ MUTATIONS: list[Mutation] = [
         "scene re-hardcodes a colour the theme already defines",
         "scenes/gear/gear.tscn",
         '[node name="EmptyLabel"',
-        'theme_override_colors/font_color = Color(0.91, 0.896, 0.944, 1)\n'
+        'theme_override_colors/font_color = Color(0.929, 0.929, 0.941, 1)\n'
         '[node name="EmptyLabel"',
     ),
     (
@@ -200,9 +200,9 @@ MUTATIONS: list[Mutation] = [
         "check_ui.py",
         "stylebox sized by margin loses its height (the invisible slider)",
         "ui/theme/main_theme.tres",
-        "content_margin_top = 11.0\ncontent_margin_right = 0.0\n"
-        "content_margin_bottom = 11.0\nbg_color = Color(0.116, 0.096, 0.164, 1)",
-        "bg_color = Color(0.116, 0.096, 0.164, 1)",
+        "content_margin_top = 9.0\ncontent_margin_right = 0.0\n"
+        "content_margin_bottom = 9.0\nbg_color = Color(0.145, 0.145, 0.161, 1)",
+        "bg_color = Color(0.145, 0.145, 0.161, 1)",
     ),
     (
         "check_ui.py",

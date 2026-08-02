@@ -8,8 +8,7 @@ extends Control
 
 const RESULT_BANNER_SCENE: PackedScene = preload("res://scenes/common/result_banner.tscn")
 
-const ARCADE: Color = Color(0.65, 0.93, 0.42, 1)
-const ARCADE_CORE: Color = Color(0.83, 0.98, 0.7, 1)
+## Retired with the other door accents — one accent, game-wide.
 
 ## How long the armed QUIT confirm stays hot before disarming.
 const ARM_SECONDS: float = 2.5
@@ -106,12 +105,12 @@ func _style_quit(armed: bool) -> void:
 		_quit_button.remove_theme_color_override("font_hover_color")
 		return
 	var style := StyleBoxFlat.new()
-	style.bg_color = ARCADE_CORE
+	style.bg_color = UIPalette.accent()
 	style.set_corner_radius_all(12)
 	style.set_content_margin_all(10)
 	for state: String in ["normal", "hover", "pressed"]:
 		_quit_button.add_theme_stylebox_override(state, style)
-	var ink := Color(0.06, 0.12, 0.04, 1)
+	var ink := Color.WHITE
 	_quit_button.add_theme_color_override("font_color", ink)
 	_quit_button.add_theme_color_override("font_hover_color", ink)
 
