@@ -19,10 +19,10 @@ const FLARE_WINDOW: float = 2.5
 const ROUND_GAP: float = 0.45
 const FLARE_TWEEN: float = 0.15
 
-## Read from the theme rather than restated here: one palette, one source.
-var _ink: Color = UIPalette.ink()
 const ARCADE_CORE: Color = Color(1, 0.851, 0.839, 1)
 
+## Read from the theme rather than restated here: one palette, one source.
+var _ink: Color = UIPalette.ink()
 var _round: int = 0
 var _hits: int = 0
 var _score_sum: float = 0.0

@@ -92,9 +92,22 @@ def check_project_godot() -> None:
             errors.append(f"project.godot: autoload script missing: {m.group(1)}")
 
 
+# Generated trees that are not this project's source. `android/` is the Gradle
+# build template — 160 files of Godot-supplied scaffold, gitignored, carrying
+# its own placeholder scenes whose ExtResources resolve only at build time.
+# `.godot/` is the import cache. Validating either says nothing about our code
+# and reports failures nobody can act on.
+SKIP_DIRS = {"android", ".godot", ".godot-shots", "build"}
+
+
+def is_ours(path: Path) -> bool:
+    return SKIP_DIRS.isdisjoint(path.relative_to(ROOT).parts)
+
+
 check_project_godot()
 for f in sorted(ROOT.rglob("*.tscn")) + sorted(ROOT.rglob("*.tres")):
-    check_scene_or_resource(f)
+    if is_ours(f):
+        check_scene_or_resource(f)
 
 if errors:
     print("\n".join(errors))

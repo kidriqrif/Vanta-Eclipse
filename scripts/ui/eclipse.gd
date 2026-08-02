@@ -8,12 +8,6 @@ extends Control
 const RESULT_BANNER_SCENE: PackedScene = preload("res://scenes/common/result_banner.tscn")
 const ECLIPSE_TEXTURE: Texture2D = preload("res://sprites/ui/eclipse_icon.svg")
 
-## Eclipse used to carry its own teal. One accent now, so the prestige screen
-## reads in the same red as everything else and is told apart by its content.
-static func crystal() -> Color: return UIPalette.accent()
-static func crystal_core() -> Color: return Color.WHITE
-static func crystal_deep() -> Color: return UIPalette.accent_deep()
-
 ## How long the armed COLLAPSE confirm stays hot before disarming (§3A).
 const ARM_SECONDS: float = 2.5
 
@@ -42,6 +36,20 @@ var _disarm_timer: Timer
 @onready var _powers_scroll: ScrollContainer = %PowersScroll
 @onready var _powers_list: VBoxContainer = %PowersList
 @onready var _nebula: ColorRect = $VoidBackground/NebulaRect
+
+
+## Eclipse used to carry its own teal. One accent now, so the prestige screen
+## reads in the same red as everything else and is told apart by its content.
+static func crystal() -> Color:
+	return UIPalette.accent()
+
+
+static func crystal_core() -> Color:
+	return Color.WHITE
+
+
+static func crystal_deep() -> Color:
+	return UIPalette.accent_deep()
 
 
 func _ready() -> void:

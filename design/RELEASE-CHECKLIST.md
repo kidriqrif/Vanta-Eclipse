@@ -36,15 +36,39 @@ later item is untestable, because no artifact can be produced.
       It is **tracked on purpose** — keeping it untracked is exactly why this
       checklist drifted. Credentials go in `export_credentials.cfg`, which is
       gitignored.
-- [ ] **Install a JDK 17 and the Android SDK** (platform-tools, build-tools,
-      platform 35) and point Godot's Editor Settings at it. This is the only
-      remaining thing between the repo and a debug APK. It needs Google's SDK
-      licence accepted interactively, which is why it was left for you.
-- [ ] **Install the Android build template** (`android/`, via Project →
-      Install Android Build Template) once the SDK exists. The AdMob and Play
-      Billing plugins both require a custom build; the stock template cannot
-      load them. Only the `Android` preset needs this — `Android Debug APK`
-      is configured to build without it.
+- [x] **JDK 17 and the Android SDK installed**, licences accepted, and Godot's
+      Editor Settings pointed at both. Locations (all outside the repo):
+
+      | | |
+      |---|---|
+      | JDK 17 | `C:/Users/kidri/dev-tools/jdk-17` (Temurin 17.0.13) |
+      | Android SDK | `C:/Users/kidri/Android/Sdk` |
+      | packages | platform-tools, build-tools 35.0.0 + 36.0.0, platforms 35 + 36 |
+      | debug keystore | `C:/Users/kidri/.android/debug.keystore` |
+
+- [x] **Android build template installed** to `android/build/`, with the
+      `android/.build_version` marker Gradle export refuses to run without.
+      `android/` is gitignored — it is 160 files of generated Gradle scaffold.
+- [x] **A debug APK actually builds** — 29.9 MB, and verified rather than
+      merely produced: `apksigner` confirms APK Signature Scheme v2 and v3,
+      and `aapt2 dump badging` reports package
+      `com.kidriqrif.vantaeclipse`, versionCode 1, arm64-v8a only, adaptive
+      icon layers packaged, and exactly three permissions (INTERNET,
+      ACCESS_NETWORK_STATE, VIBRATE).
+- [x] **The signed release AAB builds** — `build/vanta-eclipse.aab`, 28.0 MB,
+      Gradle custom build. Verified as a real Play bundle, not just a file:
+      correct `base/manifest` + `base/dex` + `base/lib` layout, `BundleConfig.pb`
+      present, `jarsigner -verify` reports "jar verified", arm64-v8a only, and
+      the signer's SHA-256 matches the upload keystore exactly.
+- [x] `tools/build_android.sh debug|release` captures the whole invocation —
+      toolchain paths, signing environment variables, and the post-build
+      verification — so none of it lives only in someone's shell history.
+      Both paths were re-run from the script from a clean `build/` to confirm
+      they reproduce.
+
+**This is uploadable.** What stops it being *releasable* is §1: the build
+still contains stub ads and stub billing, so every purchase in it is free.
+Do not push it past Internal Testing until that is real.
 
 **Confirm the package name before the first upload.** It is currently
 `com.kidriqrif.vantaeclipse`, which I chose from the GitHub account. It is
@@ -89,11 +113,23 @@ you actually submit in.
       note in §0 before the first upload, because it can never be changed.
 - [x] `version/code=1` and `version/name="0.1.0"`, matching `project.godot`.
       Bump `version/code` on every upload; Play rejects a repeat.
-- [ ] Generate an upload keystore; configure signing (never commit the
-      keystore or its passwords — see the widened patterns in `.gitignore`,
-      and note that the Stop hook auto-pushes to a **public** repo).
-      Put the paths and passwords in `export_credentials.cfg`, which is
-      gitignored — not in `export_presets.cfg`, which is tracked.
+- [x] **Upload keystore generated**, RSA 2048, valid to 2053:
+      `C:/Users/kidri/keystores/vanta-eclipse-upload.jks`, alias `upload`,
+      password in `vanta-eclipse-upload.password.txt` beside it. Both are
+      outside the repo, and `.gitignore` covers the extensions anyway — which
+      matters here because the Stop hook auto-pushes to a **public** repo.
+      SHA-256 fingerprint:
+      `3A:5B:8A:01:C8:37:06:8B:CB:F1:06:B3:2A:45:3B:6C:8D:9E:EE:3A:9B:8D:9C:EA:EB:9C:DB:A0:AB:D2:62:13`
+
+      > **Back this file up somewhere you control, today.** If you lose it you
+      > cannot ship an update to an app signed with it. (Play App Signing can
+      > reset an *upload* key on request, which is a strong reason to enrol in
+      > it when you create the app — but do not rely on that.)
+
+      Godot reads the password from `GODOT_ANDROID_KEYSTORE_RELEASE_*`
+      environment variables, which `tools/build_android.sh` sets from the
+      password file — so it never enters `export_presets.cfg`, which is
+      tracked.
 
 ### 3. Store assets
 

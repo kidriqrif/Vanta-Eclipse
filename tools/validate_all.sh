@@ -43,7 +43,16 @@ fi
 
 echo "2. gdlint"
 if command -v gdlint >/dev/null 2>&1; then
-  gdlint $(find scripts -name '*.gd') 2>&1 | tail -2 | sed 's/^/   /'
+  # The exit status has to be captured BEFORE the pipe: piping to tail made
+  # $? the status of tail, which is always 0, so every lint error this stage
+  # ever found was printed and then ignored. A whole stage was decorative.
+  lint_out=$(gdlint $(find scripts -name '*.gd') 2>&1)
+  lint_status=$?
+  printf '%s\n' "$lint_out" | tail -2 | sed 's/^/   /'
+  if [ "$lint_status" -ne 0 ]; then
+    printf '%s\n' "$lint_out" | grep -E "Error|Warning" | head -20 | sed 's/^/   /'
+    status=1
+  fi
 else
   echo "   SKIPPED (gdlint not installed: pip install gdtoolkit)"
 fi

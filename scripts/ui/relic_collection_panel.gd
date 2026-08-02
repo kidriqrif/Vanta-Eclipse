@@ -9,11 +9,6 @@ const CLOSED_TOP: float = 40.0
 const OPEN_BOTTOM: float = 0.0
 const CLOSED_BOTTOM: float = 1050.0
 const SLIDE_TIME: float = 0.28
-## Relics were gold — a third accent on a red-and-black screen. They stay
-## special by being the only thing here drawn in full white, with the accent
-## reserved for the one that is actually attuned.
-static func relic_ivory() -> Color: return Color.WHITE
-static func relic_gold() -> Color: return UIPalette.accent()
 
 var _is_open: bool = false
 var _slide_tween: Tween
@@ -21,6 +16,17 @@ var _slide_tween: Tween
 @onready var _list: VBoxContainer = %RelicList
 @onready var _empty_label: Label = %RelicEmptyLabel
 @onready var _close_button: Button = %RelicCloseButton
+
+
+## Relics were gold — a third accent on a red-and-black screen. They stay
+## special by being the only thing here drawn in full white, with the accent
+## reserved for the one that is actually attuned.
+static func relic_ivory() -> Color:
+	return Color.WHITE
+
+
+static func relic_gold() -> Color:
+	return UIPalette.accent()
 
 
 func _ready() -> void:

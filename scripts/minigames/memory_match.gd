@@ -20,8 +20,6 @@ const FACES: Array[Texture2D] = [
 const CARD_BACK: Texture2D = preload("res://sprites/minigames/card_back.svg")
 const CARD_BG: Color = Color(0.086, 0.086, 0.098, 0.9)
 
-## Read from the theme rather than restated here: one palette, one source.
-var _ink: Color = UIPalette.ink()
 const ARCADE_CORE: Color = Color(1, 0.851, 0.839, 1)
 
 const DEFAULT_PAIRS: int = 6
@@ -31,6 +29,8 @@ const COLUMNS: int = 3
 const MISMATCH_HOLD: float = 0.75
 const FLIP_TIME: float = 0.12
 
+## Read from the theme rather than restated here: one palette, one source.
+var _ink: Color = UIPalette.ink()
 var _pairs: int = DEFAULT_PAIRS
 var _budget: int = DEFAULT_BUDGET
 var _attempts: int = 0

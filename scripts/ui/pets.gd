@@ -8,7 +8,6 @@ extends Control
 ## boss-ember threat accent or any per-species tint — growth wears one color.
 ## Read from the theme rather than restated here: one palette, one source.
 var _accent: Color = UIPalette.accent()
-## Standard data-label ink (visual §2.5, §4-verified contrast).
 
 @onready var _showcase: VBoxContainer = %ShowcaseBox
 @onready var _roster: VBoxContainer = %RosterList

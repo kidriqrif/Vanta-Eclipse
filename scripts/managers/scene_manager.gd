@@ -22,7 +22,12 @@ const SCENE_JOURNAL: String = "res://scenes/journal/journal.tscn"
 const SCENE_SHOP: String = "res://scenes/shop/shop.tscn"
 
 const FADE_DURATION: float = 0.25
-const FADE_COLOR: Color = Color(0.016, 0.008, 0.031)
+## The base black, not a violet-tinted one — the transition should read as the
+## screen going out, not as a colour washing over it.
+const FADE_COLOR: Color = Color(0.016, 0.016, 0.02)
+## Where a screen's original MarginContainer margins are stashed, so the
+## safe-area inset is always applied to the baseline and never accumulates.
+const SAFE_AREA_META: StringName = &"vanta_base_margins"
 
 var _is_transitioning: bool = false
 var _fade_rect: ColorRect
@@ -92,9 +97,6 @@ func change_scene(scene_path: String) -> void:
 ## the nebula still fills the display edge to edge, and only the controls move
 ## in. The scene's own margins are the baseline the inset is ADDED to, kept in
 ## metadata so re-applying on a resize can never accumulate.
-
-
-const SAFE_AREA_META: StringName = &"vanta_base_margins"
 
 
 func _on_node_added(node: Node) -> void:

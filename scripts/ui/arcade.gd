@@ -4,9 +4,6 @@ extends Control
 ## A full SceneManager scene, so it holds any boss gate through the existing
 ## scene-transition test. Never required to progress.
 
-## The Arcade lime is retired with the other door accent; the screen now uses
-## the one accent and is told apart by its icons and its token meter.
-static func arcade() -> Color: return UIPalette.accent()
 ## How often the "next token in" line and the PLAY buttons re-read the meter.
 const TICK_SECONDS: float = 1.0
 ## The opt-in offer surfaced when the meter runs dry (M14 §2).
@@ -29,6 +26,12 @@ var _refreshing: bool = false
 @onready var _card_list: VBoxContainer = %CardList
 @onready var _offer_button: Button = %OfferButton
 @onready var _nebula: ColorRect = $VoidBackground/NebulaRect
+
+
+## The Arcade lime is retired with the other door accent; the screen now uses
+## the one accent and is told apart by its icons and its token meter.
+static func arcade() -> Color:
+	return UIPalette.accent()
 
 
 func _ready() -> void:

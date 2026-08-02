@@ -12,8 +12,6 @@ const SHOT_MISS: Texture2D = preload("res://sprites/minigames/shot_miss.svg")
 const SHOT_HIT: Texture2D = preload("res://sprites/minigames/shot_hit.svg")
 const SHOT_SUNK: Texture2D = preload("res://sprites/minigames/shot_sunk.svg")
 
-## Read from the theme rather than restated here: one palette, one source.
-var _ink: Color = UIPalette.ink()
 const ARCADE_CORE: Color = Color(1, 0.851, 0.839, 1)
 const CELL_BG: Color = Color(0.086, 0.086, 0.098, 0.9)
 
@@ -35,6 +33,8 @@ const PLACEMENT_ATTEMPTS: int = 200
 ## Whole-layout restarts before giving up (see _place_fleet).
 const LAYOUT_ATTEMPTS: int = 20
 
+## Read from the theme rather than restated here: one palette, one source.
+var _ink: Color = UIPalette.ink()
 var _size: int = DEFAULT_SIZE
 var _shot_budget: int = DEFAULT_SHOTS
 var _fleet: Array[int] = []

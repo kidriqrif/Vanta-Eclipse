@@ -11,8 +11,6 @@ const DISC_PLAYER: Texture2D = preload("res://sprites/minigames/disc_player.svg"
 const DISC_AI: Texture2D = preload("res://sprites/minigames/disc_ai.svg")
 const CELL_EMPTY: Texture2D = preload("res://sprites/minigames/cell_empty.svg")
 
-## Read from the theme rather than restated here: one palette, one source.
-var _ink: Color = UIPalette.ink()
 const ARCADE_CORE: Color = Color(1, 0.851, 0.839, 1)
 const BOARD_BG: Color = Color(0.086, 0.086, 0.098, 0.9)
 
@@ -34,6 +32,8 @@ const CELL_INSET: float = 12.0
 ## which is the dial that makes it beatable without making it look broken.
 const AI_BLUNDER_CHANCE: float = 0.6
 
+## Read from the theme rather than restated here: one palette, one source.
+var _ink: Color = UIPalette.ink()
 var _columns: int = DEFAULT_COLUMNS
 var _rows: int = DEFAULT_ROWS
 var _blunder: float = AI_BLUNDER_CHANCE
