@@ -82,6 +82,53 @@ boots unstyled, while the static sweep stays green because the file is on disk
 and the path resolves. `.godot/` is gitignored, so a fresh clone is always in
 exactly that state.
 
+### Every Android shape at once
+
+```bash
+GODOT=/path/to/godot bash tools/aspect_matrix.sh
+```
+
+Android portrait is not one shape. It runs from 9:16 on older budget phones,
+through the 9:19.5 and 9:20 most current phones use, to 9:21 on an Xperia, to
+3:4 and 16:10 tablets, to nearly square on an unfolded foldable — a 1.85x
+spread. This runs the whole walk once per shape and reports what does not fit.
+
+Two facts about `stretch/mode="canvas_items"` + `aspect="expand"` decide what
+can actually break. Expand scales by `min(win.x/base.x, win.y/base.y)` and then
+divides the window through by it, so the logical viewport is **never smaller**
+than the 1080x1920 base in either axis — it only grows:
+
+* **Nothing is ever cropped.** A taller phone gets extra height, a tablet extra
+  width. So the base 1080x1920 is simultaneously the narrowest *and* the
+  shortest case, which is why it is the one to tune against, and why a layout
+  that fits there fits everywhere.
+* **What does break is anchoring** — a bottom bar drifting away from the
+  content above it, a centred column stranded in a wide tablet field. That is
+  judged from the screenshots in `.godot-shots/<device>/`, not from the audit.
+
+The harness audits layout on every shot: `OVERFLOW` for a control past the
+viewport edge, `OVERHANG` for a Label wider than the thing containing it.
+`OVERHANG` rather than "clipped" is deliberate — Godot clamps a Control's size
+up to its own minimum, so a Label is never *smaller* than its text; it grows
+and hangs over its parent instead, which is exactly what the Gear slot tiles
+did. `VANTA_LAYOUT_PROBE=1` plants one of each fault and both must be caught,
+because an audit that visits nothing prints the same "OK" as a clean layout.
+
+### The display safe area
+
+Android hands the app the whole screen, including behind a notch or punch-hole
+and under the gesture bar. `SceneManager` insets each screen's root
+`MarginContainer` by `DisplayServer.get_display_safe_area()`, leaving the
+background full-bleed so only the controls move in.
+
+This only executes on hardware, so it would otherwise ship having never been
+watched working. `VANTA_FAKE_SAFE_AREA="left,top,right,bottom"` injects an
+inset on a desktop run:
+
+```bash
+VANTA_FAKE_SAFE_AREA="0,130,0,90" GODOT=... bash tools/screenshot_run.sh
+```
+
 Three more things this covers that nothing else does:
 
 * **Shaders actually compile.** `--headless` uses the dummy rasterizer and

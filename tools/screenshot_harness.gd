@@ -49,6 +49,9 @@ var _out_dir: String = ""
 var _only: String = ""
 var _taken: int = 0
 var _skipped: int = 0
+var _layout_problems: int = 0
+var _controls_seen: int = 0
+var _probe: bool = false
 
 
 func _ready() -> void:
@@ -57,6 +60,7 @@ func _ready() -> void:
 		_out_dir = ProjectSettings.globalize_path("user://shots")
 	DirAccess.make_dir_recursive_absolute(_out_dir)
 	_only = OS.get_environment("VANTA_SHOT_ONLY")
+	_probe = OS.get_environment("VANTA_LAYOUT_PROBE") == "1"
 	_assert_phone_aspect()
 
 	# Last autoload, so every manager below has finished _ready() by now.
@@ -69,6 +73,13 @@ func _ready() -> void:
 
 	print("HARNESS: %d shots written to %s (%d skipped by filter)"
 		% [_taken, _out_dir, _skipped])
+	if _only.is_empty() and _controls_seen < 200:
+		# The audit walked almost nothing, so a clean result means nothing.
+		print("LAYOUT: INCONCLUSIVE — only %d controls inspected" % _controls_seen)
+	elif _layout_problems == 0:
+		print("LAYOUT: OK — %d controls inspected, none overflow or clip" % _controls_seen)
+	else:
+		print("LAYOUT: %d problem(s) across %d controls" % [_layout_problems, _controls_seen])
 	# Leaks ~11 ObjectDB instances because this quits mid-await. That warning is
 	# the harness, not the game: a plain --quit-after boot exits clean.
 	get_tree().quit()
@@ -395,27 +406,142 @@ func _toggle_panel(node_name: String) -> void:
 ## renders a near-square viewport instead of a phone. The shots still LOOK
 ## plausible, which is what makes it dangerous: every conclusion about vertical
 ## layout is quietly wrong, and nothing says so. This is the only warning.
+##
+## The expected aspect comes from VANTA_EXPECT_ASPECT when the device matrix is
+## driving, since there the non-phone aspect is the entire point; it falls back
+## to the project's own base. Either way the question is the same: did we get
+## the shape we ASKED for, or did the desktop quietly clamp it?
 func _assert_phone_aspect() -> void:
 	var size: Vector2 = get_viewport().get_visible_rect().size
 	var want: float = float(ProjectSettings.get_setting("display/window/size/viewport_width")) \
 		/ float(ProjectSettings.get_setting("display/window/size/viewport_height"))
+	var requested: String = OS.get_environment("VANTA_EXPECT_ASPECT")
+	if not requested.is_empty():
+		want = requested.to_float()
 	var got: float = size.x / maxf(size.y, 1.0)
-	if absf(got - want) < 0.02:
-		print("HARNESS: viewport %d x %d (aspect %.3f) — matches the phone" % [size.x, size.y, got])
+	if absf(got - want) < 0.01:
+		print("HARNESS: viewport %d x %d (aspect %.3f) — as requested" % [size.x, size.y, got])
 		return
 	print("HARNESS: ================= WRONG ASPECT RATIO =================")
-	print("HARNESS: viewport is %d x %d (aspect %.3f), phone is %.3f." % [
+	print("HARNESS: viewport is %d x %d (aspect %.3f), asked for %.3f." % [
 		size.x, size.y, got, want,
 	])
-	print("HARNESS: The window was clamped by the desktop. Vertical layout in")
-	print("HARNESS: these shots is NOT what a player sees — lower SHOT_RES.")
+	print("HARNESS: The window was clamped by the desktop. Layout in these")
+	print("HARNESS: shots is NOT what a player sees — lower SHOT_RES.")
 	print("HARNESS: ======================================================")
+
+
+# --- Layout audit ---------------------------------------------------------------
+
+
+## Walk what is actually on screen and report anything that does not fit.
+##
+## Android portrait runs from 9:16 on old budget phones to 9:21 on an Xperia to
+## 3:4 on a tablet to nearly square on an unfolded foldable. Eyeballing 28
+## screens across 7 device shapes is 196 screenshots, which is not a review —
+## it is a slideshow nobody finishes. So the harness measures instead, and the
+## screenshots are only there to confirm what the numbers say.
+##
+## Two failures, both of which have already shipped in this project:
+##   OVERFLOW — a control sticking out past the viewport edge. This is what a
+##              phone with a different aspect does to a layout tuned on one.
+##   CLIPPED  — a Label narrower than its own text, so the words are cut. The
+##              Gear slot tiles did exactly this ("Boss Damage +29%" ran the
+##              full width of a 236px tile with nothing to spare).
+func _audit_layout(shot_name: String) -> void:
+	var scene: Node = get_tree().current_scene
+	if scene == null:
+		return
+	var view: Vector2 = get_viewport().get_visible_rect().size
+	var problems: PackedStringArray = []
+	if _probe:
+		_inject_probe(scene)
+	_walk_controls(scene, view, problems, false)
+	for banner: Node in get_tree().root.get_children():
+		if banner is Control and banner != scene:
+			_walk_controls(banner, view, problems, false)
+	if problems.is_empty():
+		return
+	for problem: String in problems:
+		print("LAYOUT: %s  %s" % [shot_name, problem])
+	_layout_problems += problems.size()
+
+
+## VANTA_LAYOUT_PROBE=1 plants one control off the right edge and one Label
+## far too narrow for its own text, both of which the audit must report.
+##
+## Without this the audit is unfalsifiable: a walk that visits nothing — a null
+## scene, a filter that excludes every node, a rename — prints exactly the same
+## "OK" as a clean layout, and the greener it looks the less it means. Same
+## reasoning as tools/selftest_checks.py, applied to the thing that measures.
+func _inject_probe(scene: Node) -> void:
+	if scene.has_node("__probe"):
+		return
+	var holder := Control.new()
+	holder.name = "__probe"
+	scene.add_child(holder)
+
+	var offscreen := ColorRect.new()
+	offscreen.name = "__probe_offscreen"
+	offscreen.position = Vector2(get_viewport().get_visible_rect().size.x - 20.0, 100.0)
+	offscreen.size = Vector2(200.0, 40.0)
+	holder.add_child(offscreen)
+
+	var box := Control.new()
+	box.name = "__probe_box"
+	box.position = Vector2(10.0, 100.0)
+	box.custom_minimum_size = Vector2(40.0, 40.0)
+	box.size = Vector2(40.0, 40.0)
+	holder.add_child(box)
+	var squeezed := Label.new()
+	squeezed.name = "__probe_overhang"
+	squeezed.text = "a line of text far too long for the box it has been given"
+	squeezed.autowrap_mode = TextServer.AUTOWRAP_OFF
+	box.add_child(squeezed)
+
+
+func _walk_controls(
+	node: Node, view: Vector2, problems: PackedStringArray, scrolled: bool
+) -> void:
+	# A ScrollContainer's whole job is holding content bigger than itself, so
+	# everything under one is exempt — otherwise every list in the game reports.
+	var inside_scroll: bool = scrolled or node is ScrollContainer
+	if node is Control:
+		var control: Control = node
+		if not control.is_visible_in_tree():
+			return  # a hidden panel parked offscreen is not a layout fault
+		_controls_seen += 1
+		if not inside_scroll and control.get_child_count() == 0:
+			var rect: Rect2 = control.get_global_rect()
+			if rect.size.x > 0.5 and rect.size.y > 0.5:
+				var over := Vector2(
+					maxf(-rect.position.x, rect.end.x - view.x),
+					maxf(-rect.position.y, rect.end.y - view.y)
+				)
+				if over.x > 1.0 or over.y > 1.0:
+					problems.append("OVERFLOW %s by (%.0f, %.0f) — rect %s, viewport %s"
+						% [control.name, maxf(over.x, 0.0), maxf(over.y, 0.0), rect, view])
+		if control is Label and not inside_scroll:
+			var label: Label = control
+			# autowrap re-flows instead of overhanging, so it cannot fail this.
+			# Checking the label against its PARENT rather than against its own
+			# rect is deliberate: Godot clamps a Control's size up to its own
+			# minimum, so a Label is never smaller than its text — it grows and
+			# hangs over whatever contains it instead. That is exactly what the
+			# Gear slot tiles did, with the affix line running past the tile.
+			var parent := label.get_parent() as Control
+			if label.autowrap_mode == TextServer.AUTOWRAP_OFF 					and not label.text.is_empty() and parent != null 					and parent.size.x > 1.0 					and label.size.x > parent.size.x + 1.0:
+				problems.append("OVERHANG %s is %.0fpx inside a %.0fpx %s — \"%s\""
+					% [label.name, label.size.x, parent.size.x, parent.name, label.text])
+	for child: Node in node.get_children():
+		_walk_controls(child, view, problems, inside_scroll)
 
 
 func _shot(shot_name: String) -> void:
 	if not _only.is_empty() and not shot_name.contains(_only):
 		_skipped += 1
 		return
+	_audit_layout(shot_name)
 	# The framebuffer is only readable after the frame has actually been drawn.
 	await RenderingServer.frame_post_draw
 	var image: Image = get_viewport().get_texture().get_image()

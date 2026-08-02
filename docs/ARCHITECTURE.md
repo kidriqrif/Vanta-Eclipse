@@ -216,6 +216,15 @@ label.
   lime). That includes the destination screen's own primary action, not just
   the button that leads there — the Arcade was lime everywhere except its four
   PLAY buttons, which came out in the global pink.
+* Every screen is a full-bleed background plus a root `MarginContainer` holding
+  all the UI. Keep that shape: `SceneManager` insets **that node** by the
+  display safe area, so a notch or gesture bar pushes the controls in while the
+  nebula still reaches the display edge. A screen that puts UI outside the
+  MarginContainer will sit under the system chrome on most current phones.
+* Layout is tuned against 1080x1920 because `stretch/aspect="expand"` only ever
+  *grows* the viewport — that base is both the narrowest and the shortest case
+  any Android device produces, so what fits there fits everywhere.
+  `tools/aspect_matrix.sh` proves it across seven device shapes.
 
 ### Giving flat art depth
 

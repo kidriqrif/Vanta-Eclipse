@@ -32,6 +32,11 @@ func _ready() -> void:
 	# Transitions must work even while the game is paused.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_fade_overlay()
+	# The first scene is loaded by the engine, not by change_scene(), so it
+	# never passes through the inset call below.
+	get_tree().node_added.connect(_on_node_added)
+	get_viewport().size_changed.connect(_apply_safe_area)
+	_apply_safe_area.call_deferred()
 
 
 ## Switch to another scene with a fade transition. Safe to call repeatedly —
@@ -67,10 +72,96 @@ func change_scene(scene_path: String) -> void:
 	get_tree().change_scene_to_packed(packed_scene)
 	# Give the new scene one frame to enter the tree before revealing it.
 	await get_tree().process_frame
+	_apply_safe_area()
 
 	await _fade_in()
 	_is_transitioning = false
 	EventBus.scene_transition_finished.emit(scene_path)
+
+
+# --- Display safe area --------------------------------------------------------
+##
+## Android hands the app the WHOLE screen, including the strip behind a notch
+## or punch-hole camera and the strip under the gesture bar. Nothing here read
+## that, so on any modern phone the top row (world name, SHOP, MENU) sat under
+## the cutout and the bottom row (GEAR, UPGRADES, the doors) sat under the
+## gesture bar — on exactly the tall devices that dominate the install base.
+##
+## Every screen is built the same way: a full-bleed background, and a root
+## MarginContainer holding all the UI. So the inset goes on that one node —
+## the nebula still fills the display edge to edge, and only the controls move
+## in. The scene's own margins are the baseline the inset is ADDED to, kept in
+## metadata so re-applying on a resize can never accumulate.
+
+
+const SAFE_AREA_META: StringName = &"vanta_base_margins"
+
+
+func _on_node_added(node: Node) -> void:
+	# The engine's initial scene, and nothing else — change_scene() insets its
+	# own. Comparing against current_scene keeps this to one call per scene
+	# rather than one per node in it.
+	if node == get_tree().current_scene:
+		_apply_safe_area.call_deferred()
+
+
+func _apply_safe_area() -> void:
+	var scene: Node = get_tree().current_scene
+	if scene == null:
+		return
+	var margin: MarginContainer = scene.get_node_or_null("MarginContainer") as MarginContainer
+	if margin == null:
+		return
+
+	if not margin.has_meta(SAFE_AREA_META):
+		margin.set_meta(SAFE_AREA_META, Vector4(
+			float(margin.get_theme_constant(&"margin_left")),
+			float(margin.get_theme_constant(&"margin_top")),
+			float(margin.get_theme_constant(&"margin_right")),
+			float(margin.get_theme_constant(&"margin_bottom"))
+		))
+	var base: Vector4 = margin.get_meta(SAFE_AREA_META)
+	var inset: Vector4 = _safe_area_inset()
+	margin.add_theme_constant_override(&"margin_left", int(base.x + inset.x))
+	margin.add_theme_constant_override(&"margin_top", int(base.y + inset.y))
+	margin.add_theme_constant_override(&"margin_right", int(base.z + inset.z))
+	margin.add_theme_constant_override(&"margin_bottom", int(base.w + inset.w))
+
+
+## Left/top/right/bottom inset in VIEWPORT units.
+##
+## get_display_safe_area() is in physical window pixels and only means anything
+## on a handheld — on desktop it returns the screen's work area, which has no
+## relationship to the window, so this is gated to mobile rather than being
+## allowed to compute nonsense insets everywhere else.
+func _safe_area_inset() -> Vector4:
+	var fake: String = OS.get_environment("VANTA_FAKE_SAFE_AREA")
+	if not fake.is_empty():
+		# A cutout simulator, so the inset path can be seen on a desktop run.
+		# Without it this code only ever executes on hardware, which means it
+		# would ship having never once been watched doing its job.
+		var parts: PackedStringArray = fake.split(",")
+		if parts.size() == 4:
+			return Vector4(parts[0].to_float(), parts[1].to_float(),
+				parts[2].to_float(), parts[3].to_float())
+	if not OS.has_feature("mobile"):
+		return Vector4.ZERO
+
+	var window: Vector2i = DisplayServer.window_get_size()
+	if window.x <= 0 or window.y <= 0:
+		return Vector4.ZERO
+	var safe: Rect2i = DisplayServer.get_display_safe_area()
+	if safe.size.x <= 0 or safe.size.y <= 0:
+		return Vector4.ZERO
+	# canvas_items stretch means the viewport is in its own units, not pixels.
+	var view: Vector2 = get_viewport().get_visible_rect().size
+	var scale := Vector2(view.x / float(window.x), view.y / float(window.y))
+	return Vector4(
+		maxf(0.0, float(safe.position.x)) * scale.x,
+		maxf(0.0, float(safe.position.y)) * scale.y,
+		maxf(0.0, float(window.x - safe.position.x - safe.size.x)) * scale.x,
+		maxf(0.0, float(window.y - safe.position.y - safe.size.y)) * scale.y
+	)
 
 
 # --- Internals ---------------------------------------------------------------
