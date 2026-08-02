@@ -212,6 +212,20 @@ MUTATIONS: list[Mutation] = [
         "bg_color = Color(0.51, 0.44, 0.72, 1)",
     ),
     (
+        "check_wiring.py",
+        "collection trophy drifts from the content it counts",
+        "data/quests/a_relics_all.tres",
+        "target = 5.0",
+        "target = 4.0",
+    ),
+    (
+        "check_scripts.py",
+        "prestige: a no-op reset gains real work but stays unwired",
+        "scripts/managers/quest_manager.gd",
+        "func reset_for_prestige() -> void:\n\tpass",
+        "func reset_for_prestige() -> void:\n\t_counters.clear()",
+    ),
+    (
         "check_scripts.py",
         "currency: the NAN-permitting comparison comes back",
         "scripts/managers/currency_manager.gd",

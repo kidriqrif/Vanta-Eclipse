@@ -277,6 +277,48 @@ def check_currency_finite_guards() -> tuple[list[str], list[str]]:
     return problems, [f"{len(FINITE_GUARDED)} currency entry points"]
 
 
+def check_prestige_resets() -> tuple[list[str], list[str]]:
+    """A reset_for_prestige() that PrestigeManager never calls is a loaded gun.
+
+    Four managers define one today and all four bodies are exactly `pass` —
+    deliberate no-ops that document "this survives the Eclipse". That is fine.
+    What is not fine is the day someone adds a real line to one of them: the
+    Eclipse would silently not reset it, and nothing would say so. An idle
+    game's prestige is the one operation a player cannot undo, so this fails
+    the build the moment such a method stops being a no-op without being
+    wired in.
+    """
+    prestige = (ROOT / "scripts" / "managers" / "prestige_manager.gd").read_text(
+        encoding="utf-8"
+    )
+    called = set(re.findall(r"(\w+)\.reset_for_prestige\(\)", prestige))
+
+    problems: list[str] = []
+    defined = 0
+    for gd in sorted(ROOT.glob("scripts/managers/*.gd")):
+        src = gd.read_text(encoding="utf-8")
+        m = re.search(r"^func reset_for_prestige\(\).*?(?=^func |\Z)", src, re.M | re.S)
+        if m is None:
+            continue
+        defined += 1
+        # snake_case file name -> the autoload's PascalCase name
+        autoload = "".join(part.title() for part in gd.stem.split("_"))
+        if autoload in called:
+            continue
+        body = [
+            line.strip()
+            for line in m.group(0).splitlines()[1:]
+            if line.strip() and not line.strip().startswith("#")
+        ]
+        if body != ["pass"]:
+            problems.append(
+                f"{gd.relative_to(ROOT)}: reset_for_prestige() does real work "
+                f"but PrestigeManager never calls {autoload}.reset_for_prestige()"
+                f"\n      body: {' / '.join(body[:3])}"
+            )
+    return problems, [f"{defined} defined, {len(called)} called by PrestigeManager"]
+
+
 CHECKS = [
     ("unique names", check_unique_names),
     ("signal arity", check_signal_arity),
@@ -284,6 +326,7 @@ CHECKS = [
     ("res:// literals", check_script_paths),
     ("autoload load order", check_load_order),
     ("currency finite guards", check_currency_finite_guards),
+    ("prestige resets are wired", check_prestige_resets),
 ]
 
 

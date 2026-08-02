@@ -225,10 +225,54 @@ def check_enum_handling() -> tuple[list[str], list[str]]:
     return problems, [f"{total} data-used values: " + ", ".join(info)]
 
 
+# A "collect them all" achievement's target is not a balance number — it is a
+# restatement of how much content ships. metric -> the directory that defines
+# the things being collected.
+COLLECTION_METRICS = {
+    "pets_owned": "data/pets",
+    "relics_owned": "data/relics",
+}
+
+
+def check_collection_targets() -> tuple[list[str], list[str]]:
+    """Achievements that mean "own every X" must target exactly how many X ship.
+
+    These are the only quests in the game that pay Astral Shards, so the
+    numbers here decide whether the Shop's trails are reachable at all without
+    paying. And the failure is silent in both directions: add a sixth relic
+    and `a_relics_all` completes at five, so the game hands out the trophy
+    while the collection screen still shows a gap; remove one and the trophy
+    can never be earned and 150 shards leave the economy.
+    """
+    problems: list[str] = []
+    checked = 0
+    for tres in sorted((ROOT / "data" / "quests").glob("*.tres")):
+        src = tres.read_text(encoding="utf-8")
+        metric = re.search(r'^metric\s*=\s*&"([^"]+)"', src, re.M)
+        target = re.search(r"^target\s*=\s*([0-9.]+)", src, re.M)
+        if metric is None or target is None:
+            continue
+        directory = COLLECTION_METRICS.get(metric.group(1))
+        if directory is None:
+            continue
+        # Only the "own every one" quests, not "own your first".
+        if not tres.stem.endswith("_all"):
+            continue
+        checked += 1
+        shipped = len(list((ROOT / directory).glob("*.tres")))
+        if int(float(target.group(1))) != shipped:
+            problems.append(
+                f"{tres.relative_to(ROOT)}: targets {target.group(1)} but "
+                f"{shipped} {metric.group(1).split('_')[0]} ship in {directory}/"
+            )
+    return problems, [f"{checked} collect-them-all achievements"]
+
+
 CHECKS = [
     ("granted stats consumed", check_stat_wiring),
     ("goal metrics fed", check_goal_metrics),
     ("enum values dispatched", check_enum_handling),
+    ("collection targets match shipped content", check_collection_targets),
 ]
 
 

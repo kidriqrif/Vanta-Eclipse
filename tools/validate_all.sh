@@ -98,4 +98,18 @@ print("   OK" if not bad else "\n".join(bad))
 sys.exit(1 if bad else 0)
 PYEOF
 
+# Everything above compares what the files say to each other. This one runs
+# the game: it seeds every save section, pushes it through the real save/load
+# path, and asserts the economy invariants. A dropped field or a non-idempotent
+# load produces no parse error and no visual difference, so nothing earlier in
+# this script can see it.
+echo "12. runtime logic (save round-trip, invariants)"
+if bash tools/logic_run.sh >/tmp/vanta_logic.$$ 2>&1; then
+  tail -1 /tmp/vanta_logic.$$ | sed 's/^ *//;s/^/   /'
+else
+  sed 's/^/   /' /tmp/vanta_logic.$$ | tail -12
+  status=1
+fi
+rm -f /tmp/vanta_logic.$$
+
 exit $status
