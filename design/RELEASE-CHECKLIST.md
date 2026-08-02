@@ -23,6 +23,15 @@ start there, because the project has still never been run.
 - [ ] **Server-side receipt validation.** A client-only "purchase succeeded"
       is trivially spoofable. Nothing that costs real money may be granted on
       the client's word alone.
+- [ ] Decide where entitlements *live*. Today they are plain strings in
+      `user://savegame.json`, so adding `"remove_ads"` to the `entitlements`
+      array by hand grants it. `load_save_data()` deliberately does not filter
+      that array — an unrecognised entitlement is preserved rather than
+      erased, so a product `.tres` that fails to load can never destroy
+      something a player paid for. That is the right call for a local save and
+      the wrong one for an authority: once billing is real, the store's
+      response (not the save file) must be what grants an entitlement, with
+      the save acting only as an offline cache.
 - [ ] Create the SKUs in Play Console matching `store_id` in
       `data/products/*.tres` (`vanta_remove_ads`, `vanta_starter_pack`,
       `vanta_shards_small`).

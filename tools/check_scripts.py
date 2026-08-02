@@ -246,12 +246,44 @@ def check_load_order() -> tuple[list[str], list[str]]:
     return problems, [f"{len(order)} autoloads in declaration order"]
 
 
+# Every function that can move a balance, and must therefore refuse inf/NAN.
+# JSON cannot write "Infinity", but an overflowing double parses to inf, and
+# Godot writes inf back out as 1e99999 — so one poisoned value survives every
+# later save. NAN is worse: all comparisons against it are false, so an
+# unguarded `balance < amount` makes the whole game free. maxf() does not
+# filter either one.
+FINITE_GUARDED = ["load_save_data", "add", "try_spend"]
+
+
+def check_currency_finite_guards() -> tuple[list[str], list[str]]:
+    path = ROOT / "scripts" / "managers" / "currency_manager.gd"
+    src = path.read_text(encoding="utf-8")
+    problems: list[str] = []
+    for name in FINITE_GUARDED:
+        m = re.search(rf"^func {name}\(.*?(?=^func |\Z)", src, re.M | re.S)
+        if m is None:
+            problems.append(f"currency_manager.gd: no func {name}() to guard")
+            continue
+        # Strings first, then comments: a guard described in a comment is not
+        # a guard. The selftest caught this check passing on a body whose only
+        # remaining "is_finite" was the comment explaining why it mattered.
+        body = COMMENT.sub("", strip_strings(m.group(0)))
+        # The sanitizer may be called rather than inlined; either satisfies it.
+        if "is_finite" not in body and "_sanitize" not in body:
+            problems.append(
+                f"currency_manager.gd {name}(): no is_finite/_sanitize guard — "
+                f"inf or NAN reaches a balance"
+            )
+    return problems, [f"{len(FINITE_GUARDED)} currency entry points"]
+
+
 CHECKS = [
     ("unique names", check_unique_names),
     ("signal arity", check_signal_arity),
     ("handler existence", check_handlers),
     ("res:// literals", check_script_paths),
     ("autoload load order", check_load_order),
+    ("currency finite guards", check_currency_finite_guards),
 ]
 
 

@@ -48,12 +48,35 @@ func get_save_data() -> Dictionary:
 
 
 func load_save_data(data: Dictionary) -> void:
-	_balances[ESSENCE] = maxf(0.0, float(data.get("essence", 0.0)))
-	_balances[VOID_CRYSTALS] = maxf(0.0, float(data.get("void_crystals", 0.0)))
-	_balances[ASTRAL_SHARDS] = maxf(0.0, float(data.get("astral_shards", 0.0)))
-	_balances[VOID_SCRAPS] = maxf(0.0, float(data.get("void_scraps", 0.0)))
+	_balances[ESSENCE] = _sanitize(data.get("essence", 0.0), "essence")
+	_balances[VOID_CRYSTALS] = _sanitize(data.get("void_crystals", 0.0), "void_crystals")
+	_balances[ASTRAL_SHARDS] = _sanitize(data.get("astral_shards", 0.0), "astral_shards")
+	_balances[VOID_SCRAPS] = _sanitize(data.get("void_scraps", 0.0), "void_scraps")
 	for currency: StringName in _balances:
 		EventBus.currency_changed.emit(currency, _balances[currency])
+
+
+## Read one balance out of a save document, rejecting anything that isn't a
+## real number.
+##
+## maxf() alone is not enough. JSON has no literal for infinity, but a double
+## that overflows parses to `inf` (Godot reads `1e400` as `inf`), and
+## maxf(0.0, inf) is inf while maxf(0.0, NAN) is NAN — both sail straight
+## through. That matters because the poison is self-perpetuating: Godot
+## stringifies inf as `1e99999`, which parses back to inf on the next load,
+## so a single bad value survives every save from then on. A NAN balance is
+## worse than a large one: every comparison against NAN is false, so
+## `_balances[c] < amount` in try_spend() never refuses and the subtraction
+## leaves NAN behind — an unlimited wallet that also never visibly changes.
+##
+## Reachable without a hex editor: this is an incremental game whose numbers
+## grow exponentially, so a long enough run can overflow a float on its own.
+func _sanitize(raw: Variant, label: String) -> float:
+	var value: float = float(raw)
+	if not is_finite(value):
+		push_error("CurrencyManager: %s was %s in the save — reset to 0." % [label, value])
+		return 0.0
+	return maxf(0.0, value)
 
 
 # --- Public API --------------------------------------------------------------
@@ -75,8 +98,12 @@ func add(currency: StringName, amount: float) -> void:
 	if not _balances.has(currency):
 		push_error("CurrencyManager: unknown currency: %s" % currency)
 		return
-	if amount < 0.0:
-		push_error("CurrencyManager: add() amount must be positive, got %f" % amount)
+	# The is_finite() half is load-bearing: every comparison against NAN is
+	# false, so `amount < 0.0` alone waved NAN through and poisoned the balance
+	# permanently. inf is refused here too — it only ever arrives from a
+	# multiplier chain that has already overflowed, which is the real bug.
+	if not is_finite(amount) or amount < 0.0:
+		push_error("CurrencyManager: add() amount must be a positive number, got %s" % amount)
 		return
 	_balances[currency] += amount
 	EventBus.currency_changed.emit(currency, _balances[currency])
@@ -96,8 +123,15 @@ func try_spend(currency: StringName, amount: float) -> bool:
 	if not _balances.has(currency):
 		push_error("CurrencyManager: unknown currency: %s" % currency)
 		return false
-	if amount < 0.0:
-		push_error("CurrencyManager: try_spend() amount must be positive, got %f" % amount)
+	if not is_finite(amount) or amount < 0.0:
+		push_error("CurrencyManager: try_spend() amount must be a positive number, got %s" % amount)
+		return false
+	# A non-finite BALANCE is the dangerous direction: `NAN < amount` is false,
+	# so without this the affordability test passes and every price in the game
+	# becomes free. Refuse rather than repair, so the error is visible.
+	if not is_finite(_balances[currency]):
+		push_error("CurrencyManager: %s balance is %s — refusing to spend." \
+			% [currency, _balances[currency]])
 		return false
 	if _balances[currency] < amount:
 		return false

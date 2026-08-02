@@ -8,9 +8,31 @@ export_presets.cfg
 # Android build template (installed locally, never committed)
 android/
 
-# Keystores and signing secrets must NEVER be committed
+# Keystores and signing secrets must NEVER be committed.
+#
+# This list is deliberately wider than the two extensions Godot's own docs
+# mention, because the Stop hook runs `git add -A` and pushes to a PUBLIC
+# repository on every turn. Nothing here is reviewed before it leaves the
+# machine, so the ignore list — not vigilance — is the only thing standing
+# between a credential and the internet. Every pattern below is a file the
+# RELEASE-CHECKLIST work is about to create.
 *.keystore
 *.jks
+*.p12
+*.pfx
+*.pem
+*.pk8
+*.pepk
+*.der
+key.properties
+keystore.properties
+# Play Console / Firebase / ad-network service credentials
+google-services.json
+play-service-account*.json
+service-account*.json
+# Local environment files
+.env
+.env.*
 
 # OS junk
 .DS_Store

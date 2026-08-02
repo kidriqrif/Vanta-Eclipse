@@ -205,6 +205,15 @@ MUTATIONS: list[Mutation] = [
         "bg_color = Color(0.145, 0.145, 0.161, 1)",
     ),
     (
+        "check_scripts.py",
+        "currency: the NAN-permitting comparison comes back",
+        "scripts/managers/currency_manager.gd",
+        "\tif not is_finite(amount) or amount < 0.0:\n"
+        '\t\tpush_error("CurrencyManager: add() amount must be a positive number, got %s" % amount)',
+        "\tif amount < 0.0:\n"
+        '\t\tpush_error("CurrencyManager: add() amount must be positive, got %f" % amount)',
+    ),
+    (
         "check_ui.py",
         "screen title drifts onto the muted secondary-text style",
         "scenes/journal/journal.tscn",
