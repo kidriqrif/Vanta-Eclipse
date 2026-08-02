@@ -205,6 +205,13 @@ MUTATIONS: list[Mutation] = [
         "bg_color = Color(0.145, 0.145, 0.161, 1)",
     ),
     (
+        "check_ui.py",
+        "an off-palette hue creeps back into UI chrome (the violet boss timer)",
+        "scenes/common/countdown_timer_bar.tscn",
+        "bg_color = Color(0.659, 0.063, 0.102, 1)",
+        "bg_color = Color(0.51, 0.44, 0.72, 1)",
+    ),
+    (
         "check_scripts.py",
         "currency: the NAN-permitting comparison comes back",
         "scripts/managers/currency_manager.gd",

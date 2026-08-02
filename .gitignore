@@ -3,7 +3,13 @@
 
 # Godot exports and build output
 build/
-export_presets.cfg
+
+# export_presets.cfg is deliberately TRACKED — it is build configuration
+# (architecture, SDK levels, permissions, exclude filters, icons, package
+# name), and keeping it untracked is exactly how the release checklist came
+# to assert settings that no file specified. Since Godot 4.4 the secrets live
+# in export_credentials.cfg instead, so that is what gets ignored.
+export_credentials.cfg
 
 # Android build template (installed locally, never committed)
 android/

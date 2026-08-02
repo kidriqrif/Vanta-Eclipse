@@ -11,9 +11,10 @@ const DISC_PLAYER: Texture2D = preload("res://sprites/minigames/disc_player.svg"
 const DISC_AI: Texture2D = preload("res://sprites/minigames/disc_ai.svg")
 const CELL_EMPTY: Texture2D = preload("res://sprites/minigames/cell_empty.svg")
 
-const ARCADE: Color = Color(0.65, 0.93, 0.42, 1)
-const ARCADE_CORE: Color = Color(0.83, 0.98, 0.7, 1)
-const BOARD_BG: Color = Color(0.078, 0.059, 0.122, 0.9)
+## Read from the theme rather than restated here: one palette, one source.
+var _ink: Color = UIPalette.ink()
+const ARCADE_CORE: Color = Color(1, 0.851, 0.839, 1)
+const BOARD_BG: Color = Color(0.086, 0.086, 0.098, 0.9)
 
 const EMPTY: int = 0
 const PLAYER: int = 1
@@ -69,7 +70,7 @@ func _ready() -> void:
 	_build_board()
 	_board_row.resized.connect(_fit_cells)
 	_fit_cells()
-	_set_status("YOUR TURN", ARCADE)
+	_set_status("YOUR TURN", _ink)
 
 
 ## Keep cells square. The columns share the width evenly but the row is free to
@@ -132,11 +133,11 @@ func _column_style(lit: bool, full: bool) -> StyleBoxFlat:
 	if full:
 		# A full column reads as closed: dimmer ground, no accent edge.
 		style.bg_color = Color(BOARD_BG.r, BOARD_BG.g, BOARD_BG.b, BOARD_BG.a * 0.5)
-		style.border_color = Color(0.235, 0.18, 0.361, 0.5)
+		style.border_color = Color(0.18, 0.18, 0.204, 0.5)
 	elif lit:
-		style.border_color = ARCADE
+		style.border_color = _ink
 	else:
-		style.border_color = Color(ARCADE.r, ARCADE.g, ARCADE.b, 0.35)
+		style.border_color = Color(_ink.r, _ink.g, _ink.b, 0.35)
 	return style
 
 
@@ -206,7 +207,7 @@ func _on_ai_think_done() -> void:
 		_end_draw()
 		return
 	_busy = false
-	_set_status("YOUR TURN", ARCADE)
+	_set_status("YOUR TURN", _ink)
 	_refresh_columns()
 
 

@@ -1,9 +1,13 @@
 # Vanta Eclipse — Release Checklist
 
-Status as of Milestone 15. **The game is feature-complete and internally
-consistent, but it is NOT ready to submit to Google Play.** Everything under
-"Blockers" must be done first, and none of it could be done inside this
-repository — each item needs an account, a credential, a device, or an SDK.
+**The game is feature-complete and internally consistent, but it is NOT ready
+to submit to Google Play.** Everything under "Blockers" must be done first.
+
+What is left genuinely cannot be done from inside this repository: each
+remaining item needs a Google account, a licence accepted by a human, a
+credential, or a physical device. Everything that *could* be produced here —
+the export presets, the icons, the store graphics, the listing copy, the
+privacy-policy draft — now exists.
 
 This file lists *what must exist*. `TESTING-GUIDE.md` lists *what must be
 proven*, staged from "does it launch at all" through to production rollout —
@@ -20,25 +24,36 @@ This section used to be missing, and the items below it were listed as
 "verified in-repo" when no file backed them. Until all three exist, every
 later item is untestable, because no artifact can be produced.
 
-- [ ] **Install the Godot 4.7 export templates.**
-      `%APPDATA%/Godot/export_templates/` is present but empty, so any
-      `--export-release` fails before it reads the project.
-- [ ] **Create `export_presets.cfg` with an Android preset.** There is no
-      such file, and there never has been — `git log --all` has no commit
-      touching it. Every export setting the rest of this checklist refers to
-      (architecture, SDK levels, AAB output, permissions, exclude filters,
-      launcher icons, package name, version code) lives *only* here, so none
-      of them currently have a value at all.
+- [x] **Godot 4.7 export templates installed.** 35 files in
+      `%APPDATA%/Godot/export_templates/4.7.stable/`, including the
+      `android_source.zip` the export error named.
+- [x] **`export_presets.cfg` created and committed.** Two presets: `Android`
+      (Gradle build, AAB, arm64-v8a, min SDK 24, target SDK 35, signed) and
+      `Android Debug APK` (prebuilt template, for the first device test).
+      Verified by running `--export-release "Android"`: Godot now parses and
+      selects the preset and fails only on the SDK below, which is what
+      proves the file is valid rather than merely present.
+      It is **tracked on purpose** — keeping it untracked is exactly why this
+      checklist drifted. Credentials go in `export_credentials.cfg`, which is
+      gitignored.
+- [ ] **Install a JDK 17 and the Android SDK** (platform-tools, build-tools,
+      platform 35) and point Godot's Editor Settings at it. This is the only
+      remaining thing between the repo and a debug APK. It needs Google's SDK
+      licence accepted interactively, which is why it was left for you.
 - [ ] **Install the Android build template** (`android/`, via Project →
-      Install Android Build Template). The AdMob and Play Billing plugins
-      both require a custom build; the stock template cannot load them.
+      Install Android Build Template) once the SDK exists. The AdMob and Play
+      Billing plugins both require a custom build; the stock template cannot
+      load them. Only the `Android` preset needs this — `Android Debug APK`
+      is configured to build without it.
 
-**Note on committing the preset.** `export_presets.cfg` is currently in
-`.gitignore`, which is the common advice because Godot historically wrote
-keystore passwords into it. Since 4.4 those live in a separate
-`export_credentials.cfg`. Prefer committing `export_presets.cfg` — it is
-build configuration, and keeping it untracked is exactly why the claims below
-drifted unnoticed — and gitignoring `export_credentials.cfg` instead.
+**Confirm the package name before the first upload.** It is currently
+`com.kidriqrif.vantaeclipse`, which I chose from the GitHub account. It is
+**permanent once published** — Play will never let it change — so if you own
+a domain, use it instead.
+
+**Check the target SDK against current policy.** It is set to 35. Play raises
+the minimum target API every August, so verify the requirement for the month
+you actually submit in.
 
 ### 1. Real ads and billing (Milestone 14 shipped stubs)
 - [ ] Add the Godot Android **AdMob** plugin (or chosen network) to the build.
@@ -69,25 +84,42 @@ drifted unnoticed — and gitignoring `export_credentials.cfg` instead.
 "ad" is a 3-second timer.**
 
 ### 2. Identity and signing
-- [ ] Set `package/unique_name`. It has no value yet (§0 — the preset does not
-      exist). Godot's default is `com.example.$genname`, which Play rejects;
-      pick a domain you control.
+- [x] `package/unique_name` set to `com.kidriqrif.vantaeclipse` (no longer
+      Godot's rejected `com.example.*` default) — but see the confirmation
+      note in §0 before the first upload, because it can never be changed.
+- [x] `version/code=1` and `version/name="0.1.0"`, matching `project.godot`.
+      Bump `version/code` on every upload; Play rejects a repeat.
 - [ ] Generate an upload keystore; configure signing (never commit the
       keystore or its passwords — see the widened patterns in `.gitignore`,
       and note that the Stop hook auto-pushes to a **public** repo).
-- [ ] Set `version/code` and `version/name` per release. `project.godot` says
-      `config/version="0.1.0"`; there is no `version/code` anywhere.
+      Put the paths and passwords in `export_credentials.cfg`, which is
+      gitignored — not in `export_presets.cfg`, which is tracked.
 
-### 3. Store assets (none exist in the repo)
-- [ ] **Replace `icon.svg`.** It is still the placeholder: a 128×128 purple
-      circle (`#a78bfa` on `#0b0812`) left over from the pre-red palette, so
-      the launcher icon currently contradicts the whole game's colour scheme.
-- [ ] Launcher icons: 192×192 and the two 432×432 adaptive layers.
-- [ ] 512×512 32-bit PNG store icon, feature graphic 1024×500, short and full
-      description, privacy policy URL.
-- [ ] At least 2 phone screenshots. `tools/screenshot_run.sh` already renders
-      28 screens, but at 540×960 — re-render at `SHOT_RES=1080x1920` for the
-      listing.
+### 3. Store assets
+
+All generated from the theme's own values, so the listing and the game agree.
+`tools/render_icons.gd` and `tools/render_feature_graphic.gd` rebuild them.
+
+- [x] **`icon.svg` redrawn** — an eclipse mark in `#FF3B30`/`#A8101A` on
+      `#0B0B0D`, replacing the 128×128 purple placeholder that had survived
+      the red-and-black overhaul.
+- [x] Launcher icon 192×192 and both 432×432 adaptive layers. Foreground art
+      sits inside the 264px safe circle; background is fully opaque; the
+      occluded disc is punched to transparent, not to black, so launcher
+      parallax cannot reveal a seam.
+- [x] 512×512 store icon, alpha channel stripped (Play rejects one that has
+      an alpha channel even when every pixel is opaque).
+- [x] Feature graphic 1024×500, composed in Godot with the project font.
+- [x] 6 phone screenshots in `production/screenshots/`, 540×960 — exact 9:16
+      and inside Play's 320–3840 range. **Not** 1080×1920: this display is
+      1920×1080, so a taller window gets silently clamped and the aspect
+      guard rejects the run. Recapture on the device during Stage 2 testing
+      if you want them sharper.
+- [x] Short and full description, categorisation, and Data Safety notes:
+      `production/store-listing.md`.
+- [ ] **Host the privacy policy.** Text drafted in
+      `production/privacy-policy.md`, but it has placeholders to fill and
+      needs a public URL before it counts.
 
 ### 4. Legal / policy
 - [ ] Privacy policy covering ad SDK data collection (required once an ad SDK
@@ -100,18 +132,30 @@ drifted unnoticed — and gitignoring `export_credentials.cfg` instead.
 
 ## Verified in-repo
 
-Everything in this section is backed by a file in the repository. Claims about
-*export* settings deliberately do not appear here — they live in
-`export_presets.cfg`, which does not exist (§0). Three former entries
-("arm64-v8a only, min SDK 24, target SDK 34, AAB output", "`design/`, `tools/`
-and scratch excluded from the export", "permissions limited to internet,
-network state, and vibrate") were listed here as verified despite having no
-file to verify against, and are now blockers instead.
+Everything in this section is backed by a file in the repository, and the file
+is named so the claim can be checked.
+
+Three entries used to sit here — "arm64-v8a only, min SDK 24, target SDK 34,
+AAB output", "`design/`, `tools/` and scratch excluded from the export", and
+"permissions limited to internet, network state, and vibrate" — while
+`export_presets.cfg` did not exist at all. They were checked-off claims with
+nothing behind them. All three are now genuinely true, because the preset was
+written (§0); they are listed there rather than here, next to the settings
+they describe.
 
 - [x] Portrait 1080×1920, `canvas_items` stretch, `expand` aspect
       (`project.godot`), confirmed rendering on 7 Android aspect ratios from
       9:16 to 5:6 via `tools/aspect_matrix.sh`.
 - [x] Mobile renderer; ETC2/ASTC VRAM compression enabled (`project.godot`).
+- [x] One accent on neutrals, enforced rather than asserted. The Milestone-15
+      overhaul reached the theme and the sprites but not per-scene
+      `theme_override_colors` or per-script colour constants: 58 saturated
+      non-red values were still live, including the violet boss countdown bar
+      and both "retired" door accents (Eclipse teal, Arcade lime). All are now
+      on the palette, moved onto theme variations (`AccentLabel`,
+      `AccentHeaderLabel`, `MutedLabel`) or `UIPalette` accessors rather than
+      restated as literals. `check_ui.py` now fails any UI colour with real
+      chroma outside the red family, so this cannot drift again silently.
 - [x] Atomic save with a backup slot and a versioned document
       (`SaveManager`), so a crash mid-write cannot corrupt progress.
 - [x] Every manager's save section defaults cleanly when absent, so old saves
@@ -124,7 +168,7 @@ file to verify against, and are now blockers instead.
       `check_shaders.py` (shader structure and material parameters), and the
       font-safe glyph check.
       Every one of those checkers has a positive control in
-      `tools/selftest_checks.py`, which injects 25 real defects into a copy of
+      `tools/selftest_checks.py`, which injects 26 real defects into a copy of
       the project and requires each to be rejected — so a green sweep means the
       checks ran, not merely that they printed OK.
 

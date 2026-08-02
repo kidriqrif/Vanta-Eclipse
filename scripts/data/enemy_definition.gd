@@ -21,7 +21,7 @@ extends Resource
 @export var hp_multiplier: float = 1.0
 
 ## Accent color used for death particles and effects.
-@export var glow_color: Color = Color(0.6, 0.4, 1.0)
+@export var glow_color: Color = Color(0.769, 0.769, 0.804)
 
 ## True for boss-tier enemies (boss HUD dressing, timed fights).
 @export var is_boss: bool = false

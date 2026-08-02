@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Play Console store listing icon: 512x512, 32-bit PNG, NO transparency.
+
+       Full-bleed square on purpose. Play applies its own rounded-corner mask
+       and drop shadow to this asset, so baking corners in here produces a
+       double-rounded icon with black wedges in the corners. -->
+  <defs>
+    <linearGradient id="corona" x1="0.15" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#FF6B62"/>
+      <stop offset="0.45" stop-color="#FF3B30"/>
+      <stop offset="1" stop-color="#A8101A"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0.52" stop-color="#FF3B30" stop-opacity="0"/>
+      <stop offset="0.76" stop-color="#FF3B30" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#FF3B30" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="512" height="512" fill="#0B0B0D"/>
+  <circle cx="256" cy="256" r="240" fill="url(#halo)"/>
+
+  <circle cx="256" cy="256" r="176" fill="url(#corona)"/>
+  <circle cx="256" cy="256" r="120" fill="#0B0B0D"/>
+
+  <path d="M131.6 131.6 A176 176 0 0 1 256 80" fill="none" stroke="#FFD9D6"
+        stroke-opacity="0.55" stroke-width="16" stroke-linecap="round"/>
+  <circle cx="151.4" cy="151.4" r="24" fill="#FFD9D6"/>
+  <circle cx="151.4" cy="151.4" r="10.4" fill="#FFFFFF"/>
+</svg>

@@ -18,9 +18,9 @@ extends Resource
 @export var boss_definition_paths: Array[String] = []
 
 ## Nebula shader palette (deep_color / nebula_color / accent_color).
-@export var deep_color: Color = Color(0.016, 0.008, 0.035)
-@export var nebula_color: Color = Color(0.1, 0.05, 0.22)
-@export var accent_color: Color = Color(0.36, 0.19, 0.66)
+@export var deep_color: Color = Color(0.016, 0.016, 0.02)
+@export var nebula_color: Color = Color(0.055, 0.055, 0.063)
+@export var accent_color: Color = Color(0.18, 0.18, 0.204)
 
 ## All essence earned at this world's levels is multiplied by this.
 @export var essence_multiplier: float = 1.0

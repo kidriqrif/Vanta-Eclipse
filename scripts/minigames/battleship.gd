@@ -12,9 +12,10 @@ const SHOT_MISS: Texture2D = preload("res://sprites/minigames/shot_miss.svg")
 const SHOT_HIT: Texture2D = preload("res://sprites/minigames/shot_hit.svg")
 const SHOT_SUNK: Texture2D = preload("res://sprites/minigames/shot_sunk.svg")
 
-const ARCADE: Color = Color(0.65, 0.93, 0.42, 1)
-const ARCADE_CORE: Color = Color(0.83, 0.98, 0.7, 1)
-const CELL_BG: Color = Color(0.078, 0.059, 0.122, 0.9)
+## Read from the theme rather than restated here: one palette, one source.
+var _ink: Color = UIPalette.ink()
+const ARCADE_CORE: Color = Color(1, 0.851, 0.839, 1)
+const CELL_BG: Color = Color(0.086, 0.086, 0.098, 0.9)
 
 const UNKNOWN: int = 0
 const MISS: int = 1
@@ -88,7 +89,7 @@ func _ready() -> void:
 	_grid.resized.connect(_fit_cells)
 	_fit_cells()
 	_refresh_labels()
-	_set_status("FIND THE FLEET", ARCADE)
+	_set_status("FIND THE FLEET", _ink)
 
 
 # --- Setup ----------------------------------------------------------------------
@@ -168,7 +169,7 @@ func _cell_style(lit: bool) -> StyleBoxFlat:
 	style.bg_color = CELL_BG
 	style.set_corner_radius_all(12)
 	style.set_border_width_all(2)
-	style.border_color = ARCADE if lit else Color(0.235, 0.18, 0.361, 0.6)
+	style.border_color = _ink if lit else Color(0.18, 0.18, 0.204, 0.6)
 	return style
 
 
@@ -207,7 +208,7 @@ func _on_cell_pressed(index: int) -> void:
 			_reveal_sunk(ship, index)
 			_set_status("SHIP SUNK", ARCADE_CORE)
 		else:
-			_set_status("HIT", ARCADE)
+			_set_status("HIT", _ink)
 	_cells[index].disabled = true
 	_pop(_cells[index])
 	_refresh_labels()

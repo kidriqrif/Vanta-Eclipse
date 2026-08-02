@@ -92,7 +92,6 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 mouse_filter = 0
-theme_override_colors/font_color = Color(0.769, 0.71, 0.992, 1)
 theme_override_font_sizes/font_size = 48
 text = "+0 Essence"
 vertical_alignment = 1

@@ -81,7 +81,7 @@ func _rebuild() -> void:
 func _make_row(def: RelicDefinition, is_active: bool) -> PanelContainer:
 	var row := PanelContainer.new()
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.10, 0.086, 0.055, 0.92)
+	style.bg_color = Color(0.086, 0.086, 0.098, 0.92)
 	style.set_corner_radius_all(16)
 	style.set_content_margin_all(18)
 	style.set_border_width_all(2)

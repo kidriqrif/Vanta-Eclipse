@@ -179,8 +179,71 @@ def check_screen_titles() -> tuple[list[str], list[str]]:
     return problems, [f"{count} screen titles"]
 
 
+# The scheme is one accent on neutrals. Anything with real chroma must sit in
+# the red family; greys, near-whites and near-blacks are unconstrained.
+#
+# Chroma (max-min) rather than HLS saturation on purpose: the Legendary rarity
+# white is Color(0.949, 0.949, 0.965), which HLS calls 19% saturated because of
+# a hair of blue, but whose chroma is 0.016 — obviously neutral. A saturation
+# threshold tuned to exclude it would sit right next to real colours.
+CHROMA_FLOOR = 0.10
+## Degrees either side of pure red that still count as the accent family.
+RED_ARC = 25.0
+
+COLOR_CALL = re.compile(
+    r"Color\(\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+)"
+)
+# Creature, world and cosmetic colours are content, not chrome: a green enemy
+# and a purple tap trail are deliberate. Only UI surfaces are constrained.
+HUE_SCOPES = ("scenes/**/*.tscn", "scripts/ui/**/*.gd", "scripts/minigames/**/*.gd",
+              "ui/**/*.tres")
+
+
+def check_palette_hues() -> tuple[list[str], list[str]]:
+    problems: list[str] = []
+    inspected = 0
+    for scope in HUE_SCOPES:
+        for path in sorted(ROOT.glob(scope)):
+            for number, line in enumerate(
+                path.read_text(encoding="utf-8").splitlines(), 1
+            ):
+                for match in COLOR_CALL.finditer(line):
+                    red, green, blue = (float(v) for v in match.groups())
+                    inspected += 1
+                    # Over-1.0 values are HDR multipliers (hit flashes); judge
+                    # them on ratio, which normalising preserves.
+                    peak = max(red, green, blue, 1.0)
+                    red, green, blue = red / peak, green / peak, blue / peak
+                    low = min(red, green, blue)
+                    chroma = max(red, green, blue) - low
+                    if chroma < CHROMA_FLOOR:
+                        continue
+                    hue = _hue_degrees(red, green, blue, chroma)
+                    if hue <= RED_ARC or hue >= 360.0 - RED_ARC:
+                        continue
+                    problems.append(
+                        f"{path.relative_to(ROOT)}:{number}: "
+                        f"Color({red:.3f}, {green:.3f}, {blue:.3f}) is {hue:.0f}deg "
+                        f"off-palette (chroma {chroma:.2f}) — the scheme is one "
+                        f"red accent on neutrals"
+                    )
+    return problems, [f"{inspected} colours in UI surfaces"]
+
+
+def _hue_degrees(red: float, green: float, blue: float, chroma: float) -> float:
+    top = max(red, green, blue)
+    if top == red:
+        hue = ((green - blue) / chroma) % 6.0
+    elif top == green:
+        hue = (blue - red) / chroma + 2.0
+    else:
+        hue = (red - green) / chroma + 4.0
+    return hue * 60.0
+
+
 CHECKS = [
     ("no stale palette copies", check_stale_palette),
+    ("colours stay in the red family", check_palette_hues),
     ("sprites are referenced", check_sprites_referenced),
     ("theme variations are used", check_variations_used),
     ("margin-sized styleboxes have height", check_styleboxes_have_height),

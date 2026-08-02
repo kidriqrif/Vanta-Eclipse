@@ -14,8 +14,8 @@ extends Label
 ## assumed — the M15 pass found this cost negligible by inspection.
 
 const NORMAL_COLOR: Color = Color(0.949, 0.949, 0.965)
-const CRIT_COLOR: Color = Color(1.0, 0.8, 0.25)
-const CRIT_OUTLINE_COLOR: Color = Color(0.25, 0.08, 0.02)
+const CRIT_COLOR: Color = Color(1, 0.231, 0.188)
+const CRIT_OUTLINE_COLOR: Color = Color(0.043, 0.043, 0.051)
 
 
 func setup(amount: float, is_crit: bool) -> void:

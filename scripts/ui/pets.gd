@@ -6,7 +6,8 @@ extends Control
 
 ## The single companion-class color (visual §2.5/§5). Pets never borrow the
 ## boss-ember threat accent or any per-species tint — growth wears one color.
-const ALLY_VIOLET: Color = Color(0.545, 0.361, 0.965, 1)
+## Read from the theme rather than restated here: one palette, one source.
+var _accent: Color = UIPalette.accent()
 ## Standard data-label ink (visual §2.5, §4-verified contrast).
 
 @onready var _showcase: VBoxContainer = %ShowcaseBox
@@ -73,7 +74,7 @@ func _build_showcase() -> void:
 	xp_bar.max_value = maxf(1.0, progress["needed"])
 	xp_bar.value = progress["into"]
 	var fill := StyleBoxFlat.new()
-	fill.bg_color = ALLY_VIOLET
+	fill.bg_color = _accent
 	fill.set_corner_radius_all(12)
 	xp_bar.add_theme_stylebox_override("fill", fill)
 	_showcase.add_child(xp_bar)
@@ -127,13 +128,13 @@ func _make_roster_row(id: StringName, is_active: bool) -> Button:
 	var row := Button.new()
 	row.custom_minimum_size = Vector2(0, 140)
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.10, 0.078, 0.157, 0.9)
+	style.bg_color = Color(0.086, 0.086, 0.098, 0.9)
 	style.set_corner_radius_all(14)
 	style.set_content_margin_all(16)
 	# Every companion wears the same 6px ally-violet spine — "one class"
 	# (visual §2.5). The active row raises the other three edges to a full
 	# border in the same color; nothing borrows a second accent.
-	style.border_color = ALLY_VIOLET
+	style.border_color = _accent
 	style.border_width_left = 6
 	if is_active:
 		style.border_width_top = 2
@@ -174,13 +175,13 @@ func _make_roster_row(id: StringName, is_active: bool) -> Button:
 	if is_active:
 		var pill := Label.new()
 		pill.text = "● ACTIVE"
-		pill.add_theme_color_override("font_color", ALLY_VIOLET)
+		pill.add_theme_color_override("font_color", _accent)
 		pill.add_theme_font_size_override("font_size", 24)
 		name_row.add_child(pill)
 	elif PetManager.is_unseen(id):
 		var new_pill := Label.new()
 		new_pill.text = "NEW"
-		new_pill.add_theme_color_override("font_color", ALLY_VIOLET)
+		new_pill.add_theme_color_override("font_color", _accent)
 		new_pill.add_theme_font_size_override("font_size", 24)
 		name_row.add_child(new_pill)
 	var bonus := Label.new()

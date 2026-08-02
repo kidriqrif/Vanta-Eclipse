@@ -12,8 +12,8 @@ signal unequip_requested(slot: StringName)
 signal salvage_requested(item_id: int)
 
 const ARM_SECONDS: float = 2.5
-const UP_COLOR: Color = Color(0.4, 0.85, 0.5)
-const DOWN_COLOR: Color = Color(0.9, 0.4, 0.45)
+const UP_COLOR: Color = Color(0.929, 0.929, 0.941)
+const DOWN_COLOR: Color = Color(1, 0.231, 0.188)
 
 var _item: Dictionary
 var _is_equipped: bool

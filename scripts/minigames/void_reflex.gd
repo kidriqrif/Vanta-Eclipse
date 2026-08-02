@@ -19,8 +19,9 @@ const FLARE_WINDOW: float = 2.5
 const ROUND_GAP: float = 0.45
 const FLARE_TWEEN: float = 0.15
 
-const ARCADE: Color = Color(0.65, 0.93, 0.42, 1)
-const ARCADE_CORE: Color = Color(0.83, 0.98, 0.7, 1)
+## Read from the theme rather than restated here: one palette, one source.
+var _ink: Color = UIPalette.ink()
+const ARCADE_CORE: Color = Color(1, 0.851, 0.839, 1)
 
 var _round: int = 0
 var _hits: int = 0
@@ -109,7 +110,7 @@ func _on_flare() -> void:
 	_sigil_icon.pivot_offset = _sigil_icon.size * 0.5
 	_sigil_ring.visible = true
 	_state_label.text = "TAP!"
-	_state_label.add_theme_color_override("font_color", ARCADE)
+	_state_label.add_theme_color_override("font_color", _ink)
 	if _flare_tween != null and _flare_tween.is_valid():
 		_flare_tween.kill()
 	_flare_tween = create_managed_tween()

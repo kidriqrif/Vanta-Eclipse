@@ -19,7 +19,11 @@ extends Control
 ## it (confirmed by screenshotting a real run). These creatures emit light —
 ## pooling their own glow_color on the ground reads correctly AND is visible.
 
-const FLASH_COLOR: Color = Color(2.2, 1.9, 3.0)
+## Over-1.0 on purpose: this multiplies modulate, so it blows the sprite out
+## rather than tinting it. Red-dominant since the palette overhaul — the old
+## value led on blue, which a saturation scan cannot catch because every
+## channel clamps to white on the way out.
+const FLASH_COLOR: Color = Color(3.0, 2.0, 1.9)
 
 ## Ground-glow rest state, and how far it thins at the top of the hover.
 ## Light falls off with distance, so a rising creature pools a smaller, fainter

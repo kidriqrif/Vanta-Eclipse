@@ -1,1 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect width="128" height="128" rx="24" fill="#0b0812"/><circle cx="64" cy="64" r="42" fill="#a78bfa"/><circle cx="57" cy="59" r="40" fill="#161022"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- Vanta Eclipse launcher mark.
+
+       Replaces the purple placeholder that survived the red-and-black
+       overhaul. Built from the theme's own values (base #0B0B0D, accent
+       #FF3B30, deep #A8101A) so the icon and the game agree.
+
+       The mark is an eclipse: a corona ring with the disc blacked out. It
+       reads at 48px because it is one closed silhouette with a hole — no
+       interior detail is load-bearing. The diamond-ring bead at the upper
+       left is the only asymmetry, and it is what stops the shape reading as
+       a generic ring or a loading spinner. -->
+  <defs>
+    <linearGradient id="corona" x1="0.15" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#FF6B62"/>
+      <stop offset="0.45" stop-color="#FF3B30"/>
+      <stop offset="1" stop-color="#A8101A"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0.52" stop-color="#FF3B30" stop-opacity="0"/>
+      <stop offset="0.76" stop-color="#FF3B30" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#FF3B30" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="128" height="128" rx="28" fill="#0B0B0D"/>
+  <circle cx="64" cy="64" r="60" fill="url(#halo)"/>
+
+  <!-- corona, then the occluding disc punched back to base -->
+  <circle cx="64" cy="64" r="44" fill="url(#corona)"/>
+  <circle cx="64" cy="64" r="30" fill="#0B0B0D"/>
+
+  <!-- rim light along the top-left, the curved-light idiom the UI sprites use -->
+  <path d="M32.9 32.9 A44 44 0 0 1 64 20" fill="none" stroke="#FFD9D6"
+        stroke-opacity="0.55" stroke-width="4" stroke-linecap="round"/>
+  <!-- diamond-ring bead -->
+  <circle cx="37.8" cy="37.8" r="6" fill="#FFD9D6"/>
+  <circle cx="37.8" cy="37.8" r="2.6" fill="#FFFFFF"/>
+</svg>

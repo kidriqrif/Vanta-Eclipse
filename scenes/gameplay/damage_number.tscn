@@ -4,9 +4,9 @@
 
 [sub_resource type="LabelSettings" id="LabelSettings_damage"]
 font_size = 44
-font_color = Color(0.95, 0.93, 1, 1)
+font_color = Color(0.929, 0.929, 0.941, 1)
 outline_size = 10
-outline_color = Color(0.06, 0.03, 0.12, 1)
+outline_color = Color(0.043, 0.043, 0.051, 1)
 
 [node name="DamageNumber" type="Label"]
 z_index = 10

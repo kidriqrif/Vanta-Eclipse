@@ -68,7 +68,6 @@ mouse_filter = 2
 
 [node name="DevLabel" type="Label" parent="MarginContainer/VBox/DevBanner"]
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.98, 0.75, 0.45, 1)
 theme_override_font_sizes/font_size = 24
 text = "Development build — purchases are simulated and nothing is charged."
 horizontal_alignment = 1
