@@ -1,29 +1,99 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Blaze — Ember's evolution. The shell has burst and what was sitting in
+       it now has wings, horns and a tail.
+
+       An evolution has to be legible as a REWARD at a glance, so it changes
+       silhouette rather than gaining an accessory: Blaze is wide where Ember
+       is tall, and the broken cup is gone. Previously the two differed by a
+       crown and about 20% scale, which read as the same pet twice. -->
   <defs>
-    <radialGradient id="au" cx="50%" cy="48%" r="50%">
-      <stop offset="0.35" stop-color="#a78bfa" stop-opacity="0.4"/>
-      <stop offset="0.75" stop-color="#a78bfa" stop-opacity="0.12"/>
-      <stop offset="1" stop-color="#a78bfa" stop-opacity="0"/>
+    <radialGradient id="au" cx="50%" cy="50%" r="52%">
+      <stop offset="0.28" stop-color="#fb923c" stop-opacity="0.50"/>
+      <stop offset="0.66" stop-color="#f97316" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#ea580c" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="body" cx="50%" cy="40%" r="65%">
-      <stop offset="0" stop-color="#ffd39a"/><stop offset="1" stop-color="#e2531f"/>
-    </radialGradient>
-    <radialGradient id="eye" cx="50%" cy="50%" r="50%">
-      <stop offset="0.25" stop-color="#f8f6ff"/><stop offset="0.6" stop-color="#c4b5fd"/>
-      <stop offset="1" stop-color="#c4b5fd" stop-opacity="0"/>
+    <linearGradient id="wing" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#ffd08a" stop-opacity="0.9"/>
+      <stop offset="0.5" stop-color="#f97316" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#b91c1c" stop-opacity="0.35"/>
+    </linearGradient>
+    <linearGradient id="body" x1="0.35" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#fff6e4"/>
+      <stop offset="0.24" stop-color="#ffd08a"/>
+      <stop offset="0.58" stop-color="#f97316"/>
+      <stop offset="0.85" stop-color="#c2410c"/>
+      <stop offset="1" stop-color="#7c2d12"/>
+    </linearGradient>
+    <linearGradient id="horn" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#fff1d6"/>
+      <stop offset="1" stop-color="#92400e"/>
+    </linearGradient>
+    <radialGradient id="eye" cx="50%" cy="46%" r="52%">
+      <stop offset="0.20" stop-color="#ffffff"/>
+      <stop offset="0.52" stop-color="#e9deff"/>
+      <stop offset="1" stop-color="#a78bfa" stop-opacity="0.15"/>
     </radialGradient>
   </defs>
-  <circle cx="256" cy="256" r="240" fill="url(#au)"/>
-  <path d="M186 150 L214 60 L236 150 Z" fill="#ffcf6a"/>
-  <path d="M256 130 L286 30 L316 130 Z" fill="#ffd88a"/>
-  <path d="M326 150 L354 66 L376 150 Z" fill="#ffcf6a"/>
-  <path d="M256 100 C316 100 356 170 316 214 L196 214 C156 170 196 100 256 100Z" fill="#ffdca8"/>
-  <ellipse cx="256" cy="330" rx="168" ry="150" fill="url(#body)"/>
-  <path d="M120 340 Q90 380 110 430 Q130 390 150 380Z" fill="#e2531f"/>
-  <path d="M392 340 Q422 380 402 430 Q382 390 362 380Z" fill="#e2531f"/>
-  <ellipse cx="206" cy="306" rx="34" ry="42" fill="url(#eye)"/>
-  <ellipse cx="306" cy="306" rx="34" ry="42" fill="url(#eye)"/>
-  <ellipse cx="208" cy="304" rx="12" ry="17" fill="#f8f6ff"/>
-  <ellipse cx="308" cy="304" rx="12" ry="17" fill="#f8f6ff"/>
-  <path d="M228 372 Q256 396 284 372" fill="none" stroke="#7a3418" stroke-width="9" stroke-linecap="round"/>
+
+  <circle cx="256" cy="262" r="244" fill="url(#au)"/>
+
+  <!-- Wings, behind the body: the width that sells the evolution. -->
+  <path fill="url(#wing)" d="
+    M188 210 C 130 168 78 154 26 160
+    C 66 186 96 218 112 254
+    C 74 250 44 258 20 278
+    C 62 292 100 314 130 344
+    C 152 306 172 262 188 210 Z"/>
+  <path fill="url(#wing)" d="
+    M324 210 C 382 168 434 154 486 160
+    C 446 186 416 218 400 254
+    C 438 250 468 258 492 278
+    C 450 292 412 314 382 344
+    C 360 306 340 262 324 210 Z"/>
+  <path fill="#7c2d12" fill-opacity="0.4" d="M188 210 C 148 190 106 178 66 176 L 112 254 Z"/>
+  <path fill="#7c2d12" fill-opacity="0.4" d="M324 210 C 364 190 406 178 446 176 L 400 254 Z"/>
+
+  <!-- Horns, as separate islands. -->
+  <path fill="url(#horn)" d="M196 130 C 176 92 158 68 132 50 C 168 76 194 104 210 134 Z"/>
+  <path fill="url(#horn)" d="M316 130 C 336 92 354 68 380 50 C 344 76 318 104 302 134 Z"/>
+
+  <!-- Body. Holes: eyes and a chest vent. -->
+  <path fill="url(#body)" fill-rule="evenodd" d="
+    M256 88
+    C 292 132 322 168 336 210
+    C 356 258 350 316 314 356
+    C 288 386 274 408 268 440
+    C 262 420 258 406 256 398
+    C 254 406 250 420 244 440
+    C 238 408 224 386 198 356
+    C 162 316 156 258 176 210
+    C 190 168 220 132 256 88 Z
+
+    M 216 246 m -25 0 a 25 29 0 1 0 50 0 a 25 29 0 1 0 -50 0 Z
+    M 296 246 m -25 0 a 25 29 0 1 0 50 0 a 25 29 0 1 0 -50 0 Z
+    M 256 322 C 268 322 276 334 276 348 C 276 362 268 372 256 372
+    C 244 372 236 362 236 348 C 236 334 244 322 256 322 Z
+  "/>
+
+  <!-- Inner fire, brightest at the throat. -->
+  <path fill="#fff6e4" fill-opacity="0.55" d="
+    M256 148 C 276 190 296 220 298 254
+    C 300 292 282 314 256 314
+    C 230 314 212 292 214 254
+    C 216 220 236 190 256 148 Z"/>
+
+  <ellipse cx="216" cy="244" rx="16" ry="19" fill="url(#eye)"/>
+  <ellipse cx="296" cy="244" rx="16" ry="19" fill="url(#eye)"/>
+  <ellipse cx="211" cy="236" rx="6" ry="7" fill="#ffffff"/>
+  <ellipse cx="291" cy="236" rx="6" ry="7" fill="#ffffff"/>
+
+  <!-- Tail, trailing away below. -->
+  <path fill="url(#body)" d="
+    M256 400 C 272 430 282 456 278 486
+    C 292 470 302 448 302 424
+    C 314 442 320 462 318 482
+    C 336 452 336 418 316 388
+    C 300 400 278 404 256 400 Z"/>
+  <circle cx="88" cy="120" r="8" fill="#fdba74" fill-opacity="0.7"/>
+  <circle cx="424" cy="112" r="7" fill="#fdba74" fill-opacity="0.7"/>
 </svg>

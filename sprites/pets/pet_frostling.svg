@@ -1,26 +1,76 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Frostling — stage 1 companion. A snowflake that grew a face: a six-armed
+       crystal frame with a rounded core nested in it.
+
+       Built from radial symmetry so it can never be confused with Ember, which
+       is built from a rising flame axis — the two starter pets used to be the
+       same ball in two colours. The frame arms are separate islands, so each
+       one picks up its own rim and the whole thing sparkles rather than
+       reading as a flat snowflake stamp. -->
   <defs>
-    <radialGradient id="au" cx="50%" cy="50%" r="50%">
-      <stop offset="0.35" stop-color="#a78bfa" stop-opacity="0.35"/>
-      <stop offset="0.75" stop-color="#a78bfa" stop-opacity="0.1"/>
-      <stop offset="1" stop-color="#a78bfa" stop-opacity="0"/>
+    <radialGradient id="au" cx="50%" cy="50%" r="52%">
+      <stop offset="0.30" stop-color="#7dd3fc" stop-opacity="0.42"/>
+      <stop offset="0.68" stop-color="#38bdf8" stop-opacity="0.13"/>
+      <stop offset="1" stop-color="#38bdf8" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="body" cx="50%" cy="42%" r="62%">
-      <stop offset="0" stop-color="#dbeafe"/><stop offset="1" stop-color="#5a9fe6"/>
-    </radialGradient>
-    <radialGradient id="eye" cx="50%" cy="50%" r="50%">
-      <stop offset="0.25" stop-color="#f8f6ff"/><stop offset="0.6" stop-color="#c4b5fd"/>
-      <stop offset="1" stop-color="#c4b5fd" stop-opacity="0"/>
+    <linearGradient id="core" x1="0.3" y1="0" x2="0.75" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.32" stop-color="#dbeafe"/>
+      <stop offset="0.68" stop-color="#7fb4ee"/>
+      <stop offset="1" stop-color="#2f6fbd"/>
+    </linearGradient>
+    <linearGradient id="arm" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#eaf5ff"/>
+      <stop offset="0.6" stop-color="#93c5fd"/>
+      <stop offset="1" stop-color="#3b7cc4"/>
+    </linearGradient>
+    <radialGradient id="eye" cx="50%" cy="46%" r="52%">
+      <stop offset="0.20" stop-color="#ffffff"/>
+      <stop offset="0.52" stop-color="#e9deff"/>
+      <stop offset="1" stop-color="#a78bfa" stop-opacity="0.15"/>
     </radialGradient>
   </defs>
-  <circle cx="256" cy="270" r="220" fill="url(#au)"/>
-  <polygon points="206,150 220,96 236,150" fill="#bcd8f5"/>
-  <polygon points="276,150 292,90 308,150" fill="#bcd8f5"/>
-  <ellipse cx="256" cy="310" rx="140" ry="132" fill="url(#body)"/>
-  <polygon points="256,180 286,240 226,240" fill="#eaf3ff" fill-opacity="0.6"/>
-  <ellipse cx="212" cy="300" rx="30" ry="36" fill="url(#eye)"/>
-  <ellipse cx="300" cy="300" rx="30" ry="36" fill="url(#eye)"/>
-  <ellipse cx="214" cy="298" rx="11" ry="15" fill="#f8f6ff"/>
-  <ellipse cx="302" cy="298" rx="11" ry="15" fill="#f8f6ff"/>
-  <path d="M240 356 Q256 370 272 356" fill="none" stroke="#2a5a8a" stroke-width="7" stroke-linecap="round"/>
+
+  <circle cx="256" cy="268" r="226" fill="url(#au)"/>
+
+  <!-- Six crystal arms, each an island with side barbs. -->
+  <g fill="url(#arm)">
+    <path d="M244 96 L268 96 L266 172 L246 172 Z M232 130 L244 118 L244 146 Z
+             M280 130 L268 118 L268 146 Z"/>
+    <path d="M114 190 L126 170 L192 210 L182 228 Z M110 226 L110 210 L134 224 Z
+             M158 178 L152 162 L176 176 Z"/>
+    <path d="M398 190 L386 170 L320 210 L330 228 Z M402 226 L402 210 L378 224 Z
+             M354 178 L360 162 L336 176 Z"/>
+    <path d="M126 366 L114 346 L182 308 L192 326 Z M110 326 L110 310 L134 312 Z
+             M152 374 L158 358 L176 360 Z"/>
+    <path d="M386 366 L398 346 L330 308 L320 326 Z M402 326 L402 310 L378 312 Z
+             M360 374 L354 358 L336 360 Z"/>
+    <path d="M244 440 L268 440 L266 364 L246 364 Z M232 406 L244 418 L244 390 Z
+             M280 406 L268 418 L268 390 Z"/>
+  </g>
+
+  <!-- Core. Holes: eyes and a small crystal notch at the brow, so the frame
+       shows through and the body reads as ice rather than as a painted ball. -->
+  <path fill="url(#core)" fill-rule="evenodd" d="
+    M256 152 L342 202 L342 314 L256 364 L170 314 L170 202 Z
+
+    M 218 268 m -24 0 a 24 28 0 1 0 48 0 a 24 28 0 1 0 -48 0 Z
+    M 294 268 m -24 0 a 24 28 0 1 0 48 0 a 24 28 0 1 0 -48 0 Z
+    M 256 196 L 278 224 L 234 224 Z
+  "/>
+  <!-- Facets, so the hexagon turns in the light. -->
+  <polygon points="256,152 342,202 256,246 170,202" fill="#ffffff" fill-opacity="0.38"/>
+  <polygon points="170,202 256,246 256,364 170,314" fill="#ffffff" fill-opacity="0.12"/>
+  <polygon points="342,202 256,246 256,364 342,314" fill="#173b6b" fill-opacity="0.22"/>
+
+  <ellipse cx="218" cy="266" rx="16" ry="19" fill="url(#eye)"/>
+  <ellipse cx="294" cy="266" rx="16" ry="19" fill="url(#eye)"/>
+  <ellipse cx="213" cy="258" rx="6" ry="7" fill="#ffffff"/>
+  <ellipse cx="289" cy="258" rx="6" ry="7" fill="#ffffff"/>
+
+  <!-- Loose frost motes. -->
+  <circle cx="120" cy="120" r="7" fill="#bfe3ff" fill-opacity="0.8"/>
+  <circle cx="396" cy="132" r="6" fill="#bfe3ff" fill-opacity="0.8"/>
+  <circle cx="150" cy="426" r="6" fill="#bfe3ff" fill-opacity="0.7"/>
+  <circle cx="372" cy="416" r="5" fill="#bfe3ff" fill-opacity="0.7"/>
 </svg>

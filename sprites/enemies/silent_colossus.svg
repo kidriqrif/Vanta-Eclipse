@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- The Silent Colossus — Frozen Ruins world boss. A titan's statue, broken
+       at the neck and still standing: enormous shoulders, a chest split open
+       around a cold furnace, and a head bowed under its own weight.
+
+       This creature had NO art of its own — it pointed at the Hollow
+       Sentinel's sprite, so the world boss looked exactly like the tier-1
+       enemy the player had been farming for an hour. It is deliberately built
+       from the Sentinel's vocabulary (cut masonry, a visor slit, floating
+       pauldrons) at a completely different mass, so it reads as the same
+       civilisation and not the same creature. -->
+  <defs>
+    <radialGradient id="aura" cx="50%" cy="46%" r="54%">
+      <stop offset="0.22" stop-color="#f0562a" stop-opacity="0.18"/>
+      <stop offset="0.48" stop-color="#3b82f6" stop-opacity="0.28"/>
+      <stop offset="0.80" stop-color="#3b82f6" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#3b82f6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="granite" x1="0.15" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#3a5cb8"/>
+      <stop offset="0.32" stop-color="#243c83"/>
+      <stop offset="0.70" stop-color="#14224f"/>
+      <stop offset="1" stop-color="#080f2a"/>
+    </linearGradient>
+    <linearGradient id="pauldron" x1="0" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#5178d8"/>
+      <stop offset="0.55" stop-color="#26407f"/>
+      <stop offset="1" stop-color="#0d1738"/>
+    </linearGradient>
+    <radialGradient id="furnace" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#fff4e8"/>
+      <stop offset="0.26" stop-color="#ffc9a0"/>
+      <stop offset="0.60" stop-color="#f97316"/>
+      <stop offset="1" stop-color="#c2410c" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="visor" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fdba74" stop-opacity="0"/>
+      <stop offset="0.18" stop-color="#fdba74"/>
+      <stop offset="0.5" stop-color="#fff7ed"/>
+      <stop offset="0.82" stop-color="#fdba74"/>
+      <stop offset="1" stop-color="#fdba74" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <circle cx="256" cy="248" r="250" fill="url(#aura)"/>
+
+  <!-- The furnace in the chest, behind the split torso. -->
+  <ellipse cx="256" cy="330" rx="62" ry="72" fill="url(#furnace)"/>
+
+  <!-- Torso: a huge trapezoid mass. Holes: the chest split and two vents. -->
+  <path fill="url(#granite)" fill-rule="evenodd" d="
+    M172 214 L340 214 L372 260 L386 356 L366 452 L322 470
+    L 314 440 L 288 466 L 272 436 L 256 462 L 240 436 L 224 466 L 198 440
+    L 190 470 L 146 452 L 126 356 L 140 260 Z
+
+    M 256 330 m -40 0 a 40 50 0 1 0 80 0 a 40 50 0 1 0 -80 0 Z
+    M 176 262 L 206 256 L 202 300 L 172 302 Z
+    M 336 262 L 306 256 L 310 300 L 340 302 Z
+    M 244 412 L 268 412 L 272 448 L 240 448 Z
+  "/>
+
+  <!-- Lit left plane and shadowed right, so the mass turns. -->
+  <path fill="#6b8fe4" fill-opacity="0.20" d="M172 214 L214 214 L206 452 L152 436 L140 260 Z"/>
+  <path fill="#080f2a" fill-opacity="0.35" d="M340 214 L300 214 L306 452 L358 436 L372 260 Z"/>
+
+  <!-- Head, bowed and broken at the neck: a separate island above the torso. -->
+  <path fill="url(#granite)" fill-rule="evenodd" d="
+    M214 92 L300 92 L314 122 L310 176 L296 196 L216 196 L202 176 L198 122 Z
+    M 210 148 L 304 148 L 304 162 L 210 162 Z
+  "/>
+  <rect x="214" y="146" width="86" height="14" rx="7" fill="url(#visor)"/>
+  <path fill="#6b8fe4" fill-opacity="0.22" d="M214 92 L242 92 L236 196 L216 190 L198 122 Z"/>
+  <!-- Fracture line where the neck gave way. -->
+  <polygon points="206,196 240,206 224,214 262,208 248,220 296,200 302,196" fill="#0d1738"/>
+
+  <!-- Pauldrons: the single biggest read at a glance. Vast, and floating. -->
+  <path fill="url(#pauldron)" d="M156 208 L74 244 L58 340 L112 366 L152 300 Z"/>
+  <path fill="url(#pauldron)" d="M356 208 L438 244 L454 340 L400 366 L360 300 Z"/>
+  <path fill="#7ea3e8" fill-opacity="0.30" d="M156 208 L96 234 L84 318 L110 330 Z"/>
+  <path fill="#080f2a" fill-opacity="0.30" d="M356 208 L416 234 L428 318 L402 330 Z"/>
+  <polygon points="74,244 58,214 104,226" fill="#26407f"/>
+  <polygon points="438,244 454,214 408,226" fill="#26407f"/>
+
+  <!-- Masonry falling away from the wreck. -->
+  <polygon points="70,392 42,414 62,442 88,420" fill="#1a2c63"/>
+  <polygon points="442,382 470,404 450,432 424,410" fill="#1a2c63"/>
+  <polygon points="104,452 84,478 110,490" fill="#14224f"/>
+  <polygon points="408,442 430,468 404,480" fill="#14224f"/>
+  <polygon points="252,60 268,26 284,64" fill="#243c83"/>
+  <polygon points="212,72 222,42 236,74" fill="#1a2c63"/>
+</svg>

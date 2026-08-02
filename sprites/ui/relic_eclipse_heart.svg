@@ -1,17 +1,49 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- Eclipse Heart. Frame: an unbroken corona ring with rays — the only
+       fully round, fully closed relic outline, so it reads as the complete
+       one against Shatterstone's broken ring. -->
   <defs>
     <radialGradient id="au" cx="50%" cy="50%" r="50%">
-      <stop offset="0.35" stop-color="#f5c451" stop-opacity="0.5"/>
-      <stop offset="0.72" stop-color="#f5c451" stop-opacity="0.15"/>
+      <stop offset="0.30" stop-color="#f5c451" stop-opacity="0.55"/>
+      <stop offset="0.68" stop-color="#f5c451" stop-opacity="0.16"/>
       <stop offset="1" stop-color="#f5c451" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="fr" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#fbe7a8"/><stop offset="1" stop-color="#c79433"/>
+    <linearGradient id="fr" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#fff3cf"/>
+      <stop offset="0.42" stop-color="#f5c451"/>
+      <stop offset="1" stop-color="#8f6417"/>
     </linearGradient>
+    <radialGradient id="corona" cx="50%" cy="50%" r="50%">
+      <stop offset="0.52" stop-color="#fff8e2" stop-opacity="0"/>
+      <stop offset="0.72" stop-color="#fff3cf" stop-opacity="0.95"/>
+      <stop offset="0.9" stop-color="#f5c451" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#f5c451" stop-opacity="0"/>
+    </radialGradient>
   </defs>
   <circle cx="64" cy="64" r="62" fill="url(#au)"/>
-  <polygon points="64,12 100,28 116,64 100,100 64,116 28,100 12,64 28,28" fill="none" stroke="url(#fr)" stroke-width="6"/>
-  <circle cx="64" cy="64" r="30" fill="#f5c451"/>
-  <circle cx="72" cy="60" r="28" fill="#100a04"/>
-  <path d="M64 54 C60 47 50 48 50 57 C50 65 64 74 64 74 C64 74 78 65 78 57 C78 48 68 47 64 54Z" fill="#fbe7a8"/>
+
+  <!-- Eight rays, long/short alternating so the ring is never a plain star. -->
+  <g fill="url(#fr)">
+    <polygon points="64,0 70,22 58,22"/>
+    <polygon points="128,64 106,70 106,58"/>
+    <polygon points="64,128 58,106 70,106"/>
+    <polygon points="0,64 22,58 22,70"/>
+    <polygon points="108,20 96,38 90,32"/>
+    <polygon points="108,108 90,96 96,90"/>
+    <polygon points="20,108 32,90 38,96"/>
+    <polygon points="20,20 38,32 32,38"/>
+  </g>
+
+  <!-- The corona itself, then the disc that eclipses it. -->
+  <circle cx="64" cy="64" r="40" fill="url(#corona)"/>
+  <circle cx="64" cy="64" r="31" fill="#f5c451"/>
+  <circle cx="64" cy="64" r="27" fill="#0d0718"/>
+  <!-- A heart pulsing inside the shadow — the relic's name, not a generic mark. -->
+  <path fill="#fff3cf" d="
+    M64 78 C 52 70 46 62 46 55 C 46 49 51 46 56 47 C 60 48 63 51 64 54
+    C 65 51 68 48 72 47 C 77 46 82 49 82 55 C 82 62 76 70 64 78 Z"/>
+  <path fill="#f5c451" fill-opacity="0.85" d="
+    M64 72 C 56 66 52 61 52 56 C 52 53 55 51 58 52 C 61 53 63 55 64 57
+    C 65 55 67 53 70 52 C 73 51 76 53 76 56 C 76 61 72 66 64 72 Z"/>
+  <circle cx="55" cy="53" r="3" fill="#ffffff" fill-opacity="0.8"/>
 </svg>

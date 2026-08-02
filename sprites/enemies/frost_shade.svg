@@ -1,32 +1,86 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Frost Shade — Frozen Ruins. A drowned spirit frozen mid-drift: a shroud
+       of ice sheeting off its shoulders, a fractured mask, and a body that
+       thins to nothing at the base.
+
+       Contrast with Rime Fiend deliberately: that one is all hard facets, this
+       one is a soft form WRAPPED in hard plates, so the two never read as the
+       same creature at a glance. -->
   <defs>
-    <radialGradient id="aura" cx="50%" cy="45%" r="50%">
-      <stop offset="0.3" stop-color="#3b82f6" stop-opacity="0.35"/>
-      <stop offset="0.7" stop-color="#3b82f6" stop-opacity="0.1"/>
+    <radialGradient id="aura" cx="50%" cy="42%" r="52%">
+      <stop offset="0.32" stop-color="#3b82f6" stop-opacity="0.30"/>
+      <stop offset="0.72" stop-color="#3b82f6" stop-opacity="0.09"/>
       <stop offset="1" stop-color="#3b82f6" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#1d4ed8"/>
-      <stop offset="0.55" stop-color="#1e3a8a"/>
-      <stop offset="1" stop-color="#0c1b45"/>
+    <linearGradient id="body" x1="0.25" y1="0" x2="0.75" y2="1">
+      <stop offset="0" stop-color="#3f6fd8"/>
+      <stop offset="0.4" stop-color="#22409a"/>
+      <stop offset="0.75" stop-color="#132663"/>
+      <stop offset="1" stop-color="#08122f"/>
     </linearGradient>
-    <radialGradient id="eye" cx="50%" cy="50%" r="50%">
-      <stop offset="0.2" stop-color="#eff6ff"/>
-      <stop offset="0.55" stop-color="#93c5fd"/>
-      <stop offset="1" stop-color="#93c5fd" stop-opacity="0"/>
+    <linearGradient id="shroud" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#bcd8fb" stop-opacity="0.65"/>
+      <stop offset="0.55" stop-color="#6f9ce8" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#2b4da8" stop-opacity="0.08"/>
+    </linearGradient>
+    <radialGradient id="eye" cx="50%" cy="46%" r="52%">
+      <stop offset="0.18" stop-color="#ffffff"/>
+      <stop offset="0.44" stop-color="#e2f0ff"/>
+      <stop offset="0.74" stop-color="#93c5fd"/>
+      <stop offset="1" stop-color="#60a5fa" stop-opacity="0.12"/>
     </radialGradient>
   </defs>
-  <circle cx="256" cy="240" r="232" fill="url(#aura)"/>
-  <path fill="url(#body)" d="M170 122
-    C 226 78 286 78 342 122
-    C 352 220 322 340 256 444
-    C 190 340 160 220 170 122 Z"/>
-  <path fill="#dbeafe" fill-opacity="0.35" d="M256 88 C 226 96 196 118 182 140 C 214 118 240 106 256 102 Z"/>
-  <polygon points="112,196 138,178 132,222" fill="#93c5fd" fill-opacity="0.85"/>
-  <polygon points="398,172 372,190 380,146" fill="#93c5fd" fill-opacity="0.85"/>
-  <polygon points="142,346 166,332 158,372" fill="#93c5fd" fill-opacity="0.7"/>
-  <ellipse cx="222" cy="204" rx="26" ry="32" fill="url(#eye)"/>
-  <ellipse cx="290" cy="204" rx="26" ry="32" fill="url(#eye)"/>
-  <ellipse cx="223" cy="202" rx="8" ry="13" fill="#f5faff"/>
-  <ellipse cx="289" cy="202" rx="8" ry="13" fill="#f5faff"/>
+
+  <circle cx="256" cy="238" r="234" fill="url(#aura)"/>
+
+  <!-- Body. Holes: two eye slits and a torn gap where the ribs would be. -->
+  <path fill="url(#body)" fill-rule="evenodd" d="
+    M256 56
+    C 306 68 344 104 356 152
+    C 366 196 362 244 350 292
+    C 340 334 326 372 310 406
+    C 300 428 288 446 274 460
+    C 268 438 262 424 256 416
+    C 250 424 244 438 238 460
+    C 224 446 212 428 202 406
+    C 186 372 172 334 162 292
+    C 150 244 146 196 156 152
+    C 168 104 206 68 256 56 Z
+
+    M 222 196 m -27 0 a 27 33 0 1 0 54 0 a 27 33 0 1 0 -54 0 Z
+    M 290 196 m -27 0 a 27 33 0 1 0 54 0 a 27 33 0 1 0 -54 0 Z
+    M 196 286 L 214 282 L 220 348 L 200 346 Z
+    M 316 286 L 298 282 L 292 348 L 312 346 Z
+    M 246 316 L 262 316 L 264 366 L 244 366 Z
+  "/>
+  <!-- Rib damage above is three vertical tears, deliberately OFF the centre
+       line. A single gap centred under two eyes stops reading as a wound and
+       starts reading as an open mouth, which turned a drowned spirit into a
+       surprised cartoon. -->
+
+
+  <!-- Ice sheeting off the shoulders: broad, soft, catching the key light. -->
+  <path fill="url(#shroud)" d="
+    M256 66 C 208 76 174 108 162 152
+    C 190 118 222 100 256 96 C 290 100 322 118 350 152
+    C 338 108 304 76 256 66 Z"/>
+  <path fill="#cfe3fd" fill-opacity="0.20" d="
+    M172 178 C 190 210 196 258 190 306 L 168 268 C 162 232 164 202 172 178 Z"/>
+
+  <ellipse cx="222" cy="194" rx="17" ry="22" fill="url(#eye)"/>
+  <ellipse cx="290" cy="194" rx="17" ry="22" fill="url(#eye)"/>
+  <ellipse cx="218" cy="186" rx="5" ry="7" fill="#ffffff" fill-opacity="0.92"/>
+  <ellipse cx="286" cy="186" rx="5" ry="7" fill="#ffffff" fill-opacity="0.92"/>
+
+  <!-- Frost plates locked onto the shoulders and flanks. -->
+  <polygon points="140,182 176,158 168,214 138,224" fill="#5b8ae0" fill-opacity="0.8"/>
+  <polygon points="372,166 336,146 344,204 374,212" fill="#5b8ae0" fill-opacity="0.8"/>
+  <polygon points="154,290 184,276 178,326 152,332" fill="#3f6fd8" fill-opacity="0.7"/>
+  <polygon points="358,278 330,266 336,316 360,320" fill="#3f6fd8" fill-opacity="0.7"/>
+
+  <!-- Loose splinters in the creature's wake. -->
+  <polygon points="106,238 82,258 104,276" fill="#2b4da8"/>
+  <polygon points="406,222 430,242 408,262" fill="#2b4da8"/>
+  <polygon points="122,368 104,392 126,398" fill="#22409a" fill-opacity="0.75"/>
+  <polygon points="390,352 410,376 388,384" fill="#22409a" fill-opacity="0.75"/>
 </svg>

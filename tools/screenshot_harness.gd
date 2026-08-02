@@ -35,6 +35,8 @@ const OFFLINE_MODAL_SCENE: PackedScene = preload(
 )
 const WORLD_UNLOCK_SCENE: PackedScene = preload("res://scenes/gameplay/world_unlock_modal.tscn")
 const BOSS_SKULL: Texture2D = preload("res://sprites/ui/boss_skull_icon.svg")
+## The same material the gameplay screen lights enemies with.
+const BESTIARY_MATERIAL: Material = preload("res://effects/dimensional_sprite_material.tres")
 
 ## A scene change is fade-out (0.25) + threaded load + a frame + fade-in (0.25).
 ## The slack on top lets a spawned enemy settle into its idle hover, so the
@@ -63,6 +65,7 @@ func _ready() -> void:
 	await _pass_cold()
 	await _pass_seeded()
 	await _pass_transients()
+	await _pass_bestiary()
 
 	print("HARNESS: %d shots written to %s (%d skipped by filter)"
 		% [_taken, _out_dir, _skipped])
@@ -214,6 +217,102 @@ func _pass_transients() -> void:
 		await _shot("27_boss_fight")
 
 
+# --- Pass 4: every creature sprite, lit, on one sheet --------------------------
+
+
+## Which enemy spawns is random, so waiting for the roster to come round is not
+## a way to review art. This lays every creature out at once under the SAME
+## material the gameplay screen uses, each retinted with its own glow_color
+## exactly as enemy_view.gd does it — so what the sheet shows is what the
+## screen shows, and a whole art pass can be judged in one image instead of
+## twenty reruns hoping for a particular spawn.
+func _pass_bestiary() -> void:
+	var sheet := ColorRect.new()
+	sheet.color = Color(0.035, 0.02, 0.07)
+	sheet.set_anchors_preset(Control.PRESET_FULL_RECT)
+	get_tree().root.add_child(sheet)
+
+	var grid := GridContainer.new()
+	# Two columns, not three: at three the cell is ~180px on the captured
+	# image, which is too small to judge the detail the sheet exists to show.
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 8)
+	grid.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sheet.add_child(grid)
+
+	for entry: Array in _creatures():
+		grid.add_child(_bestiary_cell(String(entry[0]), entry[1] as Texture2D, entry[2] as Color))
+
+	await get_tree().create_timer(1.2).timeout
+	await _shot("30_bestiary")
+	sheet.queue_free()
+
+
+## (label, texture, glow) for every creature in the game — enemies from their
+## definitions, pets from every evolution stage.
+func _creatures() -> Array[Array]:
+	var out: Array[Array] = []
+	var seen: Dictionary = {}
+	for path: String in _definition_paths("res://data/enemies"):
+		var def: EnemyDefinition = load(path) as EnemyDefinition
+		# Elder variants reuse the base creature's art on purpose, so one
+		# entry per distinct TEXTURE rather than per definition.
+		if def == null or def.texture == null or seen.has(def.texture.resource_path):
+			continue
+		seen[def.texture.resource_path] = true
+		out.append([def.display_name, def.texture, def.glow_color])
+	for path: String in _definition_paths("res://data/pets"):
+		var pet: PetDefinition = load(path) as PetDefinition
+		if pet == null:
+			continue
+		for stage in pet.stage_sprites.size():
+			out.append([pet.stage_names[stage], pet.stage_sprites[stage],
+				Color(0.655, 0.545, 0.98)])
+	return out
+
+
+## Read off disk rather than through the managers: this needs every definition,
+## including ones no manager exposes a list of, and adding a public accessor to
+## a manager purely to feed a screenshot tool would be the tail wagging the dog.
+func _definition_paths(dir_path: String) -> Array[String]:
+	var out: Array[String] = []
+	var dir: DirAccess = DirAccess.open(dir_path)
+	if dir == null:
+		print("HARNESS: cannot open ", dir_path)
+		return out
+	for file: String in dir.get_files():
+		# An exported build renames .tres to .tres.remap.
+		var file_name: String = file.trim_suffix(".remap")
+		if file_name.ends_with(".tres"):
+			out.append(dir_path.path_join(file_name))
+	out.sort()
+	return out
+
+
+func _bestiary_cell(label_text: String, texture: Texture2D, glow: Color) -> Control:
+	var cell := VBoxContainer.new()
+	cell.custom_minimum_size = Vector2(532, 300)
+
+	var art := TextureRect.new()
+	art.texture = texture
+	art.custom_minimum_size = Vector2(532, 262)
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	# duplicate(), or every cell would share one material and the last
+	# rim_color written would silently win for all of them.
+	art.material = BESTIARY_MATERIAL.duplicate()
+	(art.material as ShaderMaterial).set_shader_parameter(&"rim_color", glow)
+	cell.add_child(art)
+
+	var caption := Label.new()
+	caption.text = label_text
+	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	caption.add_theme_font_size_override("font_size", 22)
+	cell.add_child(caption)
+	return cell
+
+
 # --- Seeding -------------------------------------------------------------------
 
 
@@ -244,6 +343,9 @@ func _seed_late_game() -> void:
 	if not inventory.is_empty():
 		EquipmentManager.equip(int(inventory[0]["id"]))
 
+	# Every relic, not a sample: the five sigils are only meant to be
+	# distinguishable FROM EACH OTHER, so a shot showing three of them proves
+	# very little about the two it left out.
 	RelicManager.load_save_data({
 		"awakened": true,
 		"active": "twin_fang",
@@ -251,6 +353,8 @@ func _seed_late_game() -> void:
 			{"id": "twin_fang", "seen": true},
 			{"id": "essence_prism", "seen": true},
 			{"id": "hunters_sigil", "seen": false},
+			{"id": "shatterstone", "seen": true},
+			{"id": "eclipse_heart", "seen": true},
 		],
 	})
 	PetManager.load_save_data({

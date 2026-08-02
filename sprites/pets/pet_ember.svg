@@ -1,24 +1,88 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Ember — stage 1 companion. A cupped shell of cooled slag with a live
+       flame sitting in it.
+
+       Companions are read at three sizes: a 48px row icon, a ~180px card, and
+       a bottom-corner button in gameplay. So the silhouette carries the
+       identity (a flame in a broken cup) and the fine work stays inside it —
+       at 48px the shape still says "small fire", which a plain circle with a
+       face did not. Its evolution is a genuinely different animal rather than
+       the same ball with a hat. -->
   <defs>
-    <radialGradient id="au" cx="50%" cy="50%" r="50%">
-      <stop offset="0.35" stop-color="#a78bfa" stop-opacity="0.35"/>
-      <stop offset="0.75" stop-color="#a78bfa" stop-opacity="0.1"/>
-      <stop offset="1" stop-color="#a78bfa" stop-opacity="0"/>
+    <radialGradient id="au" cx="50%" cy="52%" r="52%">
+      <stop offset="0.30" stop-color="#fb923c" stop-opacity="0.42"/>
+      <stop offset="0.68" stop-color="#f97316" stop-opacity="0.13"/>
+      <stop offset="1" stop-color="#f97316" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="body" cx="50%" cy="42%" r="62%">
-      <stop offset="0" stop-color="#ffb98a"/><stop offset="1" stop-color="#e0632f"/>
-    </radialGradient>
-    <radialGradient id="eye" cx="50%" cy="50%" r="50%">
-      <stop offset="0.25" stop-color="#f8f6ff"/><stop offset="0.6" stop-color="#c4b5fd"/>
-      <stop offset="1" stop-color="#c4b5fd" stop-opacity="0"/>
+    <linearGradient id="flame" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#fff8e8"/>
+      <stop offset="0.28" stop-color="#ffd08a"/>
+      <stop offset="0.62" stop-color="#f97316"/>
+      <stop offset="1" stop-color="#c2410c"/>
+    </linearGradient>
+    <linearGradient id="inner" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.55" stop-color="#ffe9b8"/>
+      <stop offset="1" stop-color="#fdba74" stop-opacity="0.2"/>
+    </linearGradient>
+    <linearGradient id="shell" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#6b4636"/>
+      <stop offset="0.45" stop-color="#43281f"/>
+      <stop offset="1" stop-color="#1e1010"/>
+    </linearGradient>
+    <radialGradient id="eye" cx="50%" cy="46%" r="52%">
+      <stop offset="0.20" stop-color="#ffffff"/>
+      <stop offset="0.52" stop-color="#e9deff"/>
+      <stop offset="1" stop-color="#a78bfa" stop-opacity="0.15"/>
     </radialGradient>
   </defs>
-  <circle cx="256" cy="270" r="220" fill="url(#au)"/>
-  <path d="M256 120 C300 120 330 180 300 210 L212 210 C182 180 212 120 256 120Z" fill="#ffcf9a"/>
-  <ellipse cx="256" cy="320" rx="140" ry="130" fill="url(#body)"/>
-  <ellipse cx="212" cy="300" rx="30" ry="36" fill="url(#eye)"/>
-  <ellipse cx="300" cy="300" rx="30" ry="36" fill="url(#eye)"/>
-  <ellipse cx="214" cy="298" rx="11" ry="15" fill="#f8f6ff"/>
-  <ellipse cx="302" cy="298" rx="11" ry="15" fill="#f8f6ff"/>
-  <path d="M240 356 Q256 372 272 356" fill="none" stroke="#7a3418" stroke-width="7" stroke-linecap="round"/>
+
+  <circle cx="256" cy="278" r="228" fill="url(#au)"/>
+
+  <!-- Flame body. Holes: two eyes and a small vent, so the light reads as
+       coming from INSIDE rather than being painted on the front. -->
+  <path fill="url(#flame)" fill-rule="evenodd" d="
+    M256 62
+    C 286 118 316 152 330 190
+    C 348 178 358 160 360 138
+    C 384 182 394 232 386 280
+    C 376 340 330 382 256 382
+    C 182 382 136 340 126 280
+    C 118 232 128 182 152 138
+    C 154 160 164 178 182 190
+    C 196 152 226 118 256 62 Z
+
+    M 214 248 m -26 0 a 26 30 0 1 0 52 0 a 26 30 0 1 0 -52 0 Z
+    M 298 248 m -26 0 a 26 30 0 1 0 52 0 a 26 30 0 1 0 -52 0 Z
+    M 256 330 m -14 0 a 14 11 0 1 0 28 0 a 14 11 0 1 0 -28 0 Z
+  "/>
+
+  <!-- The hot core, a second flame inside the first. -->
+  <path fill="url(#inner)" fill-opacity="0.75" d="
+    M256 140 C 274 180 296 206 300 240
+    C 304 282 286 306 256 306
+    C 226 306 208 282 212 240
+    C 216 206 238 180 256 140 Z"/>
+
+  <ellipse cx="214" cy="246" rx="17" ry="20" fill="url(#eye)"/>
+  <ellipse cx="298" cy="246" rx="17" ry="20" fill="url(#eye)"/>
+  <ellipse cx="209" cy="238" rx="6" ry="7" fill="#ffffff"/>
+  <ellipse cx="293" cy="238" rx="6" ry="7" fill="#ffffff"/>
+
+  <!-- The cooled shell it sits in — the read that survives at icon size. -->
+  <path fill="url(#shell)" d="
+    M120 316 C 140 372 190 406 256 406
+    C 322 406 372 372 392 316
+    C 396 366 380 410 348 438
+    C 322 460 290 470 256 470
+    C 222 470 190 460 164 438
+    C 132 410 116 366 120 316 Z"/>
+  <path fill="#8a5c44" fill-opacity="0.5" d="
+    M120 316 C 138 366 176 396 220 404 L 210 440 C 166 428 132 388 120 316 Z"/>
+  <!-- Chips broken off the rim. -->
+  <polygon points="104,352 78,368 100,388" fill="#43281f"/>
+  <polygon points="408,342 434,358 412,378" fill="#43281f"/>
+  <circle cx="150" cy="176" r="8" fill="#fdba74" fill-opacity="0.75"/>
+  <circle cx="366" cy="164" r="7" fill="#fdba74" fill-opacity="0.75"/>
+  <circle cx="256" cy="34" r="9" fill="#ffd08a" fill-opacity="0.8"/>
 </svg>
