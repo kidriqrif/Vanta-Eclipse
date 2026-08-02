@@ -7,11 +7,38 @@ repository — each item needs an account, a credential, a device, or an SDK.
 
 This file lists *what must exist*. `TESTING-GUIDE.md` lists *what must be
 proven*, staged from "does it launch at all" through to production rollout —
-start there, because the project has still never been run.
+start there. The project now boots headless on desktop and every screen has
+been rendered and inspected, but it has **never run on Android hardware**.
 
 ---
 
 ## BLOCKERS — must be done before any store submission
+
+### 0. There is no export pipeline yet — nothing can be built at all
+
+This section used to be missing, and the items below it were listed as
+"verified in-repo" when no file backed them. Until all three exist, every
+later item is untestable, because no artifact can be produced.
+
+- [ ] **Install the Godot 4.7 export templates.**
+      `%APPDATA%/Godot/export_templates/` is present but empty, so any
+      `--export-release` fails before it reads the project.
+- [ ] **Create `export_presets.cfg` with an Android preset.** There is no
+      such file, and there never has been — `git log --all` has no commit
+      touching it. Every export setting the rest of this checklist refers to
+      (architecture, SDK levels, AAB output, permissions, exclude filters,
+      launcher icons, package name, version code) lives *only* here, so none
+      of them currently have a value at all.
+- [ ] **Install the Android build template** (`android/`, via Project →
+      Install Android Build Template). The AdMob and Play Billing plugins
+      both require a custom build; the stock template cannot load them.
+
+**Note on committing the preset.** `export_presets.cfg` is currently in
+`.gitignore`, which is the common advice because Godot historically wrote
+keystore passwords into it. Since 4.4 those live in a separate
+`export_credentials.cfg`. Prefer committing `export_presets.cfg` — it is
+build configuration, and keeping it untracked is exactly why the claims below
+drifted unnoticed — and gitignoring `export_credentials.cfg` instead.
 
 ### 1. Real ads and billing (Milestone 14 shipped stubs)
 - [ ] Add the Godot Android **AdMob** plugin (or chosen network) to the build.
@@ -42,16 +69,25 @@ start there, because the project has still never been run.
 "ad" is a 3-second timer.**
 
 ### 2. Identity and signing
-- [ ] Replace `package/unique_name` — it is currently
-      `com.example.vantaeclipse`, which Play will reject.
+- [ ] Set `package/unique_name`. It has no value yet (§0 — the preset does not
+      exist). Godot's default is `com.example.$genname`, which Play rejects;
+      pick a domain you control.
 - [ ] Generate an upload keystore; configure signing (never commit the
-      keystore or its passwords).
-- [ ] Set `version/code` and `version/name` per release.
+      keystore or its passwords — see the widened patterns in `.gitignore`,
+      and note that the Stop hook auto-pushes to a **public** repo).
+- [ ] Set `version/code` and `version/name` per release. `project.godot` says
+      `config/version="0.1.0"`; there is no `version/code` anywhere.
 
 ### 3. Store assets (none exist in the repo)
+- [ ] **Replace `icon.svg`.** It is still the placeholder: a 128×128 purple
+      circle (`#a78bfa` on `#0b0812`) left over from the pre-red palette, so
+      the launcher icon currently contradicts the whole game's colour scheme.
 - [ ] Launcher icons: 192×192 and the two 432×432 adaptive layers.
-- [ ] Feature graphic 1024×500, at least 2 phone screenshots, short and full
+- [ ] 512×512 32-bit PNG store icon, feature graphic 1024×500, short and full
       description, privacy policy URL.
+- [ ] At least 2 phone screenshots. `tools/screenshot_run.sh` already renders
+      28 screens, but at 540×960 — re-render at `SHOT_RES=1080x1920` for the
+      listing.
 
 ### 4. Legal / policy
 - [ ] Privacy policy covering ad SDK data collection (required once an ad SDK
@@ -64,16 +100,23 @@ start there, because the project has still never been run.
 
 ## Verified in-repo
 
-- [x] Portrait 1080×1920, `canvas_items` stretch, `expand` aspect.
-- [x] Mobile renderer; ETC2/ASTC VRAM compression enabled.
-- [x] arm64-v8a only, min SDK 24, target SDK 34, AAB output.
-- [x] `design/`, `tools/` and scratch excluded from the export.
-- [x] Permissions limited to internet, network state, and vibrate.
+Everything in this section is backed by a file in the repository. Claims about
+*export* settings deliberately do not appear here — they live in
+`export_presets.cfg`, which does not exist (§0). Three former entries
+("arm64-v8a only, min SDK 24, target SDK 34, AAB output", "`design/`, `tools/`
+and scratch excluded from the export", "permissions limited to internet,
+network state, and vibrate") were listed here as verified despite having no
+file to verify against, and are now blockers instead.
+
+- [x] Portrait 1080×1920, `canvas_items` stretch, `expand` aspect
+      (`project.godot`), confirmed rendering on 7 Android aspect ratios from
+      9:16 to 5:6 via `tools/aspect_matrix.sh`.
+- [x] Mobile renderer; ETC2/ASTC VRAM compression enabled (`project.godot`).
 - [x] Atomic save with a backup slot and a versioned document
       (`SaveManager`), so a crash mid-write cannot corrupt progress.
 - [x] Every manager's save section defaults cleanly when absent, so old saves
       load without migration.
-- [x] Static sweep green: `bash tools/validate_all.sh` — ten stages: `gdparse`,
+- [x] Static sweep green: `bash tools/validate_all.sh` — eleven stages: `gdparse`,
       `gdlint`, the scene/resource structural validator, autoload
       member-existence, call-site arity, plus the debug-pass checkers
       `check_scripts.py`, `check_data.py` and `check_wiring.py`,
@@ -81,7 +124,7 @@ start there, because the project has still never been run.
       `check_shaders.py` (shader structure and material parameters), and the
       font-safe glyph check.
       Every one of those checkers has a positive control in
-      `tools/selftest_checks.py`, which injects 19 real defects into a copy of
+      `tools/selftest_checks.py`, which injects 25 real defects into a copy of
       the project and requires each to be rejected — so a green sweep means the
       checks ran, not merely that they printed OK.
 
@@ -89,10 +132,10 @@ start there, because the project has still never been run.
 
 ## Recommended before launch (not blocking)
 
-- [ ] **Play on a real low-end device.** Nothing in this project has ever been
-      run — there is not even a `.godot/` import cache — so it is validated
-      statically, not empirically. Frame pacing, touch accuracy, battery draw
-      and the actual feel of every screen are unverified. The static sweep is
+- [ ] **Play on a real low-end device.** The project boots headless and all 28
+      screens render, but it has never run on Android and never been touched
+      by a finger. Frame pacing, touch accuracy, battery draw and the actual
+      feel of every screen are unverified. The static sweep is
       deliberately broad, but it can only compare what the files say to each
       other; no amount of it substitutes for one session on hardware.
       `TESTING-GUIDE.md` Stage 2 covers this; note that a shader which compiles
