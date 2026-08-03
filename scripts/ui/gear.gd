@@ -27,11 +27,9 @@ var _commons_armed: bool = false
 @onready var _salvage_commons_button: Button = %SalvageCommonsButton
 @onready var _forge_panel: Control = %ForgePanel
 @onready var _relic_panel: Control = %RelicCollectionPanel
-@onready var _nebula: ColorRect = $VoidBackground/NebulaRect
 
 
 func _ready() -> void:
-	_apply_world_palette()
 	_back_button.pressed.connect(_on_back_pressed)
 	_forge_button.pressed.connect(_forge_panel.toggle)
 	_salvage_commons_button.pressed.connect(_on_salvage_commons)
@@ -402,16 +400,6 @@ func _on_item_equipped(_slot: StringName) -> void:
 func _on_currency_changed(currency: StringName, _balance: float) -> void:
 	if currency == CurrencyManager.VOID_SCRAPS:
 		_scraps_label.text = NumberFormat.format(_balance)
-
-
-## Stay under the current world's sky for continuity (the material is
-## per-instance since M5, so this never touches the gameplay/menu skies).
-func _apply_world_palette() -> void:
-	var world: WorldDefinition = WorldManager.get_world_for_level(CombatManager.enemy_level)
-	var material: ShaderMaterial = _nebula.material
-	material.set_shader_parameter("deep_color", world.deep_color)
-	material.set_shader_parameter("nebula_color", world.nebula_color)
-	material.set_shader_parameter("accent_color", world.accent_color)
 
 
 func _on_back_pressed() -> void:

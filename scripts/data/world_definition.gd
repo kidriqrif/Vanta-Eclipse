@@ -17,10 +17,6 @@ extends Resource
 ## Boss for each gate in order (+10, +20, +30, +40, +50/world boss).
 @export var boss_definition_paths: Array[String] = []
 
-## Nebula shader palette (deep_color / nebula_color / accent_color).
-@export var deep_color: Color = Color(0.016, 0.016, 0.02)
-@export var nebula_color: Color = Color(0.055, 0.055, 0.063)
-@export var accent_color: Color = Color(0.18, 0.18, 0.204)
 
 ## All essence earned at this world's levels is multiplied by this.
 @export var essence_multiplier: float = 1.0

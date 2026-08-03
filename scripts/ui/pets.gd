@@ -14,11 +14,9 @@ var _accent: Color = UIPalette.accent()
 @onready var _empty_label: Label = %EmptyLabel
 @onready var _companions_header: Label = %CompanionsHeader
 @onready var _back_button: Button = %BackButton
-@onready var _nebula: ColorRect = $VoidBackground/NebulaRect
 
 
 func _ready() -> void:
-	_apply_world_palette()
 	_back_button.pressed.connect(_on_back_pressed)
 	EventBus.active_pet_changed.connect(_on_changed)
 	EventBus.pet_leveled.connect(_on_changed2)
@@ -208,14 +206,6 @@ func _bonus_text(def: PetDefinition, level: int) -> String:
 		&"tap_flat": "Tap Damage",
 	}.get(def.bonus_stat, String(def.bonus_stat))
 	return "%s +%s" % [stat_name, pct]
-
-
-func _apply_world_palette() -> void:
-	var world: WorldDefinition = WorldManager.get_world_for_level(CombatManager.enemy_level)
-	var material: ShaderMaterial = _nebula.material
-	material.set_shader_parameter("deep_color", world.deep_color)
-	material.set_shader_parameter("nebula_color", world.nebula_color)
-	material.set_shader_parameter("accent_color", world.accent_color)
 
 
 func _on_changed(_id: StringName) -> void:

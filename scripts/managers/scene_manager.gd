@@ -94,9 +94,9 @@ func change_scene(scene_path: String) -> void:
 ##
 ## Every screen is built the same way: a full-bleed background, and a root
 ## MarginContainer holding all the UI. So the inset goes on that one node —
-## the nebula still fills the display edge to edge, and only the controls move
-## in. The scene's own margins are the baseline the inset is ADDED to, kept in
-## metadata so re-applying on a resize can never accumulate.
+## the background still fills the display edge to edge, and only the controls
+## move in. The scene's own margins are the baseline the inset is ADDED to,
+## kept in metadata so re-applying on a resize can never accumulate.
 
 
 func _on_node_added(node: Node) -> void:

@@ -25,7 +25,6 @@ var _refreshing: bool = false
 @onready var _next_token_label: Label = %NextTokenLabel
 @onready var _card_list: VBoxContainer = %CardList
 @onready var _offer_button: Button = %OfferButton
-@onready var _nebula: ColorRect = $VoidBackground/NebulaRect
 
 
 ## The Arcade lime is retired with the other door accent; the screen now uses
@@ -35,7 +34,6 @@ static func arcade() -> Color:
 
 
 func _ready() -> void:
-	_apply_world_palette()
 	_back_button.pressed.connect(_on_back_pressed)
 	EventBus.arcade_tokens_changed.connect(_on_tokens_changed)
 	_tick_timer = Timer.new()
@@ -271,14 +269,6 @@ func _on_play_pressed(definition: MinigameDefinition) -> void:
 
 
 # --- Misc ---------------------------------------------------------------------
-
-
-func _apply_world_palette() -> void:
-	var world: WorldDefinition = WorldManager.get_world_for_level(CombatManager.enemy_level)
-	var material: ShaderMaterial = _nebula.material
-	material.set_shader_parameter("deep_color", world.deep_color)
-	material.set_shader_parameter("nebula_color", world.nebula_color)
-	material.set_shader_parameter("accent_color", world.accent_color)
 
 
 func _on_back_pressed() -> void:

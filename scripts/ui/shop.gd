@@ -14,11 +14,9 @@ var _pending_label: Label
 @onready var _offers_tab: Button = %OffersTab
 @onready var _cosmetics_tab: Button = %CosmeticsTab
 @onready var _item_list: VBoxContainer = %ItemList
-@onready var _nebula: ColorRect = $VoidBackground/NebulaRect
 
 
 func _ready() -> void:
-	_apply_world_palette()
 	# The banner warns whoever is BUILDING the game, so it is gated on a debug
 	# build, not on the stub flag alone. Keyed only to USE_STUB_PROVIDERS it
 	# would have shipped "DEVELOPMENT BUILD" to players in any release that
@@ -342,14 +340,6 @@ func _on_purchase_pressed(id: StringName, button: Button) -> void:
 	if bought:
 		SettingsManager.vibrate(40)
 	_rebuild()
-
-
-func _apply_world_palette() -> void:
-	var world: WorldDefinition = WorldManager.get_world_for_level(CombatManager.enemy_level)
-	var material: ShaderMaterial = _nebula.material
-	material.set_shader_parameter("deep_color", world.deep_color)
-	material.set_shader_parameter("nebula_color", world.nebula_color)
-	material.set_shader_parameter("accent_color", world.accent_color)
 
 
 func _on_back_pressed() -> void:

@@ -195,6 +195,12 @@ RED_ARC = 25.0
 COLOR_CALL = re.compile(
     r"Color\(\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+)"
 )
+# Gradients declare their stops as a flat RGBA run, not as Color() calls, so
+# the pattern above walked straight past them. The main menu's divider was a
+# violet GradientTexture2D that survived the entire palette overhaul and two
+# rounds of screenshot review — it only became visible once the animated
+# nebula behind it was removed and there was nothing left to blend into.
+PACKED_COLORS = re.compile(r"PackedColorArray\(([^)]*)\)")
 # Creature, world and cosmetic colours are content, not chrome: a green enemy
 # and a purple tap trail are deliberate. Only UI surfaces are constrained.
 HUE_SCOPES = ("scenes/**/*.tscn", "scripts/ui/**/*.gd", "scripts/minigames/**/*.gd",
@@ -209,8 +215,7 @@ def check_palette_hues() -> tuple[list[str], list[str]]:
             for number, line in enumerate(
                 path.read_text(encoding="utf-8").splitlines(), 1
             ):
-                for match in COLOR_CALL.finditer(line):
-                    red, green, blue = (float(v) for v in match.groups())
+                for red, green, blue in _colours_on(line):
                     inspected += 1
                     # Over-1.0 values are HDR multipliers (hit flashes); judge
                     # them on ratio, which normalising preserves.
@@ -230,6 +235,23 @@ def check_palette_hues() -> tuple[list[str], list[str]]:
                         f"red accent on neutrals"
                     )
     return problems, [f"{inspected} colours in UI surfaces"]
+
+
+def _colours_on(line: str) -> list[tuple[float, float, float]]:
+    """Every colour a line declares, however it spells it."""
+    out = [tuple(float(v) for v in m.groups()) for m in COLOR_CALL.finditer(line)]
+    for match in PACKED_COLORS.finditer(line):
+        values = [v.strip() for v in match.group(1).split(",") if v.strip()]
+        # A flat run of RGBA quadruples. A fully transparent stop still carries
+        # a hue and still has to be on-palette: the menu divider faded violet
+        # to nothing at both ends, so two of its three stops had alpha 0 and
+        # the visible middle one was the giveaway.
+        for i in range(0, len(values) - 3, 4):
+            try:
+                out.append(tuple(float(v) for v in values[i:i + 3]))
+            except ValueError:
+                continue
+    return out
 
 
 def _hue_degrees(red: float, green: float, blue: float, chroma: float) -> float:

@@ -35,7 +35,6 @@ var _disarm_timer: Timer
 @onready var _ascend_box: VBoxContainer = %AscendBox
 @onready var _powers_scroll: ScrollContainer = %PowersScroll
 @onready var _powers_list: VBoxContainer = %PowersList
-@onready var _nebula: ColorRect = $VoidBackground/NebulaRect
 
 
 ## Eclipse used to carry its own teal. One accent now, so the prestige screen
@@ -53,7 +52,6 @@ static func crystal_deep() -> Color:
 
 
 func _ready() -> void:
-	_apply_world_palette()
 	_disarm_timer = Timer.new()
 	_disarm_timer.one_shot = true
 	_disarm_timer.timeout.connect(_disarm_collapse)
@@ -419,14 +417,6 @@ func _on_currency_changed(currency: StringName, _balance: float) -> void:
 func _on_skill_purchased(_id: StringName, _new_level: int) -> void:
 	SettingsManager.vibrate(20)
 	_build_powers()
-
-
-func _apply_world_palette() -> void:
-	var world: WorldDefinition = WorldManager.get_world_for_level(CombatManager.enemy_level)
-	var material: ShaderMaterial = _nebula.material
-	material.set_shader_parameter("deep_color", world.deep_color)
-	material.set_shader_parameter("nebula_color", world.nebula_color)
-	material.set_shader_parameter("accent_color", world.accent_color)
 
 
 func _on_back_pressed() -> void:

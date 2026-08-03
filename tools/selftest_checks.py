@@ -206,6 +206,14 @@ MUTATIONS: list[Mutation] = [
     ),
     (
         "check_ui.py",
+        "an off-palette hue hides inside a gradient's PackedColorArray",
+        "scenes/main_menu/main_menu.tscn",
+        "colors = PackedColorArray(1, 0.231, 0.188, 0, 1, 0.231, 0.188, 0.8, 1, 0.231, 0.188, 0)",
+        "colors = PackedColorArray(0.545, 0.361, 0.965, 0, 0.655, 0.545, 0.98, 0.8, "
+        "0.545, 0.361, 0.965, 0)",
+    ),
+    (
+        "check_ui.py",
         "an off-palette hue creeps back into UI chrome (the violet boss timer)",
         "scenes/common/countdown_timer_bar.tscn",
         "bg_color = Color(0.659, 0.063, 0.102, 1)",

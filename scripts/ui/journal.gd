@@ -33,11 +33,9 @@ var _rows: Dictionary = {}
 @onready var _achievements_tab: Button = %AchievementsTab
 @onready var _reset_label: Label = %ResetLabel
 @onready var _goal_list: VBoxContainer = %GoalList
-@onready var _nebula: ColorRect = $VoidBackground/NebulaRect
 
 
 func _ready() -> void:
-	_apply_world_palette()
 	_back_button.pressed.connect(_on_back_pressed)
 	_quests_tab.pressed.connect(func() -> void: _set_tab(QuestDefinition.Kind.QUEST))
 	_daily_tab.pressed.connect(func() -> void: _set_tab(QuestDefinition.Kind.DAILY))
@@ -361,14 +359,6 @@ func _redress(id: StringName, pop: bool = false) -> void:
 		create_tween().tween_property(replacement, "scale", Vector2.ONE, 0.2) \
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_refresh_ready_pill()
-
-
-func _apply_world_palette() -> void:
-	var world: WorldDefinition = WorldManager.get_world_for_level(CombatManager.enemy_level)
-	var material: ShaderMaterial = _nebula.material
-	material.set_shader_parameter("deep_color", world.deep_color)
-	material.set_shader_parameter("nebula_color", world.nebula_color)
-	material.set_shader_parameter("accent_color", world.accent_color)
 
 
 func _on_back_pressed() -> void:

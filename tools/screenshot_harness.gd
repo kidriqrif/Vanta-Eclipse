@@ -343,8 +343,9 @@ func _seed_late_game() -> void:
 	CurrencyManager.add(CurrencyManager.VOID_CRYSTALS, 32.0)
 	CurrencyManager.add(CurrencyManager.ASTRAL_SHARDS, 9.0)
 
-	# Past the Eclipse gate (50) and the Arcade gate (20), and into world 2 so
-	# the nebula palette differs from every cold-pass shot.
+	# Past the Eclipse gate (50) and the Arcade gate (20), and into world 2, so
+	# the seeded pass exercises the later worlds rather than repeating the cold
+	# pass at a higher level.
 	CombatManager.enemy_level = 60
 	PrestigeManager.load_save_data({
 		"prestige_count": 2, "run_peak_level": 60, "lifetime_peak_level": 60,

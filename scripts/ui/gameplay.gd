@@ -58,7 +58,6 @@ var _active_loot_toast: Node
 @onready var _boss_name_label: Label = %BossNameLabel
 @onready var _timer_bar: ProgressBar = %TimerBar
 @onready var _challenge_boss_button: Button = %ChallengeBossButton
-@onready var _nebula_rect: ColorRect = $VoidBackground/NebulaRect
 @onready var _essence_display: HBoxContainer = %EssenceDisplay
 @onready var _essence_label: Label = %EssenceLabel
 @onready var _upgrades_button: Button = %UpgradesButton
@@ -127,7 +126,6 @@ func _ready() -> void:
 	_style_journal_button()
 	_shop_button.pressed.connect(_on_shop_pressed)
 	_update_journal_pill()
-	_apply_world_palette()
 	_update_count_pill()
 	_update_companion()
 
@@ -662,8 +660,10 @@ func _enqueue_unlock_presentation() -> void:
 		modal.setup(world, WorldManager.unlock_celebration_payout)
 		modal.confirmed.connect(_on_unlock_acknowledged.bind(world))
 		add_child(modal)
-		# The sky recolors behind the scrim once the card settles (§4C).
-		get_tree().create_timer(0.45).timeout.connect(_tween_world_palette.bind(world))
+		# The sky used to recolor behind the scrim once the card settled (§4C).
+		# There is no sky any more — the animated nebula is gone and the
+		# backdrop is a flat fill — so entering a world is announced by the
+		# modal and the haptic alone.
 		SettingsManager.vibrate(50)
 		return modal
 	)
@@ -681,25 +681,6 @@ func _on_unlock_acknowledged(world: WorldDefinition) -> void:
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
-## Instant palette apply for the current world (cold loads and scene
-## entries — transitions are for live unlocks only, §4C).
-func _apply_world_palette() -> void:
-	var world: WorldDefinition = WorldManager.get_world_for_level(CombatManager.enemy_level)
-	var material: ShaderMaterial = _nebula_rect.material
-	material.set_shader_parameter("deep_color", world.deep_color)
-	material.set_shader_parameter("nebula_color", world.nebula_color)
-	material.set_shader_parameter("accent_color", world.accent_color)
-
-
-func _tween_world_palette(world: WorldDefinition) -> void:
-	var material: ShaderMaterial = _nebula_rect.material
-	var tween: Tween = create_tween().set_parallel(true)
-	tween.tween_property(material, "shader_parameter/deep_color", world.deep_color, 0.8)
-	tween.tween_property(material, "shader_parameter/nebula_color", world.nebula_color, 0.8)
-	tween.tween_property(material, "shader_parameter/accent_color", world.accent_color, 0.8)
-
-
-## One-time badge pop-in at the unlock moment (UX spec §4A).
 func _pop_badge() -> void:
 	_auto_attack_badge.visible = true
 	# The badge has never been laid out while hidden — wait one frame so
