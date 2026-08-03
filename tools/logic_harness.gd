@@ -41,6 +41,7 @@ func _run() -> void:
 	_check_round_trip()
 	_check_invariants()
 	_check_currency_hardening()
+	_check_audio()
 	_check_positive_control()
 
 	print("")
@@ -284,6 +285,33 @@ func _check_invariants() -> void:
 	_ok("the equipped cosmetic is one the player owns",
 		MonetizationManager.owns_cosmetic(MonetizationManager.get_equipped_cosmetic_id()),
 		"equipped = %s" % MonetizationManager.get_equipped_cosmetic_id())
+
+
+## Audio fails silently by nature — a missing stream, a bus that does not
+## exist, a player that never starts. All of it looks and plays exactly like a
+## game that simply has no sound, which is what this game was for its whole
+## development. So assert it rather than trusting that no error printed.
+func _check_audio() -> void:
+	for id: StringName in AudioManager.SFX:
+		var stream: AudioStream = load(AudioManager.SFX[id])
+		_ok("sound '%s' loads" % id, stream != null, AudioManager.SFX[id])
+
+	# The volume sliders write to these by name. A typo'd or renamed bus makes
+	# the slider silently adjust nothing, which is the bug this whole feature
+	# exists to remove.
+	for bus: String in ["Master", "Music", "SFX"]:
+		_ok("audio bus '%s' exists" % bus, AudioServer.get_bus_index(bus) >= 0)
+
+	var players: Array[Node] = AudioManager.find_children("", "AudioStreamPlayer", true, false)
+	_ok("voice pools were built", players.size() >= AudioManager.SFX.size(),
+		"found %d players for %d sounds" % [players.size(), AudioManager.SFX.size()])
+
+	var music: Array[Node] = players.filter(
+		func(p: Node) -> bool: return (p as AudioStreamPlayer).bus == &"Music"
+	)
+	_ok("music is on the Music bus and playing",
+		music.size() == 1 and (music[0] as AudioStreamPlayer).playing,
+		"%d music players" % music.size())
 
 
 ## Prove the round-trip comparison can fail.

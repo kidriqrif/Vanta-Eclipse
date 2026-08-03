@@ -41,6 +41,7 @@ MinigameManager="*res://scripts/managers/minigame_manager.gd"
 QuestManager="*res://scripts/managers/quest_manager.gd"
 MonetizationManager="*res://scripts/managers/monetization_manager.gd"
 PrestigeManager="*res://scripts/managers/prestige_manager.gd"
+AudioManager="*res://scripts/managers/audio_manager.gd"
 
 [debug]
 
