@@ -18,6 +18,8 @@ import pathlib
 import re
 import sys
 
+from _tree import glob, rglob
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 # Newline is excluded on purpose. A GDScript string never spans a line, and a
@@ -34,7 +36,7 @@ def strip_strings(src: str) -> str:
 
 
 def scripts() -> list[pathlib.Path]:
-    return sorted(ROOT.glob("scripts/**/*.gd"))
+    return glob(ROOT, "scripts/**/*.gd")
 
 
 def func_params(src: str) -> dict[str, tuple[int, int]]:
@@ -58,7 +60,7 @@ def func_params(src: str) -> dict[str, tuple[int, int]]:
 def check_unique_names() -> tuple[list[str], list[str]]:
     problems: list[str] = []
     count = 0
-    for tscn in sorted(ROOT.rglob("*.tscn")):
+    for tscn in rglob(ROOT, "*.tscn"):
         text = tscn.read_text(encoding="utf-8")
         uniques: set[str] = set()
         current = None
@@ -295,7 +297,7 @@ def check_prestige_resets() -> tuple[list[str], list[str]]:
 
     problems: list[str] = []
     defined = 0
-    for gd in sorted(ROOT.glob("scripts/managers/*.gd")):
+    for gd in glob(ROOT, "scripts/managers/*.gd"):
         src = gd.read_text(encoding="utf-8")
         m = re.search(r"^func reset_for_prestige\(\).*?(?=^func |\Z)", src, re.M | re.S)
         if m is None:

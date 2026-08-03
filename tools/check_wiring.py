@@ -23,13 +23,15 @@ import pathlib
 import re
 import sys
 
+from _tree import glob, rglob
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 COMMENT = re.compile(r"#[^\n]*")
 
 
 def consumer_source() -> str:
     out = ""
-    for gd in sorted(ROOT.glob("scripts/**/*.gd")):
+    for gd in glob(ROOT, "scripts/**/*.gd"):
         if gd.parent.name == "data":
             continue
         out += COMMENT.sub("", gd.read_text(encoding="utf-8")) + "\n"
@@ -65,8 +67,8 @@ def check_stat_wiring() -> tuple[list[str], list[str]]:
 
     problems: list[str] = []
     counted = 0
-    for label, glob, pattern in STAT_SOURCES:
-        for tres in sorted(ROOT.glob(glob)):
+    for label, source_glob, pattern in STAT_SOURCES:
+        for tres in glob(ROOT, source_glob):
             m = re.search(pattern, tres.read_text(encoding="utf-8"), re.M)
             if not m:
                 continue
@@ -90,7 +92,7 @@ def check_goal_metrics() -> tuple[list[str], list[str]]:
 
     problems: list[str] = []
     goals = 0
-    for tres in sorted(ROOT.glob("data/quests/*.tres")):
+    for tres in glob(ROOT, "data/quests/*.tres"):
         text = tres.read_text(encoding="utf-8")
         metric = re.search(r'^metric = &"(\w*)"', text, re.M)
         shape = re.search(r"^metric_shape = (\d+)", text, re.M)
@@ -138,7 +140,7 @@ def _class_name(stem: str) -> str:
 
 def check_enum_handling() -> tuple[list[str], list[str]]:
     enums: dict[str, dict[str, list[str]]] = {}
-    for gd in sorted(ROOT.glob("scripts/data/*.gd")):
+    for gd in glob(ROOT, "scripts/data/*.gd"):
         for m in re.finditer(r"enum\s+(\w+)\s*\{(.*?)\}", gd.read_text(encoding="utf-8"), re.S):
             body = COMMENT.sub("", m.group(2))
             members = [p.split("=")[0].strip() for p in body.split(",") if p.split("=")[0].strip()]
@@ -146,7 +148,7 @@ def check_enum_handling() -> tuple[list[str], list[str]]:
 
     used: dict[tuple[str, str], set[str]] = collections.defaultdict(set)
     problems: list[str] = []
-    for tres in sorted(ROOT.glob("data/**/*.tres")):
+    for tres in glob(ROOT, "data/**/*.tres"):
         text = tres.read_text(encoding="utf-8")
         ext = {ident: p for p, ident in EXT_SCRIPT.findall(text)}
         ref = SCRIPT_REF.search(text)

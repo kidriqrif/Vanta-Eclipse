@@ -19,9 +19,18 @@ var _pending_label: Label
 
 func _ready() -> void:
 	_apply_world_palette()
-	# The banner is not subtle on purpose: while the stub providers are live,
-	# nothing is charged and no real ad is shown.
-	_dev_banner.visible = MonetizationManager.USE_STUB_PROVIDERS
+	# The banner warns whoever is BUILDING the game, so it is gated on a debug
+	# build, not on the stub flag alone. Keyed only to USE_STUB_PROVIDERS it
+	# would have shipped "DEVELOPMENT BUILD" to players in any release that
+	# still had the stubs in it — which is exactly the release this branch
+	# exists to make safe.
+	_dev_banner.visible = MonetizationManager.USE_STUB_PROVIDERS and OS.is_debug_build()
+	# With no real billing there is nothing honest to put on the OFFERS tab, so
+	# the Shop becomes a single-tab cosmetics screen rather than a tab bar with
+	# one dead half.
+	var paid: bool = MonetizationManager.PAID_SURFACES_AVAILABLE
+	_offers_tab.visible = paid
+	_cosmetics_tab.visible = paid
 	_back_button.pressed.connect(_on_back_pressed)
 	_offers_tab.pressed.connect(func() -> void: _set_tab(true))
 	_cosmetics_tab.pressed.connect(func() -> void: _set_tab(false))
@@ -36,7 +45,7 @@ func _ready() -> void:
 		func(_id: StringName, _amount: float) -> void: _rebuild()
 	)
 	_refresh_shards()
-	_set_tab(true)
+	_set_tab(MonetizationManager.PAID_SURFACES_AVAILABLE)
 
 
 func _set_tab(offers: bool) -> void:
@@ -88,7 +97,10 @@ func _rebuild() -> void:
 	for child in _item_list.get_children():
 		child.queue_free()
 	_pending_label = null
-	if _offers_tab_active:
+	# Guarded as well as hidden: _set_tab(true) from anywhere — a future caller,
+	# a restored tab state — must not be able to build a card that spends money
+	# the build cannot take.
+	if _offers_tab_active and MonetizationManager.PAID_SURFACES_AVAILABLE:
 		for placement: AdPlacementDefinition in MonetizationManager.get_shop_placements():
 			_item_list.add_child(_make_offer_card(placement))
 		for product: ShopProductDefinition in MonetizationManager.get_products():

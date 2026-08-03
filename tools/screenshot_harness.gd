@@ -51,6 +51,8 @@ var _taken: int = 0
 var _skipped: int = 0
 var _layout_problems: int = 0
 var _controls_seen: int = 0
+## Scenes _goto() asked for and did not get. Any at all invalidates the run.
+var _scene_failures: int = 0
 var _probe: bool = false
 
 
@@ -73,7 +75,13 @@ func _ready() -> void:
 
 	print("HARNESS: %d shots written to %s (%d skipped by filter)"
 		% [_taken, _out_dir, _skipped])
-	if _only.is_empty() and _controls_seen < 200:
+	if _scene_failures > 0:
+		# Reported before the layout verdict, and separately from it: the audit
+		# genuinely found no overflow, but it only looked at the screens that
+		# loaded, so "no problems" says nothing about the ones that did not.
+		print("LAYOUT: INCONCLUSIVE — %d scene(s) never loaded; the audit only "
+			% _scene_failures + "walked what was on screen")
+	elif _only.is_empty() and _controls_seen < 200:
 		# The audit walked almost nothing, so a clean result means nothing.
 		print("LAYOUT: INCONCLUSIVE — only %d controls inspected" % _controls_seen)
 	elif _layout_problems == 0:
@@ -384,6 +392,17 @@ func _seed_late_game() -> void:
 func _goto(scene_path: String) -> void:
 	SceneManager.change_scene(scene_path)
 	await get_tree().create_timer(SETTLE_SECONDS).timeout
+	# Verify the scene actually arrived. A scene whose script fails to compile
+	# leaves the PREVIOUS screen up, and everything downstream still "works":
+	# the shot is taken, the audit walks whatever is on screen, and the run
+	# reports LAYOUT: OK. That is not hypothetical — an import race made
+	# gameplay.tscn fail to load and this harness printed "OK — 952 controls"
+	# for a run that had silently lost a third of the game.
+	var current: Node = get_tree().current_scene
+	var arrived: String = current.scene_file_path if current != null else "<none>"
+	if arrived != scene_path:
+		_scene_failures += 1
+		print("HARNESS: FAILED to reach %s — still on %s" % [scene_path, arrived])
 
 
 ## Panels are children of the screen that owns them, so they are reached by

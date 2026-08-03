@@ -20,6 +20,8 @@ import pathlib
 import re
 import sys
 
+from _tree import glob, rglob
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 BASE_PROPS = {"resource_local_to_scene", "resource_name", "resource_path", "script"}
@@ -31,13 +33,13 @@ FIELD = re.compile(r"^([a-z_]\w*)\s*=\s*(.+)$", re.M)
 
 
 def tres_files() -> list[pathlib.Path]:
-    return sorted(ROOT.glob("data/**/*.tres"))
+    return glob(ROOT, "data/**/*.tres")
 
 
 def definition_classes() -> dict[str, set[str]]:
     """class_name -> exported property names."""
     out: dict[str, set[str]] = {}
-    for gd in ROOT.rglob("scripts/**/*.gd"):
+    for gd in rglob(ROOT, "scripts/**/*.gd"):
         src = gd.read_text(encoding="utf-8")
         cn = re.search(r"^class_name\s+(\w+)", src, re.M)
         if not cn:
@@ -92,7 +94,7 @@ def check_properties() -> tuple[list[str], list[str]]:
 def check_values() -> tuple[list[str], list[str]]:
     enum_props: dict[str, dict[str, int]] = {}
     path_props: dict[str, set[str]] = {}
-    for gd in ROOT.rglob("scripts/**/*.gd"):
+    for gd in rglob(ROOT, "scripts/**/*.gd"):
         src = gd.read_text(encoding="utf-8")
         cn = re.search(r"^class_name\s+(\w+)", src, re.M)
         if not cn:
@@ -207,7 +209,7 @@ def check_ids() -> tuple[list[str], list[str]]:
 
 
 def check_reachability() -> tuple[list[str], list[str]]:
-    corpus = "\n".join(p.read_text(encoding="utf-8") for p in ROOT.glob("scripts/**/*.gd"))
+    corpus = "\n".join(p.read_text(encoding="utf-8") for p in glob(ROOT, "scripts/**/*.gd"))
     corpus += "\n" + "\n".join(p.read_text(encoding="utf-8") for p in tres_files())
 
     problems: list[str] = []

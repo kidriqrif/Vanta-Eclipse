@@ -24,6 +24,8 @@ import pathlib
 import re
 import sys
 
+from _tree import glob, rglob
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 LINE_COMMENT = re.compile(r"//[^\n]*")
@@ -41,7 +43,7 @@ def strip_comments(text: str) -> str:
 
 
 def shaders() -> list[pathlib.Path]:
-    return sorted(ROOT.rglob("*.gdshader"))
+    return rglob(ROOT, "*.gdshader")
 
 
 def uniforms_of(path: pathlib.Path) -> set[str]:
@@ -92,7 +94,7 @@ def check_live_uniforms() -> tuple[list[str], list[str]]:
 def check_material_keys() -> tuple[list[str], list[str]]:
     problems: list[str] = []
     checked = 0
-    for scene in sorted(list(ROOT.rglob("*.tscn")) + list(ROOT.rglob("*.tres"))):
+    for scene in rglob(ROOT, "*.tscn") + rglob(ROOT, "*.tres"):
         text = scene.read_text(encoding="utf-8")
         params = PARAM_KEY.findall(text)
         if not params:
@@ -124,7 +126,7 @@ def check_runtime_keys() -> tuple[list[str], list[str]]:
 
     problems: list[str] = []
     checked = 0
-    for gd in sorted(ROOT.rglob("scripts/**/*.gd")):
+    for gd in rglob(ROOT, "scripts/**/*.gd"):
         body = strip_comments_gd(gd.read_text(encoding="utf-8"))
         for name in SET_PARAM.findall(body):
             checked += 1

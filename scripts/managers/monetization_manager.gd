@@ -22,6 +22,29 @@ const COSMETIC_DIR: String = "res://data/cosmetics"
 const SECONDS_PER_DAY: int = 86400
 const DEFAULT_COSMETIC: StringName = &"trail_void"
 
+## Whether any surface that takes real money — or claims to show an ad — may be
+## put in front of a player.
+##
+## False while the providers are stubs, and that is a shipping safeguard, not a
+## debug convenience: StubBillingProvider.purchase() returns true without
+## charging anything, so a released stub build would hand out `remove_ads` and
+## shard packs for free to anyone who tapped BUY. StubAdProvider is a 3-second
+## timer, so its "watch an ad" button is a button that lies.
+##
+## This makes a monetization-free v1 shippable from the same codebase: nothing
+## is deleted, and the Shop's offers, the arcade token offer and the offline
+## doubler all reappear the moment real providers land and USE_STUB_PROVIDERS
+## goes false.
+##
+## Note the consequence while it is false: Astral Shards can only be earned
+## (420 from the collection trophies), never bought, so the two most expensive
+## trails stay out of reach until monetization actually ships.
+##
+## A const rather than a method so it folds at compile time and costs this
+## class nothing against gdlint's public-method budget, which it was already
+## at the edge of.
+const PAID_SURFACES_AVAILABLE: bool = not USE_STUB_PROVIDERS
+
 var _placements: Array[AdPlacementDefinition] = []
 var _placements_by_id: Dictionary = {}
 var _products: Array[ShopProductDefinition] = []
@@ -188,8 +211,12 @@ func offers_left(id: StringName) -> int:
 	return maxi(0, placement.daily_cap - int(_ad_uses.get(id, 0)))
 
 
+## Every ad surface in the game already asks this before showing a button, and
+## run_offer() re-checks it before granting — so gating it here closes the
+## Arcade's token offer, the offline doubler, the Shop's offer cards and any
+## future placement in one place, rather than in each caller.
 func can_offer(id: StringName) -> bool:
-	return not _busy and offers_left(id) > 0
+	return PAID_SURFACES_AVAILABLE and not _busy and offers_left(id) > 0
 
 
 func is_busy() -> bool:
@@ -259,7 +286,7 @@ func _grant(placement: AdPlacementDefinition, pending_amount: float) -> float:
 ## a double-tap is safe.
 func purchase(id: StringName) -> bool:
 	var product: ShopProductDefinition = _products_by_id.get(id)
-	if product == null or _busy:
+	if product == null or _busy or not PAID_SURFACES_AVAILABLE:
 		return false
 	if is_one_time_owned(product):
 		return false

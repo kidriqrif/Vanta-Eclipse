@@ -24,6 +24,8 @@ import pathlib
 import re
 import sys
 
+from _tree import glob, rglob
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DOC = ROOT / "docs/ARCHITECTURE.md"
 
@@ -91,7 +93,7 @@ def check_autoload_table() -> tuple[list[str], list[str]]:
 
 def check_save_sections() -> tuple[list[str], list[str]]:
     registered: dict[str, str] = {}
-    for gd in sorted(ROOT.glob("scripts/managers/*.gd")):
+    for gd in glob(ROOT, "scripts/managers/*.gd"):
         for section in REGISTER.findall(gd.read_text(encoding="utf-8")):
             # save_manager.gd defines register_saveable; it never calls it.
             registered[section] = "".join(

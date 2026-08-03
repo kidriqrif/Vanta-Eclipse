@@ -1,6 +1,13 @@
 extends Control
-## Settings screen — audio sliders, haptics toggle, and manual save.
-## Pure UI: all real work happens in SettingsManager / SaveManager.
+## Settings screen — audio sliders, haptics toggle, manual save, and the
+## about/privacy block. Pure UI: all real work happens in SettingsManager /
+## SaveManager.
+
+## Play requires a reachable privacy policy for the listing, and expects the
+## app itself to be able to reach it. Served by GitHub Pages out of docs/ in
+## this repository, so the page and the app version it describes are committed
+## together and cannot drift apart.
+const PRIVACY_URL: String = "https://kidriqrif.github.io/Vanta-Eclipse/privacy-policy.html"
 
 @onready var _master_slider: HSlider = %MasterSlider
 @onready var _music_slider: HSlider = %MusicSlider
@@ -8,6 +15,8 @@ extends Control
 @onready var _haptics_toggle: CheckButton = %HapticsToggle
 @onready var _last_save_label: Label = %LastSaveLabel
 @onready var _save_game_button: Button = %SaveGameButton
+@onready var _privacy_button: Button = %PrivacyButton
+@onready var _version_label: Label = %VersionLabel
 @onready var _back_button: Button = %BackButton
 
 
@@ -24,13 +33,22 @@ func _ready() -> void:
 	_sfx_slider.value_changed.connect(_on_sfx_changed)
 	_haptics_toggle.toggled.connect(_on_haptics_toggled)
 	_save_game_button.pressed.connect(_on_save_game_pressed)
+	_privacy_button.pressed.connect(_on_privacy_pressed)
 	_back_button.pressed.connect(_on_back_pressed)
+	_version_label.text = "Vanta Eclipse %s" % GameManager.GAME_VERSION
 
 	EventBus.game_saved.connect(_on_game_saved)
 	_update_last_save_label()
 
 
 # --- Signal handlers ---------------------------------------------------------
+
+
+## Hands the URL to the system browser. The only outbound call the game makes —
+## and it is the OS opening a page, not the game fetching anything, so the
+## "this app makes no network requests" claim in that very policy holds.
+func _on_privacy_pressed() -> void:
+	OS.shell_open(PRIVACY_URL)
 
 
 func _on_master_changed(value: float) -> void:

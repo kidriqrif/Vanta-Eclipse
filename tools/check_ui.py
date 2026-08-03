@@ -28,6 +28,8 @@ import pathlib
 import re
 import sys
 
+from _tree import glob, rglob
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 THEME = ROOT / "ui/theme/main_theme.tres"
 
@@ -37,11 +39,11 @@ VARIATION = re.compile(r"^(\w+)/base_type", re.M)
 
 
 def scenes() -> list[pathlib.Path]:
-    return sorted(ROOT.rglob("scenes/**/*.tscn"))
+    return rglob(ROOT, "scenes/**/*.tscn")
 
 
 def scripts() -> list[pathlib.Path]:
-    return sorted(ROOT.rglob("scripts/**/*.gd"))
+    return rglob(ROOT, "scripts/**/*.gd")
 
 
 # Pure white/black/transparent are generic values any script may write; they
@@ -93,12 +95,12 @@ def check_stale_palette() -> tuple[list[str], list[str]]:
 def check_sprites_referenced() -> tuple[list[str], list[str]]:
     corpus = ""
     for pattern in ("**/*.tscn", "**/*.tres", "scripts/**/*.gd", "project.godot"):
-        for p in ROOT.glob(pattern) if pattern == "project.godot" else ROOT.rglob(pattern):
+        for p in glob(ROOT, pattern) if pattern == "project.godot" else rglob(ROOT, pattern):
             corpus += p.read_text(encoding="utf-8") + "\n"
 
     problems: list[str] = []
     count = 0
-    for sprite in sorted(ROOT.rglob("sprites/**/*.svg")):
+    for sprite in rglob(ROOT, "sprites/**/*.svg"):
         count += 1
         if f"res://{sprite.relative_to(ROOT).as_posix()}" not in corpus:
             problems.append(f"{sprite.relative_to(ROOT)}: referenced by nothing")
@@ -203,7 +205,7 @@ def check_palette_hues() -> tuple[list[str], list[str]]:
     problems: list[str] = []
     inspected = 0
     for scope in HUE_SCOPES:
-        for path in sorted(ROOT.glob(scope)):
+        for path in glob(ROOT, scope):
             for number, line in enumerate(
                 path.read_text(encoding="utf-8").splitlines(), 1
             ):

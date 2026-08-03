@@ -51,3 +51,7 @@ desktop.ini
 
 # Screenshots from tools/screenshot_run.sh
 .godot-shots/
+
+# Python bytecode from the tools/ checkers
+__pycache__/
+*.pyc
