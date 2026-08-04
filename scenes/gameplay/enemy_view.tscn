@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/enemy_view.gd" id="1"]
-[ext_resource type="Texture2D" path="res://resources/textures/soft_dot.tres" id="2"]
+[ext_resource type="Texture2D" path="res://sprites/ui/ground_glow.png" id="2"]
 [ext_resource type="Material" path="res://effects/pixel_sprite_material.tres" id="3"]
 
 [node name="EnemyView" type="Control"]
@@ -16,10 +16,10 @@ script = ExtResource("1")
 unique_name_in_owner = true
 modulate = Color(0.941, 0.941, 0.965, 0)
 layout_mode = 0
-offset_left = 120.0
-offset_top = 464.0
-offset_right = 380.0
-offset_bottom = 516.0
+offset_left = 130.0
+offset_top = 466.0
+offset_right = 370.0
+offset_bottom = 514.0
 pivot_offset = Vector2(130, 26)
 mouse_filter = 2
 texture = ExtResource("2")

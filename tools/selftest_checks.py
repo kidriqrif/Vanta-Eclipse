@@ -192,7 +192,7 @@ MUTATIONS: list[Mutation] = [
         "scene re-hardcodes a colour the theme already defines",
         "scenes/gear/gear.tscn",
         '[node name="EmptyLabel"',
-        'theme_override_colors/font_color = Color(0.929, 0.929, 0.941, 1)\n'
+        'theme_override_colors/font_color = Color(0.941, 0.941, 0.965, 1)\n'
         '[node name="EmptyLabel"',
     ),
     (
@@ -214,14 +214,14 @@ MUTATIONS: list[Mutation] = [
         "stylebox sized by margin loses its height (the invisible slider)",
         "ui/theme/main_theme.tres",
         "content_margin_top = 9.0\ncontent_margin_right = 0.0\n"
-        "content_margin_bottom = 9.0\nbg_color = Color(0.145, 0.145, 0.161, 1)",
-        "bg_color = Color(0.145, 0.145, 0.161, 1)",
+        "content_margin_bottom = 9.0\nbg_color = Color(0.141, 0.141, 0.184, 1)",
+        "bg_color = Color(0.141, 0.141, 0.184, 1)",
     ),
     (
         "check_ui.py",
         "an off-palette hue hides inside a gradient's PackedColorArray",
         "scenes/main_menu/main_menu.tscn",
-        "colors = PackedColorArray(1, 0.231, 0.188, 0, 1, 0.231, 0.188, 0.8, 1, 0.231, 0.188, 0)",
+        "colors = PackedColorArray(0.91, 0.196, 0.235, 0, 0.91, 0.196, 0.235, 0.8, 0.91, 0.196, 0.235, 0)",
         "colors = PackedColorArray(0.545, 0.361, 0.965, 0, 0.655, 0.545, 0.98, 0.8, "
         "0.545, 0.361, 0.965, 0)",
     ),
@@ -229,7 +229,7 @@ MUTATIONS: list[Mutation] = [
         "check_ui.py",
         "an off-palette hue creeps back into UI chrome (the violet boss timer)",
         "scenes/common/countdown_timer_bar.tscn",
-        "bg_color = Color(0.659, 0.063, 0.102, 1)",
+        "bg_color = Color(0.478, 0.055, 0.11, 1)",
         "bg_color = Color(0.51, 0.44, 0.72, 1)",
     ),
     (

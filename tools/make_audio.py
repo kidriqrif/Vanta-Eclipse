@@ -5,10 +5,21 @@ The project shipped three working volume sliders and not one AudioStreamPlayer
 — the sliders adjusted the volume of silence. This generates the sounds so
 they adjust something.
 
-Synthesised rather than sourced, for three reasons: the palette is one accent
-on black and the audio should be as spare, every sound is regenerable from
-this file so a tweak is an edit rather than a re-recording, and it keeps the
-repo free of licensed assets whose terms would need auditing before release.
+Synthesised rather than sourced: every sound is regenerable from this file so
+a tweak is an edit rather than a re-recording, and it keeps the repo free of
+licensed assets whose terms would need auditing before release.
+
+The set is DRY AND MECHANICAL — relay clacks, key switches and PC-speaker
+blips. It was originally sines and filtered noise, which suited the smooth
+vector art the game used to have. Pixel art has a hard edge everywhere, and a
+sine is the audio equivalent of a gradient: there is no edge anywhere in it.
+So the tonal material is square waves at narrow duty cycles and the noise is
+high-passed rather than low-passed, which is the whole difference between a
+sound that reads as weather and one that reads as a mechanism.
+
+The ambient drone is the deliberate exception and stays tonal. It is the only
+thing a player hears continuously, and twenty-four seconds of square wave on
+a loop is not something anyone can leave running.
 
 Design rules, in order of how much they matter:
 
@@ -16,6 +27,8 @@ Design rules, in order of how much they matter:
     quiet, with no high-frequency spike — anything bright becomes torture by
     minute ten. AudioManager also randomises its pitch slightly per shot, so
     a held finger never produces a machine-gun of identical clicks.
+  * Nothing rings. A decay long enough to ring reads as a bell, and there are
+    no bells in a terminal.
   * Every clip fades in and out over at least 3ms. A waveform that starts or
     ends on a non-zero sample clicks, and that click is the cheapest-sounding
     thing a game can do.
@@ -106,6 +119,53 @@ def lowpass(buf: list[float], alpha: float, warm: bool = False) -> list[float]:
     return out
 
 
+def square(buf: list[float], freq: float, amp: float, rate: int = SFX_RATE,
+           duty: float = 0.5, sweep: float = 1.0) -> list[float]:
+    """A hard square wave — the PC-speaker timbre.
+
+    The art revamp took the game from smooth vector forms to hard-edged pixels,
+    and the sound had to make the same move. A sine is the audio equivalent of
+    a gradient: it has no edge anywhere in it. A square is two states and an
+    instantaneous transition, which is what a relay, a key switch and a 1980s
+    beeper all actually are.
+
+    `duty` well away from 0.5 thins the tone and takes out the even harmonics —
+    that is the difference between a warm beep and a cheap one, and cheap is
+    the brief.
+    """
+    n = len(buf)
+    running = 0.0
+    for i in range(n):
+        f = freq * (1.0 + (sweep - 1.0) * (i / n))
+        running += f / rate
+        buf[i] += amp if (running % 1.0) < duty else -amp
+    return buf
+
+
+def highpass(buf: list[float], alpha: float) -> list[float]:
+    """One-pole high-pass: the signal minus its own low-passed self.
+
+    This is what makes noise read as MECHANICAL rather than as weather. Low
+    noise is wind and rain; strip the bottom out and the same noise becomes a
+    contact closing, a key bottoming out, a plastic shell resonating.
+    """
+    low = lowpass(buf, alpha)
+    return [sample - filtered for sample, filtered in zip(buf, low)]
+
+
+def clack(rng: random.Random, seconds: float, brightness: float = 0.55,
+          amp: float = 0.9) -> list[float]:
+    """One mechanical contact: a burst of thin noise with no tail.
+
+    The decay is deliberately shorter than feels right in isolation. A switch
+    does not ring — anything that rings reads as a bell, and there are no bells
+    in a terminal.
+    """
+    buf = noise(silence(seconds), amp, rng)
+    buf = highpass(buf, brightness)
+    return attack(decay(buf, seconds * 0.22), 0.0004)
+
+
 def make_seamless(buf: list[float], loop_len: int, fade: int) -> list[float]:
     """Crossfade the material past the loop point back over the start.
 
@@ -167,43 +227,53 @@ def write(name: str, buf: list[float], directory: pathlib.Path,
 
 
 def tap_hit(rng: random.Random) -> list[float]:
-    """The core interaction. Dark, 70ms, no top end."""
-    buf = silence(0.07)
-    sine(buf, 190.0, 0.9, sweep=0.55)      # the body, pitching down as it dies
-    sine(buf, 95.0, 0.5, sweep=0.6)        # an octave under, for weight
-    click = lowpass(noise(silence(0.012), 0.5, rng), 0.25)
-    for i, s in enumerate(click):
-        buf[i] += s
-    return attack(decay(buf, 0.022), 0.001)
+    """The core interaction: a relay closing.
+
+    Played thousands of times a session, so the rules that mattered before
+    still hold — 60ms, no high spike, nothing that rings. What changed is the
+    body: it used to be two sines pitching down, which is a soft drum. Now it
+    is a contact clack over a short square thud, so the hit has an EDGE where
+    the art has an edge.
+    """
+    buf = silence(0.06)
+    square(buf, 140.0, 0.55, duty=0.28, sweep=0.6)   # the thud, thin and hard
+    for i, sample in enumerate(clack(rng, 0.02, brightness=0.42, amp=0.8)):
+        buf[i] += sample
+    return attack(decay(buf, 0.018), 0.0004)
 
 
 def crit_hit(rng: random.Random) -> list[float]:
     """The same strike with something bright on top — a crit has to be
     audible as a crit without being a different event."""
-    buf = silence(0.16)
-    sine(buf, 240.0, 0.8, sweep=0.6)
-    sine(buf, 660.0, 0.35, sweep=1.35)     # the rising glint
-    sine(buf, 990.0, 0.18, sweep=1.4)
-    click = lowpass(noise(silence(0.02), 0.45, rng), 0.4)
-    for i, s in enumerate(click):
-        buf[i] += s
-    return attack(decay(buf, 0.05), 0.001)
+    buf = silence(0.14)
+    square(buf, 190.0, 0.6, duty=0.3, sweep=0.62)
+    # The glint is now a rising SQUARE blip — a beeper reporting a result
+    # rather than a chime. Two of them, an octave apart, so it cuts through a
+    # stream of taps without being louder than one.
+    square(buf, 720.0, 0.3, duty=0.18, sweep=1.45)
+    square(buf, 1440.0, 0.12, duty=0.12, sweep=1.5)
+    for i, sample in enumerate(clack(rng, 0.025, brightness=0.5, amp=0.75)):
+        buf[i] += sample
+    return attack(decay(buf, 0.042), 0.0004)
 
 
 def enemy_death(rng: random.Random) -> list[float]:
     """A collapse, not an explosion. It fires on every kill, so it sits under
     the tap rather than over it."""
-    buf = lowpass(noise(silence(0.3), 0.6, rng), 0.12)
-    sine(buf, 150.0, 0.7, sweep=0.35)
-    return attack(decay(buf, 0.09), 0.004)
+    # A power-down, not a puff of smoke: the pitch drops away in a square, and
+    # the noise under it is high-passed so it reads as a mechanism stopping
+    # rather than as dust.
+    buf = highpass(noise(silence(0.26), 0.45, rng), 0.3)
+    square(buf, 160.0, 0.6, duty=0.35, sweep=0.22)
+    return attack(decay(buf, 0.075), 0.002)
 
 
 def boss_defeat(rng: random.Random) -> list[float]:
     """Rare and earned: longer, lower, with a tail."""
     buf = silence(0.9)
-    sine(buf, 110.0, 0.9, sweep=0.5)
-    sine(buf, 55.0, 0.7, sweep=0.5)
-    sine(buf, 220.0, 0.3, sweep=0.5)
+    square(buf, 110.0, 0.9, sweep=0.5)
+    square(buf, 55.0, 0.7, sweep=0.5)
+    square(buf, 220.0, 0.3, sweep=0.5)
     rumble = lowpass(noise(silence(0.9), 0.7, rng), 0.06)
     for i, s in enumerate(rumble):
         buf[i] += s * 0.6
@@ -213,36 +283,39 @@ def boss_defeat(rng: random.Random) -> list[float]:
 def fanfare() -> list[float]:
     """Unlocks and level-ups. A rising minor triad — the game is not cheerful,
     and a major chord would belong to a different game."""
-    buf = silence(0.75)
+    # Four square blips climbing a minor arpeggio, each one a discrete event
+    # with silence between. The sine version overlapped into a chord, which is
+    # a musical instrument; this is a machine reporting four things in a row.
+    buf = silence(0.7)
     for index, freq in enumerate([220.0, 261.63, 329.63, 440.0]):
-        voice = silence(0.75)
-        sine(voice, freq, 0.6)
-        delay = int(index * 0.075 * SFX_RATE)
-        voice = decay(attack(voice, 0.01), 0.3)
+        voice = silence(0.7)
+        square(voice, freq, 0.5, duty=0.22)
+        voice = decay(attack(voice, 0.002), 0.055)
+        delay = int(index * 0.09 * SFX_RATE)
         for i in range(len(buf) - delay):
             buf[i + delay] += voice[i]
-    return decay(buf, 0.55)
+    return buf
 
 
 def confirm() -> list[float]:
     """Purchases, equips, upgrades. Two tones, up — small and definite."""
-    buf = silence(0.12)
-    sine(buf, 520.0, 0.5)
-    second = silence(0.12)
-    sine(second, 780.0, 0.45)
-    second = decay(attack(second, 0.002), 0.05)
-    offset = int(0.045 * SFX_RATE)
+    buf = silence(0.11)
+    square(buf, 560.0, 0.42, duty=0.25)
+    second = silence(0.11)
+    square(second, 840.0, 0.38, duty=0.2)
+    second = decay(attack(second, 0.001), 0.035)
+    offset = int(0.04 * SFX_RATE)
     for i in range(len(buf) - offset):
         buf[i + offset] += second[i]
-    return attack(decay(buf, 0.06), 0.002)
+    return attack(decay(buf, 0.045), 0.001)
 
 
 def loot(rng: random.Random) -> list[float]:
     """A drop landing. Bright but tiny, so a rare item registers without
     interrupting the fight it dropped from."""
     buf = silence(0.28)
-    sine(buf, 880.0, 0.4, sweep=1.5)
-    sine(buf, 1320.0, 0.25, sweep=1.5)
+    square(buf, 880.0, 0.4, sweep=1.5)
+    square(buf, 1320.0, 0.25, sweep=1.5)
     shimmer = lowpass(noise(silence(0.28), 0.25, rng), 0.6)
     for i, s in enumerate(shimmer):
         buf[i] += s * 0.35
@@ -258,13 +331,13 @@ def boss_warn(rng: random.Random) -> list[float]:
     arriving late enough to feel like an answer rather than a chord.
     """
     buf = silence(1.2)
-    sine(buf, 98.0, 0.85, sweep=0.98)      # barely detuning — a bell, not a fall
-    sine(buf, 147.0, 0.4, sweep=0.98)      # a fifth: hollow, unresolved
+    square(buf, 98.0, 0.85, sweep=0.98)      # barely detuning — a bell, not a fall
+    square(buf, 147.0, 0.4, sweep=0.98)      # a fifth: hollow, unresolved
     strike = lowpass(noise(silence(0.05), 0.5, rng), 0.18)
     for i, s in enumerate(strike):
         buf[i] += s
     answer = silence(1.2)
-    sine(answer, 196.0, 0.45, sweep=0.98)
+    square(answer, 196.0, 0.45, sweep=0.98)
     answer = decay(attack(answer, 0.004), 0.45)
     offset = int(0.34 * SFX_RATE)
     for i in range(len(buf) - offset):
@@ -283,12 +356,12 @@ def fail() -> list[float]:
     buf = silence(0.9)
     for index, freq in enumerate([329.63, 261.63, 220.0]):
         voice = silence(0.9)
-        sine(voice, freq, 0.55, sweep=0.97)
+        square(voice, freq, 0.55, sweep=0.97)
         delay = int(index * 0.085 * SFX_RATE)
         voice = decay(attack(voice, 0.008), 0.28)
         for i in range(len(buf) - delay):
             buf[i + delay] += voice[i]
-    sine(buf, 82.0, 0.3, sweep=0.85)       # the floor dropping out underneath
+    square(buf, 82.0, 0.3, sweep=0.85)       # the floor dropping out underneath
     return decay(buf, 0.5)
 
 
@@ -316,9 +389,9 @@ def goal() -> list[float]:
     a goal completes often enough that it must never be ceremonial.
     """
     buf = silence(0.3)
-    sine(buf, 587.33, 0.45)
+    square(buf, 587.33, 0.45)
     second = silence(0.3)
-    sine(second, 880.0, 0.4)
+    square(second, 880.0, 0.4)
     second = decay(attack(second, 0.003), 0.09)
     offset = int(0.07 * SFX_RATE)
     for i in range(len(buf) - offset):
@@ -336,7 +409,7 @@ def claim(rng: random.Random) -> list[float]:
     buf = silence(0.45)
     for index, freq in enumerate([440.0, 659.25, 880.0]):
         voice = silence(0.45)
-        sine(voice, freq, 0.4, sweep=1.02)
+        square(voice, freq, 0.4, sweep=1.02)
         delay = int(index * 0.035 * SFX_RATE)
         voice = decay(attack(voice, 0.003), 0.14)
         for i in range(len(buf) - delay):
@@ -352,7 +425,7 @@ def levelup() -> list[float]:
     blip that acknowledges without interrupting. The moment it becomes a jingle
     it becomes the reason someone turns the sound off."""
     buf = silence(0.14)
-    sine(buf, 660.0, 0.4, sweep=1.5)
+    square(buf, 660.0, 0.4, sweep=1.5)
     return attack(decay(buf, 0.045), 0.002)
 
 
@@ -369,8 +442,8 @@ def eclipse() -> list[float]:
     buf = silence(total)
     # The swell: rising, quiet, gathering.
     swell = silence(total)
-    sine(swell, 110.0, 0.5, sweep=1.5)
-    sine(swell, 165.0, 0.3, sweep=1.5)
+    square(swell, 110.0, 0.5, sweep=1.5)
+    square(swell, 165.0, 0.3, sweep=1.5)
     for i in range(len(swell)):
         # Grows across the first 45%, then gets out of the way of the bloom.
         phase = min(1.0, (i / len(swell)) / 0.45)
@@ -379,9 +452,9 @@ def eclipse() -> list[float]:
         buf[i] += s
     # The bloom: low, wide, falling — arriving exactly where the swell stops.
     bloom = silence(total)
-    sine(bloom, 55.0, 0.9, sweep=0.7)
-    sine(bloom, 82.5, 0.5, sweep=0.7)
-    sine(bloom, 220.0, 0.22, sweep=0.7)
+    square(bloom, 55.0, 0.9, sweep=0.7)
+    square(bloom, 82.5, 0.5, sweep=0.7)
+    square(bloom, 220.0, 0.22, sweep=0.7)
     bloom = decay(attack(bloom, 0.006), 0.7)
     offset = int(0.42 * total * SFX_RATE)
     for i in range(len(buf) - offset):
@@ -400,15 +473,12 @@ def click(rng: random.Random) -> list[float]:
     confirm is the result, so the click has to sit underneath rather than
     compete with it.
 
-    A tick, not a tone: 30ms, mostly filtered noise. Deliberately thinner and
-    higher than `tap_hit`, because a button must not feel like hitting the
-    enemy.
+    A key switch bottoming out: 26ms of thin, high-passed noise and nothing
+    else. Deliberately drier and higher than `tap_hit`, because a button must
+    never feel like hitting the enemy — and with no tonal content at all it
+    can sit under `confirm` on a purchase without beating against it.
     """
-    buf = silence(0.03)
-    noise(buf, 0.6, rng)
-    buf = lowpass(buf, 0.55)               # takes the hiss off without dulling it
-    sine(buf, 1400.0, 0.25, sweep=0.7)     # just enough pitch to read as a surface
-    return attack(decay(buf, 0.008), 0.0008)
+    return clack(rng, 0.026, brightness=0.72, amp=0.85)
 
 
 def ambient_drone() -> list[float]:

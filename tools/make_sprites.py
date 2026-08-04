@@ -508,6 +508,52 @@ def shot_sunk() -> Canvas:
 # 24-32px on a phone, so interior detail is wasted and outline is everything.
 
 
+# Ordered dither. A gradient is the one thing this style cannot draw, so a
+# falloff is expressed as SOLID pixels at decreasing density instead — which is
+# how pixel art has always done it, and why the matrix is worth having.
+BAYER4 = [
+    [0, 8, 2, 10],
+    [12, 4, 14, 6],
+    [3, 11, 1, 9],
+    [15, 7, 13, 5],
+]
+
+
+def ground_glow() -> Canvas:
+    """The pool of light an enemy stands in.
+
+    Replaces a 64x64 radial GradientTexture2D. That texture was the last smooth
+    thing on the gameplay screen: a hard-edged creature standing in a softly
+    blurred ellipse read as a sticker pasted onto a photograph.
+
+    Authored 40x8, which is the 5:1 aspect of the TextureRect that draws it.
+    The first version was a 32x32 ellipse stretched into that rect — 8x across
+    and 1.6x down — so the dither cells came out as long thin rectangles and
+    the whole thing read as a dotted line rather than a pool. A dithered
+    texture has to be drawn at the shape it will be seen at, because the
+    pattern IS the image.
+
+    Drawn in ivory and tinted at runtime — enemy_view.gd modulates it to the
+    creature's own glow_color.
+    """
+    width, height = 40, 8
+    c = Canvas(width, height)
+    for y in range(height):
+        for x in range(width):
+            nx = (x + 0.5 - width / 2.0) / (width / 2.0)
+            ny = (y + 0.5 - height / 2.0) / (height / 2.0)
+            distance = nx * nx + ny * ny
+            if distance >= 1.0:
+                continue
+            # Shallower falloff than a true gradient: at eight rows tall there
+            # is only room for about three density steps before the pattern
+            # stops reading as light at all.
+            density = (1.0 - distance) ** 0.45
+            if density * 16.0 > BAYER4[y % 4][x % 4]:
+                c.put(x, y, "ivory")
+    return c
+
+
 def _gem(fill: str, mid: str, spark: bool = True) -> Canvas:
     c = Canvas(ICON, ICON)
     for y in range(-12, 13):                      # cut-gem diamond
@@ -809,7 +855,7 @@ UI = {
     "arcade_token_icon": arcade_token_icon, "auto_attack_icon": auto_attack_icon,
     "boss_skull_icon": boss_skull_icon, "eclipse_emblem": eclipse_emblem,
     "eclipse_icon": eclipse_icon, "essence_icon": essence_icon,
-    "forge_icon": forge_icon, "journal_icon": journal_icon,
+    "forge_icon": forge_icon, "ground_glow": ground_glow, "journal_icon": journal_icon,
     "lock_glyph": lock_glyph, "minigame_reflex_icon": minigame_reflex_icon,
     "relic_eclipse_heart": relic_eclipse_heart,
     "relic_essence_prism": relic_essence_prism,
