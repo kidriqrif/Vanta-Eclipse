@@ -136,9 +136,9 @@ you actually submit in.
 All generated from the theme's own values, so the listing and the game agree.
 `tools/make_icons.py` rebuilds them all (pixel art, integer-scaled).
 
-- [x] **`icon.svg` redrawn** — an eclipse mark in `#FF3B30`/`#A8101A` on
-      `#0B0B0D`, replacing the 128×128 purple placeholder that had survived
-      the red-and-black overhaul.
+- [x] **`icon.png` redrawn** — a 128×128 pixel-art eclipse mark in the
+      palette's `crimson`/`blood` on `void`, replacing the SVG that the
+      revamp made the last vector asset in the project.
 - [x] Launcher icon 192×192 and both 432×432 adaptive layers. Foreground art
       sits inside the 264px safe circle; background is fully opaque; the
       occluded disc is punched to transparent, not to black, so launcher

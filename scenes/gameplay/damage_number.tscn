@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/ui/damage_number.gd" id="1"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_damage"]
-font_size = 44
+font_size = 36
 font_color = Color(0.941, 0.941, 0.965, 1)
 outline_size = 10
 outline_color = Color(0.031, 0.031, 0.047, 1)

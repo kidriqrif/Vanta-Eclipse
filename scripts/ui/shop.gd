@@ -55,7 +55,6 @@ func _set_tab(offers: bool) -> void:
 
 func _style_tab(button: Button, active: bool) -> void:
 	var style := StyleBoxFlat.new()
-	style.set_corner_radius_all(12)
 	style.set_content_margin_all(10)
 	if active:
 		style.bg_color = UIPalette.raised()
@@ -114,7 +113,6 @@ func _card() -> PanelContainer:
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var style := StyleBoxFlat.new()
 	style.bg_color = UIPalette.surface()
-	style.set_corner_radius_all(14)
 	style.set_content_margin_all(16)
 	style.border_width_left = 4
 	style.border_color = Color(UIPalette.ink().r, UIPalette.ink().g, UIPalette.ink().b, 0.35)
@@ -138,7 +136,7 @@ func _title_row(box: VBoxContainer, title: String, right: String, ink: Color) ->
 	var name_label := Label.new()
 	name_label.text = title
 	name_label.add_theme_color_override("font_color", UIPalette.ink())
-	name_label.add_theme_font_size_override("font_size", 30)
+	name_label.add_theme_font_size_override("font_size", 27)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(name_label)
@@ -147,7 +145,7 @@ func _title_row(box: VBoxContainer, title: String, right: String, ink: Color) ->
 	var right_label := Label.new()
 	right_label.text = right
 	right_label.add_theme_color_override("font_color", ink)
-	right_label.add_theme_font_size_override("font_size", 24)
+	right_label.add_theme_font_size_override("font_size", 18)
 	right_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(right_label)
 
@@ -156,7 +154,7 @@ func _description(box: VBoxContainer, text: String) -> void:
 	var label := Label.new()
 	label.text = text
 	label.add_theme_color_override("font_color", UIPalette.muted())
-	label.add_theme_font_size_override("font_size", 24)
+	label.add_theme_font_size_override("font_size", 18)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(label)
@@ -200,7 +198,7 @@ func _make_product_card(product: ShopProductDefinition) -> PanelContainer:
 		var marker := Label.new()
 		marker.text = "● OWNED"
 		marker.add_theme_color_override("font_color", UIPalette.muted())
-		marker.add_theme_font_size_override("font_size", 24)
+		marker.add_theme_font_size_override("font_size", 18)
 		marker.size_flags_horizontal = Control.SIZE_SHRINK_END
 		marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(marker)
@@ -252,13 +250,12 @@ func _make_cosmetic_card(cosmetic: CosmeticDefinition) -> PanelContainer:
 		swatch.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var style := StyleBoxFlat.new()
 		style.bg_color = color
-		style.set_corner_radius_all(8)
 		swatch.add_theme_stylebox_override("panel", style)
 		swatch_row.add_child(swatch)
 	var swatch_note := Label.new()
 	swatch_note.text = "trail · numbers"
 	swatch_note.add_theme_color_override("font_color", UIPalette.muted())
-	swatch_note.add_theme_font_size_override("font_size", 24)
+	swatch_note.add_theme_font_size_override("font_size", 18)
 	swatch_note.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	swatch_note.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	swatch_row.add_child(swatch_note)
@@ -267,7 +264,7 @@ func _make_cosmetic_card(cosmetic: CosmeticDefinition) -> PanelContainer:
 		var marker := Label.new()
 		marker.text = "● EQUIPPED"
 		marker.add_theme_color_override("font_color", UIPalette.ink())
-		marker.add_theme_font_size_override("font_size", 24)
+		marker.add_theme_font_size_override("font_size", 18)
 		marker.size_flags_horizontal = Control.SIZE_SHRINK_END
 		marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(marker)

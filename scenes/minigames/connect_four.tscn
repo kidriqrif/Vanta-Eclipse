@@ -27,7 +27,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 27
 text = "YOUR TURN"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -36,7 +36,7 @@ vertical_alignment = 1
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"HeaderLabel"
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 18
 text = "Tap a column to drop. Four in a row wins."
 horizontal_alignment = 1
 

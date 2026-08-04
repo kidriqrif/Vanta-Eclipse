@@ -41,7 +41,7 @@ func _build_showcase() -> void:
 		var none := Label.new()
 		none.text = "No active companion."
 		none.add_theme_color_override("font_color", UIPalette.muted())
-		none.add_theme_font_size_override("font_size", 28)
+		none.add_theme_font_size_override("font_size", 18)
 		none.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_showcase.add_child(none)
 		return
@@ -60,7 +60,7 @@ func _build_showcase() -> void:
 	name_label.text = "%s · Stage %d of %d" % [
 		def.stage_names[stage], stage + 1, def.stage_names.size()
 	]
-	name_label.add_theme_font_size_override("font_size", 40)
+	name_label.add_theme_font_size_override("font_size", 36)
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_showcase.add_child(name_label)
 
@@ -72,7 +72,6 @@ func _build_showcase() -> void:
 	xp_bar.value = progress["into"]
 	var fill := StyleBoxFlat.new()
 	fill.bg_color = _accent
-	fill.set_corner_radius_all(12)
 	xp_bar.add_theme_stylebox_override("fill", fill)
 	_showcase.add_child(xp_bar)
 	var xp_label := Label.new()
@@ -84,14 +83,14 @@ func _build_showcase() -> void:
 			NumberFormat.format_exact(progress["into"]),
 			NumberFormat.format_exact(progress["needed"]),
 		]
-	xp_label.add_theme_font_size_override("font_size", 26)
+	xp_label.add_theme_font_size_override("font_size", 18)
 	xp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_showcase.add_child(xp_label)
 
 	var bonus := Label.new()
 	bonus.text = _bonus_text(def, level)
 	bonus.add_theme_color_override("font_color", UIPalette.ink())
-	bonus.add_theme_font_size_override("font_size", 28)
+	bonus.add_theme_font_size_override("font_size", 18)
 	bonus.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_showcase.add_child(bonus)
 
@@ -99,7 +98,7 @@ func _build_showcase() -> void:
 		var next_evo := Label.new()
 		next_evo.text = "Evolves at Lv. %d" % def.evolution_levels[stage]
 		next_evo.add_theme_color_override("font_color", UIPalette.muted())
-		next_evo.add_theme_font_size_override("font_size", 24)
+		next_evo.add_theme_font_size_override("font_size", 18)
 		next_evo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_showcase.add_child(next_evo)
 
@@ -126,7 +125,6 @@ func _make_roster_row(id: StringName, is_active: bool) -> Button:
 	row.custom_minimum_size = Vector2(0, 140)
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.078, 0.078, 0.11, 0.9)
-	style.set_corner_radius_all(14)
 	style.set_content_margin_all(16)
 	# Every companion wears the same 6px ally-violet spine — "one class"
 	# (visual §2.5). The active row raises the other three edges to a full
@@ -167,24 +165,24 @@ func _make_roster_row(id: StringName, is_active: bool) -> Button:
 	info.add_child(name_row)
 	var name_label := Label.new()
 	name_label.text = "%s · Lv. %d" % [def.stage_names[stage], PetManager.get_level(id)]
-	name_label.add_theme_font_size_override("font_size", 30)
+	name_label.add_theme_font_size_override("font_size", 27)
 	name_row.add_child(name_label)
 	if is_active:
 		var pill := Label.new()
 		pill.text = "● ACTIVE"
 		pill.add_theme_color_override("font_color", _accent)
-		pill.add_theme_font_size_override("font_size", 24)
+		pill.add_theme_font_size_override("font_size", 18)
 		name_row.add_child(pill)
 	elif PetManager.is_unseen(id):
 		var new_pill := Label.new()
 		new_pill.text = "NEW"
 		new_pill.add_theme_color_override("font_color", _accent)
-		new_pill.add_theme_font_size_override("font_size", 24)
+		new_pill.add_theme_font_size_override("font_size", 18)
 		name_row.add_child(new_pill)
 	var bonus := Label.new()
 	bonus.text = _bonus_text(def, PetManager.get_level(id))
 	bonus.add_theme_color_override("font_color", UIPalette.muted())
-	bonus.add_theme_font_size_override("font_size", 24)
+	bonus.add_theme_font_size_override("font_size", 18)
 	info.add_child(bonus)
 
 	if not is_active:

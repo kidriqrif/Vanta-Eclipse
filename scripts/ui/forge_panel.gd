@@ -71,7 +71,7 @@ func _build_slot_pickers() -> void:
 		button.icon = slot.icon
 		button.expand_icon = true
 		button.text = slot.display_name
-		button.add_theme_font_size_override("font_size", 24)
+		button.add_theme_font_size_override("font_size", 18)
 		button.pressed.connect(_on_slot_selected.bind(slot.id))
 		_slot_row.add_child(button)
 		_slot_buttons[slot.id] = button

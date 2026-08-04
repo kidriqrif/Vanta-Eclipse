@@ -107,7 +107,6 @@ func _end_refusal() -> void:
 
 func _style_tab(button: Button, active: bool) -> void:
 	var style := StyleBoxFlat.new()
-	style.set_corner_radius_all(12)
 	style.set_content_margin_all(10)
 	if active:
 		style.bg_color = UIPalette.raised()
@@ -158,7 +157,7 @@ func _muted_label(text: String) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.add_theme_color_override("font_color", UIPalette.muted())
-	label.add_theme_font_size_override("font_size", 26)
+	label.add_theme_font_size_override("font_size", 18)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return label
@@ -182,14 +181,14 @@ func _make_row(definition: QuestDefinition) -> PanelContainer:
 	var name_label := Label.new()
 	name_label.text = definition.display_name
 	name_label.add_theme_color_override("font_color", UIPalette.ink())
-	name_label.add_theme_font_size_override("font_size", 30)
+	name_label.add_theme_font_size_override("font_size", 27)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top.add_child(name_label)
 	var reward := Label.new()
 	reward.text = definition.format_reward()
 	reward.add_theme_color_override("font_color", _reward_ink(definition))
-	reward.add_theme_font_size_override("font_size", 24)
+	reward.add_theme_font_size_override("font_size", 18)
 	reward.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top.add_child(reward)
 
@@ -197,7 +196,7 @@ func _make_row(definition: QuestDefinition) -> PanelContainer:
 	var description := Label.new()
 	description.text = definition.description
 	description.add_theme_color_override("font_color", UIPalette.muted())
-	description.add_theme_font_size_override("font_size", 24)
+	description.add_theme_font_size_override("font_size", 18)
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	description.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(description)
@@ -217,13 +216,12 @@ func _make_row(definition: QuestDefinition) -> PanelContainer:
 	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var fill := StyleBoxFlat.new()
 	fill.bg_color = UIPalette.ink()
-	fill.set_corner_radius_all(12)
 	bar.add_theme_stylebox_override("fill", fill)
 	progress_row.add_child(bar)
 	var figure := Label.new()
 	figure.text = _progress_text(definition)
 	figure.add_theme_color_override("font_color", UIPalette.muted())
-	figure.add_theme_font_size_override("font_size", 24)
+	figure.add_theme_font_size_override("font_size", 18)
 	figure.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	figure.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	progress_row.add_child(figure)
@@ -235,7 +233,6 @@ func _make_row(definition: QuestDefinition) -> PanelContainer:
 
 func _card_style(definition: QuestDefinition) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.set_corner_radius_all(14)
 	style.set_content_margin_all(16)
 	# A claimed card recedes by dimming its GROUND, never the whole card:
 	# modulate propagates to children and would take the text with it.
@@ -259,7 +256,7 @@ func _make_action(definition: QuestDefinition) -> Control:
 		claim.pressed.connect(_on_claim_pressed.bind(definition.id))
 		return claim
 	var marker := Label.new()
-	marker.add_theme_font_size_override("font_size", 24)
+	marker.add_theme_font_size_override("font_size", 18)
 	marker.size_flags_horizontal = Control.SIZE_SHRINK_END
 	marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if QuestManager.is_claimed(definition):

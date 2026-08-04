@@ -26,7 +26,7 @@ theme_override_constants/separation = 16
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 18
 text = "Attempt 0 of 12 · 0 of 6 pairs"
 horizontal_alignment = 1
 
@@ -36,7 +36,7 @@ custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"HeaderLabel"
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 27
 text = ""
 horizontal_alignment = 1
 vertical_alignment = 1

@@ -46,7 +46,7 @@ stretch_mode = 5
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"PanelTitle"
-theme_override_font_sizes/font_size = 38
+theme_override_font_sizes/font_size = 27
 text = "THE FORGE"
 vertical_alignment = 1
 
@@ -54,13 +54,13 @@ vertical_alignment = 1
 unique_name_in_owner = true
 custom_minimum_size = Vector2(180, 96)
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 27
 text = "CLOSE"
 
 [node name="PromptLabel" type="Label" parent="Panel/PanelVBox"]
 layout_mode = 2
 theme_type_variation = &"HeaderLabel"
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 18
 text = "Forge a random item for a slot at your current level."
 horizontal_alignment = 1
 autowrap_mode = 3
@@ -78,14 +78,14 @@ theme_override_constants/separation = 14
 [node name="CostLabel" type="Label" parent="Panel/PanelVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 27
 text = "0 / 20 Void Scraps"
 horizontal_alignment = 1
 
 [node name="OddsLabel" type="Label" parent="Panel/PanelVBox"]
 layout_mode = 2
 theme_type_variation = &"HeaderLabel"
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 18
 text = "Common 74%  ·  Rare 20%  ·  Epic 5%  ·  Legendary 0.9%  ·  Mythic 0.1%"
 horizontal_alignment = 1
 autowrap_mode = 3

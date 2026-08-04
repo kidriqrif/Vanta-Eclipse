@@ -88,7 +88,6 @@ func _make_row(def: RelicDefinition, is_active: bool) -> PanelContainer:
 	var row := PanelContainer.new()
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.078, 0.078, 0.11, 0.92)
-	style.set_corner_radius_all(16)
 	style.set_content_margin_all(18)
 	style.set_border_width_all(2)
 	style.border_color = relic_gold() if is_active else UIPalette.line()
@@ -117,18 +116,18 @@ func _make_row(def: RelicDefinition, is_active: bool) -> PanelContainer:
 	var name_label := Label.new()
 	name_label.text = def.display_name
 	name_label.add_theme_color_override("font_color", relic_ivory())
-	name_label.add_theme_font_size_override("font_size", 30)
+	name_label.add_theme_font_size_override("font_size", 27)
 	name_row.add_child(name_label)
 	if is_active:
 		var active_pill := Label.new()
 		active_pill.text = "● ACTIVE"
 		active_pill.add_theme_color_override("font_color", relic_gold())
-		active_pill.add_theme_font_size_override("font_size", 24)
+		active_pill.add_theme_font_size_override("font_size", 18)
 		name_row.add_child(active_pill)
 	var effect := Label.new()
 	effect.text = def.effect_description
 	effect.add_theme_color_override("font_color", UIPalette.muted())
-	effect.add_theme_font_size_override("font_size", 24)
+	effect.add_theme_font_size_override("font_size", 18)
 	effect.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info.add_child(effect)
 

@@ -142,7 +142,6 @@ func _make_card(definition: MinigameDefinition) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var style := StyleBoxFlat.new()
-	style.set_corner_radius_all(14)
 	style.set_content_margin_all(16)
 	style.border_width_left = 4  # the arcade "one class" spine on every card
 	# A locked card recedes by dimming its BACKGROUND, never the whole card:
@@ -176,7 +175,7 @@ func _make_card(definition: MinigameDefinition) -> PanelContainer:
 	var name_label := Label.new()
 	name_label.text = definition.display_name
 	name_label.add_theme_color_override("font_color", UIPalette.ink())
-	name_label.add_theme_font_size_override("font_size", 30)
+	name_label.add_theme_font_size_override("font_size", 27)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -185,7 +184,7 @@ func _make_card(definition: MinigameDefinition) -> PanelContainer:
 		var best := Label.new()
 		best.text = "Best: %s" % NumberFormat.format(MinigameManager.get_best(definition.id))
 		best.add_theme_color_override("font_color", arcade())
-		best.add_theme_font_size_override("font_size", 24)
+		best.add_theme_font_size_override("font_size", 18)
 		best.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		best.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		top.add_child(best)
@@ -194,7 +193,7 @@ func _make_card(definition: MinigameDefinition) -> PanelContainer:
 	var description := Label.new()
 	description.text = definition.description
 	description.add_theme_color_override("font_color", UIPalette.muted())
-	description.add_theme_font_size_override("font_size", 24)
+	description.add_theme_font_size_override("font_size", 18)
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	description.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(description)
@@ -204,7 +203,7 @@ func _make_card(definition: MinigameDefinition) -> PanelContainer:
 		var locked := Label.new()
 		locked.text = "REACHES Lv. %d" % definition.unlock_level
 		locked.add_theme_color_override("font_color", UIPalette.muted())
-		locked.add_theme_font_size_override("font_size", 24)
+		locked.add_theme_font_size_override("font_size", 18)
 		locked.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(locked)
 		return card
@@ -249,7 +248,6 @@ func _dress_play_button(button: Button, definition: MinigameDefinition) -> void:
 func _paint_lime(button: Button) -> void:
 	var style := StyleBoxFlat.new()
 	style.bg_color = UIPalette.accent_deep()
-	style.set_corner_radius_all(6)
 	style.set_content_margin_all(16)
 	for state: String in ["normal", "hover", "pressed"]:
 		button.add_theme_stylebox_override(state, style)

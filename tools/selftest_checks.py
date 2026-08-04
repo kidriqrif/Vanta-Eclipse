@@ -37,6 +37,16 @@ COPY = [
     # complaint entirely — a mutation passing for a reason that has nothing to
     # do with the mutation.
     "audio",
+    # check_pixels.py decodes the launcher, store and feature-graphic PNGs.
+    # Without these the sandbox scans five fewer images than the real project,
+    # and its "did the glob match anything" guard would be measuring the
+    # sandbox rather than the repository.
+    "production",
+    # check_generated.py re-runs make_icons.py, which writes icon.png to the
+    # project root. Without this the sandbox has nowhere to compare it against
+    # and EVERY mutation aimed at that checker would be "caught" by a missing
+    # file rather than by the defect injected — a pass for the wrong reason.
+    "icon.png",
 ]
 
 # Anchors are exact and complete: .tres has no comment syntax, so a mutation
@@ -218,10 +228,19 @@ MUTATIONS: list[Mutation] = [
         "bg_color = Color(0.141, 0.141, 0.184, 1)",
     ),
     (
+        # This one INJECTS the PackedColorArray rather than editing an existing
+        # one, because the project no longer contains a single gradient — the
+        # menu divider was the last, and it is a stepped PNG now. The parser
+        # branch it exercises is kept anyway: check_ui.py's colour scan reads
+        # Color() calls, and a gradient spells its stops as a flat RGBA run
+        # that the Color() pattern walks straight past. That is how a violet
+        # divider survived the entire palette overhaul. Nothing else in the
+        # sweep can catch this line, so a pass here means that branch is live.
         "check_ui.py",
         "an off-palette hue hides inside a gradient's PackedColorArray",
         "scenes/main_menu/main_menu.tscn",
-        "colors = PackedColorArray(0.91, 0.196, 0.235, 0, 0.91, 0.196, 0.235, 0.8, 0.91, 0.196, 0.235, 0)",
+        'texture = ExtResource("5")',
+        'texture = ExtResource("5")\n'
         "colors = PackedColorArray(0.545, 0.361, 0.965, 0, 0.655, 0.545, 0.98, 0.8, "
         "0.545, 0.361, 0.965, 0)",
     ),
@@ -296,6 +315,58 @@ MUTATIONS: list[Mutation] = [
         "scenes/journal/journal.tscn",
         'theme_type_variation = &"TitleLabel"',
         'theme_type_variation = &"HeaderLabel"',
+    ),
+    (
+        "check_ui.py",
+        "a font size off the 9px glyph box, so the bitmap font resamples",
+        "scenes/gameplay/gameplay.tscn",
+        "font_size = 27",
+        "font_size = 26",
+    ),
+    (
+        "check_ui.py",
+        "a rounded corner returns to a StyleBox",
+        "scenes/gear/loot_toast.tscn",
+        "corner_radius_top_left = 0",
+        "corner_radius_top_left = 24",
+    ),
+    (
+        "check_ui.py",
+        "a soft drop shadow returns to the theme's panels",
+        "ui/theme/main_theme.tres",
+        "border_color = Color(0.239, 0.239, 0.306, 1)",
+        "border_color = Color(0.239, 0.239, 0.306, 1)\nshadow_size = 40",
+    ),
+    (
+        # A generator edited but not re-run: the source of truth and the
+        # shipped bytes now disagree, and whichever one you read is wrong.
+        # Nothing else in the sweep compares them — check_pixels.py would
+        # still pass, because the stale atlas is perfectly on-palette.
+        "check_generated.py",
+        "a generator is edited without regenerating what it produces",
+        "tools/make_font.py",
+        "ADVANCE = 6",
+        "ADVANCE = 7",
+    ),
+    (
+        "check_architecture.py",
+        "a document goes on naming a file the project has deleted",
+        "docs/ARCHITECTURE.md",
+        "`effects/pixel_sprite.gdshader` replaced it",
+        "`effects/dimensional_sprite.gdshader` replaced it",
+    ),
+    (
+        # Mutates the PALETTE rather than a PNG, because the mutation harness
+        # does text find/replace and a PNG is bytes. It is the stronger test
+        # anyway: the sprites on disk still hold the OLD crimson, so moving the
+        # palette entry leaves every crimson pixel in the project stranded
+        # off-palette. Nothing but actually decoding the images can see that,
+        # which is the one thing this check exists to do.
+        "check_pixels.py",
+        "the palette drifts away from the art already generated from it",
+        "tools/pixelart.py",
+        '"crimson": "#E8323C",',
+        '"crimson": "#E8323D",',
     ),
 ]
 

@@ -320,7 +320,6 @@ func _style_door_button(button: Button, icon: Texture2D) -> void:
 	button.add_theme_color_override("font_hover_color", Color.WHITE)
 	var style := StyleBoxFlat.new()
 	style.bg_color = UIPalette.surface()
-	style.set_corner_radius_all(6)
 	style.set_content_margin_all(12)
 	style.set_border_width_all(2)
 	style.border_color = UIPalette.line()
@@ -347,7 +346,6 @@ func _style_journal_button() -> void:
 	_journal_button.icon = JOURNAL_TEXTURE
 	var style := StyleBoxFlat.new()
 	style.bg_color = UIPalette.surface()
-	style.set_corner_radius_all(6)
 	style.set_content_margin_all(8)
 	style.set_border_width_all(2)
 	style.border_color = UIPalette.line()

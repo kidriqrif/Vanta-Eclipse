@@ -43,13 +43,13 @@ theme_override_colors/font_shadow_color = Color(0.031, 0.031, 0.047, 0.5)
 theme_override_constants/outline_size = 6
 theme_override_constants/shadow_offset_x = 0
 theme_override_constants/shadow_offset_y = 4
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 36
 text = "AUTO-ATTACK UNLOCKED"
 horizontal_alignment = 1
 
 [node name="BodyLabel" type="Label" parent="ToastPanel/ToastVBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 18
 text = "Your hero fights on, even when you're not tapping."
 horizontal_alignment = 1
 autowrap_mode = 3

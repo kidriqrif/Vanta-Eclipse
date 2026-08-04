@@ -110,14 +110,14 @@ func _build_info() -> void:
 	_salvage_button.visible = false
 	var title := Label.new()
 	title.text = _info_title
-	title.add_theme_font_size_override("font_size", 40)
+	title.add_theme_font_size_override("font_size", 36)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_body.add_child(title)
 	if _info_subtitle != "":
 		var sub := Label.new()
 		sub.text = _info_subtitle
 		sub.add_theme_color_override("font_color", UIPalette.muted())
-		sub.add_theme_font_size_override("font_size", 26)
+		sub.add_theme_font_size_override("font_size", 18)
 		sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_body.add_child(sub)
 	var spacer := Control.new()
@@ -125,7 +125,7 @@ func _build_info() -> void:
 	_body.add_child(spacer)
 	var body := Label.new()
 	body.text = _info_body
-	body.add_theme_font_size_override("font_size", 28)
+	body.add_theme_font_size_override("font_size", 18)
 	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_body.add_child(body)
@@ -141,14 +141,14 @@ func _build_header(rarity: int) -> void:
 	var slot_name: String = slot_def.display_name if slot_def != null else str(_item["slot"])
 	name_label.text = "%s %s" % [RarityStyle.rarity_name(rarity), slot_name]
 	name_label.add_theme_color_override("font_color", RarityStyle.color(rarity))
-	name_label.add_theme_font_size_override("font_size", 44)
+	name_label.add_theme_font_size_override("font_size", 36)
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_body.add_child(name_label)
 
 	var sub := Label.new()
 	sub.text = "Item Level %d" % int(_item["item_level"])
 	sub.add_theme_color_override("font_color", UIPalette.muted())
-	sub.add_theme_font_size_override("font_size", 26)
+	sub.add_theme_font_size_override("font_size", 18)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_body.add_child(sub)
 
@@ -158,7 +158,7 @@ func _build_affix_list() -> void:
 	for id: StringName in affixes:
 		var row := Label.new()
 		row.text = EquipmentManager.format_affix(id, affixes[id])
-		row.add_theme_font_size_override("font_size", 30)
+		row.add_theme_font_size_override("font_size", 27)
 		row.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_body.add_child(row)
 
@@ -174,7 +174,7 @@ func _build_compare() -> void:
 	var header := Label.new()
 	header.text = "vs equipped:"
 	header.add_theme_color_override("font_color", UIPalette.muted())
-	header.add_theme_font_size_override("font_size", 24)
+	header.add_theme_font_size_override("font_size", 18)
 	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_body.add_child(header)
 
@@ -198,7 +198,7 @@ func _build_compare() -> void:
 		var label := Label.new()
 		label.text = "%s %s %s%s" % [arrow, _affix_label(id), sign_str, shown]
 		label.add_theme_color_override("font_color", UP_COLOR if up else DOWN_COLOR)
-		label.add_theme_font_size_override("font_size", 26)
+		label.add_theme_font_size_override("font_size", 18)
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_body.add_child(label)
 

@@ -85,7 +85,6 @@ func _set_active_tab(ascend: bool) -> void:
 
 func _style_tab(button: Button, active: bool) -> void:
 	var style := StyleBoxFlat.new()
-	style.set_corner_radius_all(12)
 	style.set_content_margin_all(10)
 	if active:
 		style.bg_color = crystal_deep()
@@ -120,16 +119,16 @@ func _build_ascend() -> void:
 	var reward: int = PrestigeManager.crystal_reward()
 
 	var lead := _centered_label(
-		"Collapsing this run yields" if can else "Not ready to collapse", 28, UIPalette.muted()
+		"Collapsing this run yields" if can else "Not ready to collapse", 18, UIPalette.muted()
 	)
 	_ascend_box.add_child(lead)
 
 	var yield_text: String = "◆ %s Void Crystals" % NumberFormat.format(float(reward)) if can \
 		else "Reach Lv. %d this run" % PrestigeManager.ECLIPSE_UNLOCK_LEVEL
-	_ascend_box.add_child(_centered_label(yield_text, 48, crystal()))
+	_ascend_box.add_child(_centered_label(yield_text, 36, crystal()))
 
 	_ascend_box.add_child(_centered_label(
-		"Run peak: Lv. %d" % PrestigeManager.run_peak_level, 24, UIPalette.muted()
+		"Run peak: Lv. %d" % PrestigeManager.run_peak_level, 18, UIPalette.muted()
 	))
 
 	var columns := HBoxContainer.new()
@@ -147,7 +146,7 @@ func _build_ascend() -> void:
 	var note := Label.new()
 	note.text = "*Auto-Attack is re-earned at Lv. 15 — unless Eternal Reflex is owned."
 	note.add_theme_color_override("font_color", UIPalette.muted())
-	note.add_theme_font_size_override("font_size", 24)
+	note.add_theme_font_size_override("font_size", 18)
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ascend_box.add_child(note)
@@ -170,7 +169,6 @@ func _make_summary_column(title: String, accent: Color, items: Array) -> PanelCo
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var style := StyleBoxFlat.new()
 	style.bg_color = UIPalette.surface()
-	style.set_corner_radius_all(14)
 	style.set_content_margin_all(16)
 	panel.add_theme_stylebox_override("panel", style)
 	var box := VBoxContainer.new()
@@ -180,14 +178,14 @@ func _make_summary_column(title: String, accent: Color, items: Array) -> PanelCo
 	var header := Label.new()
 	header.text = title
 	header.add_theme_color_override("font_color", accent)
-	header.add_theme_font_size_override("font_size", 26)
+	header.add_theme_font_size_override("font_size", 18)
 	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(header)
 	for item: String in items:
 		var row := Label.new()
 		row.text = "· %s" % item
 		row.add_theme_color_override("font_color", UIPalette.ink())
-		row.add_theme_font_size_override("font_size", 24)
+		row.add_theme_font_size_override("font_size", 18)
 		row.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(row)
@@ -209,7 +207,6 @@ func _centered_label(text: String, size: int, color: Color) -> Label:
 
 func _style_collapse(armed: bool) -> void:
 	var style := StyleBoxFlat.new()
-	style.set_corner_radius_all(14)
 	style.set_content_margin_all(14)
 	style.bg_color = crystal() if armed else crystal_deep()
 	style.border_color = crystal()
@@ -281,7 +278,7 @@ func _make_branch_header(title: String) -> VBoxContainer:
 	var header := Label.new()
 	header.text = title.to_upper()
 	header.theme_type_variation = &"HeaderLabel"
-	header.add_theme_font_size_override("font_size", 30)
+	header.add_theme_font_size_override("font_size", 27)
 	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(header)
 	var rule := Panel.new()
@@ -302,7 +299,6 @@ func _make_node_card(def: SkillNodeDefinition) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var style := StyleBoxFlat.new()
-	style.set_corner_radius_all(14)
 	style.set_content_margin_all(16)
 	style.border_width_left = 4  # the prestige "one class" spine on every card
 	# A locked node recedes by dimming its BACKGROUND and spine, never the text:
@@ -329,7 +325,7 @@ func _make_node_card(def: SkillNodeDefinition) -> PanelContainer:
 	var name_label := Label.new()
 	name_label.text = def.display_name
 	name_label.add_theme_color_override("font_color", UIPalette.ink())
-	name_label.add_theme_font_size_override("font_size", 30)
+	name_label.add_theme_font_size_override("font_size", 27)
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	name_row.add_child(name_label)
@@ -340,7 +336,7 @@ func _make_node_card(def: SkillNodeDefinition) -> PanelContainer:
 	else:
 		marker.text = "● Lv. %d / %d" % [level, def.max_level]
 		marker.add_theme_color_override("font_color", crystal())
-	marker.add_theme_font_size_override("font_size", 24)
+	marker.add_theme_font_size_override("font_size", 18)
 	marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	name_row.add_child(marker)
 
@@ -348,7 +344,7 @@ func _make_node_card(def: SkillNodeDefinition) -> PanelContainer:
 	var effect := Label.new()
 	effect.text = _effect_line(def, level)
 	effect.add_theme_color_override("font_color", UIPalette.muted())
-	effect.add_theme_font_size_override("font_size", 24)
+	effect.add_theme_font_size_override("font_size", 18)
 	effect.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	effect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(effect)
@@ -363,7 +359,7 @@ func _make_action(def: SkillNodeDefinition, maxed: bool, locked: bool) -> Contro
 		var done := Label.new()
 		done.text = "● MAXED"
 		done.add_theme_color_override("font_color", crystal_core())
-		done.add_theme_font_size_override("font_size", 26)
+		done.add_theme_font_size_override("font_size", 18)
 		done.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		return done
 	if locked:
@@ -372,7 +368,7 @@ func _make_action(def: SkillNodeDefinition, maxed: bool, locked: bool) -> Contro
 		var prereq_name: String = prereq.display_name if prereq != null else String(def.prereq_id)
 		req.text = "REQUIRES %s Lv. %d" % [prereq_name, def.prereq_level]
 		req.add_theme_color_override("font_color", UIPalette.muted())
-		req.add_theme_font_size_override("font_size", 24)
+		req.add_theme_font_size_override("font_size", 18)
 		req.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		req.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		return req

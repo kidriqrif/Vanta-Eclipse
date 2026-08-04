@@ -51,6 +51,9 @@ var _taken: int = 0
 var _skipped: int = 0
 var _layout_problems: int = 0
 var _controls_seen: int = 0
+var _font_problems: int = 0
+var _text_controls_seen: int = 0
+var _glyph_box: int = -1
 ## Scenes _goto() asked for and did not get. Any at all invalidates the run.
 var _scene_failures: int = 0
 var _probe: bool = false
@@ -88,6 +91,22 @@ func _ready() -> void:
 		print("LAYOUT: OK — %d controls inspected, none overflow or clip" % _controls_seen)
 	else:
 		print("LAYOUT: %d problem(s) across %d controls" % [_layout_problems, _controls_seen])
+
+	# The font verdict is separate from the layout verdict and carries its own
+	# "did it look at anything" guard, because the two walk different sets: a
+	# screen of icons has plenty of controls and no text at all.
+	if _scene_failures > 0:
+		print("FONT: INCONCLUSIVE — %d scene(s) never loaded" % _scene_failures)
+	elif _glyph_box_size() <= 0:
+		print("FONT: INCONCLUSIVE — vanta_pixel.fnt did not load; nothing was resolved")
+	elif _only.is_empty() and _text_controls_seen < 100:
+		print("FONT: INCONCLUSIVE — only %d text controls inspected" % _text_controls_seen)
+	elif _font_problems == 0:
+		print("FONT: OK — %d text controls, every size a whole multiple of %dpx"
+			% [_text_controls_seen, _glyph_box_size()])
+	else:
+		print("FONT: %d control(s) of %d render at a fractional glyph scale"
+			% [_font_problems, _text_controls_seen])
 	# Leaks ~11 ObjectDB instances because this quits mid-await. That warning is
 	# the harness, not the game: a plain --quit-after boot exits clean.
 	get_tree().quit()
@@ -327,7 +346,10 @@ func _bestiary_cell(label_text: String, texture: Texture2D, glow: Color) -> Cont
 	var caption := Label.new()
 	caption.text = label_text
 	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	caption.add_theme_font_size_override("font_size", 22)
+	# 18, not 22: a multiple of the 9px glyph box. The sheet exists to judge
+	# art, so a caption on it resampling at 2.44 boxes is the one place a soft
+	# glyph is actively misleading.
+	caption.add_theme_font_size_override("font_size", 18)
 	cell.add_child(caption)
 	return cell
 
@@ -482,9 +504,17 @@ func _audit_layout(shot_name: String) -> void:
 			_walk_controls(banner, view, problems, false)
 	if problems.is_empty():
 		return
+	var font_faults: int = 0
 	for problem: String in problems:
-		print("LAYOUT: %s  %s" % [shot_name, problem])
-	_layout_problems += problems.size()
+		if problem.begins_with("FONTSIZE"):
+			font_faults += 1
+			print("FONT: %s  %s" % [shot_name, problem])
+		else:
+			print("LAYOUT: %s  %s" % [shot_name, problem])
+	# Counted apart from the layout total so each verdict reports only what it
+	# measured. A font fault is not an overflow, and rolling them together
+	# would let a clean layout read as broken and vice versa.
+	_layout_problems += problems.size() - font_faults
 
 
 ## VANTA_LAYOUT_PROBE=1 plants one control off the right edge and one Label
@@ -518,6 +548,15 @@ func _inject_probe(scene: Node) -> void:
 	squeezed.text = "a line of text far too long for the box it has been given"
 	squeezed.autowrap_mode = TextServer.AUTOWRAP_OFF
 	box.add_child(squeezed)
+
+	# One label at a size the bitmap font cannot render exactly. The font audit
+	# must report it, for the same reason the two above exist: a walk that
+	# resolves no font sizes at all prints the same "OK" as a clean one.
+	var fractional := Label.new()
+	fractional.name = "__probe_font_size"
+	fractional.text = "resampled"
+	fractional.add_theme_font_size_override("font_size", maxi(1, _glyph_box_size()) + 1)
+	holder.add_child(fractional)
 
 
 func _walk_controls(
@@ -553,8 +592,60 @@ func _walk_controls(
 			if label.autowrap_mode == TextServer.AUTOWRAP_OFF 					and not label.text.is_empty() and parent != null 					and parent.size.x > 1.0 					and label.size.x > parent.size.x + 1.0:
 				problems.append("OVERHANG %s is %.0fpx inside a %.0fpx %s — \"%s\""
 					% [label.name, label.size.x, parent.size.x, parent.name, label.text])
+		_audit_font_size(control, problems)
 	for child: Node in node.get_children():
 		_walk_controls(child, view, problems, inside_scroll)
+
+
+## The one size vanta_pixel actually contains, read from the font rather than
+## written down here. A constant would be free to disagree with the shipped
+## atlas; FontFile.fixed_size cannot.
+func _glyph_box_size() -> int:
+	if _glyph_box < 0:
+		var font := load("res://fonts/vanta_pixel.fnt") as FontFile
+		_glyph_box = font.fixed_size if font != null else 0
+	return _glyph_box
+
+
+## Fails any text control resolving to a size the bitmap font cannot render
+## exactly.
+##
+## vanta_pixel's glyphs are 9px tall and exist at that size only. Godot serves
+## another size by scaling the atlas: at a whole multiple every source pixel
+## becomes an even block and the glyph is the one the font contains, but at 26
+## the factor is 2.889, stems land between pixels and get resampled. The result
+## is a soft, unevenly-weighted glyph — the exact smooth look the revamp
+## removed, reintroduced in the thing a player reads.
+##
+## This runs at RUNTIME, against what the engine resolved, because that is the
+## only place the answer is complete. Grepping for `font_size = N` finds the
+## literals and misses everything else: a LabelSettings resource bypasses the
+## theme entirely, and a size passed positionally into a helper is just an
+## integer argument at the call site. Three of those were live in eclipse.gd
+## after a pass that had "fixed" every literal in the project.
+func _audit_font_size(control: Control, problems: PackedStringArray) -> void:
+	var box: int = _glyph_box_size()
+	if box <= 0:
+		return  # the font failed to load; _check_font_loaded reports that
+	var size: int = -1
+	if control is Label:
+		var label: Label = control
+		# LabelSettings wins over every theme item when it is set, so reading
+		# the theme here would report a size this label does not use.
+		size = (
+			label.label_settings.font_size if label.label_settings != null
+			else label.get_theme_font_size(&"font_size")
+		)
+	elif control is Button or control is RichTextLabel:
+		size = control.get_theme_font_size(&"font_size")
+	else:
+		return
+	_text_controls_seen += 1
+	if size > 0 and size % box != 0:
+		problems.append("FONTSIZE %s renders at %dpx, which is %.2f glyph boxes — "
+			% [control.name, size, float(size) / float(box)]
+			+ "a bitmap font only scales exactly at whole multiples of %d" % box)
+		_font_problems += 1
 
 
 func _shot(shot_name: String) -> void:

@@ -67,7 +67,6 @@ func _make_timer(handler: Callable) -> Timer:
 func _style_ring() -> void:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color.TRANSPARENT
-	style.set_corner_radius_all(200)
 	style.set_border_width_all(10)
 	style.border_color = ARCADE_CORE
 	_sigil_ring.add_theme_stylebox_override("panel", style)

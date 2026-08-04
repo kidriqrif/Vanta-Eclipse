@@ -57,14 +57,25 @@ Three rules hold it together, and each exists because breaking it produced a
 visible bug:
 
 * **Nothing scales by a fraction.** Sprites, font sizes and icons are all
-  integer multiples of what was authored. Theme font sizes are multiples of 9
-  (the glyph box) for that reason; the icon grids are 32 and 27 because
-  512/192/432 divide by them.
+  integer multiples of what was authored. **Every** font size in the project
+  is a multiple of 9 — the glyph box — because vanta_pixel is a bitmap face
+  that exists at 9px and nowhere else, so any other size is Godot resampling
+  the atlas. The icon grids are 32 and 27 because 512/192/432 divide by them.
+  The revamp converted the theme and left the scenes and scripts on their
+  Nunito-era values, so 135 of 145 sizes were resampling on a "finished"
+  restyle; `tools/snap_font_sizes.py` fixes them and `check_ui.py` fails the
+  sweep on any that come back.
+* **Surfaces are flat.** No corner radii, no soft shadows, no gradients — each
+  needs colours between the ones the palette gives it. A falloff is spelled as
+  solid pixels at falling density (`ground_glow()`) or as hard steps
+  (`menu_divider()`). `check_ui.py` fails the sweep on all three.
 * **`void` is the background, never a fill.** A void-filled body is not a dark
   shape, it is a hole.
 * **The palette is closed.** `check_ui.py` fails the sweep on any UI colour
-  that is not one of the sixteen, and `check_glyphs.py` fails it on any
-  rendered character the font has no glyph for.
+  that is not one of the sixteen, `check_pixels.py` fails it on any *pixel* of
+  any shipped PNG that is not one of the sixteen — 1.3M pixels across 59
+  images, which no source-file scan can see — and `check_glyphs.py` fails it
+  on any rendered character the font has no glyph for.
 
 ## Communication rules
 
@@ -274,38 +285,48 @@ body → title) and nine hues do meaning (element, rarity, currency, danger).
   any Android device produces, so what fits there fits everywhere.
   `tools/aspect_matrix.sh` proves it across seven device shapes.
 
-### Giving flat art depth
+### Where the shading lives
 
-The sprites are SVGs — clean shapes with a crisp alpha silhouette and no
-shading of their own. Rather than author a normal map per sprite,
-`effects/dimensional_sprite.gdshader` **derives the surface normal from the
-alpha channel**: the alpha gradient points into the shape, so its negation is
-the direction the surface faces, and sampling that gradient several pixels out
-turns a hard edge into a rounded bevel. That normal then drives Lambert
-diffuse, a rim term, and a Blinn-Phong highlight.
+The sprites are indexed pixel art: a 64×64 PNG whose every pixel is one of the
+sixteen palette colours, drawn with its own lit/mid/shadow ramp already in it
+(`tools/make_sprites.py`). **The art is shaded; the shader is not.** That is
+the inversion from the previous style and it is the whole architecture of this
+layer.
 
-This matters architecturally because it is *free to adopt*: any sprite in the
-project gets lit by assigning `effects/dimensional_sprite_material.tres`, with
-no new art and no per-sprite setup. The material is
-`resource_local_to_scene`, so a screen may retint its uniforms without
-affecting other users — `enemy_view.gd` retints `rim_color` per enemy from
-`EnemyDefinition.glow_color`.
+Before the revamp the sprites were SVGs — smooth shapes with no shading of
+their own — and **dimensional_sprite.gdshader** (deleted) supplied all of it,
+deriving a fake surface normal from the alpha gradient and running Lambert
+diffuse, a rim term and a Blinn-Phong highlight over it. That shader was correct for 512px
+vector art and actively destructive here: on a 64px sprite scaled 8× it
+averaged a seven-texel bevel across pixels that were the image, then
+desaturated the result against a 0.42 grey ambient. The first pixel-art render
+came out a blurred grey smudge, and the sprites were not the reason.
+
+`effects/pixel_sprite.gdshader` replaced it and does one thing: a hard
+**one-texel outline** in the creature's own colour, so the silhouette stays off
+the background. It measures that texel with `TEXTURE_PIXEL_SIZE`, which is in
+UV units of the *source* image, so the halo is one source pixel thick at any
+scale and never drifts off the art's own grid. Adoption is still free — assign
+`effects/pixel_sprite_material.tres` — and the material is still
+`resource_local_to_scene`, so `enemy_view.gd` retints `rim_color` per enemy
+from `EnemyDefinition.glow_color`. The uniform kept its old name precisely so
+that call site did not have to change.
 
 Two rules for anything that adopts it:
 
 1. **Modify `COLOR` in place; never rebuild it from `TEXTURE`.** Whatever Godot
    put in `COLOR` already carries the node's modulate, so hit flashes, fades,
    and every `modulate` tween keep working. The shader relies on this.
-2. **Light needs ground.** A lit sprite with no shadow reads as a sticker.
-   Pair the material with a contact shadow (`resources/textures/soft_dot.tres`
-   squashed into an ellipse) and counter-animate it against any hover — see
-   `enemy_view.gd`, where the plate tightens and fades on the same curve as
-   the bob.
+2. **A creature needs ground.** A sprite with nothing under it reads as a
+   sticker. Pair it with `sprites/ui/ground_glow.png` — a dithered pool, not a
+   blurred ellipse — and counter-animate it against any hover; see
+   `enemy_view.gd`, where the pool tightens and fades on the same curve as the
+   bob.
 
-Budget: 8 texture taps, no branches, no loops, one pass — sized for the
-`mobile` renderer and low-end Android. `tools/check_shaders.py` guards the
-parts that fail silently: a `shader_parameter` or `set_shader_parameter()`
-naming a uniform that does not exist is discarded without an error anywhere.
+Budget: 5 texture taps, one branch, no loops, one pass — sized for the `mobile`
+renderer and low-end Android. `tools/check_shaders.py` guards the parts that
+fail silently: a `shader_parameter` or `set_shader_parameter()` naming a
+uniform that does not exist is discarded without an error anywhere.
 
 ## Conventions
 

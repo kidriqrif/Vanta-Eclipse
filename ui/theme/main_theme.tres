@@ -241,8 +241,6 @@ corner_radius_top_left = 0
 corner_radius_top_right = 0
 corner_radius_bottom_right = 0
 corner_radius_bottom_left = 0
-shadow_color = Color(0.031, 0.031, 0.047, 0.75)
-shadow_size = 40
 
 ; Sliding overlays (the Forge, the Relics list, the Upgrade shop) COVER the
 ; screen behind them rather than floating over a scrim, so unlike every other
@@ -259,8 +257,6 @@ border_width_top = 2
 border_color = Color(0.239, 0.239, 0.306, 1)
 corner_radius_top_left = 0
 corner_radius_top_right = 0
-shadow_color = Color(0.031, 0.031, 0.047, 0.7)
-shadow_size = 34
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_boss_pb_bg"]
 bg_color = Color(0.078, 0.078, 0.11, 1)

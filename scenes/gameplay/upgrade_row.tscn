@@ -14,10 +14,10 @@ border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0.141, 0.141, 0.184, 0.7)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
-corner_radius_bottom_right = 14
-corner_radius_bottom_left = 14
+corner_radius_top_left = 0
+corner_radius_top_right = 0
+corner_radius_bottom_right = 0
+corner_radius_bottom_left = 0
 
 [node name="UpgradeRow" type="PanelContainer"]
 theme_override_styles/panel = SubResource("StyleBoxFlat_row")
@@ -36,14 +36,14 @@ theme_override_constants/separation = 6
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"PanelTitle"
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 27
 text = "Upgrade"
 
 [node name="DescLabel" type="Label" parent="RowHBox/InfoVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HeaderLabel"
-theme_override_font_sizes/font_size = 25
+theme_override_font_sizes/font_size = 18
 text = "Description"
 autowrap_mode = 3
 
@@ -51,7 +51,7 @@ autowrap_mode = 3
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"AccentLabel"
-theme_override_font_sizes/font_size = 25
+theme_override_font_sizes/font_size = 18
 text = "Lv. 0"
 
 [node name="BuyButton" type="Button" parent="RowHBox"]
@@ -60,7 +60,7 @@ custom_minimum_size = Vector2(250, 120)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_constants/icon_max_width = 40
-theme_override_font_sizes/font_size = 34
+theme_override_font_sizes/font_size = 27
 text = "0"
 icon = ExtResource("2")
 expand_icon = true

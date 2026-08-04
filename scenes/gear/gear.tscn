@@ -49,7 +49,7 @@ text = "BACK"
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"TitleLabel"
-theme_override_font_sizes/font_size = 56
+theme_override_font_sizes/font_size = 45
 text = "GEAR"
 horizontal_alignment = 1
 
@@ -69,7 +69,7 @@ stretch_mode = 5
 [node name="ScrapsLabel" type="Label" parent="MarginContainer/VBox/HeaderRow/ScrapsDisplay"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 34
+theme_override_font_sizes/font_size = 27
 text = "0"
 vertical_alignment = 1
 
@@ -96,7 +96,7 @@ theme_override_constants/separation = 16
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"HeaderLabel"
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 27
 text = "INVENTORY"
 vertical_alignment = 1
 
@@ -104,7 +104,7 @@ vertical_alignment = 1
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 18
 text = "Salvage Commons"
 
 [node name="InventoryScroll" type="ScrollContainer" parent="MarginContainer/VBox"]
@@ -122,7 +122,7 @@ theme_override_constants/separation = 12
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HeaderLabel"
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 18
 text = "No items yet — defeat enemies to find gear."
 horizontal_alignment = 1
 

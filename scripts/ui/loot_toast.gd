@@ -62,11 +62,9 @@ func _render() -> void:
 		_label.text = _label_text
 	_label.add_theme_color_override("font_color", RarityStyle.color(_rarity))
 	var style: StyleBoxFlat = _panel.get_theme_stylebox("panel").duplicate()
+	# The border is the rarity signal; the soft glow that used to sit behind it
+	# was the same colour spread over 10px of blur.
 	style.border_color = RarityStyle.color(_rarity)
-	var glow: Color = RarityStyle.color(_rarity)
-	glow.a = 0.25
-	style.shadow_color = glow
-	style.shadow_size = 10
 	_panel.add_theme_stylebox_override("panel", style)
 
 

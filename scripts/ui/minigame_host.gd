@@ -106,7 +106,6 @@ func _style_quit(armed: bool) -> void:
 		return
 	var style := StyleBoxFlat.new()
 	style.bg_color = UIPalette.accent()
-	style.set_corner_radius_all(12)
 	style.set_content_margin_all(10)
 	for state: String in ["normal", "hover", "pressed"]:
 		_quit_button.add_theme_stylebox_override(state, style)

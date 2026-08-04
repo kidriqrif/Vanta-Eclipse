@@ -39,7 +39,7 @@ unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"HeaderLabel"
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 36
 text = "HEADLINE"
 horizontal_alignment = 1
 
@@ -47,7 +47,7 @@ horizontal_alignment = 1
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 18
 text = "Body"
 horizontal_alignment = 1
 autowrap_mode = 3

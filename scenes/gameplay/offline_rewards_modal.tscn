@@ -56,7 +56,7 @@ theme_type_variation = &"TitleLabel"
 theme_override_constants/outline_size = 6
 theme_override_constants/shadow_offset_y = 4
 theme_override_constants/shadow_outline_size = 8
-theme_override_font_sizes/font_size = 44
+theme_override_font_sizes/font_size = 36
 text = "WELCOME BACK"
 
 [node name="StarRight" type="TextureRect" parent="Card/CardVBox/TitleRow"]
@@ -69,7 +69,7 @@ stretch_mode = 5
 
 [node name="SubtitleLabel" type="Label" parent="Card/CardVBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 27
 text = "Your hero kept fighting while you were away."
 horizontal_alignment = 1
 autowrap_mode = 3
@@ -92,14 +92,14 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 mouse_filter = 0
-theme_override_font_sizes/font_size = 48
+theme_override_font_sizes/font_size = 36
 text = "+0 Essence"
 vertical_alignment = 1
 
 [node name="HoldHintLabel" type="Label" parent="Card/CardVBox"]
 layout_mode = 2
 theme_type_variation = &"HeaderLabel"
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 18
 text = "(tap and hold for exact amount)"
 horizontal_alignment = 1
 
@@ -107,7 +107,7 @@ horizontal_alignment = 1
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HeaderLabel"
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 18
 text = "Away for 0m"
 horizontal_alignment = 1
 
@@ -116,7 +116,7 @@ unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_type_variation = &"HeaderLabel"
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 18
 text = "(offline earnings cap at 8h)"
 horizontal_alignment = 1
 

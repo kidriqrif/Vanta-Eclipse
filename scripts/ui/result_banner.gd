@@ -9,9 +9,7 @@ extends CanvasLayer
 ## depth-1 queue so banners never stack on layer 50.
 
 const WIN_BORDER: Color = Color(0.91, 0.196, 0.235, 0.9)
-const WIN_SHADOW: Color = Color(0.91, 0.196, 0.235, 0.3)
 const NEUTRAL_BORDER: Color = Color(0.141, 0.141, 0.184, 0.8)
-const NEUTRAL_SHADOW: Color = Color(0.031, 0.031, 0.047, 0.5)
 const WIN_HEADLINE_OUTLINE: Color = Color(0.478, 0.055, 0.11, 0.55)
 
 var _icon: Texture2D
@@ -41,9 +39,9 @@ func _ready() -> void:
 	# Win celebrates in the reward violet; fail stays neutral — failure
 	# copy redirects, it never scolds (UX spec §3C).
 	var stylebox: StyleBoxFlat = _panel.get_theme_stylebox("panel").duplicate()
+	# Win and loss are told apart by the border colour. An 18px blurred halo
+	# behind it was the old style's way of saying "this one matters".
 	stylebox.border_color = WIN_BORDER if _is_win else NEUTRAL_BORDER
-	stylebox.shadow_color = WIN_SHADOW if _is_win else NEUTRAL_SHADOW
-	stylebox.shadow_size = 18 if _is_win else 12
 	_panel.add_theme_stylebox_override("panel", stylebox)
 	if _is_win:
 		_headline_label.add_theme_color_override("font_color", UIPalette.title())

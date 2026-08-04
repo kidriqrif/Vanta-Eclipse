@@ -13,12 +13,10 @@ border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
 border_color = Color(0.722, 0.722, 0.784, 1)
-corner_radius_top_left = 24
-corner_radius_top_right = 24
-corner_radius_bottom_right = 24
-corner_radius_bottom_left = 24
-shadow_color = Color(0.031, 0.031, 0.047, 0.5)
-shadow_size = 10
+corner_radius_top_left = 0
+corner_radius_top_right = 0
+corner_radius_bottom_right = 0
+corner_radius_bottom_left = 0
 
 [node name="LootToast" type="CanvasLayer"]
 layer = 50
@@ -62,6 +60,6 @@ mouse_filter = 2
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 27
 text = "Common Weapon"
 vertical_alignment = 1

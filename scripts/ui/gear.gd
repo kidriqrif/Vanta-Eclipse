@@ -104,7 +104,6 @@ func _make_relic_tile() -> Button:
 	tile.custom_minimum_size = SLOT_TILE_SIZE
 	var style := StyleBoxFlat.new()
 	style.bg_color = UIPalette.raised()
-	style.set_corner_radius_all(6)
 	style.set_content_margin_all(12)
 	style.set_border_width_all(3)
 	style.border_color = UIPalette.ink()
@@ -117,7 +116,7 @@ func _make_relic_tile() -> Button:
 	var kicker := Label.new()
 	kicker.text = "RELIC"
 	kicker.add_theme_color_override("font_color", UIPalette.ink())
-	kicker.add_theme_font_size_override("font_size", 24)
+	kicker.add_theme_font_size_override("font_size", 18)
 	kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(kicker)
 
@@ -129,7 +128,7 @@ func _make_relic_tile() -> Button:
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(icon)
 	var sub := Label.new()
-	sub.add_theme_font_size_override("font_size", 24)
+	sub.add_theme_font_size_override("font_size", 18)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(sub)
@@ -154,7 +153,6 @@ func _make_slot_tile(slot: SlotDefinition) -> Button:
 	tile.custom_minimum_size = SLOT_TILE_SIZE
 	var equipped: Dictionary = EquipmentManager.get_equipped(slot.id)
 	var style := StyleBoxFlat.new()
-	style.set_corner_radius_all(6)
 	style.set_content_margin_all(12)
 	if slot.sealed:
 		style.bg_color = UIPalette.fade(UIPalette.surface(), 0.85)
@@ -163,11 +161,10 @@ func _make_slot_tile(slot: SlotDefinition) -> Button:
 	elif not equipped.is_empty():
 		style.bg_color = UIPalette.raised()
 		style.set_border_width_all(3)
+		# Rarity reads off the hard border alone. This also carried a soft
+		# coloured glow, which said nothing the border did not already say and
+		# said it with a 8px blur.
 		style.border_color = RarityStyle.color(int(equipped["rarity"]))
-		var glow: Color = RarityStyle.color(int(equipped["rarity"]))
-		glow.a = 0.22
-		style.shadow_color = glow
-		style.shadow_size = 8
 	else:
 		style.bg_color = UIPalette.surface()
 		style.set_border_width_all(2)
@@ -196,7 +193,7 @@ func _make_slot_tile(slot: SlotDefinition) -> Button:
 
 	var name_label := Label.new()
 	name_label.text = slot.display_name
-	name_label.add_theme_font_size_override("font_size", 24)
+	name_label.add_theme_font_size_override("font_size", 18)
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(name_label)
 
@@ -204,7 +201,7 @@ func _make_slot_tile(slot: SlotDefinition) -> Button:
 		var flavor := Label.new()
 		flavor.text = slot.sealed_flavor
 		flavor.add_theme_color_override("font_color", UIPalette.muted())
-		flavor.add_theme_font_size_override("font_size", 20)
+		flavor.add_theme_font_size_override("font_size", 18)
 		flavor.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		flavor.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(flavor)
@@ -229,7 +226,7 @@ func _make_slot_tile(slot: SlotDefinition) -> Button:
 		var stat := Label.new()
 		stat.text = RarityStyle.key_stat_line(equipped)
 		stat.add_theme_color_override("font_color", UIPalette.muted())
-		stat.add_theme_font_size_override("font_size", 24)
+		stat.add_theme_font_size_override("font_size", 18)
 		stat.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		# The longest affix names ("Boss Damage +29%") fill the tile exactly,
 		# and the next one along would simply run off it.
@@ -240,7 +237,7 @@ func _make_slot_tile(slot: SlotDefinition) -> Button:
 		var empty := Label.new()
 		empty.text = "Empty"
 		empty.add_theme_color_override("font_color", UIPalette.muted())
-		empty.add_theme_font_size_override("font_size", 24)
+		empty.add_theme_font_size_override("font_size", 18)
 		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		box.add_child(empty)
 		tile.pressed.connect(_open_empty_card.bind(slot))
@@ -266,7 +263,6 @@ func _make_inventory_row(item: Dictionary) -> Button:
 	row.custom_minimum_size = Vector2(0, ROW_HEIGHT)
 	var style := StyleBoxFlat.new()
 	style.bg_color = UIPalette.fade(UIPalette.surface(), 0.9)
-	style.set_corner_radius_all(14)
 	style.set_content_margin_all(14)
 	style.content_margin_left = 22.0
 	row.add_theme_stylebox_override("normal", style)
@@ -307,12 +303,12 @@ func _make_inventory_row(item: Dictionary) -> Button:
 	var name_label := Label.new()
 	name_label.text = "%s %s" % [RarityStyle.rarity_name(rarity), slot_name]
 	name_label.add_theme_color_override("font_color", RarityStyle.color(rarity))
-	name_label.add_theme_font_size_override("font_size", 30)
+	name_label.add_theme_font_size_override("font_size", 27)
 	info.add_child(name_label)
 	var stat := Label.new()
 	stat.text = RarityStyle.key_stat_line(item)
 	stat.add_theme_color_override("font_color", UIPalette.muted())
-	stat.add_theme_font_size_override("font_size", 24)
+	stat.add_theme_font_size_override("font_size", 18)
 	info.add_child(stat)
 
 	# Durable NEW tag for items not yet seen on the Gear screen.
@@ -320,7 +316,7 @@ func _make_inventory_row(item: Dictionary) -> Button:
 		var new_pill := Label.new()
 		new_pill.text = "NEW"
 		new_pill.add_theme_color_override("font_color", Color.WHITE)
-		new_pill.add_theme_font_size_override("font_size", 24)
+		new_pill.add_theme_font_size_override("font_size", 18)
 		new_pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		hbox.add_child(new_pill)
 

@@ -120,9 +120,101 @@ def check_save_sections() -> tuple[list[str], list[str]]:
     return problems, [f"{len(registered)} save sections"]
 
 
+# --- files the docs name ------------------------------------------------------
+#
+# A doc that names a deleted file is the same failure as a stale autoload table:
+# a confident wrong answer. The revamp deleted dimensional_sprite.gdshader,
+# nebula_background.gdshader, soft_dot.tres and icon.svg, and four documents
+# went on describing them — including the architecture section that explained,
+# in detail and in the present tense, how the project derives surface normals
+# from an alpha channel it no longer has.
+#
+# Bare basenames resolve anywhere in the tree, because the docs write
+# `save_manager.gd` for a file that lives in scripts/managers/ and spelling out
+# every path would be worse prose for no more precision.
+#
+# The rule this establishes: BACKTICKS MEAN A LIVE PATH. A file that used to
+# exist and is being described historically is written in bold instead — see
+# the "Where the shading lives" section, which names the deleted bevel shader
+# because the reason it was deleted is the point of the section.
+DOCS = ("docs/ARCHITECTURE.md", "design/TESTING-GUIDE.md",
+        "design/RELEASE-CHECKLIST.md", "README.md")
+NAMED_FILE = re.compile(
+    r"`(?:res://)?([\w./-]+\.(?:gd|gdshader|tres|tscn|png|svg|fnt|ttf|py|sh))`"
+)
+# Directories whose contents are generated, vendored, or gitignored: a doc
+# naming something in here is not evidence the doc is stale.
+SKIP_DIRS = {".godot", "android", "build", "node_modules", ".git"}
+
+
+def _basenames() -> set[str]:
+    found: set[str] = set()
+    for path in ROOT.rglob("*"):
+        if not path.is_file():
+            continue
+        if SKIP_DIRS & set(path.relative_to(ROOT).parts):
+            continue
+        found.add(path.name)
+    return found
+
+
+def check_doc_files_exist() -> tuple[list[str], list[str]]:
+    known = _basenames()
+    problems: list[str] = []
+    inspected = 0
+    for name in DOCS:
+        doc = ROOT / name
+        if not doc.exists():
+            problems.append(f"{name}: listed in DOCS but missing")
+            continue
+        for number, line in enumerate(
+            doc.read_text(encoding="utf-8").splitlines(), 1
+        ):
+            for ref in NAMED_FILE.findall(line):
+                inspected += 1
+                if (ROOT / ref).exists():
+                    continue
+                if "/" not in ref and ref in known:
+                    continue
+                problems.append(
+                    f"{name}:{number}: names `{ref}`, which does not exist"
+                )
+    return problems, [f"{inspected} file references across {len(DOCS)} documents"]
+
+
+# check_autoload_table() verifies the TABLE. The same number is also written
+# out in prose in three other places, and prose is where it rots: README and
+# TESTING-GUIDE both still said 19 after the twentieth autoload landed, because
+# nothing about adding a manager makes anyone reread a sentence.
+AUTOLOAD_COUNT = re.compile(r"\b(\d+)\s+autoload")
+
+
+def check_doc_counts() -> tuple[list[str], list[str]]:
+    actual = len(declared_autoloads())
+    problems: list[str] = []
+    inspected = 0
+    for name in DOCS:
+        doc = ROOT / name
+        if not doc.exists():
+            continue
+        for number, line in enumerate(
+            doc.read_text(encoding="utf-8").splitlines(), 1
+        ):
+            for claim in AUTOLOAD_COUNT.findall(line):
+                inspected += 1
+                if int(claim) != actual:
+                    problems.append(
+                        f"{name}:{number}: says {claim} autoloads; "
+                        f"project.godot declares {actual}"
+                    )
+    return problems, [f"{inspected} prose counts against {actual} autoloads"]
+
+
 CHECKS = [
     ("autoload table matches project.godot", check_autoload_table),
     ("save sections match the code", check_save_sections),
+    ("documents only name files that exist", check_doc_files_exist),
+    ("prose counts match the code", check_doc_counts),
 ]
 
 

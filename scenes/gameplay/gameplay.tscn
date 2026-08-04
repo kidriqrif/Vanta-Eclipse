@@ -51,14 +51,14 @@ theme_override_constants/separation = 4
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HeaderLabel"
-theme_override_font_sizes/font_size = 38
+theme_override_font_sizes/font_size = 27
 text = "DARK FOREST"
 
 [node name="StageLabel" type="Label" parent="MarginContainer/GameplayVBox/TopBar/WorldVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HeaderLabel"
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 18
 text = "Enemy Lv. 1"
 
 [node name="AutoAttackBadge" type="PanelContainer" parent="MarginContainer/GameplayVBox/TopBar/WorldVBox"]
@@ -85,7 +85,7 @@ stretch_mode = 5
 [node name="BadgeLabel" type="Label" parent="MarginContainer/GameplayVBox/TopBar/WorldVBox/AutoAttackBadge/BadgeHBox"]
 layout_mode = 2
 theme_type_variation = &"AccentLabel"
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 18
 text = "AUTO-ATTACK ACTIVE"
 
 [node name="JournalButton" type="Button" parent="MarginContainer/GameplayVBox/TopBar"]
@@ -113,7 +113,7 @@ theme_type_variation = &"BadgePanel"
 [node name="JournalCount" type="Label" parent="MarginContainer/GameplayVBox/TopBar/JournalButton/JournalPill"]
 unique_name_in_owner = true
 mouse_filter = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 18
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -148,7 +148,7 @@ stretch_mode = 5
 [node name="EssenceLabel" type="Label" parent="MarginContainer/GameplayVBox/EssenceDisplay"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 42
+theme_override_font_sizes/font_size = 36
 text = "0"
 vertical_alignment = 1
 
@@ -156,7 +156,7 @@ vertical_alignment = 1
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"PanelTitle"
-theme_override_font_sizes/font_size = 42
+theme_override_font_sizes/font_size = 36
 text = "Gloom Wisp"
 horizontal_alignment = 1
 
@@ -187,7 +187,7 @@ theme_override_colors/font_shadow_color = Color(0.031, 0.031, 0.047, 0.5)
 theme_override_constants/outline_size = 6
 theme_override_constants/shadow_offset_x = 0
 theme_override_constants/shadow_offset_y = 4
-theme_override_font_sizes/font_size = 42
+theme_override_font_sizes/font_size = 36
 text = "HOLLOW WARDEN"
 
 [node name="HealthBar" type="ProgressBar" parent="MarginContainer/GameplayVBox"]
@@ -206,7 +206,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 18
 text = "4 / 4"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -271,7 +271,7 @@ theme_type_variation = &"BadgePanel"
 unique_name_in_owner = true
 mouse_filter = 2
 theme_type_variation = &"AccentLabel"
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 18
 text = "Lv. 1"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -294,7 +294,7 @@ theme_type_variation = &"BadgePanel"
 [node name="NewLabel" type="Label" parent="MarginContainer/GameplayVBox/CombatArea/CompanionButton/NewPill"]
 mouse_filter = 2
 theme_type_variation = &"AccentLabel"
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 18
 text = "NEW"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -313,7 +313,7 @@ mouse_filter = 2
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HeaderLabel"
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 18
 text = "Void creatures slain: 0"
 horizontal_alignment = 1
 
@@ -354,7 +354,7 @@ theme_type_variation = &"BadgePanel"
 [node name="CountLabel" type="Label" parent="MarginContainer/GameplayVBox/BottomRow/GearButton/CountPill"]
 unique_name_in_owner = true
 mouse_filter = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 18
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -392,14 +392,14 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"MutedLabel"
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 18
 text = "Session #1"
 
 [node name="PlayTimeLabel" type="Label" parent="MarginContainer/GameplayVBox/FooterBar"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"MutedLabel"
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 18
 text = "0m 00s"
 horizontal_alignment = 2
 

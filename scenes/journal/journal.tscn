@@ -47,7 +47,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 theme_type_variation = &"TitleLabel"
-theme_override_font_sizes/font_size = 56
+theme_override_font_sizes/font_size = 45
 text = "JOURNAL"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -63,7 +63,7 @@ theme_type_variation = &"BadgePanel"
 [node name="ReadyLabel" type="Label" parent="MarginContainer/VBox/HeaderRow/ReadyPill"]
 unique_name_in_owner = true
 mouse_filter = 2
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 18
 text = "0 READY"
 vertical_alignment = 1
 
@@ -98,7 +98,7 @@ visible = false
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"HeaderLabel"
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 18
 text = "Resets in 4h"
 horizontal_alignment = 1
 

@@ -22,19 +22,22 @@ Nothing downstream matters until this passes.
    `config/features = ("4.7", "Mobile")`. An older 4.x will refuse the config
    version; a newer one will offer to upgrade the project — let it, then re-run
    `bash tools/validate_all.sh` before trusting anything.
-2. **Open the project.** First import rasterises 49 SVGs and builds `.godot/`.
-   This takes a while and is one-time.
+2. **Open the project.** First import builds `.godot/` from 53 sprite PNGs and
+   the bitmap font. This takes a while and is one-time.
 3. **Watch the Output and Errors panels during import, not just after.** This is
-   the first time `effects/dimensional_sprite.gdshader` and
-   `effects/nebula_background.gdshader` are ever compiled.
+   the first time `effects/pixel_sprite.gdshader` is ever compiled. Expect the
+   first pass to report errors against the theme and to need a **second**
+   `--import`: the theme resolves its font and textures before those assets
+   have sidecars, so pass one fails on assets pass one is still creating.
 4. **Press F5.**
 
 ### What is most likely to break, in order
 
 | Risk | Why it is the risk | What you would see |
 | --- | --- | --- |
-| `dimensional_sprite.gdshader` fails to compile | Written without a compiler available — `check_shaders.py` is static and cannot prove a shader compiles | Enemy renders black, white, or untextured; shader error in Output |
-| An autoload `_ready()` throws | 19 autoloads all run at boot, in order, before any screen | Black screen, or a stack trace naming a manager |
+| `pixel_sprite.gdshader` fails to compile | Written without a compiler available — `check_shaders.py` is static and cannot prove a shader compiles | Enemy renders black, white, or untextured; shader error in Output |
+| A sprite renders soft instead of blocky | `textures/canvas_textures/default_texture_filter=0` (nearest) is a project setting, so anything overriding the filter per-node undoes it | Creatures look like the pre-revamp vector art, blurred rather than pixelated |
+| An autoload `_ready()` throws | 20 autoloads all run at boot, in order, before any screen | Black screen, or a stack trace naming a manager |
 | A `%UniqueName` misses at runtime | Statically checked, but scene-tree timing is not the same thing | `Node not found` on entering a screen |
 | A `.tres` fails to load into its typed property | Property names are checked, runtime coercion is not | Null texture, or a definition silently defaulting |
 
@@ -75,7 +78,7 @@ not match the phone. It found a real bug the moment it was fixed: the Gear
 badge covering its own button label, invisible at the stretched aspect because
 the bottom row was twice as wide as a phone ever gives it.
 
-The script also runs `--headless --import` first. A newly added `.svg` has no
+The script also runs `--headless --import` first. A newly added `.png` has no
 import sidecar, so every reference to it fails — and because the theme is one
 resource, **one** unimported sprite takes the whole theme down and the game
 boots unstyled, while the static sweep stays green because the file is on disk

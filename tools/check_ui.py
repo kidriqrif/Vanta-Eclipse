@@ -268,20 +268,143 @@ def _colours_on(line: str) -> list[tuple[float, float, float]]:
     return out
 
 
-def _hue_degrees(red: float, green: float, blue: float, chroma: float) -> float:
-    top = max(red, green, blue)
-    if top == red:
-        hue = ((green - blue) / chroma) % 6.0
-    elif top == green:
-        hue = (blue - red) / chroma + 2.0
-    else:
-        hue = (red - green) / chroma + 4.0
-    return hue * 60.0
+# --- flat surfaces -------------------------------------------------------------
+#
+# Three treatments belong to the pre-revamp look and cannot be expressed in
+# pixel art at all, because each one needs colours between the ones it is given:
+#
+#   rounded corners  a radius is an anti-aliased curve. At 14px it spends four
+#                    or five blended pixels per corner deciding how round to be.
+#   soft shadows     StyleBoxFlat blurs the shadow across shadow_size pixels.
+#                    The theme's panels carried a 40px falloff.
+#   gradients        the smooth ramp itself. ground_glow() and menu_divider()
+#                    show the pixel answer: solid pixels at falling density, or
+#                    hard steps.
+#
+# The revamp converted the theme and stopped, which left 45 radii and 6 shadows
+# live in the scenes and scripts — the same split the font sizes had, and for
+# the same reason: a theme is one file and the call sites are ninety.
+#
+# CPUParticles2D.color_ramp is exempt. That Gradient is a colour-over-lifetime
+# curve on a 2px particle, not a surface, and dropping it makes tap trails
+# vanish on a frame boundary instead of dissolving.
+FLAT_SCOPES = ("ui/**/*.tres", "scenes/**/*.tscn", "scripts/**/*.gd")
+ROUNDED = re.compile(r"corner_radius\w*\s*=\s*([1-9]\d*)|set_corner_radius_all\(\s*([1-9]\d*)")
+SOFT_SHADOW = re.compile(r"shadow_size\s*=\s*([1-9]\d*)")
+# A bare Gradient paints nothing on its own — it needs a GradientTexture to
+# become pixels, which is why only the texture types are named here. The one
+# place a Gradient reaches the screen unwrapped is CPUParticles2D.color_ramp,
+# and that is the exemption above.
+GRADIENT = re.compile(r"GradientTexture\w*|type=\"Gradient\"")
+
+
+def check_flat_surfaces() -> tuple[list[str], list[str]]:
+    problems: list[str] = []
+    inspected = 0
+    for scope in FLAT_SCOPES:
+        for path in glob(ROOT, scope):
+            for number, line in enumerate(
+                path.read_text(encoding="utf-8").splitlines(), 1
+            ):
+                # A comment naming a treatment is documentation, not a use of
+                # it — and the comment explaining why the particle ramp is
+                # exempt would otherwise fail this check by saying so.
+                if line.lstrip().startswith("#"):
+                    continue
+                inspected += 1
+                where = f"{path.relative_to(ROOT)}:{number}"
+                rounded = ROUNDED.search(line)
+                if rounded is not None:
+                    radius = rounded.group(1) or rounded.group(2)
+                    problems.append(
+                        f"{where}: corner radius {radius} — a curve costs "
+                        "blended pixels the palette does not contain"
+                    )
+                shadow = SOFT_SHADOW.search(line)
+                if shadow is not None:
+                    problems.append(
+                        f"{where}: shadow_size {shadow.group(1)} — StyleBoxFlat "
+                        "blurs the shadow across that many pixels"
+                    )
+                if GRADIENT.search(line) and "color_ramp" not in line:
+                    problems.append(
+                        f"{where}: a gradient — see ground_glow() and "
+                        "menu_divider() in tools/make_sprites.py for the "
+                        "dithered and stepped alternatives"
+                    )
+    return problems, [f"{inspected} lines across {len(FLAT_SCOPES)} scopes"]
+
+
+# --- font sizes ---------------------------------------------------------------
+#
+# vanta_pixel is a BITMAP font: its glyphs are 9px tall and exist at that size
+# only. Godot serves any other size by scaling the atlas, which is exact at a
+# whole multiple and a resample at anything else — so `font_size = 26` asks for
+# 2.889 glyph boxes, lands stems between pixels and renders soft. That is the
+# smooth look the revamp removed, coming back in the text.
+#
+# The revamp converted the theme by hand and stopped there, leaving 135 of the
+# project's 145 sizes on values tuned for Nunito, an outline font that renders
+# at any size. Every screen was resampling. tools/snap_font_sizes.py fixes them.
+#
+# This is the cheap half of the guard and it only sees literals. A size stored
+# in a LabelSettings resource, or passed positionally into a helper that
+# forwards it to add_theme_font_size_override, is invisible here — three of
+# those survived in eclipse.gd after every literal had been corrected. The
+# complete check is tools/screenshot_harness.gd's FONT pass, which reads the
+# size the engine actually resolved on a live control.
+FONT_SIZE_ASSIGN = re.compile(r"(?:^|\.|/)\w*font_size\w*\s*=\s*(\d+)", re.M)
+FONT_SIZE_OVERRIDE = re.compile(
+    r"add_theme_font_size_override\(\s*&?\"font_size\"\s*,\s*(\d+)\)"
+)
+# tools/ is in scope because screenshot_harness.gd draws text too, and its
+# bestiary sheet — the artifact the art is REVIEWED on — was captioning every
+# creature at 22px, which is 2.44 glyph boxes. The runtime FONT pass found it;
+# it is listed here so the cheap check finds the next one.
+FONT_SCOPES = ("ui/**/*.tres", "scenes/**/*.tscn", "scripts/**/*.gd",
+               "tools/**/*.gd")
+
+
+def glyph_box() -> int:
+    """The one size the font contains, read from the font, not written down."""
+    header = (ROOT / "fonts/vanta_pixel.fnt").read_text(
+        encoding="utf-8"
+    ).splitlines()[0]
+    match = re.search(r"\bsize=(\d+)", header)
+    if match is None:
+        raise SystemExit("fonts/vanta_pixel.fnt: no size= on the info line")
+    return int(match.group(1))
+
+
+def check_font_sizes() -> tuple[list[str], list[str]]:
+    box = glyph_box()
+    problems: list[str] = []
+    inspected = 0
+    for scope in FONT_SCOPES:
+        for path in glob(ROOT, scope):
+            for number, line in enumerate(
+                path.read_text(encoding="utf-8").splitlines(), 1
+            ):
+                for pattern in (FONT_SIZE_ASSIGN, FONT_SIZE_OVERRIDE):
+                    for raw in pattern.findall(line):
+                        size = int(raw)
+                        inspected += 1
+                        if size % box == 0:
+                            continue
+                        problems.append(
+                            f"{path.relative_to(ROOT)}:{number}: font_size {size} "
+                            f"is {size / box:.2f} glyph boxes — a bitmap font "
+                            f"only scales exactly at multiples of {box}; run "
+                            f"tools/snap_font_sizes.py"
+                        )
+    return problems, [f"{inspected} sizes against a {box}px glyph box"]
 
 
 CHECKS = [
     ("no stale palette copies", check_stale_palette),
     ("every colour is one of the 16", check_palette_membership),
+    ("font sizes land on the glyph box", check_font_sizes),
+    ("surfaces are flat (no radii, shadows, gradients)", check_flat_surfaces),
     ("sprites are referenced", check_sprites_referenced),
     ("theme variations are used", check_variations_used),
     ("margin-sized styleboxes have height", check_styleboxes_have_height),

@@ -36,7 +36,7 @@ theme_override_constants/separation = 20
 layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"PanelTitle"
-theme_override_font_sizes/font_size = 38
+theme_override_font_sizes/font_size = 27
 text = "UPGRADE SHOP"
 vertical_alignment = 1
 
@@ -44,7 +44,7 @@ vertical_alignment = 1
 unique_name_in_owner = true
 custom_minimum_size = Vector2(180, 96)
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 27
 text = "CLOSE"
 
 [node name="Scroll" type="ScrollContainer" parent="Panel/PanelVBox"]

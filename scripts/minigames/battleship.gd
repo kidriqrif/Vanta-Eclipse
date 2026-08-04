@@ -167,7 +167,6 @@ func _build_grid() -> void:
 func _cell_style(lit: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = CELL_BG
-	style.set_corner_radius_all(12)
 	style.set_border_width_all(2)
 	style.border_color = _ink if lit else Color(0.141, 0.141, 0.184, 0.6)
 	return style

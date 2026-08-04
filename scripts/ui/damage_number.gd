@@ -24,7 +24,7 @@ func setup(amount: float, is_crit: bool) -> void:
 	# before changing anything — otherwise every number on screen changes.
 	label_settings = label_settings.duplicate()
 	if is_crit:
-		label_settings.font_size = 64
+		label_settings.font_size = 54
 		label_settings.font_color = CRIT_COLOR
 		label_settings.outline_color = CRIT_OUTLINE_COLOR
 	else:

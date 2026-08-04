@@ -104,7 +104,6 @@ func _make_card(index: int) -> Button:
 
 func _card_style(matched: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.set_corner_radius_all(14)
 	if matched:
 		style.bg_color = Color(0.141, 0.141, 0.184, 0.55)
 		style.set_border_width_all(3)

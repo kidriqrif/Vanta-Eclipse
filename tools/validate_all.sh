@@ -84,12 +84,25 @@ echo "10. UI theme discipline and asset reachability"
 echo "11. font coverage (every rendered glyph exists in the face)"
 "$PY" tools/check_glyphs.py | sed 's/^/   /' || status=1
 
+# Stage 10 reads colour out of source files and stops there, so half the
+# project's colour — the pixels inside the 58 shipped PNGs — had nothing
+# looking at it at all. This opens the images.
+echo "12. generated art (every pixel is one of the 16 palette colours)"
+"$PY" tools/check_pixels.py | sed 's/^/   /' || status=1
+
 # Everything above compares what the files say to each other. This one runs
 # the game: it seeds every save section, pushes it through the real save/load
 # path, and asserts the economy invariants. A dropped field or a non-idempotent
 # load produces no parse error and no visual difference, so nothing earlier in
 # this script can see it.
-echo "12. runtime logic (save round-trip, invariants)"
+# Stage 12 proves the pixels are on-palette. This proves they are the pixels
+# the generators still produce — the difference between "this art is valid" and
+# "this art is current". A hand-edited sprite, or one left over from before a
+# generator changed, passes 12 and fails here.
+echo "13. shipped assets match their generators (byte-identical)"
+"$PY" tools/check_generated.py | sed 's/^/   /' || status=1
+
+echo "14. runtime logic (save round-trip, invariants)"
 if bash tools/logic_run.sh >/tmp/vanta_logic.$$ 2>&1; then
   # The verdict line by name, NOT tail -1. Anything the engine prints after the
   # harness has spoken — a leak warning, a driver notice — is not the result,

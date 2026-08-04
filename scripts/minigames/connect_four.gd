@@ -126,7 +126,6 @@ func _build_board() -> void:
 
 func _column_style(lit: bool, full: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.set_corner_radius_all(14)
 	style.set_content_margin_all(6)
 	style.bg_color = BOARD_BG
 	style.set_border_width_all(2)

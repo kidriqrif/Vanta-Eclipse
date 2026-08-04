@@ -554,6 +554,43 @@ def ground_glow() -> Canvas:
     return c
 
 
+def menu_divider() -> Canvas:
+    """The rule under the main menu's title.
+
+    Replaces a GradientTexture2D that faded crimson out to alpha 0 at both
+    ends — the last GradientTexture2D in the project, and the last smooth thing
+    on the main menu. It survived the palette pass because a gradient declares
+    its stops as a flat PackedColorArray rather than as Color() calls, so the
+    check walked straight past it; check_ui.py reads both spellings now.
+
+    Tapered in THREE HARD STEPS rather than by dithering, which is the opposite
+    of what ground_glow() does and for the same underlying reason. This is 64px
+    of texture stretched across roughly 950px of phone, so every source pixel
+    lands about fifteen wide. A 1px dither cell at that scale is not a dither,
+    it is a dashed line. Blocks eight columns wide survive the stretch as
+    blocks — coarse enough that magnifying them changes nothing but their size.
+
+    Vertically it is 1:1: four rows drawn, four pixels tall on screen.
+    """
+    width, height = 64, 4
+    c = Canvas(width, height)
+    half = width // 2
+    for x in range(half):
+        reach = x / float(half - 1)      # 0 at the outer end, 1 at the centre
+        if reach < 0.25:
+            continue                     # the ends stop, rather than fading
+        if reach < 0.55:
+            c.put(x, 2, "blood")         # one row: the thinnest the rule gets
+        elif reach < 0.8:
+            c.put(x, 1, "blood")
+            c.put(x, 2, "blood")
+        else:
+            c.put(x, 1, "crimson")       # the core, in the accent
+            c.put(x, 2, "crimson")
+    c.mirror_x()
+    return c
+
+
 def _gem(fill: str, mid: str, spark: bool = True) -> Canvas:
     c = Canvas(ICON, ICON)
     for y in range(-12, 13):                      # cut-gem diamond
@@ -856,7 +893,8 @@ UI = {
     "boss_skull_icon": boss_skull_icon, "eclipse_emblem": eclipse_emblem,
     "eclipse_icon": eclipse_icon, "essence_icon": essence_icon,
     "forge_icon": forge_icon, "ground_glow": ground_glow, "journal_icon": journal_icon,
-    "lock_glyph": lock_glyph, "minigame_reflex_icon": minigame_reflex_icon,
+    "lock_glyph": lock_glyph, "menu_divider": menu_divider,
+    "minigame_reflex_icon": minigame_reflex_icon,
     "relic_eclipse_heart": relic_eclipse_heart,
     "relic_essence_prism": relic_essence_prism,
     "relic_hunters_sigil": relic_hunters_sigil,
