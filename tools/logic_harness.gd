@@ -311,9 +311,16 @@ func _check_audio() -> void:
 	for bus: String in ["Master", "Music", "SFX"]:
 		_ok("audio bus '%s' exists" % bus, AudioServer.get_bus_index(bus) >= 0)
 
+	# Exactly VOICES per sound plus the music, not "at least one each". The
+	# >= form here reported OK on a build where seven of fourteen sounds had
+	# failed to load, because seven pools of four still cleared a floor of
+	# fourteen. A count that passes while half the audio is missing is not a
+	# count.
 	var players: Array[Node] = AudioManager.find_children("", "AudioStreamPlayer", true, false)
-	_ok("voice pools were built", players.size() >= AudioManager.SFX.size(),
-		"found %d players for %d sounds" % [players.size(), AudioManager.SFX.size()])
+	var want: int = AudioManager.SFX.size() * AudioManager.VOICES + 1
+	_ok("every sound got a full voice pool", players.size() == want,
+		"found %d players, expected %d (%d sounds x %d voices + music)"
+			% [players.size(), want, AudioManager.SFX.size(), AudioManager.VOICES])
 
 	var music: Array[Node] = players.filter(
 		func(p: Node) -> bool: return (p as AudioStreamPlayer).bus == &"Music"

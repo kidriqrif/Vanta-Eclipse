@@ -249,6 +249,146 @@ def loot(rng: random.Random) -> list[float]:
     return attack(decay(buf, 0.1), 0.003)
 
 
+def boss_warn(rng: random.Random) -> list[float]:
+    """A boss appearing with a countdown was the tensest moment in the game and
+    the only one with no sound at all.
+
+    Deliberately NOT a fanfare: this is the single fail state the game has, and
+    it has to read as a warning. A struck low bell, then a second an octave up
+    arriving late enough to feel like an answer rather than a chord.
+    """
+    buf = silence(1.2)
+    sine(buf, 98.0, 0.85, sweep=0.98)      # barely detuning — a bell, not a fall
+    sine(buf, 147.0, 0.4, sweep=0.98)      # a fifth: hollow, unresolved
+    strike = lowpass(noise(silence(0.05), 0.5, rng), 0.18)
+    for i, s in enumerate(strike):
+        buf[i] += s
+    answer = silence(1.2)
+    sine(answer, 196.0, 0.45, sweep=0.98)
+    answer = decay(attack(answer, 0.004), 0.45)
+    offset = int(0.34 * SFX_RATE)
+    for i in range(len(buf) - offset):
+        buf[i + offset] += answer[i]
+    return attack(decay(buf, 0.55), 0.003)
+
+
+def fail() -> list[float]:
+    """The countdown expiring with the boss alive.
+
+    Failure has to sound like something, not like nothing — silence reads as
+    the game not having noticed. The fanfare's rising minor triad, inverted and
+    slowed: the same intervals falling, so it is recognisably the shape of the
+    reward sound going the wrong way.
+    """
+    buf = silence(0.9)
+    for index, freq in enumerate([329.63, 261.63, 220.0]):
+        voice = silence(0.9)
+        sine(voice, freq, 0.55, sweep=0.97)
+        delay = int(index * 0.085 * SFX_RATE)
+        voice = decay(attack(voice, 0.008), 0.28)
+        for i in range(len(buf) - delay):
+            buf[i + delay] += voice[i]
+    sine(buf, 82.0, 0.3, sweep=0.85)       # the floor dropping out underneath
+    return decay(buf, 0.5)
+
+
+def whoosh(rng: random.Random) -> list[float]:
+    """Screens and modals. Played at three pitches from this one file — opening
+    at 1.0, closing at 0.8, a scene change at 0.9 — because three near-identical
+    recordings would cost three times the space to say the same thing.
+
+    Filtered noise only, no tone: navigation should be felt and not listened
+    to. At 340ms it is over before the transition finishes.
+    """
+    buf = lowpass(noise(silence(0.34), 0.7, rng), 0.09)
+    # Swell and fall rather than a struck decay — a movement, not an impact.
+    for i in range(len(buf)):
+        phase = i / len(buf)
+        buf[i] *= math.sin(math.pi * phase) ** 1.6
+    return buf
+
+
+def goal() -> list[float]:
+    """A Journal goal reaching its target. The whole Journal was silent.
+
+    Two rising notes, clean and short. Distinct from `loot` (which is a thing
+    arriving) and from `fanfare` (which is permanent): this says progress, and
+    a goal completes often enough that it must never be ceremonial.
+    """
+    buf = silence(0.3)
+    sine(buf, 587.33, 0.45)
+    second = silence(0.3)
+    sine(second, 880.0, 0.4)
+    second = decay(attack(second, 0.003), 0.09)
+    offset = int(0.07 * SFX_RATE)
+    for i in range(len(buf) - offset):
+        buf[i + offset] += second[i]
+    return attack(decay(buf, 0.1), 0.002)
+
+
+def claim(rng: random.Random) -> list[float]:
+    """Collecting something already earned — a claimed goal, an ad bonus, the
+    offline reward waiting at launch.
+
+    Warmer and longer than `loot`, because claiming is a deliberate act with a
+    result, where a drop is something that merely happened to you.
+    """
+    buf = silence(0.45)
+    for index, freq in enumerate([440.0, 659.25, 880.0]):
+        voice = silence(0.45)
+        sine(voice, freq, 0.4, sweep=1.02)
+        delay = int(index * 0.035 * SFX_RATE)
+        voice = decay(attack(voice, 0.003), 0.14)
+        for i in range(len(buf) - delay):
+            buf[i + delay] += voice[i]
+    shimmer = lowpass(noise(silence(0.45), 0.3, rng), 0.55)
+    for i, s in enumerate(shimmer):
+        buf[i] += s * 0.2
+    return attack(decay(buf, 0.16), 0.002)
+
+
+def levelup() -> list[float]:
+    """A pet gaining a level. Frequent, so it is 140ms and almost nothing — a
+    blip that acknowledges without interrupting. The moment it becomes a jingle
+    it becomes the reason someone turns the sound off."""
+    buf = silence(0.14)
+    sine(buf, 660.0, 0.4, sweep=1.5)
+    return attack(decay(buf, 0.045), 0.002)
+
+
+def eclipse() -> list[float]:
+    """The Eclipse — a full prestige reset, and the biggest thing a player ever
+    chooses to do.
+
+    It was sharing the generic unlock fanfare, which made the game's defining
+    act sound like picking up a relic. This is the one sound allowed to be
+    slow: a swell inward, then a low struck bloom, so it reads as something
+    closing rather than something being won.
+    """
+    total = 2.2
+    buf = silence(total)
+    # The swell: rising, quiet, gathering.
+    swell = silence(total)
+    sine(swell, 110.0, 0.5, sweep=1.5)
+    sine(swell, 165.0, 0.3, sweep=1.5)
+    for i in range(len(swell)):
+        # Grows across the first 45%, then gets out of the way of the bloom.
+        phase = min(1.0, (i / len(swell)) / 0.45)
+        swell[i] *= phase ** 2.2 * max(0.0, 1.0 - max(0.0, phase - 0.92) * 12.0)
+    for i, s in enumerate(swell):
+        buf[i] += s
+    # The bloom: low, wide, falling — arriving exactly where the swell stops.
+    bloom = silence(total)
+    sine(bloom, 55.0, 0.9, sweep=0.7)
+    sine(bloom, 82.5, 0.5, sweep=0.7)
+    sine(bloom, 220.0, 0.22, sweep=0.7)
+    bloom = decay(attack(bloom, 0.006), 0.7)
+    offset = int(0.42 * total * SFX_RATE)
+    for i in range(len(buf) - offset):
+        buf[i + offset] += bloom[i]
+    return attack(buf, 0.004)
+
+
 def ambient_drone() -> list[float]:
     """A 24-second seamless loop for the Music bus.
 
@@ -293,6 +433,13 @@ def main() -> int:
     write("fanfare.wav", fanfare(), SFX_DIR)
     write("confirm.wav", confirm(), SFX_DIR)
     write("loot.wav", loot(rng), SFX_DIR)
+    write("boss_warn.wav", boss_warn(rng), SFX_DIR)
+    write("fail.wav", fail(), SFX_DIR)
+    write("whoosh.wav", whoosh(rng), SFX_DIR)
+    write("goal.wav", goal(), SFX_DIR)
+    write("claim.wav", claim(rng), SFX_DIR)
+    write("levelup.wav", levelup(), SFX_DIR)
+    write("eclipse.wav", eclipse(), SFX_DIR)
     print("music:")
     write("ambient_void.wav", ambient_drone(), MUSIC_DIR, rate=MUSIC_RATE, loop=True)
     return 0

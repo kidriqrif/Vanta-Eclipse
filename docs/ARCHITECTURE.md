@@ -37,7 +37,7 @@ sweep fails.
 | 17 | `QuestManager` | `quest_manager.gd` | The Journal: quest chain, daily set, achievements. After `MinigameManager`, whose token grant it pays with. |
 | 18 | `MonetizationManager` | `monetization_manager.gd` | Opt-in ad offers, purchases, entitlements, cosmetics. No mechanic is ever pay-gated (GDD stance, non-negotiable). |
 | 19 | `PrestigeManager` | `prestige_manager.gd` | The Eclipse loop: run peak level, Void Crystal payout, and resetting the run-scoped managers. Loads last because it reaches across all of them. |
-| 20 | `AudioManager` | `audio_manager.gd` | Every sound the game makes. Listens to `EventBus` and nothing else, so no screen asks for audio — which is why adding sound to a finished game changed no UI script. Loads last because it only ever reacts. |
+| 20 | `AudioManager` | `audio_manager.gd` | Every sound the game makes. Listens to `EventBus` and nothing else, so no screen asks for audio — which is why adding sound to a finished game changed no UI script. Loads last because it only ever reacts. The 14 effects and the drone are **synthesised** by `tools/make_audio.py` from a fixed seed, not sourced: regenerating is byte-identical, a tweak is an edit rather than a re-recording, and there are no asset licences to audit before release. |
 
 ## Communication rules
 

@@ -31,6 +31,12 @@ COPY = [
     "effects",
     # check_ui.py walks sprites and the fonts the theme references.
     "sprites", "fonts",
+    # check_wiring.py resolves every res://audio path in AudioManager.SFX.
+    # Without this the sandbox has no audio/ at all, so EVERY sound reports
+    # missing and an injected sound defect would be "caught" by the wrong
+    # complaint entirely — a mutation passing for a reason that has nothing to
+    # do with the mutation.
+    "audio",
 ]
 
 # Anchors are exact and complete: .tres has no comment syntax, so a mutation
@@ -241,6 +247,20 @@ MUTATIONS: list[Mutation] = [
         '\t\tpush_error("CurrencyManager: add() amount must be a positive number, got %s" % amount)',
         "\tif amount < 0.0:\n"
         '\t\tpush_error("CurrencyManager: add() amount must be positive, got %f" % amount)',
+    ),
+    (
+        "check_wiring.py",
+        "audio: a typo'd sound id, which play() answers with silence",
+        "scripts/managers/audio_manager.gd",
+        'play(&"levelup")',
+        'play(&"levelup_typo")',
+    ),
+    (
+        "check_wiring.py",
+        "audio: a sound shipped in the APK that nothing ever plays",
+        "scripts/managers/audio_manager.gd",
+        '\t&"loot": "res://audio/sfx/loot.wav",',
+        '\t&"loot": "res://audio/sfx/loot.wav",\n\t&"never_played": "res://audio/sfx/loot.wav",',
     ),
     (
         "check_data.py",

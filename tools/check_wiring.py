@@ -270,11 +270,49 @@ def check_collection_targets() -> tuple[list[str], list[str]]:
     return problems, [f"{checked} collect-them-all achievements"]
 
 
+# --- 5. every sound is both shipped and played --------------------------------
+
+AUDIO_MANAGER = ROOT / "scripts" / "managers" / "audio_manager.gd"
+SFX_ENTRY = re.compile(r'&"(\w+)"\s*:\s*"(res://audio/[^"]+)"')
+PLAY_CALL = re.compile(r'\bplay\(\s*&"(\w+)"')
+# play() takes a StringName, so a misspelled id is not a NameError, a missing
+# file, or any other kind of noise — the pool lookup misses, play() returns,
+# and that moment is silent forever. Nothing at runtime can tell you.
+PLAY_TERNARY = re.compile(r'&"(\w+)"\s+if\s+.+?\s+else\s+&"(\w+)"')
+
+
+def check_sound_wiring() -> tuple[list[str], list[str]]:
+    if not AUDIO_MANAGER.exists():
+        return [f"{AUDIO_MANAGER.relative_to(ROOT)} is missing"], ["0 sounds"]
+    source = AUDIO_MANAGER.read_text(encoding="utf-8")
+    declared = dict(SFX_ENTRY.findall(source))
+
+    problems: list[str] = []
+    for sound_id, path in sorted(declared.items()):
+        on_disk = ROOT / path.removeprefix("res://")
+        if not on_disk.exists():
+            problems.append(f"sound &\"{sound_id}\" points at {path}, which does not exist")
+
+    # Both directions. A played id that is not declared is silent at runtime;
+    # a declared id that is never played is a file shipped in the APK for a
+    # moment that never happens.
+    played: set[str] = set(PLAY_CALL.findall(source))
+    for first, second in PLAY_TERNARY.findall(source):
+        played.update({first, second})
+    for sound_id in sorted(played - set(declared)):
+        problems.append(f'play(&"{sound_id}") names no sound in SFX — it plays nothing, silently')
+    for sound_id in sorted(set(declared) - played):
+        problems.append(f'sound &"{sound_id}" is declared and shipped but never played')
+
+    return problems, [f"{len(declared)} sounds, {len(played)} play sites"]
+
+
 CHECKS = [
     ("granted stats consumed", check_stat_wiring),
     ("goal metrics fed", check_goal_metrics),
     ("enum values dispatched", check_enum_handling),
     ("collection targets match shipped content", check_collection_targets),
+    ("sounds are shipped and played", check_sound_wiring),
 ]
 
 

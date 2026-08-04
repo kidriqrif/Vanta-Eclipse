@@ -36,6 +36,17 @@ const REPEAT_GAP: Dictionary = {
 	&"boss": 0.4,
 	# A kill can drop an item, a relic and a pet at once.
 	&"loot": 0.06,
+	# A screen change and a modal opening can both land on one frame; this is
+	# what makes them one whoosh instead of two.
+	&"whoosh": 0.12,
+	# Several Journal goals can complete on the same kill.
+	&"goal": 0.15,
+	&"claim": 0.15,
+	&"levelup": 0.1,
+	# Long, and each marks a moment that cannot happen twice in half a second.
+	&"boss_warn": 0.5,
+	&"fail": 0.5,
+	&"eclipse": 1.0,
 }
 ## Enough to stop one frame's duplicates without ever being audible as a
 ## dropped sound.
@@ -54,6 +65,13 @@ const SFX: Dictionary = {
 	&"fanfare": "res://audio/sfx/fanfare.wav",
 	&"confirm": "res://audio/sfx/confirm.wav",
 	&"loot": "res://audio/sfx/loot.wav",
+	&"boss_warn": "res://audio/sfx/boss_warn.wav",
+	&"fail": "res://audio/sfx/fail.wav",
+	&"whoosh": "res://audio/sfx/whoosh.wav",
+	&"goal": "res://audio/sfx/goal.wav",
+	&"claim": "res://audio/sfx/claim.wav",
+	&"levelup": "res://audio/sfx/levelup.wav",
+	&"eclipse": "res://audio/sfx/eclipse.wav",
 }
 const MUSIC_PATH: String = "res://audio/music/ambient_void.wav"
 
@@ -149,8 +167,41 @@ func _connect_events() -> void:
 	EventBus.auto_attack_unlocked.connect(func() -> void: play(&"fanfare"))
 	EventBus.relics_awakened.connect(func() -> void: play(&"fanfare"))
 	EventBus.pet_evolved.connect(func(_id: StringName, _stage: int) -> void: play(&"fanfare"))
+	EventBus.eclipse_available.connect(func() -> void: play(&"fanfare"))
+	EventBus.arcade_unlocked.connect(func() -> void: play(&"fanfare"))
+	# The exception to the one-fanfare rule. An Eclipse is the biggest thing a
+	# player ever chooses to do, and sharing the generic unlock sound made it
+	# land like picking up a relic.
 	EventBus.eclipse_performed.connect(
-		func(_reward: float, _count: int) -> void: play(&"fanfare")
+		func(_reward: float, _count: int) -> void: play(&"eclipse")
+	)
+	# Bosses. The countdown is the only fail state in the game, and both ends of
+	# it — the fight starting and the timer running out — made no sound at all.
+	# Silence on failure reads as the game not having noticed.
+	EventBus.boss_fight_started.connect(
+		func(_def: EnemyDefinition, _lvl: int, _hp: float, _secs: float) -> void:
+			play(&"boss_warn")
+	)
+	EventBus.boss_fight_failed.connect(func(_level: int) -> void: play(&"fail"))
+	# The Journal, which was silent end to end.
+	EventBus.goal_completed.connect(func(_id: StringName) -> void: play(&"goal"))
+	EventBus.goal_claimed.connect(
+		func(_id: StringName, _reward_text: String) -> void: play(&"claim")
+	)
+	# Collecting something already earned, as opposed to being handed a drop.
+	EventBus.ad_reward_granted.connect(
+		func(_placement: StringName, _amount: float) -> void: play(&"claim")
+	)
+	EventBus.offline_rewards_ready.connect(
+		func(_amount: float, _away: int, _capped: bool) -> void: play(&"claim")
+	)
+	EventBus.pet_leveled.connect(func(_id: StringName, _level: int) -> void: play(&"levelup"))
+	EventBus.minigame_finished.connect(_on_minigame_finished)
+	# Navigation. One file at three pitches: opening, closing, changing screen.
+	EventBus.ui_overlay_opened.connect(func() -> void: play(&"whoosh"))
+	EventBus.ui_overlay_closed.connect(func() -> void: play(&"whoosh", 0.8))
+	EventBus.scene_transition_started.connect(
+		func(_path: String) -> void: play(&"whoosh", 0.9)
 	)
 	# Acquisitions.
 	EventBus.item_dropped.connect(func(_item: Dictionary) -> void: play(&"loot"))
@@ -165,6 +216,7 @@ func _connect_events() -> void:
 		func(_id: StringName, _level: int) -> void: play(&"confirm")
 	)
 	EventBus.active_relic_changed.connect(func(_id: StringName) -> void: play(&"confirm"))
+	EventBus.active_pet_changed.connect(func(_id: StringName) -> void: play(&"confirm"))
 	EventBus.cosmetic_equipped.connect(func(_id: StringName) -> void: play(&"confirm"))
 	EventBus.purchase_completed.connect(func(_id: StringName) -> void: play(&"confirm"))
 
@@ -249,3 +301,15 @@ func _on_boss_won(_level: int, _payout: float, is_world_boss: bool) -> void:
 	play(&"boss")
 	if is_world_boss:
 		play(&"fanfare")
+
+
+## An Arcade run ending. A win borrows the Journal's progress sound and a loss
+## borrows the boss timer's, deliberately: the Arcade is a side room, and giving
+## it private sounds would teach the player two vocabularies for one meaning.
+## QUIT is silent — forfeiting is not an outcome worth scoring.
+func _on_minigame_finished(_id: StringName, outcome: int, _payout: float) -> void:
+	match outcome:
+		Minigame.Outcome.WIN:
+			play(&"goal")
+		Minigame.Outcome.LOSS:
+			play(&"fail")
