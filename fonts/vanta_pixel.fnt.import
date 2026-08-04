@@ -1,0 +1,17 @@
+[remap]
+
+importer="font_data_bmfont"
+type="FontFile"
+uid="uid://b7mo0c1chhdyn"
+path="res://.godot/imported/vanta_pixel.fnt-5466a09c958708b82a53f0c43cfc013e.fontdata"
+
+[deps]
+
+source_file="res://fonts/vanta_pixel.fnt"
+dest_files=["res://.godot/imported/vanta_pixel.fnt-5466a09c958708b82a53f0c43cfc013e.fontdata"]
+
+[params]
+
+fallbacks=[]
+compress=true
+scaling_mode=2

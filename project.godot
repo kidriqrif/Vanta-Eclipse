@@ -14,7 +14,7 @@ config/name="Vanta Eclipse"
 config/version="0.1.0"
 run/main_scene="res://scenes/main_menu/main_menu.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
-config/icon="res://icon.svg"
+config/icon="res://icon.png"
 
 [audio]
 

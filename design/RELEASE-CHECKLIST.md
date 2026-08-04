@@ -134,7 +134,7 @@ you actually submit in.
 ### 3. Store assets
 
 All generated from the theme's own values, so the listing and the game agree.
-`tools/render_icons.gd` and `tools/render_feature_graphic.gd` rebuild them.
+`tools/make_icons.py` rebuilds them all (pixel art, integer-scaled).
 
 - [x] **`icon.svg` redrawn** — an eclipse mark in `#FF3B30`/`#A8101A` on
       `#0B0B0D`, replacing the 128×128 purple placeholder that had survived

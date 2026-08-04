@@ -256,6 +256,13 @@ MUTATIONS: list[Mutation] = [
         '\t\tpush_error("CurrencyManager: add() amount must be positive, got %f" % amount)',
     ),
     (
+        "check_glyphs.py",
+        "font: UI text uses a character the bitmap face has no glyph for",
+        "scenes/gear/gear.tscn",
+        'text = "THE FORGE"',
+        'text = "THE FORGE ⚒"',
+    ),
+    (
         "check_wiring.py",
         "audio: a typo'd sound id, which play() answers with silence",
         "scripts/managers/audio_manager.gd",

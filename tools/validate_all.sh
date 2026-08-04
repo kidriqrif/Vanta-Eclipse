@@ -81,22 +81,8 @@ echo "9. shaders and material parameters"
 echo "10. UI theme discipline and asset reachability"
 "$PY" tools/check_ui.py | sed 's/^/   /' || status=1
 
-echo "11. font-safe glyphs in button text"
-"$PY" - <<'PYEOF' || status=1
-import re, pathlib, sys
-# These were absent from Cinzel, the old Button/Header face. Nunito replaced
-# it and its coverage of these has NOT been verified, so the ban is kept:
-# being over-strict costs a design choice, being under-strict ships .notdef
-# boxes to players.
-UNSAFE = "◈◆★●→"
-bad = []
-for gd in pathlib.Path("scripts").rglob("*.gd"):
-    for i, l in enumerate(gd.read_text(encoding="utf-8").splitlines(), 1):
-        if re.search(r'(button|Button)\w*\.text\s*=', l) and any(c in UNSAFE for c in l):
-            bad.append(f"   {gd}:{i}")
-print("   OK" if not bad else "\n".join(bad))
-sys.exit(1 if bad else 0)
-PYEOF
+echo "11. font coverage (every rendered glyph exists in the face)"
+"$PY" tools/check_glyphs.py | sed 's/^/   /' || status=1
 
 # Everything above compares what the files say to each other. This one runs
 # the game: it seeds every save section, pushes it through the real save/load
