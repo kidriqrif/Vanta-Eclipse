@@ -98,6 +98,12 @@ against the code by `tools/check_architecture.py`:
   mid-save can never destroy progress; loading falls back to the backup.
 * Format changes bump `SAVE_VERSION` and add one numbered step in
   `SaveManager._migrate()`. Old saves upgrade step by step to the newest format.
+* Saves from a **newer** build are refused, never downgraded, and copied to
+  `user://savegame.from_vN.json` first. Loading one would hand new-format
+  sections to old code and relabel them as old-format, so the next update would
+  migrate already-migrated data and destroy the run — and refusing without
+  keeping a copy would be just as bad, because the 60 s autosave overwrites the
+  file we declined to read.
 * `saved_at_unix` is the anchor for offline progression (Milestone 4).
 * Cloud saves (Milestone 15) will upload `SaveManager.get_full_save_text()`.
 

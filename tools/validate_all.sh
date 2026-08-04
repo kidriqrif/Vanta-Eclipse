@@ -105,7 +105,10 @@ PYEOF
 # this script can see it.
 echo "12. runtime logic (save round-trip, invariants)"
 if bash tools/logic_run.sh >/tmp/vanta_logic.$$ 2>&1; then
-  tail -1 /tmp/vanta_logic.$$ | sed 's/^ *//;s/^/   /'
+  # The verdict line by name, NOT tail -1. Anything the engine prints after the
+  # harness has spoken — a leak warning, a driver notice — is not the result,
+  # and this stage spent a while reporting one of those as if it were.
+  grep -E "^ *LOGIC: " /tmp/vanta_logic.$$ | sed 's/^ *//;s/^/   /'
 else
   sed 's/^/   /' /tmp/vanta_logic.$$ | tail -12
   status=1

@@ -80,7 +80,12 @@ LOG="$(mktemp)"
 "$BIN" --headless --path "$PROJECT_DIR" --quit-after 1800 >"$LOG" 2>&1
 status=$?
 
-grep -vE "^Godot Engine|^$|WARNING: ObjectDB|^ +at: " "$LOG" | sed 's/^/   /'
+# Leak warnings are deliberately NOT filtered out. The filter that used to try
+# read "WARNING: ObjectDB" and the engine actually prints "WARNING: 2 ObjectDB
+# instances were leaked at exit", so it never matched anything — and the only
+# reason the leak it was meant to hide was ever noticed is that it failed to
+# hide it. Suppressing engine noise you have not read is how you suppress a bug.
+grep -vE "^Godot Engine|^$|^ +at: " "$LOG" | sed 's/^/   /'
 
 # A harness that dies before printing its verdict exits 0 via the watchdog,
 # which would read as a pass. Require the verdict line itself.
@@ -91,6 +96,27 @@ if ! grep -q "^LOGIC: " "$LOG"; then
 	rm -f "$LOG"
 	exit 1
 fi
+# Objects still alive at exit. A budget, not zero, and the number is the whole
+# point of the check.
+#
+# Quitting with the music playing costs exactly two — the AudioStreamWAV and
+# its AudioStreamPlaybackWAV — because releasing a playback takes an
+# AudioServer mix step and quit() is not guaranteed to run one. It is a race:
+# the same build reports 0 or 2 across identical runs, and reported 0 every
+# time under --verbose purely because logging slowed it down. Demanding zero
+# would be a check that fails on how fast the machine is.
+#
+# Above the budget is different: that is an owner that did not let go.
+LEAK_BUDGET=2
+leaked=$(sed -n 's/.*WARNING: \([0-9][0-9]*\) ObjectDB instances were leaked.*/\1/p' "$LOG" | head -1)
+if [ -n "$leaked" ] && [ "$leaked" -gt "$LEAK_BUDGET" ]; then
+	echo "logic checks FAILED — $leaked objects alive at exit, budget $LEAK_BUDGET:" >&2
+	grep -E "ObjectDB instances were leaked|Leaked instance:" "$LOG" | sed 's/^/   /' >&2
+	echo "   Name them: GODOT=/path/to/a/--verbose/wrapper bash tools/logic_run.sh" >&2
+	rm -f "$LOG"
+	exit 1
+fi
+
 rm -f "$LOG"
 
 if [ "$status" -ne 0 ]; then

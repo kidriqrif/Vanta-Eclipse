@@ -142,6 +142,22 @@ func _try_load_from(path: String) -> bool:
 		push_error("SaveManager: %s is missing its 'sections' block." % path)
 		return false
 
+	var version: int = int(document.get("save_version", SAVE_VERSION))
+	if version > SAVE_VERSION:
+		# A save written by a NEWER build. This one cannot understand it, and
+		# the damage of trying is not the failed load — it is that _migrate()
+		# used to stamp save_version back DOWN to SAVE_VERSION. That relabels
+		# new-format data as old-format, so when the player updates again the
+		# migration chain runs over data that has already been migrated and
+		# destroys the run. Silently, and with no way back.
+		#
+		# Happens for real: a Play Store staged rollback, an internal-test
+		# build followed by the public one, or a device restore.
+		push_error("SaveManager: %s was written by save v%d, newer than v%d — refusing to load it."
+			% [path, version, SAVE_VERSION])
+		_quarantine(path, version)
+		return false
+
 	document = _migrate(document)
 
 	var sections: Dictionary = document["sections"]
@@ -161,7 +177,9 @@ func _try_load_from(path: String) -> bool:
 ##         sections["currency"]["eclipse_essence"] = sections["currency"].get("gold", 0)
 ##
 ## Chaining single steps means a save from ANY old version always upgrades
-## cleanly to the newest format.
+## cleanly to the newest format. Saves from a NEWER version never reach here —
+## _try_load_from() refuses them, because there is no such thing as migrating
+## backwards.
 func _migrate(document: Dictionary) -> Dictionary:
 	var version: int = int(document.get("save_version", 1))
 	while version < SAVE_VERSION:
@@ -171,6 +189,25 @@ func _migrate(document: Dictionary) -> Dictionary:
 		version += 1
 	document["save_version"] = SAVE_VERSION
 	return document
+
+
+## Keep a copy of a save this build is too old to read.
+##
+## Refusing to load it is not enough on its own: the game carries on into a
+## fresh run and the 60-second autosave overwrites the very file we refused,
+## so declining to read the player's progress would be what deletes it. With a
+## copy aside, updating again recovers everything.
+func _quarantine(path: String, version: int) -> void:
+	var kept: String = "user://savegame.from_v%d.json" % version
+	if FileAccess.file_exists(kept):
+		# An earlier launch already preserved this. Keep the first copy: it is
+		# the one written before any of this build's autosaves ran.
+		return
+	var error: int = DirAccess.copy_absolute(path, kept)
+	if error != OK:
+		push_error("SaveManager: could not preserve the newer save at %s (error %d)" % [kept, error])
+		return
+	push_warning("SaveManager: the newer save was kept at %s — reinstall the newer build to use it." % kept)
 
 
 ## Write the save so that a crash at ANY point leaves a readable file:

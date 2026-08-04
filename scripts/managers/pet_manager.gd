@@ -114,7 +114,14 @@ func get_stage(id: StringName) -> int:
 	for threshold: int in def.evolution_levels:
 		if level >= threshold:
 			stage += 1
-	return mini(stage, def.stage_names.size() - 1)
+	# Clamped against BOTH parallel arrays, not just the names. Five UI sites
+	# take this index straight into stage_sprites, so a pet given a third name
+	# before its third sprite exists would crash the companion button — which
+	# is on screen the entire game. check_data.py rejects that content at build
+	# time; this is what keeps a build that slipped through merely wrong-looking
+	# instead of dead.
+	var stages: int = mini(def.stage_names.size(), def.stage_sprites.size())
+	return clampi(stage, 0, maxi(0, stages - 1))
 
 
 ## XP into the current level and XP needed to reach the next.

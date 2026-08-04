@@ -243,6 +243,20 @@ MUTATIONS: list[Mutation] = [
         '\t\tpush_error("CurrencyManager: add() amount must be positive, got %f" % amount)',
     ),
     (
+        "check_data.py",
+        "parallel arrays: a pet gains a stage name but not the sprite for it",
+        "data/pets/ember.tres",
+        'stage_names = PackedStringArray("Ember", "Blaze")',
+        'stage_names = PackedStringArray("Ember", "Blaze", "Inferno")',
+    ),
+    (
+        "check_data.py",
+        "parallel arrays: a stage no evolution threshold can reach",
+        "data/pets/frostling.tres",
+        "evolution_levels = PackedInt32Array(10)",
+        "evolution_levels = PackedInt32Array()",
+    ),
+    (
         "check_ui.py",
         "screen title drifts onto the muted secondary-text style",
         "scenes/journal/journal.tscn",

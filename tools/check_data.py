@@ -237,11 +237,118 @@ def check_reachability() -> tuple[list[str], list[str]]:
     ]
 
 
+# --- 6. arrays indexed together stay the same length --------------------------
+
+ARRAY_CALL = re.compile(r"^[A-Za-z_]\w*(?:\[[^\]]*\])?\((.*)\)$", re.S)
+
+# Fields a definition indexes with ONE shared index.
+#
+# PetManager.get_stage() derives a stage number, and five UI sites push it
+# straight into stage_sprites — so a pet given a third stage name before its
+# third sprite exists crashes the companion button, which is on screen for the
+# entire game. The only thing holding these together was the words "parallel to
+# stage_names" in a doc comment, and a comment cannot fail a build.
+#
+# (script stem, anchor field, partner field, len(partner) - len(anchor))
+PARALLEL: list[tuple[str, str, str, int]] = [
+    ("pet_definition", "stage_names", "stage_sprites", 0),
+    # One threshold BETWEEN each pair of stages. A stage with no threshold to
+    # reach it is a name and a sprite no player can ever see.
+    ("pet_definition", "stage_names", "evolution_levels", -1),
+]
+
+
+def _split_top(text: str) -> list[str]:
+    """Split on commas that are not inside quotes, brackets or parentheses."""
+    parts: list[str] = []
+    depth = 0
+    quote = ""
+    current = ""
+    for char in text:
+        if quote:
+            current += char
+            if char == quote:
+                quote = ""
+            continue
+        if char in "\"'":
+            quote = char
+        elif char in "([{":
+            depth += 1
+        elif char in ")]}":
+            depth -= 1
+        elif char == "," and depth == 0:
+            parts.append(current)
+            current = ""
+            continue
+        current += char
+    parts.append(current)
+    return [p for p in (piece.strip() for piece in parts) if p]
+
+
+def count_elements(raw: str) -> int | None:
+    """Entries in a .tres array literal, or None if it is not one.
+
+    Covers the three spellings Godot writes: PackedStringArray("a", "b"),
+    Array[Texture2D]([ExtResource("1")]) and a bare []. None rather than 0 for
+    anything else, because a value this cannot read must fail loudly — silently
+    counting it as empty would turn an unparsed field into a passing check.
+    """
+    text = raw.strip()
+    call = ARRAY_CALL.match(text)
+    if call:
+        text = call.group(1).strip()
+    elif not (text.startswith("[") and text.endswith("]")):
+        return None
+    if text.startswith("[") and text.endswith("]"):
+        text = text[1:-1].strip()
+    if not text:
+        return 0
+    return len(_split_top(text))
+
+
+def check_parallel_arrays() -> tuple[list[str], list[str]]:
+    problems: list[str] = []
+    checked = 0
+    for path in tres_files():
+        stem, fields = parse(path)
+        rules = [rule for rule in PARALLEL if rule[0] == stem]
+        if not rules:
+            continue
+        rel = path.relative_to(ROOT)
+        for _stem, anchor, partner, offset in rules:
+            checked += 1
+            missing = [f for f in (anchor, partner) if f not in fields]
+            if missing:
+                problems.append(f"{rel}: {stem} never sets {', '.join(missing)}")
+                continue
+            counts = {field: count_elements(fields[field]) for field in (anchor, partner)}
+            unreadable = [f for f, n in counts.items() if n is None]
+            if unreadable:
+                field = unreadable[0]
+                problems.append(f"{rel}: cannot count entries in {field} = {fields[field]}")
+                continue
+            have_anchor = counts[anchor]
+            have_partner = counts[partner]
+            if have_anchor == 0:
+                problems.append(
+                    f"{rel}: {anchor} is empty — every index into it is out of range"
+                )
+                continue
+            if have_partner != have_anchor + offset:
+                problems.append(
+                    f"{rel}: {partner} has {have_partner} entries, expected "
+                    f"{have_anchor + offset} — it is indexed with {anchor} "
+                    f"({have_anchor} entries)"
+                )
+    return problems, [f"{checked} parallel-array constraints"]
+
+
 CHECKS = [
     ("property names", check_properties),
     ("enum ranges + paths", check_values),
     ("ids + cross-references", check_ids),
     ("definition reachability", check_reachability),
+    ("parallel arrays stay parallel", check_parallel_arrays),
 ]
 
 

@@ -41,7 +41,8 @@ func _run() -> void:
 	_check_round_trip()
 	_check_invariants()
 	_check_currency_hardening()
-	_check_audio()
+	await _check_audio()
+	_check_future_save()
 	_check_positive_control()
 
 	print("")
@@ -49,6 +50,14 @@ func _run() -> void:
 		print("LOGIC: OK — %d checks passed" % _checks)
 	else:
 		print("LOGIC: %d of %d checks FAILED" % [_failures, _checks])
+
+	# Quit the way the game does, and let AudioManager's own EXIT_TREE handler
+	# do the stopping. Padding frames in here was tried and dropped: with eight
+	# frames of grace the exit-time leak count still came back 0, 2, 0 over
+	# three identical runs. Releasing an audio playback needs an AudioServer
+	# mix step that a quitting process is not guaranteed to run, so the count
+	# measures the machine, not the code. logic_run.sh budgets for it rather
+	# than pretending a frame count fixed it.
 	get_tree().quit(1 if _failures > 0 else 0)
 
 
@@ -312,6 +321,93 @@ func _check_audio() -> void:
 	_ok("music is on the Music bus and playing",
 		music.size() == 1 and (music[0] as AudioStreamPlayer).playing,
 		"%d music players" % music.size())
+	if music.size() != 1:
+		return
+
+	# Backgrounding. On Android NOTIFICATION_APPLICATION_PAUSED arrives the
+	# moment the player presses Home, and NOTHING else in this game stops the
+	# music: PROCESS_MODE_ALWAYS means pausing the tree does not, and a
+	# LOOP_FORWARD stream never reaches an end. If suspend() does not stop it,
+	# the drone plays over whatever the player opened next until they
+	# force-quit. The notification cannot be raised from a headless desktop
+	# run, so the handler and this check deliberately share one entry point
+	# instead of being tested apart.
+	var player: AudioStreamPlayer = music[0]
+	player.seek(5.0)
+	await get_tree().process_frame
+	AudioManager.suspend()
+	_ok("suspend() stops the music (the Android home button)", not player.playing)
+	AudioManager.resume()
+	_ok("resume() starts it again", player.playing)
+	# Resuming from zero would restart the drone's slow swell every time the
+	# player glanced at a notification, which is audible and cheap to avoid.
+	var resumed_at: float = player.get_playback_position()
+	_ok("resume() picks up mid-loop rather than from the top", resumed_at > 1.0,
+		"resumed at %.2fs" % resumed_at)
+
+	# Two events on one frame must not stack the same clip on top of itself.
+	# Beating a world boss does exactly that: CombatManager emits
+	# boss_fight_won, WorldManager answers it by emitting world_unlocked, and
+	# both map to the fanfare. Each clip peaks at 0.72, so the pair sums to
+	# 1.44 and the game's biggest moment is the one that distorts.
+	var fanfare: Array = AudioManager._voices.get(&"fanfare", [])
+	if fanfare.is_empty():
+		_ok("fanfare voice pool exists", false)
+		return
+	AudioManager._last_played_msec.erase(&"fanfare")
+	AudioManager.play(&"fanfare")
+	AudioManager.play(&"fanfare")
+	var live: int = 0
+	for voice: AudioStreamPlayer in fanfare:
+		if voice.playing:
+			live += 1
+	_ok("the same sound twice in one frame plays once, not twice", live == 1,
+		"%d fanfare voices playing at the same instant" % live)
+	for voice: AudioStreamPlayer in fanfare:
+		voice.stop()
+
+
+## A save written by a NEWER build must be refused, not quietly relabelled.
+##
+## _migrate() used to end with an unconditional
+##     document["save_version"] = SAVE_VERSION
+## so a v2 save opened by a v1 build was stamped back DOWN to v1 while its
+## v2-format sections were handed to v1 code. Nothing errors. The player
+## updates again, the 1->2 migration runs over data already in v2 format, and
+## the run is gone with no way back. It happens for real: a staged rollback, an
+## internal-test build followed by the public one, a device restore.
+##
+## Inert while SAVE_VERSION is 1 — which is exactly why it needs a check now,
+## because the day it stops being inert is the day it costs someone their save.
+func _check_future_save() -> void:
+	var quarantine: String = "user://savegame.from_v%d.json" % (SaveManager.SAVE_VERSION + 1)
+	# Removed first: _quarantine() keeps the earliest copy, so a leftover from a
+	# previous run would make the assertion below pass without this run
+	# having preserved anything.
+	if FileAccess.file_exists(quarantine):
+		DirAccess.remove_absolute(quarantine)
+
+	SaveManager.save_game()
+	var file := FileAccess.open(SaveManager.SAVE_PATH, FileAccess.READ)
+	if file == null:
+		_ok("future save: the save is readable", false)
+		return
+	var document: Dictionary = JSON.parse_string(file.get_as_text())
+	file.close()
+	document["save_version"] = SaveManager.SAVE_VERSION + 1
+	var out := FileAccess.open(SaveManager.SAVE_PATH, FileAccess.WRITE)
+	out.store_string(JSON.stringify(document, "\t"))
+	out.close()
+
+	_ok("a save from a newer build is refused, not downgraded",
+		not SaveManager._try_load_from(SaveManager.SAVE_PATH))
+	# Refusing is only safe if the file survives. The game carries on into a
+	# fresh run and autosaves sixty seconds later, so with no copy aside,
+	# declining to read the player's progress is what destroys it.
+	_ok("the newer save is kept aside for the build that can read it",
+		FileAccess.file_exists(quarantine), quarantine)
+	if FileAccess.file_exists(quarantine):
+		DirAccess.remove_absolute(quarantine)
 
 
 ## Prove the round-trip comparison can fail.

@@ -12,13 +12,34 @@ extends Node
 ## fastest attack speed in the game without cutting its own tail off.
 const VOICES: int = 4
 
-## The tap fires on every attack, and Swift Hunt plus Twin Fang can drive the
-## auto-attacker faster than a sound can decay. Below this gap the hit is
-## skipped entirely rather than layered — twenty taps a second is a buzz, not
-## feedback, and it is also the fastest way to make someone mute a game.
-const MIN_HIT_GAP: float = 0.055
-## Kills come in bursts at high attack speed for the same reason.
-const MIN_DEATH_GAP: float = 0.12
+## Minimum gap between two plays of the SAME sound, in seconds.
+##
+## Layering a clip over itself does not make it twice as loud, it makes it
+## clip: every sound peaks at 0.72, and two in the same frame is 1.44 into a
+## bus that stops at 1.0. That is not hypothetical — CombatManager emits
+## boss_fight_won, WorldManager answers that signal by emitting world_unlocked,
+## and both map to the fanfare, so beating a world boss distorted the single
+## biggest moment the game has.
+##
+## Sounds gap independently of each other. A crit landing 10ms after a tap
+## still plays both, because two different sounds read as variety; it is one
+## sound repeating that reads as a fault.
+const REPEAT_GAP: Dictionary = {
+	# Swift Hunt plus Twin Fang drives the auto-attacker faster than the tap
+	# can decay. Twenty taps a second is a buzz, not feedback, and it is the
+	# fastest way to make someone mute a game.
+	&"tap": 0.055,
+	# Kills arrive in bursts at high attack speed for the same reason.
+	&"death": 0.12,
+	# Long, loud, and triggered by two separate events on one frame.
+	&"fanfare": 0.4,
+	&"boss": 0.4,
+	# A kill can drop an item, a relic and a pet at once.
+	&"loot": 0.06,
+}
+## Enough to stop one frame's duplicates without ever being audible as a
+## dropped sound.
+const DEFAULT_REPEAT_GAP: float = 0.03
 
 ## Per-shot pitch jitter. Without it a held finger produces the same 70ms
 ## sample forty times in a row, which stops reading as impact and starts
@@ -41,8 +62,13 @@ var _voices: Dictionary = {}
 var _next_voice: Dictionary = {}
 var _music: AudioStreamPlayer
 
-var _last_hit_msec: int = 0
-var _last_death_msec: int = 0
+## sound id -> Time.get_ticks_msec() of its last play.
+var _last_played_msec: Dictionary = {}
+
+## Where the drone had got to when the app was backgrounded, so resuming picks
+## the loop up rather than restarting its swell from the top every time the
+## player glances at a notification.
+var _music_position: float = 0.0
 
 
 func _ready() -> void:
@@ -52,6 +78,21 @@ func _ready() -> void:
 	_build_voices()
 	_build_music()
 	_connect_events()
+
+
+func _notification(what: int) -> void:
+	match what:
+		# Android home button / app switch. NOTHING else in the game stops the
+		# music: PROCESS_MODE_ALWAYS means pausing the tree does not, and a
+		# LOOP_FORWARD stream has no end to reach on its own. Without this the
+		# drone follows the player out of the app and plays over whatever they
+		# opened next, until they force-quit the game.
+		NOTIFICATION_APPLICATION_PAUSED:
+			suspend()
+		NOTIFICATION_APPLICATION_RESUMED:
+			resume()
+		NOTIFICATION_WM_CLOSE_REQUEST, NOTIFICATION_EXIT_TREE:
+			_shutdown()
 
 
 func _build_voices() -> void:
@@ -131,12 +172,57 @@ func _connect_events() -> void:
 # --- Public -------------------------------------------------------------------
 
 
-## Play a sound by id. Round-robins the voice pool so a sound never cuts its
-## own tail, and jitters pitch so repeats do not sound mechanical.
+## Silence everything and remember where the music was. Public because the
+## logic harness drives it directly — the Android lifecycle notifications it
+## normally answers cannot be raised from a headless desktop run.
+func suspend() -> void:
+	if _music != null and _music.playing:
+		_music_position = _music.get_playback_position()
+		_music.stop()
+	for id: StringName in _voices:
+		for player: AudioStreamPlayer in _voices[id]:
+			player.stop()
+
+
+## Pick the drone back up where it left off. One-shots are not resumed: a hit
+## sound the player never heard is not worth playing three minutes late.
+func resume() -> void:
+	if _music != null and not _music.playing:
+		_music.play(_music_position)
+
+
+## Stop, then hand the streams back.
+##
+## Clearing `stream` drops this side's reference immediately rather than
+## leaving it to whenever the player node is finally freed. The AudioServer
+## still releases the playback on its own schedule — it needs one mix step to
+## do it — so on the quit path, where no further frame runs, the pair is
+## reported as leaked no matter what happens here. Measured, not assumed: this
+## function demonstrably runs, and the exit-time warning survives it.
+##
+## It earns its place on the desktop close path, where NOTIFICATION_WM_CLOSE_-
+## REQUEST arrives with frames still to come and the release does complete.
+func _shutdown() -> void:
+	suspend()
+	if _music != null:
+		_music.stream = null
+	for id: StringName in _voices:
+		for player: AudioStreamPlayer in _voices[id]:
+			player.stream = null
+
+
+## Play a sound by id. Drops a repeat of the same sound inside its REPEAT_GAP,
+## round-robins the voice pool so a sound never cuts its own tail, and jitters
+## pitch so repeats do not sound mechanical.
 func play(id: StringName, pitch: float = 1.0) -> void:
 	var pool: Array = _voices.get(id, [])
 	if pool.is_empty():
 		return
+	var now: int = Time.get_ticks_msec()
+	var gap: float = REPEAT_GAP.get(id, DEFAULT_REPEAT_GAP)
+	if now - int(_last_played_msec.get(id, -100000)) < int(gap * 1000.0):
+		return
+	_last_played_msec[id] = now
 	var index: int = int(_next_voice[id])
 	_next_voice[id] = (index + 1) % pool.size()
 	var player: AudioStreamPlayer = pool[index]
@@ -148,20 +234,14 @@ func play(id: StringName, pitch: float = 1.0) -> void:
 
 
 func _on_enemy_damaged(_amount: float, is_crit: bool, _hp: float, _max_hp: float) -> void:
-	var now: int = Time.get_ticks_msec()
-	# A crit is always heard: it is the moment worth hearing, and rate-limiting
-	# it away would mean the louder the fight, the less the payoff registers.
-	if not is_crit and now - _last_hit_msec < int(MIN_HIT_GAP * 1000.0):
-		return
-	_last_hit_msec = now
+	# No rate limiting here any more — play() gaps each sound against itself.
+	# A crit therefore still lands even in the middle of a stream of taps,
+	# which matters: it is the moment worth hearing, and suppressing it would
+	# mean the bigger the fight, the less the payoff registers.
 	play(&"crit" if is_crit else &"tap")
 
 
 func _on_enemy_died(_level: int, _total_kills: int) -> void:
-	var now: int = Time.get_ticks_msec()
-	if now - _last_death_msec < int(MIN_DEATH_GAP * 1000.0):
-		return
-	_last_death_msec = now
 	play(&"death")
 
 
