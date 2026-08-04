@@ -207,7 +207,8 @@ func _quarantine(path: String, version: int) -> void:
 	if error != OK:
 		push_error("SaveManager: could not preserve the newer save at %s (error %d)" % [kept, error])
 		return
-	push_warning("SaveManager: the newer save was kept at %s — reinstall the newer build to use it." % kept)
+	push_warning("SaveManager: the newer save was kept at %s — reinstall the newer build to use it."
+		% kept)
 
 
 ## Write the save so that a crash at ANY point leaves a readable file:
