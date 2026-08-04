@@ -12,7 +12,6 @@ const SHOT_MISS: Texture2D = preload("res://sprites/minigames/shot_miss.png")
 const SHOT_HIT: Texture2D = preload("res://sprites/minigames/shot_hit.png")
 const SHOT_SUNK: Texture2D = preload("res://sprites/minigames/shot_sunk.png")
 
-const ARCADE_CORE: Color = UIPalette.ink()
 const CELL_BG: Color = Color(0.078, 0.078, 0.11, 0.9)
 
 const UNKNOWN: int = 0
@@ -205,7 +204,7 @@ func _on_cell_pressed(index: int) -> void:
 		if _ship_health[ship] <= 0:
 			_sunk += 1
 			_reveal_sunk(ship, index)
-			_set_status("SHIP SUNK", ARCADE_CORE)
+			_set_status("SHIP SUNK", UIPalette.ink())
 		else:
 			_set_status("HIT", _ink)
 	_cells[index].disabled = true
@@ -270,7 +269,7 @@ func _end_run(won: bool, detail: String) -> void:
 		performance = float(_hits) / float(_total_ship_cells)
 	_set_status(
 		"FLEET DESTROYED" if won else "OUT OF SHOTS",
-		ARCADE_CORE if won else UIPalette.muted()
+		UIPalette.ink() if won else UIPalette.muted()
 	)
 	_finish(
 		Outcome.WIN if won else Outcome.LOSS, performance, float(_shots), detail

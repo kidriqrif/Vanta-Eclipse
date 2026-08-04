@@ -138,18 +138,30 @@ def feature_graphic() -> Canvas:
 
 def main() -> int:
     ICONS.mkdir(parents=True, exist_ok=True)
+    # alpha=False on the three that Play composites itself rather than masks.
+    #
+    # The store icon and the feature graphic are listing artwork: Play draws
+    # them on its own surfaces and rejects — or has historically rejected —
+    # transparency in them. The adaptive BACKGROUND layer must be fully opaque
+    # by Android's own rule, because the launcher slides it under the
+    # foreground during parallax and any hole shows through to nothing.
+    #
+    # The adaptive FOREGROUND keeps its alpha: that layer is supposed to be
+    # mostly transparent. So does launcher_192 (legacy icon, masked by the
+    # launcher) and icon.png (the in-engine window icon).
     jobs = [
-        (ICONS / "store_icon_512.png", store_icon(32).scaled(16)),
-        (ICONS / "launcher_192.png", store_icon(32).scaled(6)),
-        (ICONS / "adaptive_foreground_432.png", adaptive_foreground(27).scaled(16)),
-        (ICONS / "adaptive_background_432.png", adaptive_background(27).scaled(16)),
-        (ICONS / "feature_graphic_1024x500.png", feature_graphic().scaled(4)),
-        (ROOT / "icon.png", store_icon(32).scaled(4)),
+        (ICONS / "store_icon_512.png", store_icon(32).scaled(16), False),
+        (ICONS / "launcher_192.png", store_icon(32).scaled(6), True),
+        (ICONS / "adaptive_foreground_432.png", adaptive_foreground(27).scaled(16), True),
+        (ICONS / "adaptive_background_432.png", adaptive_background(27).scaled(16), False),
+        (ICONS / "feature_graphic_1024x500.png", feature_graphic().scaled(4), False),
+        (ROOT / "icon.png", store_icon(32).scaled(4), True),
     ]
-    for path, canvas in jobs:
-        size = write_png(path, canvas)
-        print("  %-38s %4dx%-4d %7d B"
-              % (path.relative_to(ROOT).as_posix(), canvas.width, canvas.height, size))
+    for path, canvas, alpha in jobs:
+        size = write_png(path, canvas, alpha=alpha)
+        print("  %-38s %4dx%-4d %7d B  %s"
+              % (path.relative_to(ROOT).as_posix(), canvas.width, canvas.height,
+                 size, "RGBA" if alpha else "RGB"))
     return 0
 
 

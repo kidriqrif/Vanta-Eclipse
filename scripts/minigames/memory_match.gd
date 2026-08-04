@@ -20,7 +20,6 @@ const FACES: Array[Texture2D] = [
 const CARD_BACK: Texture2D = preload("res://sprites/minigames/card_back.png")
 const CARD_BG: Color = Color(0.078, 0.078, 0.11, 0.9)
 
-const ARCADE_CORE: Color = UIPalette.ink()
 
 const DEFAULT_PAIRS: int = 6
 const DEFAULT_BUDGET: int = 12
@@ -165,7 +164,7 @@ func _resolve_match(a: int, b: int) -> void:
 		_cards[index].add_theme_color_override("icon_disabled_color", Color.WHITE)
 		_cards[index].disabled = true
 	_status_label.text = "MATCH!"
-	_status_label.add_theme_color_override("font_color", ARCADE_CORE)
+	_status_label.add_theme_color_override("font_color", UIPalette.ink())
 	if _matched >= _pairs:
 		_end_run(true)
 	elif _attempts >= _budget:
@@ -206,7 +205,7 @@ func _end_run(won: bool) -> void:
 	var detail: String = "%d pairs in %d attempts" % [_matched, _attempts] if won \
 		else "%d of %d pairs" % [_matched, _pairs]
 	_status_label.text = "CLEARED" if won else "OUT OF ATTEMPTS"
-	_status_label.add_theme_color_override("font_color", ARCADE_CORE if won else UIPalette.muted())
+	_status_label.add_theme_color_override("font_color", UIPalette.ink() if won else UIPalette.muted())
 	_finish(
 		Outcome.WIN if won else Outcome.LOSS, performance, float(_attempts), detail
 	)

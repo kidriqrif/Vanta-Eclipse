@@ -17,7 +17,7 @@ Vanta Eclipse
 ```
 An idle RPG in the dark. Your hero fights on while you're away.
 ```
-`[62]`
+`[63]`
 
 ## Full description  *(4000 max)*
 
@@ -54,15 +54,20 @@ against your current rate, so they never go stale and never become the
 optimal way to play.
 
 FAIR BY DESIGN
-No mechanic in this game is behind a paywall. Ads are opt-in, capped per day,
-and always a bonus on top of something you already earned — declining one
-never costs you anything. There is no energy meter, no timer blocking a door,
-and no way to buy power. The only things money buys are cosmetics and the
-option to skip the ads.
+No mechanic in this game is behind a paywall. There are no ads, no purchases,
+no energy meter, no timer blocking a door, and no way to buy power. Every
+cosmetic is earned by playing.
 
 Plays in portrait, one-handed, offline.
 ```
-`[1547]`
+`[1662]`
+
+> The FAIR BY DESIGN paragraph above is written for the **current, unmonetised
+> build**. The original copy described opt-in ads and cosmetic purchases, which
+> is the design intent but not what installs today — and a listing that
+> promises "the option to skip the ads" for an app with no ads is a
+> misrepresentation. Restore the longer version alongside
+> `USE_STUB_PROVIDERS = false`.
 
 ---
 
@@ -73,9 +78,22 @@ Plays in portrait, one-handed, offline.
 | App or game | Game |
 | Category | Role Playing |
 | Tags | Idle, RPG, Offline |
-| Contains ads | **Yes** — rewarded video only |
-| In-app purchases | **Yes** — $0.99–$4.99 |
+| Contains ads | **No** — for the build that ships today (see below) |
+| In-app purchases | **No** — for the build that ships today (see below) |
 | Target audience | 13+ (see note) |
+
+> **These two answers describe the BUILD, not the design.**
+> `MonetizationManager.USE_STUB_PROVIDERS` is `true`, so
+> `PAID_SURFACES_AVAILABLE` is `false` and every paid surface is hidden: there
+> is no ad SDK in the bundle and no Play Billing library, so the app shows no
+> ads and takes no money. Declaring "Yes" would be a false declaration, and
+> declaring IAP with no billing integration and no SKUs in Play Console fails
+> review.
+>
+> When real providers land, both answers become **Yes** (rewarded video only;
+> $0.99–$4.99), the Data Safety form has to be redone from the ad SDK's
+> disclosure, and the `AD_ID` permission declaration applies. Flip these back
+> in the same change that sets `USE_STUB_PROVIDERS = false`.
 
 **Note on age rating.** The IARC questionnaire will ask about violence.
 Combat here is a health bar and a particle burst against stylised creatures —
@@ -102,5 +120,5 @@ after integration — not before, and not from this file.
 | App icon | 512×512 32-bit PNG, no alpha | ✅ `production/icons/store_icon_512.png` |
 | Feature graphic | 1024×500 PNG/JPG, no alpha | ✅ `production/icons/feature_graphic_1024x500.png` |
 | Phone screenshots | ≥2, 16:9 or 9:16, 320–3840px | ✅ `production/screenshots/` |
-| Privacy policy URL | public, reachable | ⛔ text drafted in `production/privacy-policy.md`, **needs hosting** |
-| Signed AAB | targeting current API level | ⛔ blocked on build environment |
+| Privacy policy URL | public, reachable | ⛔ `docs/privacy-policy.html` exists but GitHub Pages is **off** — the URL 404s, and the in-app Settings button opens it |
+| Signed AAB | targeting current API level | ✅ `build/vanta-eclipse.aab`, targetSdk 36, arm64-v8a, 16 KB-aligned |

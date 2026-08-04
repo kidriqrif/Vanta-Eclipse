@@ -106,8 +106,23 @@ fi
 # time under --verbose purely because logging slowed it down. Demanding zero
 # would be a check that fails on how fast the machine is.
 #
+# The harness also compiles every script and instantiates every scene now
+# (_check_scripts_parse / _check_scenes_instantiate, added after all four
+# Arcade minigames shipped un-parseable and nothing noticed). That work leaves
+# its own residue, and the amount depends on how much the engine had to
+# recompile rather than on whether anything is owned wrongly. Measured on this
+# machine, same code, back to back:
+#
+#     warm run, nothing recompiled ........ 2, 2, 2, 2, 2
+#     cold run, harness recompiled ........ 4
+#     cold run + asset reimport ........... 8
+#
+# So the floor moved and the ceiling is now set by the coldest case, not by the
+# code. 12 keeps a cold CI run green while still being far below what an actual
+# retained node would produce — a leaked screen brings its whole subtree.
+#
 # Above the budget is different: that is an owner that did not let go.
-LEAK_BUDGET=2
+LEAK_BUDGET=12
 leaked=$(sed -n 's/.*WARNING: \([0-9][0-9]*\) ObjectDB instances were leaked.*/\1/p' "$LOG" | head -1)
 if [ -n "$leaked" ] && [ "$leaked" -gt "$LEAK_BUDGET" ]; then
 	echo "logic checks FAILED — $leaked objects alive at exit, budget $LEAK_BUDGET:" >&2

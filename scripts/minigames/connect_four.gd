@@ -11,7 +11,6 @@ const DISC_PLAYER: Texture2D = preload("res://sprites/minigames/disc_player.png"
 const DISC_AI: Texture2D = preload("res://sprites/minigames/disc_ai.png")
 const CELL_EMPTY: Texture2D = preload("res://sprites/minigames/cell_empty.png")
 
-const ARCADE_CORE: Color = UIPalette.ink()
 const BOARD_BG: Color = Color(0.078, 0.078, 0.11, 0.9)
 
 const EMPTY: int = 0
@@ -370,7 +369,7 @@ func _end_run(won: bool, detail: String, drawn: bool = false) -> void:
 	else:
 		performance = clampf(float(_longest_run(PLAYER) - 1) / float(CONNECT - 1), 0.0, 1.0)
 	var headline: String = "YOU WIN" if won else ("DRAW" if drawn else "DEFEATED")
-	_set_status(headline, ARCADE_CORE if won else UIPalette.muted())
+	_set_status(headline, UIPalette.ink() if won else UIPalette.muted())
 	_finish(
 		Outcome.WIN if won else Outcome.LOSS, performance, float(_player_moves), detail
 	)

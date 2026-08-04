@@ -199,6 +199,34 @@ class Canvas:
 # --- PNG ----------------------------------------------------------------------
 
 
+def _to_rgb(rgba: bytes, width: int, height: int) -> bytearray:
+    """Drop the alpha channel, compositing any transparency onto void.
+
+    Both buffers carry the PNG per-scanline filter byte, which is 0 (None) for
+    everything this module writes, so the row stride changes but the leading
+    byte is copied through unchanged.
+    """
+    out = bytearray()
+    src_stride = 1 + width * 4
+    for y in range(height):
+        row = y * src_stride
+        out.append(rgba[row])                       # the filter byte
+        for x in range(width):
+            at = row + 1 + x * 4
+            r, g, b, a = rgba[at], rgba[at + 1], rgba[at + 2], rgba[at + 3]
+            if a == 255:
+                out += bytes((r, g, b))
+            else:
+                # Composite onto void (#08080C) — the background these images
+                # are seen against — scaled by coverage.
+                out += bytes((
+                    (r * a + 0x08 * (255 - a)) // 255,
+                    (g * a + 0x08 * (255 - a)) // 255,
+                    (b * a + 0x0C * (255 - a)) // 255,
+                ))
+    return out
+
+
 def _chunk(tag: bytes, data: bytes) -> bytes:
     return (
         struct.pack(">I", len(data))
@@ -208,13 +236,30 @@ def _chunk(tag: bytes, data: bytes) -> bytes:
     )
 
 
-def write_png(path: pathlib.Path, canvas: Canvas) -> int:
-    """8-bit RGBA, no interlacing. Returns the byte size written."""
-    header = struct.pack(">IIBBBBB", canvas.width, canvas.height, 8, 6, 0, 0, 0)
+def write_png(path: pathlib.Path, canvas: Canvas, alpha: bool = True) -> int:
+    """8-bit PNG, no interlacing. Returns the byte size written.
+
+    `alpha=False` writes colour type 2 (RGB) instead of 6 (RGBA), dropping the
+    alpha channel entirely rather than filling it with 255.
+
+    That distinction is a Play Console one, not an aesthetic one. The store
+    listing's feature graphic must not carry transparency, and the uploader
+    has historically rejected an RGBA image on the presence of the channel
+    rather than on its contents — so "every pixel is opaque" is not the same
+    answer as "there is no alpha channel", even though they look identical.
+    Any transparent pixel is dropped onto black, which is `void` and therefore
+    the background these images already sit on.
+    """
+    if alpha:
+        header = struct.pack(">IIBBBBB", canvas.width, canvas.height, 8, 6, 0, 0, 0)
+        raw = canvas.to_rgba()
+    else:
+        header = struct.pack(">IIBBBBB", canvas.width, canvas.height, 8, 2, 0, 0, 0)
+        raw = _to_rgb(canvas.to_rgba(), canvas.width, canvas.height)
     blob = (
         b"\x89PNG\r\n\x1a\n"
         + _chunk(b"IHDR", header)
-        + _chunk(b"IDAT", zlib.compress(canvas.to_rgba(), 9))
+        + _chunk(b"IDAT", zlib.compress(raw, 9))
         + _chunk(b"IEND", b"")
     )
     path.parent.mkdir(parents=True, exist_ok=True)

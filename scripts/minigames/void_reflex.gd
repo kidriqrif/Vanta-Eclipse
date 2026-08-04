@@ -19,7 +19,6 @@ const FLARE_WINDOW: float = 2.5
 const ROUND_GAP: float = 0.45
 const FLARE_TWEEN: float = 0.15
 
-const ARCADE_CORE: Color = UIPalette.ink()
 
 ## Read from the theme rather than restated here: one palette, one source.
 var _ink: Color = UIPalette.ink()
@@ -68,7 +67,7 @@ func _style_ring() -> void:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color.TRANSPARENT
 	style.set_border_width_all(10)
-	style.border_color = ARCADE_CORE
+	style.border_color = UIPalette.ink()
 	_sigil_ring.add_theme_stylebox_override("panel", style)
 	_sigil_ring.visible = false
 
@@ -143,7 +142,7 @@ func _on_sigil_pressed() -> void:
 	_reaction_sum += reaction
 	_score_sum += _normalize_reaction(reaction)
 	_result_label.text = "%d ms" % int(reaction * 1000.0)
-	_result_label.add_theme_color_override("font_color", ARCADE_CORE)
+	_result_label.add_theme_color_override("font_color", UIPalette.ink())
 	_next_round()
 
 
@@ -171,7 +170,7 @@ func _end_run() -> void:
 	if _hits > 0:
 		detail += " · avg %dms" % int((_reaction_sum / float(_hits)) * 1000.0)
 	_state_label.text = "COMPLETE"
-	_state_label.add_theme_color_override("font_color", ARCADE_CORE if won else UIPalette.muted())
+	_state_label.add_theme_color_override("font_color", UIPalette.ink() if won else UIPalette.muted())
 	_finish(
 		Outcome.WIN if won else Outcome.LOSS, performance, float(_hits), detail
 	)

@@ -38,6 +38,8 @@ func _run() -> void:
 	await get_tree().process_frame
 
 	_seed()
+	_check_scripts_parse()
+	_check_scenes_instantiate()
 	_check_round_trip()
 	_check_invariants()
 	_check_currency_hardening()
@@ -133,6 +135,150 @@ func _seed() -> void:
 
 
 # --- The round trip ----------------------------------------------------------
+
+
+## Every GDScript in the project actually compiles.
+##
+## THE BUG THAT MADE THIS NECESSARY
+##
+## All four Arcade minigames shipped with `const ARCADE_CORE: Color =
+## UIPalette.ink()`. A const initialiser must be a constant expression and a
+## static call is not one, so every one of those scripts failed to parse — the
+## whole Arcade, one of the four features the store listing advertises, was
+## dead. It survived a 14-stage sweep, 71 runtime checks and a screenshot pass.
+##
+## Every one of those missed it for a different and instructive reason:
+##   * the static checkers parse GDScript with their own reader, which is
+##     lenient about what an initialiser may contain — the engine is not.
+##   * this harness never referenced a minigame, and a script nothing loads is
+##     a script nothing type-checks.
+##   * the screenshot harness DID capture all four, and each came out as a
+##     title bar over an empty screen. It reported them as successes because
+##     the only things it measured were layout overflow and font size, and an
+##     empty screen overflows nothing.
+##
+## FINDING THE RIGHT SIGNAL TOOK THREE TRIES, AND THE FIRST TWO ARE WHY THIS
+## COMMENT IS HERE.
+##
+## load() alone is useless: it returns a NON-NULL GDScript for a script that
+## failed to parse, which is exactly how the Arcade hid.
+##
+##   can_instantiate()  — the first attempt. It is false for plenty of HEALTHY
+##                        scripts (gear.gd among them), so it cannot separate
+##                        the two. Re-injecting the real defect reported PASS.
+##   reload()           — the second. It returns an error for any script with a
+##                        live instance, so every autoload came back "broken":
+##                        36 false positives against 1 real one.
+##   base type          — what actually discriminates. A GDScript that parsed
+##                        knows what it extends; one that did not has no base
+##                        type at all. Measured across a healthy autoload, a
+##                        healthy UI script, a healthy minigame and a planted
+##                        broken script, this was the only signal that split
+##                        them cleanly.
+##
+## CACHE_MODE_IGNORE forces a fresh parse. Without it a script already loaded
+## earlier in this run answers out of the resource cache, so a file that is
+## broken ON DISK still reports the base type it had when it last parsed.
+func _check_scripts_parse() -> void:
+	var scripts: PackedStringArray = _gd_files("res://scripts")
+	_ok("found scripts to compile", scripts.size() > 40,
+		"%d .gd files" % scripts.size())
+	var broken: PackedStringArray = []
+	for path: String in scripts:
+		var script: Script = ResourceLoader.load(
+			path, "Script", ResourceLoader.CACHE_MODE_IGNORE
+		) as Script
+		if script == null:
+			broken.append("%s (did not load)" % path)
+		elif script.get_instance_base_type() == &"":
+			broken.append(path)
+	_ok("every script compiles", broken.is_empty(),
+		"%d compiled" % scripts.size() if broken.is_empty()
+		else "BROKEN: %s" % ", ".join(broken))
+
+	# Positive control. tools/selftest_fixtures/uncompilable.gd carries the
+	# exact defect the Arcade shipped with; if this check cannot see THAT, its
+	# clean verdict above means nothing. Two earlier versions of this check
+	# passed against a real broken script, so the control is not paranoia.
+	var planted: Script = ResourceLoader.load(
+		"res://tools/selftest_fixtures/uncompilable.gd", "Script",
+		ResourceLoader.CACHE_MODE_IGNORE
+	) as Script
+	_ok("positive control: an uncompilable script IS reported",
+		planted != null and planted.get_instance_base_type() == &"",
+		"the planted fixture must not compile")
+
+
+## Every screen and widget scene can actually be built.
+##
+## A .tscn whose script failed to parse still loads and still instantiates —
+## Godot just gives you the node with no script attached — so the scene tree
+## looks fine and every button on it does nothing. Checking that the script
+## SURVIVED instantiation is the difference between "the file is well-formed"
+## and "the screen works".
+func _check_scenes_instantiate() -> void:
+	var scenes: PackedStringArray = _scene_files("res://scenes")
+	_ok("found scenes to build", scenes.size() > 20, "%d .tscn files" % scenes.size())
+	var broken: PackedStringArray = []
+	for path: String in scenes:
+		var packed: PackedScene = load(path) as PackedScene
+		if packed == null or not packed.can_instantiate():
+			broken.append(path)
+			continue
+		var node: Node = packed.instantiate()
+		if node == null:
+			broken.append(path)
+			continue
+		# The scene declares a script but the built node has none: the script
+		# failed to compile and Godot dropped it silently.
+		#
+		# "Declares" is read out of the .tscn itself. The first version guessed
+		# the path by swapping .tscn for .gd, which never matches anything in
+		# this project — scenes live under scenes/ and their scripts under
+		# scripts/ — so the condition was false for every scene in the game and
+		# the check could not fail.
+		if _declares_script(path) and node.get_script() == null:
+			broken.append("%s (script dropped)" % path)
+		node.free()
+	_ok("every scene instantiates with its script", broken.is_empty(),
+		"%d built" % scenes.size() if broken.is_empty()
+		else "BROKEN: %s" % ", ".join(broken))
+
+
+## Whether a .tscn attaches a script, read from the scene file's own text.
+func _declares_script(path: String) -> bool:
+	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return false
+	var text: String = file.get_as_text()
+	file.close()
+	return text.contains("type=\"Script\"")
+
+
+func _gd_files(root: String) -> PackedStringArray:
+	return _files_under(root, ".gd")
+
+
+func _scene_files(root: String) -> PackedStringArray:
+	return _files_under(root, ".tscn")
+
+
+func _files_under(root: String, suffix: String) -> PackedStringArray:
+	var found: PackedStringArray = []
+	var dir: DirAccess = DirAccess.open(root)
+	if dir == null:
+		return found
+	dir.list_dir_begin()
+	var entry: String = dir.get_next()
+	while entry != "":
+		var full: String = "%s/%s" % [root, entry]
+		if dir.current_is_dir():
+			found.append_array(_files_under(full, suffix))
+		elif entry.ends_with(suffix):
+			found.append(full)
+		entry = dir.get_next()
+	dir.list_dir_end()
+	return found
 
 
 func _check_round_trip() -> void:
