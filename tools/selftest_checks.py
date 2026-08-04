@@ -46,6 +46,13 @@ COPY = [
 # file with this content"; find of None means "append".
 Mutation = tuple[str, str, str, str | None, str]
 
+# The orphan-sprite check globs sprites/**/*.png and looks for each FILENAME in
+# the source corpus — it never opens the file. So the probe's contents are
+# irrelevant and this is deliberately not a real PNG: apply() writes text, and
+# smuggling binary through it would complicate every other mutation to buy
+# nothing. If that check ever starts reading pixels, this has to become one.
+ORPHAN_PROBE_PNG = "not a real PNG - see ORPHAN_PROBE_PNG in selftest_checks.py\n"
+
 MUTATIONS: list[Mutation] = [
     (
         "check_scripts.py",
@@ -169,9 +176,9 @@ MUTATIONS: list[Mutation] = [
     (
         "check_shaders.py",
         "material parameter: a .tres sets a knob the shader does not declare",
-        "effects/dimensional_sprite_material.tres",
+        "effects/pixel_sprite_material.tres",
         'shader = ExtResource("1")',
-        'shader = ExtResource("1")\nshader_parameter/bevel_radius_typo = 7.0',
+        'shader = ExtResource("1")\nshader_parameter/rim_radius_typo = 7.0',
     ),
     (
         "check_scripts.py",
@@ -191,14 +198,14 @@ MUTATIONS: list[Mutation] = [
     (
         "check_ui.py",
         "sprite referenced by nothing",
-        "sprites/ui/_orphan_probe.svg",
+        "sprites/ui/_orphan_probe.png",
         None,
-        '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"></svg>',
+        ORPHAN_PROBE_PNG,
     ),
     (
         "check_shaders.py",
         "dead uniform: declared, tunable, read by nothing",
-        "effects/dimensional_sprite.gdshader",
+        "effects/pixel_sprite.gdshader",
         "void fragment() {",
         "uniform float unused_knob = 1.0;\n\nvoid fragment() {",
     ),

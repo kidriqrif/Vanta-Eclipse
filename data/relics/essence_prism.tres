@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="RelicDefinition" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/relic_definition.gd" id="1"]
-[ext_resource type="Texture2D" path="res://sprites/ui/relic_essence_prism.svg" id="2"]
+[ext_resource type="Texture2D" path="res://sprites/ui/relic_essence_prism.png" id="2"]
 
 [resource]
 script = ExtResource("1")

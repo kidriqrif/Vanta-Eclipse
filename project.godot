@@ -64,3 +64,8 @@ theme/custom="res://ui/theme/main_theme.tres"
 renderer/rendering_method="mobile"
 renderer/rendering_method.web="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
+; Nearest, project-wide. Godot filters textures linearly by default, which
+; turns a 64x64 creature scaled to fill a phone screen into a blurred smear —
+; the single most common way a pixel-art game ships looking wrong. Set here
+; rather than per-texture so it cannot be missed on the next sprite added.
+textures/canvas_textures/default_texture_filter=0

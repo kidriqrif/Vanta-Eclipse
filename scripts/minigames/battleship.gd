@@ -7,10 +7,10 @@ extends Minigame
 ##
 ## Scene + .tres only. Score is SHOTS USED with lower_is_better.
 
-const CELL_EMPTY: Texture2D = preload("res://sprites/minigames/cell_empty.svg")
-const SHOT_MISS: Texture2D = preload("res://sprites/minigames/shot_miss.svg")
-const SHOT_HIT: Texture2D = preload("res://sprites/minigames/shot_hit.svg")
-const SHOT_SUNK: Texture2D = preload("res://sprites/minigames/shot_sunk.svg")
+const CELL_EMPTY: Texture2D = preload("res://sprites/minigames/cell_empty.png")
+const SHOT_MISS: Texture2D = preload("res://sprites/minigames/shot_miss.png")
+const SHOT_HIT: Texture2D = preload("res://sprites/minigames/shot_hit.png")
+const SHOT_SUNK: Texture2D = preload("res://sprites/minigames/shot_sunk.png")
 
 const ARCADE_CORE: Color = Color(1, 0.851, 0.839, 1)
 const CELL_BG: Color = Color(0.086, 0.086, 0.098, 0.9)

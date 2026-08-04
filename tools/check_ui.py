@@ -16,7 +16,7 @@ the restyle only half-applied. A screen looked wrong and the theme looked fine.
                           already defines for that role.
   2. sprites reachable  — every sprite is referenced by some scene, script or
                           resource. An unreferenced sprite is either dead
-                          weight or, as with forge_icon.svg, art that was
+                          weight or, as with forge_icon.png, art that was
                           drawn and then never wired to anything.
   3. variations used    — every theme type variation is applied by some node.
 
@@ -100,7 +100,7 @@ def check_sprites_referenced() -> tuple[list[str], list[str]]:
 
     problems: list[str] = []
     count = 0
-    for sprite in rglob(ROOT, "sprites/**/*.svg"):
+    for sprite in rglob(ROOT, "sprites/**/*.png"):
         count += 1
         if f"res://{sprite.relative_to(ROOT).as_posix()}" not in corpus:
             problems.append(f"{sprite.relative_to(ROOT)}: referenced by nothing")

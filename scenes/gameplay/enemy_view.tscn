@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/ui/enemy_view.gd" id="1"]
 [ext_resource type="Texture2D" path="res://resources/textures/soft_dot.tres" id="2"]
-[ext_resource type="Material" path="res://effects/dimensional_sprite_material.tres" id="3"]
+[ext_resource type="Material" path="res://effects/pixel_sprite_material.tres" id="3"]
 
 [node name="EnemyView" type="Control"]
 layout_mode = 3

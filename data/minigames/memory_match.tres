@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="MinigameDefinition" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/minigame_definition.gd" id="1"]
-[ext_resource type="Texture2D" path="res://sprites/minigames/face_hexagon.svg" id="2"]
+[ext_resource type="Texture2D" path="res://sprites/minigames/face_hexagon.png" id="2"]
 
 [resource]
 script = ExtResource("1")

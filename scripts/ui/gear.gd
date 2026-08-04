@@ -5,8 +5,8 @@ extends Control
 ## gameplay, re-checking the held gate — no ui_overlay plumbing needed.
 
 const INSPECTOR_CARD_SCENE: PackedScene = preload("res://scenes/gear/inspector_card.tscn")
-const LOCK_GLYPH: Texture2D = preload("res://sprites/ui/lock_glyph.svg")
-const RELIC_SLOT_ICON: Texture2D = preload("res://sprites/ui/slot_relic.svg")
+const LOCK_GLYPH: Texture2D = preload("res://sprites/ui/lock_glyph.png")
+const RELIC_SLOT_ICON: Texture2D = preload("res://sprites/ui/slot_relic.png")
 const SLOT_TILE_SIZE: Vector2 = Vector2(236, 250)
 ## Breathing room between a tile's border and its text.
 const TILE_PAD: float = 14.0

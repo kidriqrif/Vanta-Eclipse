@@ -1,8 +1,8 @@
 [gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/offline_rewards_modal.gd" id="1"]
-[ext_resource type="Texture2D" path="res://sprites/ui/star_flourish.svg" id="2"]
-[ext_resource type="Texture2D" path="res://sprites/ui/essence_icon.svg" id="3"]
+[ext_resource type="Texture2D" path="res://sprites/ui/star_flourish.png" id="2"]
+[ext_resource type="Texture2D" path="res://sprites/ui/essence_icon.png" id="3"]
 
 [node name="OfflineRewardsModal" type="CanvasLayer"]
 layer = 60

@@ -7,9 +7,9 @@ extends Minigame
 ##
 ## Score is MOVES TO WIN with lower_is_better — a faster win is a better record.
 
-const DISC_PLAYER: Texture2D = preload("res://sprites/minigames/disc_player.svg")
-const DISC_AI: Texture2D = preload("res://sprites/minigames/disc_ai.svg")
-const CELL_EMPTY: Texture2D = preload("res://sprites/minigames/cell_empty.svg")
+const DISC_PLAYER: Texture2D = preload("res://sprites/minigames/disc_player.png")
+const DISC_AI: Texture2D = preload("res://sprites/minigames/disc_ai.png")
+const CELL_EMPTY: Texture2D = preload("res://sprites/minigames/cell_empty.png")
 
 const ARCADE_CORE: Color = Color(1, 0.851, 0.839, 1)
 const BOARD_BG: Color = Color(0.086, 0.086, 0.098, 0.9)

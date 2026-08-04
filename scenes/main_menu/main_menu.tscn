@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1"]
 [ext_resource type="Theme" path="res://ui/theme/main_theme.tres" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/common/void_background.tscn" id="3"]
-[ext_resource type="Texture2D" path="res://sprites/ui/eclipse_emblem.svg" id="4"]
+[ext_resource type="Texture2D" path="res://sprites/ui/eclipse_emblem.png" id="4"]
 
 [sub_resource type="Gradient" id="Gradient_divider"]
 offsets = PackedFloat32Array(0, 0.5, 1)

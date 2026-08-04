@@ -34,9 +34,9 @@ const OFFLINE_MODAL_SCENE: PackedScene = preload(
 	"res://scenes/gameplay/offline_rewards_modal.tscn"
 )
 const WORLD_UNLOCK_SCENE: PackedScene = preload("res://scenes/gameplay/world_unlock_modal.tscn")
-const BOSS_SKULL: Texture2D = preload("res://sprites/ui/boss_skull_icon.svg")
+const BOSS_SKULL: Texture2D = preload("res://sprites/ui/boss_skull_icon.png")
 ## The same material the gameplay screen lights enemies with.
-const BESTIARY_MATERIAL: Material = preload("res://effects/dimensional_sprite_material.tres")
+const BESTIARY_MATERIAL: Material = preload("res://effects/pixel_sprite_material.tres")
 
 ## A scene change is fade-out (0.25) + threaded load + a frame + fade-in (0.25).
 ## The slack on top lets a spawned enemy settle into its idle hover, so the

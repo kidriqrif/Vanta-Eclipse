@@ -10,14 +10,14 @@ extends Minigame
 ## better record.
 
 const FACES: Array[Texture2D] = [
-	preload("res://sprites/minigames/face_circle.svg"),
-	preload("res://sprites/minigames/face_square.svg"),
-	preload("res://sprites/minigames/face_triangle.svg"),
-	preload("res://sprites/minigames/face_diamond.svg"),
-	preload("res://sprites/minigames/face_cross.svg"),
-	preload("res://sprites/minigames/face_hexagon.svg"),
+	preload("res://sprites/minigames/face_circle.png"),
+	preload("res://sprites/minigames/face_square.png"),
+	preload("res://sprites/minigames/face_triangle.png"),
+	preload("res://sprites/minigames/face_diamond.png"),
+	preload("res://sprites/minigames/face_cross.png"),
+	preload("res://sprites/minigames/face_hexagon.png"),
 ]
-const CARD_BACK: Texture2D = preload("res://sprites/minigames/card_back.svg")
+const CARD_BACK: Texture2D = preload("res://sprites/minigames/card_back.png")
 const CARD_BG: Color = Color(0.086, 0.086, 0.098, 0.9)
 
 const ARCADE_CORE: Color = Color(1, 0.851, 0.839, 1)

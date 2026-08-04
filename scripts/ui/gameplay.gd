@@ -14,11 +14,11 @@ const RESULT_BANNER_SCENE: PackedScene = preload("res://scenes/common/result_ban
 const WORLD_UNLOCK_MODAL_SCENE: PackedScene = preload(
 	"res://scenes/gameplay/world_unlock_modal.tscn"
 )
-const BOSS_SKULL_TEXTURE: Texture2D = preload("res://sprites/ui/boss_skull_icon.svg")
+const BOSS_SKULL_TEXTURE: Texture2D = preload("res://sprites/ui/boss_skull_icon.png")
 const LOOT_TOAST_SCENE: PackedScene = preload("res://scenes/gear/loot_toast.tscn")
-const ECLIPSE_TEXTURE: Texture2D = preload("res://sprites/ui/eclipse_icon.svg")
-const ARCADE_TOKEN_TEXTURE: Texture2D = preload("res://sprites/ui/arcade_token_icon.svg")
-const JOURNAL_TEXTURE: Texture2D = preload("res://sprites/ui/journal_icon.svg")
+const ECLIPSE_TEXTURE: Texture2D = preload("res://sprites/ui/eclipse_icon.png")
+const ARCADE_TOKEN_TEXTURE: Texture2D = preload("res://sprites/ui/arcade_token_icon.png")
+const JOURNAL_TEXTURE: Texture2D = preload("res://sprites/ui/journal_icon.png")
 ## The per-door accents (Eclipse teal, Arcade lime) are RETIRED. Under a
 ## one-accent scheme two extra neon hues on the busiest row of the game were
 ## the loudest thing on screen and the first thing to break the red-and-black

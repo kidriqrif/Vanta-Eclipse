@@ -38,7 +38,7 @@
 ; The grabber is an ICON, not a stylebox — no StyleBox setting can reach it, so
 ; leaving it out means the engine default: a small pale dot with no relation to
 ; this palette.
-[ext_resource type="Texture2D" path="res://sprites/ui/slider_grabber.svg" id="4"]
+[ext_resource type="Texture2D" path="res://sprites/ui/slider_grabber.png" id="4"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
 content_margin_left = 34.0

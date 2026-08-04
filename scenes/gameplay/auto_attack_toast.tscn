@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/auto_attack_toast.gd" id="1"]
-[ext_resource type="Texture2D" path="res://sprites/ui/auto_attack_icon.svg" id="2"]
+[ext_resource type="Texture2D" path="res://sprites/ui/auto_attack_icon.png" id="2"]
 
 [node name="AutoAttackToast" type="CanvasLayer"]
 layer = 50

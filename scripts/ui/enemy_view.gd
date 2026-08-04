@@ -8,7 +8,7 @@ extends Control
 ##   SpriteHolder  — spawn pop-in, idle hover, death collapse
 ##   EnemySprite   — hit squash, flash, and crit wiggle
 ##
-## The sprite wears effects/dimensional_sprite.gdshader, which derives a
+## The sprite wears effects/pixel_sprite.gdshader, which derives a
 ## surface normal from the art's own alpha and lights it. Two things here feed
 ## it: the rim is retinted per enemy from EnemyDefinition.glow_color, and the
 ## ground glow below grounds the result — without it a lit sprite reads as a

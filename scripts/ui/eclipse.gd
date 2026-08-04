@@ -6,7 +6,7 @@ extends Control
 ## progress. Reads PrestigeManager / SkillTreeManager and asks them to act.
 
 const RESULT_BANNER_SCENE: PackedScene = preload("res://scenes/common/result_banner.tscn")
-const ECLIPSE_TEXTURE: Texture2D = preload("res://sprites/ui/eclipse_icon.svg")
+const ECLIPSE_TEXTURE: Texture2D = preload("res://sprites/ui/eclipse_icon.png")
 
 ## How long the armed COLLAPSE confirm stays hot before disarming (§3A).
 const ARM_SECONDS: float = 2.5
