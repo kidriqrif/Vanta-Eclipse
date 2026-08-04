@@ -4,26 +4,87 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Vanta Eclipse</title>
+<meta name="description" content="An idle RPG in the dark. Your hero fights on while you're away.">
 <style>
-  :root { color-scheme: dark light; }
-  body { margin:0 auto; padding:4rem 1.25rem; max-width:34rem; text-align:center;
-    font:16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background:#0B0B0D; color:#EDEDF0; }
-  h1 { font-size:2rem; letter-spacing:-.01em; margin:1.5rem 0 .25rem; }
-  p { color:#9C9CA5; margin:0 0 2rem; }
-  a { color:#FF3B30; }
-  svg { width:96px; height:96px; }
-  @media (prefers-color-scheme: light) { body { background:#fff; color:#16161a; } }
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin:0 auto; padding:3.5rem 1.25rem 4rem; max-width:44rem;
+    font:15px/1.7 ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+      "Liberation Mono", monospace;
+    background:#08080C; color:#B8B8C8; }
+  header { text-align:center; margin-bottom:3rem; }
+  img.mark { width:128px; height:128px; image-rendering:pixelated;
+    image-rendering:crisp-edges; }
+  h1 { font-size:1.75rem; letter-spacing:.08em; margin:1.25rem 0 .5rem;
+    color:#F0F0F6; text-transform:uppercase; }
+  h2 { font-size:.95rem; letter-spacing:.14em; text-transform:uppercase;
+    color:#E8323C; margin:2.5rem 0 .9rem; }
+  p.lead { color:#6E6E85; margin:0; }
+  a { color:#E8323C; }
+  a:hover { color:#F0F0F6; }
+  hr { border:0; border-top:2px solid #7A0E1C; margin:2.5rem 0; }
+  table { border-collapse:collapse; width:100%; }
+  td { border-bottom:1px solid #3D3D4E; padding:.5rem .25rem; }
+  td.n { text-align:right; color:#F0F0F6; white-space:nowrap; }
+  ul { list-style:none; padding:0; }
+  li { border-bottom:1px solid #3D3D4E; padding:.5rem .25rem; }
+  li::before { content:"\2022  "; color:#E8323C; }
+  .swatches { display:flex; flex-wrap:wrap; gap:0; margin:.5rem 0 0; }
+  .swatches i { width:2rem; height:2rem; display:block; }
+  footer { margin-top:3rem; color:#6E6E85; font-size:.85rem;
+    text-align:center; }
 </style>
 </head>
 <body>
-<svg viewBox="0 0 128 128" aria-hidden="true">
-  <circle cx="64" cy="64" r="44" fill="#FF3B30"/>
-  <circle cx="64" cy="64" r="30" fill="#0B0B0D"/>
-  <circle cx="37.8" cy="37.8" r="6" fill="#FFD9D6"/>
-</svg>
+<header>
+<img class="mark" alt="Vanta Eclipse" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAABx0lEQVR42u3dLQ7CMBiA4ckJ5CSHIGgEx+J4HAfJDUAMs4QEmq4/6feI1y/9HtGk3TYty/GluE0WAQALAYAA+DTPBw0cAAAAAAAAAIwC4Hm/bjJkAASAAJBNoAAQAAJAAAgAASAAAAAgpcf5sgkAAAAAAAAAAADiW70fbgEAAAAAAAAAAHVA9LaJBAAAAAAAAAAAdrqUejtt6h0EAAAAAAAAAAAQEwQAAAAAAAAAAFAHQCoIAAAAAAAAAABgTACtQQAAAAAAAADAvwB8hAkAAAAAAAAAbAK1P4DaIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAQ8z7qBAAAAAAAAAAAAAAAAAAAAAAAABg4AAAAAAAAAAAQ+7Cn9MB/vcgDAAAAAAAAAAC0GbiXQwEAAAAAAAAgxoB9KBIAAAAAAAAA1or/fLnyQHMHDgAAAAAAAABRN4GpC9TbgP04EgAAAAAAAADagKgNJPf5Wq8vAAAAAAAAANQCsPcPJ3IHULreD78AAAAAAAAAYNQLIdEHDAAAAAAAAAAuhQoAASAABIAAEAACAAAA+jrcAgAAAAAAAAAABIAAEABqCUCxAgAAiwCAwvYGGxqwHCL8LAcAAAAASUVORK5CYII=">
 <h1>Vanta Eclipse</h1>
-<p>An idle RPG in the dark. Your hero fights on while you're away.</p>
-<p><a href="privacy-policy.html">Privacy policy</a></p>
+<p class="lead">An idle RPG in the dark. Your hero fights on while you're away.</p>
+</header>
+
+<h2>What it is</h2>
+<p>An idle RPG for Android, built in Godot 4.7. Tap to strike, or unlock
+the auto-attacker and let your hero fight without you. two
+worlds, a boss on every tenth gate, seven equipment slots,
+five relics, two pets, an arcade of
+four real minigames, and a prestige reset that makes the next
+run faster than the last.</p>
+<p>No paywall, no energy meter, no timer blocking a door. Plays in portrait,
+one-handed, offline.</p>
+
+<h2>The art is generated</h2>
+<p>Every sprite, the bitmap font, the icons and all 16 sounds are
+produced by programs in <code>tools/</code> rather than drawn or recorded. A
+palette change is one edit and one command, not 53 files reopened by
+hand. The palette is closed at 16 colours and the validation sweep
+fails on any pixel outside it — and on any asset that no longer matches the
+program that draws it.</p>
+<div class="swatches"><i style="background:#08080C" title="void #08080C"></i><i style="background:#14141C" title="abyss #14141C"></i><i style="background:#24242F" title="slate #24242F"></i><i style="background:#3D3D4E" title="iron #3D3D4E"></i><i style="background:#6E6E85" title="ash #6E6E85"></i><i style="background:#B8B8C8" title="bone #B8B8C8"></i><i style="background:#F0F0F6" title="ivory #F0F0F6"></i><i style="background:#7A0E1C" title="blood #7A0E1C"></i><i style="background:#E8323C" title="crimson #E8323C"></i><i style="background:#F07830" title="ember #F07830"></i><i style="background:#F0C040" title="gold #F0C040"></i><i style="background:#58A83C" title="moss #58A83C"></i><i style="background:#40C8E0" title="frost #40C8E0"></i><i style="background:#3868D8" title="azure #3868D8"></i><i style="background:#8848E0" title="violet #8848E0"></i><i style="background:#E060A8" title="rose #E060A8"></i></div>
+
+<h2>By the numbers</h2>
+<table>
+<tr><td>Screens</td><td class="n">28</td></tr>
+<tr><td>Autoload managers</td><td class="n">20</td></tr>
+<tr><td>Content definitions</td><td class="n">93</td></tr>
+<tr><td>Generated sprites</td><td class="n">53</td></tr>
+<tr><td>Generated sounds</td><td class="n">16</td></tr>
+<tr><td>Palette colours</td><td class="n">16</td></tr>
+<tr><td>Font glyphs</td><td class="n">106</td></tr>
+<tr><td>Validation stages</td><td class="n">15</td></tr>
+<tr><td>Self-test mutations</td><td class="n">41</td></tr>
+</table>
+
+<h2>Links</h2>
+<ul>
+<li><a href="https://github.com/kidriqrif/Vanta-Eclipse">Source on GitHub</a></li>
+<li><a href="privacy-policy.html">Privacy policy</a></li>
+</ul>
+
+<hr>
+<footer>
+Version 0.1.0 &middot; Android 24+ &middot;
+targets API 36<br>
+This page is generated by <code>tools/make_docs.py</code>.
+</footer>
 </body>
 </html>

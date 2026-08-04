@@ -102,7 +102,14 @@ echo "12. generated art (every pixel is one of the 16 palette colours)"
 echo "13. shipped assets match their generators (byte-identical)"
 "$PY" tools/check_generated.py | sed 's/^/   /' || status=1
 
-echo "14. runtime logic (save round-trip, invariants)"
+# Stage 8 checks that ARCHITECTURE.md names files that exist. This one checks
+# that the README and the public GitHub Pages site still describe THIS project:
+# every figure in them is regenerated from the file that defines it, so a stale
+# count fails here instead of being read by someone as fact.
+echo "14. README and the published site match the code"
+"$PY" tools/check_docs.py | sed 's/^/   /' || status=1
+
+echo "15. runtime logic (save round-trip, invariants)"
 if bash tools/logic_run.sh >/tmp/vanta_logic.$$ 2>&1; then
   # The verdict line by name, NOT tail -1. Anything the engine prints after the
   # harness has spoken — a leak warning, a driver notice — is not the result,

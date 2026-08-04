@@ -47,6 +47,10 @@ COPY = [
     # and EVERY mutation aimed at that checker would be "caught" by a missing
     # file rather than by the defect injected — a pass for the wrong reason.
     "icon.png",
+    # check_docs.py regenerates the README's fact block and the public site,
+    # and reads the version and SDK levels out of the export presets.
+    "README.md",
+    "export_presets.cfg",
 ]
 
 # Anchors are exact and complete: .tres has no comment syntax, so a mutation
@@ -347,6 +351,16 @@ MUTATIONS: list[Mutation] = [
         "tools/make_font.py",
         "ADVANCE = 6",
         "ADVANCE = 7",
+    ),
+    (
+        # The README goes on asserting a number the code has moved past — the
+        # single most common way documentation lies, and the one it did tell
+        # about its own autoload count for an entire milestone.
+        "check_docs.py",
+        "the README's figures drift from the code they describe",
+        "README.md",
+        "| Autoload managers | 20 |",
+        "| Autoload managers | 19 |",
     ),
     (
         "check_architecture.py",
