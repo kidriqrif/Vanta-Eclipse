@@ -9,4 +9,4 @@ id = &"thorn_fiend"
 display_name = "Thorn Fiend"
 texture = ExtResource("2")
 hp_multiplier = 1.25
-glow_color = Color(0.702, 0.702, 0.741, 1)
+glow_color = Color(0.722, 0.722, 0.784, 1)

@@ -125,7 +125,7 @@ func _make_roster_row(id: StringName, is_active: bool) -> Button:
 	var row := Button.new()
 	row.custom_minimum_size = Vector2(0, 140)
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.086, 0.086, 0.098, 0.9)
+	style.bg_color = Color(0.078, 0.078, 0.11, 0.9)
 	style.set_corner_radius_all(14)
 	style.set_content_margin_all(16)
 	# Every companion wears the same 6px ally-violet spine — "one class"

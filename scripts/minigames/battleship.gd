@@ -12,8 +12,8 @@ const SHOT_MISS: Texture2D = preload("res://sprites/minigames/shot_miss.png")
 const SHOT_HIT: Texture2D = preload("res://sprites/minigames/shot_hit.png")
 const SHOT_SUNK: Texture2D = preload("res://sprites/minigames/shot_sunk.png")
 
-const ARCADE_CORE: Color = Color(1, 0.851, 0.839, 1)
-const CELL_BG: Color = Color(0.086, 0.086, 0.098, 0.9)
+const ARCADE_CORE: Color = UIPalette.ink()
+const CELL_BG: Color = Color(0.078, 0.078, 0.11, 0.9)
 
 const UNKNOWN: int = 0
 const MISS: int = 1
@@ -169,7 +169,7 @@ func _cell_style(lit: bool) -> StyleBoxFlat:
 	style.bg_color = CELL_BG
 	style.set_corner_radius_all(12)
 	style.set_border_width_all(2)
-	style.border_color = _ink if lit else Color(0.18, 0.18, 0.204, 0.6)
+	style.border_color = _ink if lit else Color(0.141, 0.141, 0.184, 0.6)
 	return style
 
 

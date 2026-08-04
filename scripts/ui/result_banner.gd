@@ -8,11 +8,11 @@ extends CanvasLayer
 ## Usage: instantiate, setup(...), add_child. The gameplay scene owns a
 ## depth-1 queue so banners never stack on layer 50.
 
-const WIN_BORDER: Color = Color(1, 0.231, 0.188, 0.9)
-const WIN_SHADOW: Color = Color(1, 0.231, 0.188, 0.3)
-const NEUTRAL_BORDER: Color = Color(0.18, 0.18, 0.204, 0.8)
-const NEUTRAL_SHADOW: Color = Color(0.043, 0.043, 0.051, 0.5)
-const WIN_HEADLINE_OUTLINE: Color = Color(0.659, 0.063, 0.102, 0.55)
+const WIN_BORDER: Color = Color(0.91, 0.196, 0.235, 0.9)
+const WIN_SHADOW: Color = Color(0.91, 0.196, 0.235, 0.3)
+const NEUTRAL_BORDER: Color = Color(0.141, 0.141, 0.184, 0.8)
+const NEUTRAL_SHADOW: Color = Color(0.031, 0.031, 0.047, 0.5)
+const WIN_HEADLINE_OUTLINE: Color = Color(0.478, 0.055, 0.11, 0.55)
 
 var _icon: Texture2D
 var _headline: String = ""

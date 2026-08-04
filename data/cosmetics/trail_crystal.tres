@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = &"trail_crystal"
 display_name = "Crystal Trail"
-trail_color = Color(0.4, 0.86, 0.85, 1)
-number_color = Color(0.83, 0.99, 0.98, 1)
+trail_color = Color(0.251, 0.784, 0.878, 1)
+number_color = Color(0.941, 0.941, 0.965, 1)
 shard_price = 150.0
 sort_order = 3

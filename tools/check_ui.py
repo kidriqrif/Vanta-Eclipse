@@ -181,16 +181,19 @@ def check_screen_titles() -> tuple[list[str], list[str]]:
     return problems, [f"{count} screen titles"]
 
 
-# The scheme is one accent on neutrals. Anything with real chroma must sit in
-# the red family; greys, near-whites and near-blacks are unconstrained.
+# The scheme is a CLOSED palette: sixteen colours, defined once in
+# tools/pixelart.py, and every colour in the UI must be one of them exactly.
 #
-# Chroma (max-min) rather than HLS saturation on purpose: the Legendary rarity
-# white is Color(0.949, 0.949, 0.965), which HLS calls 19% saturated because of
-# a hair of blue, but whose chroma is 0.016 — obviously neutral. A saturation
-# threshold tuned to exclude it would sit right next to real colours.
-CHROMA_FLOOR = 0.10
-## Degrees either side of pure red that still count as the accent family.
-RED_ARC = 25.0
+# This replaces a hue-arc rule ("anything with real chroma must sit within 25
+# degrees of red"). That rule was correct for a one-accent scheme, and it is
+# both too loose and too tight for this one — too loose because it admitted any
+# of the infinitely many reds rather than THE red, and too tight because the
+# palette now carries nine hues on purpose.
+#
+# Exact membership is a far stronger check than an arc. Two greys one step
+# apart are the failure mode a closed palette exists to prevent, and an arc
+# cannot see them at all: they have no chroma, so it skipped them entirely.
+TOLERANCE = 0.002
 
 COLOR_CALL = re.compile(
     r"Color\(\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+)\s*,\s*([0-9]*\.?[0-9]+)"
@@ -207,7 +210,16 @@ HUE_SCOPES = ("scenes/**/*.tscn", "scripts/ui/**/*.gd", "scripts/minigames/**/*.
               "ui/**/*.tres")
 
 
-def check_palette_hues() -> tuple[list[str], list[str]]:
+def _palette_rgb() -> dict[tuple[float, float, float], str]:
+    from pixelart import PALETTE, rgb
+    return {
+        tuple(round(channel / 255.0, 3) for channel in rgb(name)): name
+        for name in PALETTE
+    }
+
+
+def check_palette_membership() -> tuple[list[str], list[str]]:
+    allowed = _palette_rgb()
     problems: list[str] = []
     inspected = 0
     for scope in HUE_SCOPES:
@@ -216,25 +228,27 @@ def check_palette_hues() -> tuple[list[str], list[str]]:
                 path.read_text(encoding="utf-8").splitlines(), 1
             ):
                 for red, green, blue in _colours_on(line):
-                    inspected += 1
-                    # Over-1.0 values are HDR multipliers (hit flashes); judge
-                    # them on ratio, which normalising preserves.
-                    peak = max(red, green, blue, 1.0)
-                    red, green, blue = red / peak, green / peak, blue / peak
-                    low = min(red, green, blue)
-                    chroma = max(red, green, blue) - low
-                    if chroma < CHROMA_FLOOR:
+                    # Over-1.0 values are HDR multipliers, not colours —
+                    # enemy_view's FLASH_COLOR is Color(3.0, 2.0, 1.9) and
+                    # multiplies modulate to blow a sprite past white. It has
+                    # no business being in a palette of paint.
+                    if max(red, green, blue) > 1.0:
                         continue
-                    hue = _hue_degrees(red, green, blue, chroma)
-                    if hue <= RED_ARC or hue >= 360.0 - RED_ARC:
+                    inspected += 1
+                    if any(
+                        abs(red - pr) <= TOLERANCE
+                        and abs(green - pg) <= TOLERANCE
+                        and abs(blue - pb) <= TOLERANCE
+                        for pr, pg, pb in allowed
+                    ):
                         continue
                     problems.append(
                         f"{path.relative_to(ROOT)}:{number}: "
-                        f"Color({red:.3f}, {green:.3f}, {blue:.3f}) is {hue:.0f}deg "
-                        f"off-palette (chroma {chroma:.2f}) — the scheme is one "
-                        f"red accent on neutrals"
+                        f"Color({red:.3f}, {green:.3f}, {blue:.3f}) is not one of "
+                        f"the {len(allowed)} palette colours — run "
+                        f"tools/snap_palette.py"
                     )
-    return problems, [f"{inspected} colours in UI surfaces"]
+    return problems, [f"{inspected} colours against {len(allowed)} palette entries"]
 
 
 def _colours_on(line: str) -> list[tuple[float, float, float]]:
@@ -267,7 +281,7 @@ def _hue_degrees(red: float, green: float, blue: float, chroma: float) -> float:
 
 CHECKS = [
     ("no stale palette copies", check_stale_palette),
-    ("colours stay in the red family", check_palette_hues),
+    ("every colour is one of the 16", check_palette_membership),
     ("sprites are referenced", check_sprites_referenced),
     ("theme variations are used", check_variations_used),
     ("margin-sized styleboxes have height", check_styleboxes_have_height),

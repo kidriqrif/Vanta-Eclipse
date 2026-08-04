@@ -41,30 +41,30 @@ static func title() -> Color:
 ## The bright accent: marks, active state, small text on black. Read off the
 ## slider fill, which is the theme's plainest statement of "this is the accent".
 static func accent() -> Color:
-	return _box_color(&"grabber_area", &"HSlider", Color(1.0, 0.231, 0.188))
+	return _box_color(&"grabber_area", &"HSlider", Color(0.91, 0.196, 0.235))
 
 
 ## The deep accent: a fill that white text sits on. Not interchangeable with
 ## accent() — that one is tuned to be READ against black, this one to be read
 ## THROUGH, and neither clears 7:1 in the other's job.
 static func accent_deep() -> Color:
-	return _box_color(&"normal", &"PrimaryButton", Color(0.659, 0.063, 0.102))
+	return _box_color(&"normal", &"PrimaryButton", Color(0.478, 0.055, 0.11))
 
 
 ## Panel fill.
 static func surface() -> Color:
-	return _box_color(&"panel", &"PanelContainer", Color(0.086, 0.086, 0.098))
+	return _box_color(&"panel", &"PanelContainer", Color(0.078, 0.078, 0.11))
 
 
 ## A row or tile sitting on a panel — one step up from the surface.
 static func raised() -> Color:
-	return _box_color(&"hover", &"Button", Color(0.125, 0.125, 0.141))
+	return _box_color(&"hover", &"Button", Color(0.141, 0.141, 0.184))
 
 
 ## Hairline dividers and inactive borders.
 static func line() -> Color:
 	var box: StyleBoxFlat = THEME.get_stylebox(&"normal", &"Button") as StyleBoxFlat
-	return box.border_color if box != null else Color(0.18, 0.18, 0.204)
+	return box.border_color if box != null else Color(0.141, 0.141, 0.184)
 
 
 ## Same colour at a different alpha, for scrims and de-emphasised states.

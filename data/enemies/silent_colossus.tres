@@ -9,6 +9,6 @@ id = &"silent_colossus"
 display_name = "The Silent Colossus"
 texture = ExtResource("2")
 hp_multiplier = 1.0
-glow_color = Color(1, 0.231, 0.188, 1)
+glow_color = Color(0.91, 0.196, 0.235, 1)
 is_boss = true
 view_scale = 1.4

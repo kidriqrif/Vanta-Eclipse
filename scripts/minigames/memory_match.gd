@@ -18,9 +18,9 @@ const FACES: Array[Texture2D] = [
 	preload("res://sprites/minigames/face_hexagon.png"),
 ]
 const CARD_BACK: Texture2D = preload("res://sprites/minigames/card_back.png")
-const CARD_BG: Color = Color(0.086, 0.086, 0.098, 0.9)
+const CARD_BG: Color = Color(0.078, 0.078, 0.11, 0.9)
 
-const ARCADE_CORE: Color = Color(1, 0.851, 0.839, 1)
+const ARCADE_CORE: Color = UIPalette.ink()
 
 const DEFAULT_PAIRS: int = 6
 const DEFAULT_BUDGET: int = 12
@@ -106,13 +106,13 @@ func _card_style(matched: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.set_corner_radius_all(14)
 	if matched:
-		style.bg_color = Color(0.125, 0.125, 0.141, 0.55)
+		style.bg_color = Color(0.141, 0.141, 0.184, 0.55)
 		style.set_border_width_all(3)
 		style.border_color = _ink
 	else:
 		style.bg_color = CARD_BG
 		style.set_border_width_all(2)
-		style.border_color = Color(0.18, 0.18, 0.204, 0.6)
+		style.border_color = Color(0.141, 0.141, 0.184, 0.6)
 	return style
 
 

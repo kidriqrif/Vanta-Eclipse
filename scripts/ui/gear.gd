@@ -190,7 +190,7 @@ func _make_slot_tile(slot: SlotDefinition) -> Button:
 		# A sealed tile carries three things the others do not have room for
 		# at once — icon, name AND a wrapped sentence — in the same 236x250.
 		# The icon yields, since the lock glyph already says "sealed".
-		icon.modulate = Color(0.4, 0.4, 0.45, 1)
+		icon.modulate = UIPalette.muted()
 		icon.custom_minimum_size = Vector2(62, 62)
 	box.add_child(icon)
 

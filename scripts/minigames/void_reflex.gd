@@ -19,7 +19,7 @@ const FLARE_WINDOW: float = 2.5
 const ROUND_GAP: float = 0.45
 const FLARE_TWEEN: float = 0.15
 
-const ARCADE_CORE: Color = Color(1, 0.851, 0.839, 1)
+const ARCADE_CORE: Color = UIPalette.ink()
 
 ## Read from the theme rather than restated here: one palette, one source.
 var _ink: Color = UIPalette.ink()
@@ -66,7 +66,7 @@ func _make_timer(handler: Callable) -> Timer:
 
 func _style_ring() -> void:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0, 0, 0, 0)
+	style.bg_color = Color.TRANSPARENT
 	style.set_corner_radius_all(200)
 	style.set_border_width_all(10)
 	style.border_color = ARCADE_CORE
@@ -96,7 +96,7 @@ func _set_resting() -> void:
 		# Kill it first: a tap inside the tween's window would otherwise let it
 		# keep animating and leave the sigil enlarged while reading "WAIT".
 		_flare_tween.kill()
-	_sigil_icon.modulate = Color(1, 1, 1, 0.45)
+	_sigil_icon.modulate = Color(0.941, 0.941, 0.965, 0.45)
 	_sigil_icon.scale = Vector2.ONE
 	_sigil_ring.visible = false
 	_state_label.text = "WAIT"
@@ -106,7 +106,7 @@ func _set_resting() -> void:
 func _on_flare() -> void:
 	_flared = true
 	_flare_at_msec = Time.get_ticks_msec()
-	_sigil_icon.modulate = Color(1, 1, 1, 1)
+	_sigil_icon.modulate = UIPalette.ink()
 	_sigil_icon.pivot_offset = _sigil_icon.size * 0.5
 	_sigil_ring.visible = true
 	_state_label.text = "TAP!"

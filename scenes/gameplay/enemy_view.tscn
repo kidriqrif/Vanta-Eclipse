@@ -14,7 +14,7 @@ script = ExtResource("1")
 
 [node name="GroundGlow" type="TextureRect" parent="."]
 unique_name_in_owner = true
-modulate = Color(1, 1, 1, 0)
+modulate = Color(0.941, 0.941, 0.965, 0)
 layout_mode = 0
 offset_left = 120.0
 offset_top = 464.0

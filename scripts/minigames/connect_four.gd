@@ -11,8 +11,8 @@ const DISC_PLAYER: Texture2D = preload("res://sprites/minigames/disc_player.png"
 const DISC_AI: Texture2D = preload("res://sprites/minigames/disc_ai.png")
 const CELL_EMPTY: Texture2D = preload("res://sprites/minigames/cell_empty.png")
 
-const ARCADE_CORE: Color = Color(1, 0.851, 0.839, 1)
-const BOARD_BG: Color = Color(0.086, 0.086, 0.098, 0.9)
+const ARCADE_CORE: Color = UIPalette.ink()
+const BOARD_BG: Color = Color(0.078, 0.078, 0.11, 0.9)
 
 const EMPTY: int = 0
 const PLAYER: int = 1
@@ -133,7 +133,7 @@ func _column_style(lit: bool, full: bool) -> StyleBoxFlat:
 	if full:
 		# A full column reads as closed: dimmer ground, no accent edge.
 		style.bg_color = Color(BOARD_BG.r, BOARD_BG.g, BOARD_BG.b, BOARD_BG.a * 0.5)
-		style.border_color = Color(0.18, 0.18, 0.204, 0.5)
+		style.border_color = Color(0.141, 0.141, 0.184, 0.5)
 	elif lit:
 		style.border_color = _ink
 	else:
