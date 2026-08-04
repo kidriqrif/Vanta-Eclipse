@@ -136,8 +136,8 @@ def normalise(buf: list[float], peak: float = PEAK) -> list[float]:
 
 
 def write(name: str, buf: list[float], directory: pathlib.Path,
-          rate: int = SFX_RATE, loop: bool = False) -> None:
-    buf = normalise(buf)
+          rate: int = SFX_RATE, loop: bool = False, peak: float = PEAK) -> None:
+    buf = normalise(buf, peak)
     if not loop:
         # Edge fades for one-shots: several of these end mid-cycle by
         # construction, and a non-zero final sample clicks.
@@ -389,6 +389,28 @@ def eclipse() -> list[float]:
     return attack(buf, 0.004)
 
 
+def click(rng: random.Random) -> list[float]:
+    """Every button in the game. 45 of them across the screens, and pressing
+    one made no sound at all unless it happened to complete a transaction.
+
+    Written at roughly half the level of everything else (see the `peak`
+    argument where this is written out), for two reasons. It is the most
+    frequent sound in the game after the tap, and on a purchase it lands in the
+    same frame as `confirm` — the click is the press being acknowledged and the
+    confirm is the result, so the click has to sit underneath rather than
+    compete with it.
+
+    A tick, not a tone: 30ms, mostly filtered noise. Deliberately thinner and
+    higher than `tap_hit`, because a button must not feel like hitting the
+    enemy.
+    """
+    buf = silence(0.03)
+    noise(buf, 0.6, rng)
+    buf = lowpass(buf, 0.55)               # takes the hiss off without dulling it
+    sine(buf, 1400.0, 0.25, sweep=0.7)     # just enough pitch to read as a surface
+    return attack(decay(buf, 0.008), 0.0008)
+
+
 def ambient_drone() -> list[float]:
     """A 24-second seamless loop for the Music bus.
 
@@ -440,6 +462,9 @@ def main() -> int:
     write("claim.wav", claim(rng), SFX_DIR)
     write("levelup.wav", levelup(), SFX_DIR)
     write("eclipse.wav", eclipse(), SFX_DIR)
+    # Last, so every sound above draws the same random numbers it always has
+    # and regenerating leaves their files byte-identical.
+    write("click.wav", click(rng), SFX_DIR, peak=0.38)
     print("music:")
     write("ambient_void.wav", ambient_drone(), MUSIC_DIR, rate=MUSIC_RATE, loop=True)
     return 0

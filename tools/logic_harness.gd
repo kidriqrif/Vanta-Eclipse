@@ -373,6 +373,54 @@ func _check_audio() -> void:
 	for voice: AudioStreamPlayer in fanfare:
 		voice.stop()
 
+	await _check_button_audio()
+
+
+## Every button in the game clicks, and no UI script asks for it — AudioManager
+## adopts them on node_added.
+##
+## Checked against a REAL screen, not a Button built here. A synthetic one
+## would pass even if the hook never fired for scene content, which is the only
+## case that matters: 45 buttons across the screens, and before this they made
+## no sound at all unless the press happened to complete a transaction.
+func _check_button_audio() -> void:
+	var packed: PackedScene = load("res://scenes/settings/settings_menu.tscn")
+	if packed == null:
+		_ok("settings screen loads for the button audit", false)
+		return
+	var screen: Node = packed.instantiate()
+	add_child(screen)
+	await get_tree().process_frame
+
+	var buttons: Array[Node] = screen.find_children("", "BaseButton", true, false)
+	var orphans: Array[String] = []
+	for node: Node in buttons:
+		var button: BaseButton = node
+		if not button.pressed.is_connected(AudioManager._on_any_button_pressed):
+			orphans.append(str(button.name))
+	_ok("every button on a real screen was adopted for its click",
+		not buttons.is_empty() and orphans.is_empty(),
+		"%d buttons, unadopted: %s" % [buttons.size(), orphans])
+
+	# And the adoption actually makes a sound, not merely a connection.
+	var pool: Array = AudioManager._voices.get(&"click", [])
+	for voice: AudioStreamPlayer in pool:
+		voice.stop()
+	AudioManager._last_played_msec.erase(&"click")
+	if buttons.is_empty():
+		screen.queue_free()
+		return
+	(buttons[0] as BaseButton).pressed.emit()
+	var clicking: int = 0
+	for voice: AudioStreamPlayer in pool:
+		if voice.playing:
+			clicking += 1
+	_ok("pressing a real button plays the click", clicking == 1,
+		"%d click voices playing" % clicking)
+	for voice: AudioStreamPlayer in pool:
+		voice.stop()
+	screen.queue_free()
+
 
 ## A save written by a NEWER build must be refused, not quietly relabelled.
 ##

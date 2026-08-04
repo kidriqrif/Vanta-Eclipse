@@ -43,6 +43,9 @@ const REPEAT_GAP: Dictionary = {
 	&"goal": 0.15,
 	&"claim": 0.15,
 	&"levelup": 0.1,
+	# Short, so it can be quick, but long enough that a double-tap on one
+	# button is one click.
+	&"click": 0.04,
 	# Long, and each marks a moment that cannot happen twice in half a second.
 	&"boss_warn": 0.5,
 	&"fail": 0.5,
@@ -72,6 +75,7 @@ const SFX: Dictionary = {
 	&"claim": "res://audio/sfx/claim.wav",
 	&"levelup": "res://audio/sfx/levelup.wav",
 	&"eclipse": "res://audio/sfx/eclipse.wav",
+	&"click": "res://audio/sfx/click.wav",
 }
 const MUSIC_PATH: String = "res://audio/music/ambient_void.wav"
 
@@ -96,6 +100,7 @@ func _ready() -> void:
 	_build_voices()
 	_build_music()
 	_connect_events()
+	_adopt_buttons()
 
 
 func _notification(what: int) -> void:
@@ -155,6 +160,38 @@ func _build_music() -> void:
 	_music.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_music)
 	_music.play()
+
+
+## Give every button in the game a click, without a single UI script asking for
+## one.
+##
+## The alternative was 65 `pressed` handlers across 22 screens each remembering
+## to make a noise, and the one that forgot would be found by a player. This
+## keeps the property the rest of this file has: AudioManager listens, nothing
+## announces.
+##
+## node_added covers everything, because autoloads are built before the first
+## screen exists — every Button in the game is added to the tree after this
+## line runs, including ones written next year.
+##
+## Safe against the tap: the combat area is a plain Control driven by
+## gui_input, not a BaseButton, so attacking never triggers a click.
+func _adopt_buttons() -> void:
+	get_tree().node_added.connect(_on_node_added)
+
+
+func _on_node_added(node: Node) -> void:
+	if not node is BaseButton:
+		return
+	var button: BaseButton = node
+	# A disabled button never emits `pressed`, so an unaffordable upgrade stays
+	# silent on its own without anything here having to know what it costs.
+	if not button.pressed.is_connected(_on_any_button_pressed):
+		button.pressed.connect(_on_any_button_pressed)
+
+
+func _on_any_button_pressed() -> void:
+	play(&"click")
 
 
 func _connect_events() -> void:
