@@ -65,7 +65,7 @@ func _style_tab(button: Button, active: bool) -> void:
 	button.add_theme_stylebox_override("normal", style)
 	button.add_theme_stylebox_override("focus", style)
 	var lit: StyleBoxFlat = style.duplicate()
-	lit.bg_color = UIPalette.raised() if active else Color(0.141, 0.141, 0.184, 0.85)
+	lit.bg_color = UIPalette.raised() if active else Color(0.173, 0.173, 0.235, 0.85)
 	button.add_theme_stylebox_override("hover", lit)
 	button.add_theme_stylebox_override("pressed", lit)
 	button.add_theme_color_override("font_color", UIPalette.ink() if active else UIPalette.muted())

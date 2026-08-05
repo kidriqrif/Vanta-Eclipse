@@ -16,6 +16,8 @@ raises, so the failure reaches the player as content that simply is not there.
 """
 
 import collections
+import itertools
+import math
 import pathlib
 import re
 import sys
@@ -343,12 +345,92 @@ def check_parallel_arrays() -> tuple[list[str], list[str]]:
     return problems, [f"{checked} parallel-array constraints"]
 
 
+# --- 6. every tap trail is a colour the others are not ------------------------
+#
+# A tap trail is the one thing a player buys purely to LOOK different, so two
+# trails sharing a colour are two products with one appearance. That shipped:
+# trail_verdant was byte-identical to trail_aureate and trail_void to
+# trail_frost, so six cosmetics drew four trails and two of the shop's own
+# swatches were repeats. "Verdant" was gold and "Void" was light grey, so the
+# names did not even survive contact with the values.
+#
+# Nothing could catch it. check_ui.py owns colour discipline, but its
+# HUE_SCOPES stop at the UI and never enter data/ — deliberately, because
+# content is allowed hues a panel is not. So no check had ever read these.
+#
+# The floor is a perceptual distance, not equality. Two adjacent palette
+# entries clear an != test and still read as the same streak at particle size.
+# The closest pair actually shipped (ember vs gold) sits at 146, so 120
+# rejects near-misses without outlawing a legitimate warm pair.
+MIN_TRAIL_DISTANCE = 120.0
+
+
+def _colour_distance(
+    one: tuple[int, int, int], two: tuple[int, int, int]
+) -> float:
+    """Weighted RGB distance — nearer to perception than the plain metric."""
+    mean_red = (one[0] + two[0]) / 2.0
+    red, green, blue = one[0] - two[0], one[1] - two[1], one[2] - two[2]
+    return math.sqrt(
+        (2.0 + mean_red / 256.0) * red * red
+        + 4.0 * green * green
+        + (2.0 + (255.0 - mean_red) / 256.0) * blue * blue
+    )
+
+
+def check_trail_colours() -> tuple[list[str], list[str]]:
+    from pixelart import PALETTE, rgb
+
+    palette = {rgb(name): name for name in PALETTE}
+    problems: list[str] = []
+    trails: dict[str, tuple[int, int, int]] = {}
+    for path in tres_files():
+        stem, fields = parse(path)
+        raw = fields.get("trail_color")
+        if stem != "cosmetic_definition" or raw is None:
+            continue
+        rel = path.relative_to(ROOT)
+        channels = re.findall(r"[\d.]+", raw)
+        if len(channels) < 3:
+            problems.append(f"{rel}: cannot read trail_color = {raw}")
+            continue
+        colour = tuple(round(float(v) * 255) for v in channels[:3])
+        if colour not in palette:
+            problems.append(
+                f"{rel}: trail_color {colour} is not one of the "
+                f"{len(palette)} palette colours"
+            )
+            continue
+        trails[fields.get("id", path.stem).strip('&"')] = colour
+
+    for (one, first), (two, second) in itertools.combinations(
+        sorted(trails.items()), 2
+    ):
+        gap = _colour_distance(first, second)
+        if gap >= MIN_TRAIL_DISTANCE:
+            continue
+        if first == second:
+            problems.append(
+                f"{one} and {two} are the SAME colour ({palette[first]}) — "
+                "two cosmetics the player cannot tell apart"
+            )
+        else:
+            problems.append(
+                f"{one} ({palette[first]}) and {two} ({palette[second]}) are "
+                f"only {gap:.0f} apart, under the {MIN_TRAIL_DISTANCE:.0f} floor"
+            )
+    return problems, [
+        f"{len(trails)} tap trails, {len(set(trails.values()))} distinct colours"
+    ]
+
+
 CHECKS = [
     ("property names", check_properties),
     ("enum ranges + paths", check_values),
     ("ids + cross-references", check_ids),
     ("definition reachability", check_reachability),
     ("parallel arrays stay parallel", check_parallel_arrays),
+    ("tap trails are mutually distinct", check_trail_colours),
 ]
 
 

@@ -36,7 +36,16 @@ fi
 
 BACKUP="$(mktemp)"
 cp project.godot "$BACKUP"
-restore() { cp "$BACKUP" "$PROJECT_DIR/project.godot"; rm -f "$BACKUP"; }
+# The harness log is cleaned up by this same handler on purpose. A SECOND
+# `trap ... EXIT` does not run alongside this one, it REPLACES it — which is
+# how a later edit to this file silently disabled the project.godot restore
+# and left a duplicate ScreenshotHarness autoload behind on every run until
+# the sweep noticed there were 23 of them.
+LOG="$(mktemp)"
+restore() {
+	cp "$BACKUP" "$PROJECT_DIR/project.godot"
+	rm -f "$BACKUP" "$LOG"
+}
 trap restore EXIT INT TERM
 
 # Insert at the END of the [autoload] section, so it loads after every manager.
@@ -93,7 +102,7 @@ fi
 timeout 300 env VANTA_SHOT_DIR="$OUT_DIR" VANTA_SHOT_ONLY="${VANTA_SHOT_ONLY:-}" "$BIN" \
 	--path "$PROJECT_DIR" \
 	--resolution ${SHOT_RES:-540x960} \
-	--position 40,20 2>&1 | grep -v 'reimport\|loading_editor'
+	--position 40,20 2>&1 | grep -v 'reimport\|loading_editor' | tee "$LOG"
 
 if [ "${PIPESTATUS[0]}" = "124" ]; then
 	echo "TIMED OUT after 300s — the harness never quit." >&2
@@ -102,3 +111,34 @@ fi
 echo
 echo "--- written ---"
 ls -1 "$OUT_DIR"/*.png 2>/dev/null || echo "(no screenshots — check the log above)"
+
+# The verdicts decide the exit status. Until this existed the script ended on
+# `ls`, so it returned 0 whatever the harness had just said — LAYOUT could
+# report overflow on every screen and the run still "passed". That is the same
+# defect validate_all.sh documents twice (a stage piped into `tail`, and a
+# verdict read with `tail -1`), and it is why this reads each verdict BY NAME:
+# anything the engine prints afterwards — a leak warning, a driver notice — is
+# not the result.
+#
+# A missing verdict is a failure, not a pass. If the harness died before it
+# spoke, the absence of the word "problem" means nothing at all.
+echo
+status=0
+for verdict in LAYOUT FONT FONTDEVICE; do
+	line=$(grep -m1 "^${verdict}: " "$LOG" || true)
+	if [ -z "$line" ]; then
+		echo "   $verdict: MISSING — the harness never reported one" >&2
+		status=1
+		continue
+	fi
+	echo "   $line"
+	case "$line" in
+		"$verdict: OK"*) ;;
+		# Only the device verdict may be inconclusive and still pass: at a
+		# fractional window:viewport the 9px face cannot land exactly at any
+		# size, which is a property of the resolution, not of this project.
+		"FONTDEVICE: INCONCLUSIVE"*) ;;
+		*) status=1 ;;
+	esac
+done
+exit $status

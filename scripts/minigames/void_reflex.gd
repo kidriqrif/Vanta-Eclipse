@@ -94,7 +94,7 @@ func _set_resting() -> void:
 		# Kill it first: a tap inside the tween's window would otherwise let it
 		# keep animating and leave the sigil enlarged while reading "WAIT".
 		_flare_tween.kill()
-	_sigil_icon.modulate = Color(0.941, 0.941, 0.965, 0.45)
+	_sigil_icon.modulate = Color(0.965, 0.965, 0.988, 0.45)
 	_sigil_icon.scale = Vector2.ONE
 	_sigil_ring.visible = false
 	_state_label.text = "WAIT"

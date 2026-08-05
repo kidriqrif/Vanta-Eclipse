@@ -39,23 +39,48 @@ import zlib
 PALETTE: dict[str, str] = {
     # neutrals, darkest to lightest
     "void":    "#08080C",   # the background behind everything
-    "abyss":   "#14141C",   # panel surface
-    "slate":   "#24242F",   # a row or tile sitting on a panel
-    "iron":    "#3D3D4E",   # borders, dividers, inactive outlines
-    "ash":     "#6E6E85",   # muted and disabled text
-    "bone":    "#B8B8C8",   # body text
-    "ivory":   "#F0F0F6",   # titles, highlights, the brightest pixel allowed
+    "abyss":   "#171722",   # panel surface
+    "slate":   "#2C2C3C",   # a row or tile sitting on a panel
+    "iron":    "#4E4E66",   # borders, dividers, inactive outlines
+    "ash":     "#8686A2",   # muted and disabled text
+    "bone":    "#C8C8DA",   # body text
+    "ivory":   "#F6F6FC",   # titles, highlights, the brightest pixel allowed
     # hues
-    "blood":   "#7A0E1C",   # deep accent — a fill that ivory text sits ON
-    "crimson": "#E8323C",   # the accent — marks, active state, the identity
-    "ember":   "#F07830",   # fire, warning, heat
-    "gold":    "#F0C040",   # currency, legendary
-    "moss":    "#58A83C",   # poison, nature, success
-    "frost":   "#40C8E0",   # ice, rare
-    "azure":   "#3868D8",   # arcane, uncommon
-    "violet":  "#8848E0",   # void magic, epic
-    "rose":    "#E060A8",   # mythic, charm
+    "blood":   "#B01228",   # deep accent — a fill that ivory text sits ON
+    "crimson": "#FF3A46",   # the accent — marks, active state, the identity
+    "ember":   "#FF8A28",   # fire, warning, heat
+    "gold":    "#FFD23C",   # currency, legendary
+    "moss":    "#6ADC3E",   # poison, nature, success
+    "frost":   "#3EDCFA",   # ice, rare
+    "azure":   "#3E82FF",   # arcane, uncommon
+    "violet":  "#A85CFF",   # void magic, epic
+    "rose":    "#FF6EC0",   # mythic, charm
 }
+
+# --- why these values ---------------------------------------------------------
+#
+# The first palette was picked for cohesion and got it, but it read MUDDY: on
+# the #08080C background, 53.6% of every shipped sprite's ink was neutral, and
+# the single most-used colour in the whole set was `iron` — a desaturated
+# blue-grey 21 points of luminance off the background it sat on. The second
+# most-used was `void` itself. Creatures did not read as creatures against the
+# void; they read as slightly-less-void.
+#
+# Two changes fix that without reopening a single sprite, which is the entire
+# reason the art is generated:
+#
+#   * The nine hues moved up in chroma and value. They are now saturated
+#     enough to hold their own hue at 1px against near-black, which is what a
+#     32x32 icon and a particle trail both need.
+#   * The mid neutrals (slate, iron, ash) climbed. They still step evenly, so
+#     the row-on-panel-on-background stack keeps reading as three planes, but
+#     the darkest structural colour is no longer close enough to the
+#     background to disappear into it.
+#
+# `void` is unchanged: it IS the background, so moving it moves the thing
+# everything is being contrasted against and buys nothing. `crimson` stayed
+# crimson — the icon, the feature graphic and the store listing commit to red
+# on black, and a revamp that abandons that is a different product.
 
 ORDER: list[str] = list(PALETTE)
 TRANSPARENT = "_"

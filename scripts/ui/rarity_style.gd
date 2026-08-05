@@ -40,9 +40,9 @@ const PIP_OUTLINE: Color = Color(0.031, 0.031, 0.047, 0.4)
 ## resolvable at compile time, which rules out calling UIPalette at all.
 static func color(rarity: int) -> Color:
 	match clampi(rarity, 0, TIERS - 1):
-		1: return Color(0.251, 0.784, 0.878, 1)   # Rare      — frost
-		2: return Color(0.533, 0.282, 0.878, 1)   # Epic      — violet
-		3: return Color(0.941, 0.753, 0.251, 1)   # Legendary — gold
+		1: return Color(0.243, 0.863, 0.98, 1)   # Rare      — frost
+		2: return Color(0.659, 0.361, 1, 1)   # Epic      — violet
+		3: return Color(1, 0.824, 0.235, 1)   # Legendary — gold
 		4: return UIPalette.accent()              # Mythic
 	return UIPalette.muted()                      # Common — recedes
 

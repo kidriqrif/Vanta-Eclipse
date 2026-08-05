@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = &"trail_ember"
 display_name = "Ember Trail"
-trail_color = Color(0.941, 0.471, 0.188, 1)
-number_color = Color(0.941, 0.941, 0.965, 1)
+trail_color = Color(1, 0.541, 0.157, 1)
+number_color = Color(0.965, 0.965, 0.988, 1)
 shard_price = 120.0
 sort_order = 1

@@ -9,6 +9,6 @@ id = &"frost_shade"
 display_name = "Frost Shade"
 texture = ExtResource("2")
 hp_multiplier = 0.85
-glow_color = Color(0.722, 0.722, 0.784, 1)
+glow_color = Color(0.784, 0.784, 0.855, 1)
 is_boss = false
 view_scale = 1.0

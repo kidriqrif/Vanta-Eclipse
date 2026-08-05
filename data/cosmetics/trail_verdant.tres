@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = &"trail_verdant"
 display_name = "Verdant Trail"
-trail_color = Color(0.941, 0.753, 0.251, 1)
-number_color = Color(0.941, 0.941, 0.965, 1)
+trail_color = Color(0.416, 0.863, 0.243, 1)
+number_color = Color(0.965, 0.965, 0.988, 1)
 shard_price = 150.0
 sort_order = 4

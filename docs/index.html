@@ -11,33 +11,33 @@
   body { margin:0 auto; padding:3.5rem 1.25rem 4rem; max-width:44rem;
     font:15px/1.7 ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
       "Liberation Mono", monospace;
-    background:#08080C; color:#B8B8C8; }
+    background:#08080C; color:#C8C8DA; }
   header { text-align:center; margin-bottom:3rem; }
   img.mark { width:128px; height:128px; image-rendering:pixelated;
     image-rendering:crisp-edges; }
   h1 { font-size:1.75rem; letter-spacing:.08em; margin:1.25rem 0 .5rem;
-    color:#F0F0F6; text-transform:uppercase; }
+    color:#F6F6FC; text-transform:uppercase; }
   h2 { font-size:.95rem; letter-spacing:.14em; text-transform:uppercase;
-    color:#E8323C; margin:2.5rem 0 .9rem; }
-  p.lead { color:#6E6E85; margin:0; }
-  a { color:#E8323C; }
-  a:hover { color:#F0F0F6; }
-  hr { border:0; border-top:2px solid #7A0E1C; margin:2.5rem 0; }
+    color:#FF3A46; margin:2.5rem 0 .9rem; }
+  p.lead { color:#8686A2; margin:0; }
+  a { color:#FF3A46; }
+  a:hover { color:#F6F6FC; }
+  hr { border:0; border-top:2px solid #B01228; margin:2.5rem 0; }
   table { border-collapse:collapse; width:100%; }
-  td { border-bottom:1px solid #3D3D4E; padding:.5rem .25rem; }
-  td.n { text-align:right; color:#F0F0F6; white-space:nowrap; }
+  td { border-bottom:1px solid #4E4E66; padding:.5rem .25rem; }
+  td.n { text-align:right; color:#F6F6FC; white-space:nowrap; }
   ul { list-style:none; padding:0; }
-  li { border-bottom:1px solid #3D3D4E; padding:.5rem .25rem; }
-  li::before { content:"\2022  "; color:#E8323C; }
+  li { border-bottom:1px solid #4E4E66; padding:.5rem .25rem; }
+  li::before { content:"\2022  "; color:#FF3A46; }
   .swatches { display:flex; flex-wrap:wrap; gap:0; margin:.5rem 0 0; }
   .swatches i { width:2rem; height:2rem; display:block; }
-  footer { margin-top:3rem; color:#6E6E85; font-size:.85rem;
+  footer { margin-top:3rem; color:#8686A2; font-size:.85rem;
     text-align:center; }
 </style>
 </head>
 <body>
 <header>
-<img class="mark" alt="Vanta Eclipse" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAABx0lEQVR42u3dLQ7CMBiA4ckJ5CSHIGgEx+J4HAfJDUAMs4QEmq4/6feI1y/9HtGk3TYty/GluE0WAQALAYAA+DTPBw0cAAAAAAAAAIwC4Hm/bjJkAASAAJBNoAAQAAJAAAgAASAAAAAgpcf5sgkAAAAAAAAAAADiW70fbgEAAAAAAAAAAHVA9LaJBAAAAAAAAAAAdrqUejtt6h0EAAAAAAAAAAAQEwQAAAAAAAAAAFAHQCoIAAAAAAAAAABgTACtQQAAAAAAAADAvwB8hAkAAAAAAAAAbAK1P4DaIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAQ8z7qBAAAAAAAAAAAAAAAAAAAAAAAABg4AAAAAAAAAAAQ+7Cn9MB/vcgDAAAAAAAAAAC0GbiXQwEAAAAAAAAgxoB9KBIAAAAAAAAA1or/fLnyQHMHDgAAAAAAAABRN4GpC9TbgP04EgAAAAAAAADagKgNJPf5Wq8vAAAAAAAAANQCsPcPJ3IHULreD78AAAAAAAAAYNQLIdEHDAAAAAAAAAAuhQoAASAABIAAEAACAAAA+jrcAgAAAAAAAAAABIAAEABqCUCxAgAAiwCAwvYGGxqwHCL8LAcAAAAASUVORK5CYII=">
+<img class="mark" alt="Vanta Eclipse" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAABxUlEQVR42u3drQ7CMBSA0ckJ/DyKZyBoHo7H44WGANOEBJquP+k94vOk94iGbt2ybeddcVssAgAWAgAB8GldT5o4AAAAAAAAAJgFwP68JRkyAAJAAMgmUAAIAAEgAASAABAAAACQ9UfT9Z4EAAAAAAAAAAAA8a3RD7cAAAAAAAAAAIA2IEbbRAIAAAAAAAAAAAcBeFzSBgcBAAAAAAAAAADEBAEAAAAAAAAAADQCkAkCAAAAAAAAAACYFEBnEAAAAAAAAADwLwCXMAEAAAAAAACATaAqAGgMAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAyx7FInAAAAAAAAAAAAAAAAAAAAAAAAwMABAAAAAAAAAIDghz2VB/7rRR4AAAAAAAAAAKDTwL0cCgAAAAAAAAAxBuyiSAAAAAAAAAB4L3jtjy+3HmjhwAEAAAAAAAAg6iYwd4GGG7APRwIAAAAAAABAHxCtgRT+vt7rCwAAAAAAAACtABz9wYliIJUb/fALAAAAAAAAAGZ9ICT6gAEAAAAAAADAQ6ECQAAIAAEgAASAAAAAgLEOtwAAAAAAAAAAAAEgAASAegJQrAAAwCIAoLC9AP88TVoDrJjOAAAAAElFTkSuQmCC">
 <h1>Vanta Eclipse</h1>
 <p class="lead">An idle RPG in the dark. Your hero fights on while you're away.</p>
 </header>
@@ -59,7 +59,7 @@ palette change is one edit and one command, not 53 files reopened by
 hand. The palette is closed at 16 colours and the validation sweep
 fails on any pixel outside it — and on any asset that no longer matches the
 program that draws it.</p>
-<div class="swatches"><i style="background:#08080C" title="void #08080C"></i><i style="background:#14141C" title="abyss #14141C"></i><i style="background:#24242F" title="slate #24242F"></i><i style="background:#3D3D4E" title="iron #3D3D4E"></i><i style="background:#6E6E85" title="ash #6E6E85"></i><i style="background:#B8B8C8" title="bone #B8B8C8"></i><i style="background:#F0F0F6" title="ivory #F0F0F6"></i><i style="background:#7A0E1C" title="blood #7A0E1C"></i><i style="background:#E8323C" title="crimson #E8323C"></i><i style="background:#F07830" title="ember #F07830"></i><i style="background:#F0C040" title="gold #F0C040"></i><i style="background:#58A83C" title="moss #58A83C"></i><i style="background:#40C8E0" title="frost #40C8E0"></i><i style="background:#3868D8" title="azure #3868D8"></i><i style="background:#8848E0" title="violet #8848E0"></i><i style="background:#E060A8" title="rose #E060A8"></i></div>
+<div class="swatches"><i style="background:#08080C" title="void #08080C"></i><i style="background:#171722" title="abyss #171722"></i><i style="background:#2C2C3C" title="slate #2C2C3C"></i><i style="background:#4E4E66" title="iron #4E4E66"></i><i style="background:#8686A2" title="ash #8686A2"></i><i style="background:#C8C8DA" title="bone #C8C8DA"></i><i style="background:#F6F6FC" title="ivory #F6F6FC"></i><i style="background:#B01228" title="blood #B01228"></i><i style="background:#FF3A46" title="crimson #FF3A46"></i><i style="background:#FF8A28" title="ember #FF8A28"></i><i style="background:#FFD23C" title="gold #FFD23C"></i><i style="background:#6ADC3E" title="moss #6ADC3E"></i><i style="background:#3EDCFA" title="frost #3EDCFA"></i><i style="background:#3E82FF" title="azure #3E82FF"></i><i style="background:#A85CFF" title="violet #A85CFF"></i><i style="background:#FF6EC0" title="rose #FF6EC0"></i></div>
 
 <h2>By the numbers</h2>
 <table>
@@ -70,8 +70,8 @@ program that draws it.</p>
 <tr><td>Generated sounds</td><td class="n">16</td></tr>
 <tr><td>Palette colours</td><td class="n">16</td></tr>
 <tr><td>Font glyphs</td><td class="n">106</td></tr>
-<tr><td>Validation stages</td><td class="n">15</td></tr>
-<tr><td>Self-test mutations</td><td class="n">41</td></tr>
+<tr><td>Validation stages</td><td class="n">16</td></tr>
+<tr><td>Self-test mutations</td><td class="n">43</td></tr>
 </table>
 
 <h2>Links</h2>

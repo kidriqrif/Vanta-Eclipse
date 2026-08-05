@@ -13,8 +13,8 @@ extends Label
 ## a real device shows pressure at very high attack speeds. Measured, not
 ## assumed — the M15 pass found this cost negligible by inspection.
 
-const NORMAL_COLOR: Color = Color(0.941, 0.941, 0.965)
-const CRIT_COLOR: Color = Color(0.91, 0.196, 0.235)
+const NORMAL_COLOR: Color = Color(0.965, 0.965, 0.988)
+const CRIT_COLOR: Color = Color(1, 0.227, 0.275)
 const CRIT_OUTLINE_COLOR: Color = Color(0.031, 0.031, 0.047)
 
 

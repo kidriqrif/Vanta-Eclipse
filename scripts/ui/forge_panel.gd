@@ -10,7 +10,7 @@ const CLOSED_TOP: float = 40.0
 const OPEN_BOTTOM: float = 0.0
 const CLOSED_BOTTOM: float = 1050.0
 const SLIDE_TIME: float = 0.28
-const DENY_COLOR: Color = Color(0.91, 0.196, 0.235)
+const DENY_COLOR: Color = Color(1, 0.227, 0.275)
 
 var _is_open: bool = false
 var _selected_slot: StringName = &""

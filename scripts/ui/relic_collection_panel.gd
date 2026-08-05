@@ -87,7 +87,7 @@ func _rebuild() -> void:
 func _make_row(def: RelicDefinition, is_active: bool) -> PanelContainer:
 	var row := PanelContainer.new()
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.078, 0.078, 0.11, 0.92)
+	style.bg_color = Color(0.09, 0.09, 0.133, 0.92)
 	style.set_content_margin_all(18)
 	style.set_border_width_all(2)
 	style.border_color = relic_gold() if is_active else UIPalette.line()

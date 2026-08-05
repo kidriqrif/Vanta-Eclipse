@@ -317,47 +317,65 @@ def thorn_fiend() -> Canvas:
 
 def hollow_sentinel() -> Canvas:
     """Armour with nobody in it. Hard rectangles only — no curve anywhere, so
-    it never reads as flesh."""
+    it never reads as flesh.
+
+    The armour is AZURE, not steel. Drawn in iron and slate it was 94% neutral
+    and read as a grey rectangle on a near-black background — the silhouette
+    was correct and completely inert. A hue carries the plate and the two
+    neutrals it kept (the visor's void, the outline) are the holes, which is
+    the right way round: the empty parts of a hollow suit should be the dark
+    ones. Gold bands and ember visor-glow survive because they now sit on a
+    blue field instead of on grey.
+    """
     c = Canvas(ENEMY, ENEMY)
-    c.rect(20, 24, 24, 26, "iron")                # torso
-    c.rect(22, 26, 20, 22, "slate")
+    c.rect(20, 24, 24, 26, "frost")               # torso, lit rim
+    c.rect(22, 26, 20, 22, "azure")
     c.rect(24, 30, 16, 3, "gold")                 # belt bands
     c.rect(24, 38, 16, 2, "gold")
-    c.rect(24, 12, 16, 14, "iron")                # helm
-    c.rect(26, 14, 12, 10, "slate")
+    c.rect(24, 12, 16, 14, "frost")               # helm
+    c.rect(26, 14, 12, 10, "azure")
     c.rect(26, 18, 12, 3, "void")                 # visor slit, deliberately empty
     c.rect(27, 19, 3, 1, "ember")
     c.rect(35, 19, 3, 1, "ember")
     for sx in (14, 44):                           # pauldrons
-        c.rect(sx, 24, 6, 8, "iron")
-        c.rect(sx + 1, 25, 4, 6, "ash")
-    c.rect(16, 32, 5, 16, "slate")                # arms
-    c.rect(43, 32, 5, 16, "slate")
-    c.rect(22, 50, 8, 10, "iron")                 # legs
-    c.rect(34, 50, 8, 10, "iron")
-    c.line(30, 26, 30, 48, "ash")                 # a split down the breastplate
+        c.rect(sx, 24, 6, 8, "azure")
+        c.rect(sx + 1, 25, 4, 6, "frost")
+    c.rect(16, 32, 5, 16, "azure")                # arms
+    c.rect(43, 32, 5, 16, "azure")
+    c.rect(22, 50, 8, 10, "azure")                # legs
+    c.rect(34, 50, 8, 10, "azure")
+    c.line(30, 26, 30, 48, "frost")               # a split down the breastplate
     c.outline("void")
     return c
 
 
 def silent_colossus() -> Canvas:
     """Fills the frame. Weight comes from a low centre of mass and a head that
-    is far too small for the shoulders."""
+    is far too small for the shoulders.
+
+    It is MOLTEN, not stone. In iron and slate it was the worst offender in
+    the set — 96.9% neutral, a grey mass whose only colour was a four-pixel
+    seam. Running the trunk ramp warm (ember over blood over abyss) keeps the
+    exact same shading structure and low centre of mass while making the body
+    itself the light source. The seam had to change with it: gold-on-ember
+    disappeared, so the core is now ivory inside gold, which is the brightest
+    pair the palette allows and still reads as heat.
+    """
     c = Canvas(ENEMY, ENEMY)
-    c.rect(10, 22, 44, 12, "slate")               # enormous shoulder span
-    c.rect(12, 24, 40, 8, "iron")
+    c.rect(10, 22, 44, 12, "blood")               # enormous shoulder span
+    c.rect(12, 24, 40, 8, "ember")
     for y in range(34, 58):                       # blocky trunk
         half = 16 - abs(y - 46) // 3
-        _ramp(c, 32, y, half, "iron", "slate", "abyss")
-    c.rect(27, 14, 10, 10, "iron")                # small head
+        _ramp(c, 32, y, half, "ember", "blood", "abyss")
+    c.rect(27, 14, 10, 10, "ember")               # small head
     c.rect(29, 16, 6, 6, "abyss")
     c.rect(29, 18, 2, 2, "gold")
     c.rect(33, 18, 2, 2, "gold")
     for ax in (8, 48):                            # pillar arms
-        c.rect(ax, 26, 8, 26, "slate")
-        c.rect(ax + 1, 28, 5, 22, "iron")
+        c.rect(ax, 26, 8, 26, "blood")
+        c.rect(ax + 1, 28, 5, 22, "ember")
     c.rect(30, 36, 4, 12, "gold")                 # core seam
-    c.rect(31, 38, 2, 8, "ember")
+    c.rect(31, 38, 2, 8, "ivory")
     c.outline("void")
     return c
 
@@ -393,14 +411,20 @@ def hollow_sovereign() -> Canvas:
 
 def frost_shade() -> Canvas:
     """A drowned spirit frozen mid-drift: ice sheeting off the shoulders, a
-    fractured mask, a shroud that thins toward the base."""
+    fractured mask, a shroud that thins toward the base.
+
+    The shroud ramps frost over azure rather than azure over iron. Two of the
+    three ramp steps used to be neutral, which put a grey core inside an ice
+    creature and left it 62% neutral — cold in name and drab on screen. Ice is
+    the one thing in the set that has a light of its own.
+    """
     c = Canvas(ENEMY, ENEMY)
     for y in range(20, 61):
         t = (y - 20) / 40.0
         half = int(11 * (1.0 - t * 0.72) ** 0.8) + 1
-        _ramp(c, 32, y, half, "azure", "iron", "slate")
+        _ramp(c, 32, y, half, "frost", "azure", "abyss")
     _ragged_hem(c, 18, 47, 59)
-    c.disc(32, 17, 8, "iron")
+    c.disc(32, 17, 8, "azure")
     c.disc(32, 18, 7, "frost")
     c.disc(32, 19, 6, "void")
     c.rect(29, 17, 2, 2, "frost")

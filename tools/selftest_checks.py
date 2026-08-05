@@ -133,6 +133,20 @@ MUTATIONS: list[Mutation] = [
     ),
     (
         "check_data.py",
+        "tap trails: two cosmetics drawn in the same colour",
+        "data/cosmetics/trail_verdant.tres",
+        "Color(0.416, 0.863, 0.243, 1)",
+        "Color(1, 0.824, 0.235, 1)",
+    ),
+    (
+        "check_data.py",
+        "tap trails: a trail colour that is not on the palette",
+        "data/cosmetics/trail_crystal.tres",
+        "Color(1, 0.431, 0.753, 1)",
+        "Color(1, 0.430, 0.750, 1)",
+    ),
+    (
+        "check_data.py",
         "reachability: a definition no manager loads",
         "data/relics/orphaned_relic.tres",
         None,
@@ -228,8 +242,8 @@ MUTATIONS: list[Mutation] = [
         "stylebox sized by margin loses its height (the invisible slider)",
         "ui/theme/main_theme.tres",
         "content_margin_top = 9.0\ncontent_margin_right = 0.0\n"
-        "content_margin_bottom = 9.0\nbg_color = Color(0.141, 0.141, 0.184, 1)",
-        "bg_color = Color(0.141, 0.141, 0.184, 1)",
+        "content_margin_bottom = 9.0\nbg_color = Color(0.173, 0.173, 0.235, 1)",
+        "bg_color = Color(0.173, 0.173, 0.235, 1)",
     ),
     (
         # This one INJECTS the PackedColorArray rather than editing an existing
@@ -252,7 +266,7 @@ MUTATIONS: list[Mutation] = [
         "check_ui.py",
         "an off-palette hue creeps back into UI chrome (the violet boss timer)",
         "scenes/common/countdown_timer_bar.tscn",
-        "bg_color = Color(0.478, 0.055, 0.11, 1)",
+        "bg_color = Color(0.69, 0.071, 0.157, 1)",
         "bg_color = Color(0.51, 0.44, 0.72, 1)",
     ),
     (
@@ -338,8 +352,8 @@ MUTATIONS: list[Mutation] = [
         "check_ui.py",
         "a soft drop shadow returns to the theme's panels",
         "ui/theme/main_theme.tres",
-        "border_color = Color(0.239, 0.239, 0.306, 1)",
-        "border_color = Color(0.239, 0.239, 0.306, 1)\nshadow_size = 40",
+        "border_color = Color(0.306, 0.306, 0.4, 1)",
+        "border_color = Color(0.306, 0.306, 0.4, 1)\nshadow_size = 40",
     ),
     (
         # A generator edited but not re-run: the source of truth and the
@@ -379,7 +393,7 @@ MUTATIONS: list[Mutation] = [
         "check_pixels.py",
         "the palette drifts away from the art already generated from it",
         "tools/pixelart.py",
-        '"crimson": "#E8323C",',
+        '"crimson": "#FF3A46",',
         '"crimson": "#E8323D",',
     ),
 ]

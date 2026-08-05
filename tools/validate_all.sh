@@ -121,4 +121,32 @@ else
 fi
 rm -f /tmp/vanta_logic.$$
 
+# Stage 15 runs the game with no renderer. This one runs it with a real one and
+# then LOOKS at the result: every screen walked for overflow, every text control
+# checked against the glyph box, and every glyph checked against the pixels the
+# rasteriser actually produced.
+#
+# It was not part of this script before, which is why the tagline on the main
+# menu could lose both its periods and stay green through fifteen stages. The
+# harness had been finding things and reporting them to nobody: it always
+# exited 0, so even when it printed problems the sweep never heard.
+#
+# Skippable, because it is the one stage that needs a GPU and ~90s. CI without
+# a display sets VANTA_SKIP_SHOTS=1; a developer machine should not.
+echo "16. rendered screens (layout, glyph box, device pixels)"
+if [ "${VANTA_SKIP_SHOTS:-0}" = "1" ]; then
+  echo "   SKIPPED (VANTA_SKIP_SHOTS=1)"
+elif ! command -v timeout >/dev/null 2>&1; then
+  echo "   SKIPPED (no timeout(1); the harness needs its hard cap)"
+else
+  if bash tools/screenshot_run.sh >/tmp/vanta_shots.$$ 2>&1; then
+    grep -E "^(LAYOUT|FONT|FONTDEVICE): " /tmp/vanta_shots.$$ | sed 's/^/   /'
+  else
+    grep -E "^(LAYOUT|FONT|FONTDEVICE): " /tmp/vanta_shots.$$ | sed 's/^/   /'
+    grep -E "^ *FINDING: " /tmp/vanta_shots.$$ | sed 's/^ *//;s/^/   /' | head -15
+    status=1
+  fi
+  rm -f /tmp/vanta_shots.$$
+fi
+
 exit $status

@@ -26,8 +26,8 @@ that no longer matches the program that draws it.
 | Generated sounds | 16 |
 | Palette colours | 16 |
 | Font glyphs | 106 |
-| Validation stages | 15 |
-| Self-test mutations | 41 |
+| Validation stages | 16 |
+| Self-test mutations | 43 |
 
 Every number above is read from the file that defines it and refreshed
 by `tools/make_docs.py`; `tools/check_docs.py` fails the sweep if this

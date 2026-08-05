@@ -52,6 +52,7 @@ var _skipped: int = 0
 var _layout_problems: int = 0
 var _controls_seen: int = 0
 var _font_problems: int = 0
+var _font_device_problems: int = 0
 var _text_controls_seen: int = 0
 var _glyph_box: int = -1
 ## Scenes _goto() asked for and did not get. Any at all invalidates the run.
@@ -107,6 +108,35 @@ func _ready() -> void:
 	else:
 		print("FONT: %d control(s) of %d render at a fractional glyph scale"
 			% [_font_problems, _text_controls_seen])
+
+	# The third verdict: what the RASTERISER did, as opposed to what the theme
+	# asked for. FONT above passes as long as every declared size is a whole
+	# multiple of 9. That is necessary and not sufficient — the window stretch
+	# multiplies it afterwards, and 27px at a 0.5 stretch is 13.5 device px.
+	#
+	# The arithmetic is worth stating because it decides what this can even
+	# claim. The face exists at 9px and the theme uses 9x{2,3,4,5,6}. For every
+	# tier to land on whole glyph boxes at once, k*stretch must be a whole
+	# number for k = 2..6 — and the only values that satisfy all five are the
+	# integers. So a non-integer stretch cannot render this face exactly no
+	# matter how the layout is written, and reporting that as a layout defect
+	# would be blaming the project for the resolution it was asked to run at.
+	# It is reported, loudly, and it does not fail the run.
+	var stretch: float = _device_stretch()
+	var whole: bool = absf(stretch - roundf(stretch)) < 0.001
+	if _scene_failures > 0 or _glyph_box_size() <= 0:
+		print("FONTDEVICE: INCONCLUSIVE — the run did not complete")
+	elif not whole:
+		print("FONTDEVICE: INCONCLUSIVE — window:viewport is %.3f, which is not "
+			% stretch + "a whole number, so the 9px face cannot land exactly at "
+			+ "any size. %d control(s) resample here. Shots at this resolution "
+			% _font_device_problems + "do not show the text a 1080-wide device draws.")
+	elif _font_device_problems == 0:
+		print("FONTDEVICE: OK — %d text controls land on whole device pixels at a "
+			% _text_controls_seen + "stretch of %.0f" % stretch)
+	else:
+		print("FONTDEVICE: %d control(s) of %d do not land on whole device pixels"
+			% [_font_device_problems, _text_controls_seen])
 	# Leaks ~11 ObjectDB instances because this quits mid-await. That warning is
 	# the harness, not the game: a plain --quit-after boot exits clean.
 	get_tree().quit()
@@ -504,13 +534,17 @@ func _audit_layout(shot_name: String) -> void:
 			_walk_controls(banner, view, problems, false)
 	if problems.is_empty():
 		return
+	# Individual findings are prefixed FINDING, never with a verdict's own word.
+	# The three verdicts are the only lines that may begin "LAYOUT: ", "FONT: "
+	# or "FONTDEVICE: ", so a reader — human or grep — cannot mistake the first
+	# complaint about one screen for the conclusion about all of them. The
+	# first version of this printed both with the same prefix and the wiring in
+	# validate_all.sh promptly read a finding as the verdict.
 	var font_faults: int = 0
 	for problem: String in problems:
-		if problem.begins_with("FONTSIZE"):
+		if problem.begins_with("FONTSIZE") or problem.begins_with("FONTDEVICE"):
 			font_faults += 1
-			print("FONT: %s  %s" % [shot_name, problem])
-		else:
-			print("LAYOUT: %s  %s" % [shot_name, problem])
+		print("FINDING: %s  %s" % [shot_name, problem])
 	# Counted apart from the layout total so each verdict reports only what it
 	# measured. A font fault is not an overflow, and rolling them together
 	# would let a clean layout read as broken and vice versa.
@@ -646,6 +680,73 @@ func _audit_font_size(control: Control, problems: PackedStringArray) -> void:
 			% [control.name, size, float(size) / float(box)]
 			+ "a bitmap font only scales exactly at whole multiples of %d" % box)
 		_font_problems += 1
+		return
+	if size > 0:
+		_audit_font_device_pixels(control, size, problems)
+
+
+## Fails any text control whose glyphs do not land on whole DEVICE pixels.
+##
+## _audit_font_size above checks the size the THEME asked for. That is not the
+## size the rasteriser uses. stretch/mode="canvas_items" multiplies everything
+## by the window-to-viewport ratio, so on a 540-wide window a perfectly legal
+## 27px label is drawn at 13.5px, and a legal 18px label whose box lands on an
+## odd row is drawn across a half pixel. Both resample a face that exists at
+## exactly one size, and resampling is what pixel art is for avoiding.
+##
+## This is not theoretical. It cost the main menu BOTH periods in "Devour the
+## light. Ascend.", which shipped reading "Devour the light  Ascend". The
+## period is a single pixel; the resample rounded it away while still charging
+## it a 6px advance, so the gap stayed and the glyph did not. Every gate the
+## project had reported green: the atlas contains the period, the declared size
+## is a whole multiple of 9, and every pixel was on-palette. Nothing measured
+## the one thing that was wrong.
+##
+## The tolerance is deliberately loose. A transform is floating point and a
+## centred label lands a hair off exact constantly; only a genuine half-pixel
+## is a resample, so the bar is a quarter of a device pixel.
+func _audit_font_device_pixels(
+	control: Control, size: int, problems: PackedStringArray
+) -> void:
+	var box: int = _glyph_box_size()
+	var transform: Transform2D = control.get_global_transform_with_canvas()
+	# get_global_transform_with_canvas() stops at the VIEWPORT. The window
+	# stretch that canvas_items applies on top of it is the whole effect being
+	# measured here, so it has to be multiplied back in by hand — without it
+	# this function silently audits 1080x1920 and reports on a resolution
+	# nobody is looking at.
+	var stretch: float = _device_stretch()
+	# A control the game is actively scaling — a damage number mid-pop — is not
+	# a layout fact, and failing the build for the middle of a tween would make
+	# this gate noise. Only statically-placed text is the project's to get
+	# right.
+	if absf(transform.get_scale().y - 1.0) > 0.01:
+		return
+	var device: float = float(size) * stretch
+	if absf(device - roundf(device)) > 0.01 or int(roundf(device)) % box != 0:
+		problems.append("FONTDEVICE %s asks for %dpx and the window stretch of "
+			% [control.name, size]
+			+ "%.3f draws it at %.2f device px — not a whole multiple of %d"
+			% [stretch, device, box])
+		_font_device_problems += 1
+		return
+	var offset: float = transform.origin.y * stretch
+	if absf(offset - roundf(offset)) > 0.25:
+		problems.append("FONTDEVICE %s sits at device y=%.2f — a bitmap glyph "
+			% [control.name, offset]
+			+ "straddling a half pixel is resampled, and a 1px glyph "
+			+ "(a period) can be rounded away entirely")
+		_font_device_problems += 1
+
+
+## Window pixels per viewport pixel. 1.0 when the window matches the project
+## resolution, 0.5 for the half-scale screenshot run, and whatever a real
+## handset's width divides to in the player's hands.
+func _device_stretch() -> float:
+	var view: Vector2 = get_viewport().get_visible_rect().size
+	if view.y <= 0.0:
+		return 1.0
+	return float(DisplayServer.window_get_size().y) / view.y
 
 
 func _shot(shot_name: String) -> void:

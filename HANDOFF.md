@@ -24,11 +24,14 @@ Green across the board as of this snapshot:
 
 | Gate | Command | Result |
 |---|---|---|
-| Full sweep, 15 stages | `bash tools/validate_all.sh` | exit 0 |
-| Mutation self-test | `python tools/selftest_checks.py` | 41/41 caught |
+| Full sweep, 16 stages | `bash tools/validate_all.sh` | exit 0 |
+| Mutation self-test | `python tools/selftest_checks.py` | 43/43 caught |
 | Runtime logic | (sweep stage 15) | 76/76 |
-| Screenshots + layout + font | `bash tools/screenshot_run.sh` | LAYOUT OK, FONT OK |
+| Screenshots + layout + font | (sweep stage 16) | LAYOUT OK, FONT OK, FONTDEVICE inconclusive at half scale |
 | Release bundle | `bash tools/build_android.sh release` | signed, `jar verified` |
+
+**The AAB predates the palette revamp below.** Rebuild before uploading — the
+bundle on disk still carries the muted art.
 
 The AAB is `build/vanta-eclipse.aab` (~27.2 MB), targetSdk 36, minSdk 24,
 arm64-v8a only, native libs 16 KB-aligned.
@@ -75,6 +78,34 @@ so a touched file fails the build. Change the program, re-run it.
 **The palette is closed at 16 colours** (`tools/pixelart.py`). Stage 12
 checks *every pixel of every shipped PNG*, not just source literals.
 
+**The palette was re-valued on 2026-08-05 for contrast.** The old set was
+cohesive and muted: 53.6% of all sprite ink was neutral, the most-used colour
+in the whole game was `iron` (a grey 21 points of luminance off the background
+it sat on), and the second was `void` — the background itself. Two enemies were
+effectively greyscale (`silent_colossus` 96.9% neutral, `hollow_sentinel`
+94.1%). The nine hues moved up in chroma and value and the mid neutrals
+climbed; mean sprite luminance went 90.8 → 104.4 against a background at 8.6.
+`void` is unchanged because it *is* the background, and `crimson` stayed
+crimson because the icon and store listing commit to red on black.
+
+Three enemies were also re-hued in `tools/make_sprites.py`, because a palette
+edit cannot fix a sprite that never asked for a hue: the sentinel is azure, the
+colossus is molten ember, the frost shade ramps frost-over-azure instead of
+azure-over-iron. Every enemy is now under 50% neutral.
+
+Changing a palette value means rewriting every `Color()` literal that used it —
+theme, scenes, `data/`. `tools/snap_palette.py` snaps drifted colours to the
+*nearest* entry, which is the wrong tool for this: when hues move far, nearest
+can land a colour on a different entry than the one it has always been. Migrate
+by palette NAME, then run `snap_palette.py` and confirm it reports 0 moved.
+
+**Six tap trails must be six different colours.** They were not: `trail_verdant`
+was byte-identical to `trail_aureate` and `trail_void` to `trail_frost`, so the
+shop sold six cosmetics that drew four trails, and "Verdant" was gold while
+"Void" was light grey. Now enforced by `check_data.py` with a perceptual
+distance floor of 120 — `check_ui.py` cannot do it, since its `HUE_SCOPES`
+deliberately stop at the UI and never enter `data/`.
+
 **Every font size is a multiple of 9.** `vanta_pixel` is a bitmap face whose
 glyphs exist at 9px only; anything else makes Godot resample and go soft. Use
 `tools/snap_font_sizes.py`. Legal tiers in use: 18 / 27 / 36 / 45 / 54.
@@ -115,6 +146,22 @@ verifies**. Found repeatedly; assume more exist.
   is not a constant expression). The whole Arcade was dead through a 14-stage
   sweep, 71 runtime checks and a screenshot pass. Now caught by
   `_check_scripts_parse` in `tools/logic_harness.gd`.
+- **The main menu tagline lost both its periods** and shipped reading "Devour
+  the light  Ascend". Three checks each verified a proper subset and all three
+  said green: `check_glyphs.py` confirmed the atlas *contains* a period, the
+  harness confirmed the *declared* size is a whole multiple of 9, and
+  `check_pixels.py` confirmed every pixel was *on-palette*. Nothing compared
+  the rasterised glyph to the authored one. See "Text and device pixels" below.
+- **`screenshot_run.sh` was never wired into the sweep and always exited 0.**
+  It had been finding real problems and reporting them to nobody for as long as
+  it existed. It is now stage 16, and it reads each verdict BY NAME — findings
+  are prefixed `FINDING:` precisely so a grep cannot mistake the first
+  complaint about one screen for the conclusion about all of them.
+- **A second `trap ... EXIT` REPLACES the first, it does not run alongside it.**
+  Adding one to `screenshot_run.sh` silently disabled the `project.godot`
+  restore, and every run appended another `ScreenshotHarness` autoload until
+  stage 8 reported 23 of them. If you add cleanup to that script, extend
+  `restore()` — do not add a trap.
 
 **Generated output must be looked at, not reasoned about.** Every sprite that
 came out wrong looked correct in source. A screenshot harness reported four
@@ -143,6 +190,34 @@ nothing because the anchor string did not exist in the file.
   converts a FAT volume to NTFS. Use `magick`.
 
 ---
+
+## Text and device pixels — a real constraint, not yet decided
+
+`vanta_pixel` exists at 9px only, and the theme uses 9x{2,3,4,5,6}. With
+`stretch/mode="canvas_items"` the engine multiplies all of that by
+window ÷ viewport. For every tier to land on whole glyph boxes at once,
+`k x stretch` must be a whole number for k = 2..6 — and **only the integers
+satisfy all five**.
+
+So the game renders text pixel-exact on a 1080-wide screen and nowhere else.
+At 720 wide (stretch 0.667) the 18px tier resamples; at 1440 (1.333) it does
+too. This is what ate the tagline's periods: at the harness's 0.5 the subtitle
+landed on device y=415.5, and a glyph whose entire ink is one pixel does not
+survive a half-pixel offset — while still being charged its 6px advance, which
+is why the gap stayed and the dot did not.
+
+Stage 16's `FONTDEVICE` verdict measures exactly this. It reports INCONCLUSIVE
+rather than FAIL at a fractional stretch, because no layout can fix a
+resolution — but it fails hard at an integer stretch, where a finding really is
+a layout bug. **The OK branch is unverified**: a 1080x1920 window does not fit
+on a 1080p desktop, so it could not be exercised here.
+
+Three ways out, none taken — this is a design decision:
+1. Accept it. Most Android handsets are 1080 wide. The cost is soft text on the
+   ones that are not.
+2. Switch to `stretch/mode="viewport"` with integer scaling and letterbox.
+   Sharp everywhere, black bars on non-9:16.
+3. Author the face at a second size, or move the theme to a single tier.
 
 ## Open, needing a human decision
 

@@ -38,7 +38,7 @@ stretch_mode = 5
 [node name="HeadlineLabel" type="Label" parent="ToastPanel/ToastVBox"]
 layout_mode = 2
 theme_type_variation = &"AccentHeaderLabel"
-theme_override_colors/font_outline_color = Color(0.078, 0.078, 0.11, 0.8)
+theme_override_colors/font_outline_color = Color(0.09, 0.09, 0.133, 0.8)
 theme_override_colors/font_shadow_color = Color(0.031, 0.031, 0.047, 0.5)
 theme_override_constants/outline_size = 6
 theme_override_constants/shadow_offset_x = 0
