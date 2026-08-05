@@ -115,53 +115,202 @@ def shade_stalker() -> Canvas:
     posture has to be readable from the silhouette alone.
     """
     c = Canvas(ENEMY, ENEMY)
-    for y in range(24, 46):                       # haunches, highest at the back
-        t = (y - 24) / 22.0
-        half = int(16 - 10 * abs(t - 0.25))
-        _ramp(c, 32, y, max(6, half), "crimson", "blood", "abyss")
-    # Shoulder blades. Kept the SAME value as the body and merged into it: as
-    # two bright discs on a dark mass they stopped being shoulders and became
-    # eyes, and the whole sprite flipped into reading as a mask.
-    for sx in (21, 43):
-        c.disc(sx, 29, 8, "blood")
-        c.disc(sx, 30, 5, "blood")
-    c.rect(26, 36, 12, 11, "abyss")               # head, low and thrust forward
-    c.rect(27, 37, 10, 9, "blood")
-    c.rect(28, 47, 8, 4, "abyss")                 # jaw
-    for tooth in range(29, 36, 2):
-        c.put(tooth, 50, "ivory")
-    c.rect(28, 40, 3, 2, "ember")
-    c.rect(34, 40, 3, 2, "ember")
-    c.put(28, 40, "gold")
-    c.put(36, 40, "gold")
-    for lx in (16, 42):                           # forelimbs: thick, planted
-        c.rect(lx, 40, 6, 15, "abyss")
-        c.rect(lx + 1, 41, 4, 13, "blood")
-        c.rect(lx - 1, 55, 8, 3, "abyss")         # paw
-    c.line(41, 21, 47, 28, "ash")                 # a scar, deliberately one-sided
+
+    # THE THIRD ATTEMPT, AND WHY THE FIRST TWO FAILED THE SAME WAY.
+    #
+    # Attempt one was four one-pixel limbs off a round body: a tick. Attempt
+    # two raised a symmetric dome of haunches centred on x=32 and hung a small
+    # head under it — which is a mushroom, and with two lighter shoulder discs
+    # on it, a mask. Both failed for one reason: a predator is defined by
+    # ASYMMETRY ALONG ITS LENGTH. Front and back of an animal do not match, and
+    # anything mirrored about the vertical centre line stops being a creature
+    # facing somewhere and becomes an ornament.
+    #
+    # So this one is drawn in profile-ish three-quarter: head low and forward
+    # at the left, spine rising to haunches at the right. Nothing is mirrored.
+
+    # Torso, with TWO humps in the back line: shoulder blades forward, haunches
+    # aft, and a dip between them.
+    #
+    # A single rising curve is what kept this reading as a boot no matter how
+    # the head was redrawn. One smooth arc over two posts is a shoe in profile;
+    # the dip is the whole difference, because it is the shape a cat makes when
+    # it gathers itself and nothing inanimate has it.
+    for x in range(22, 52):
+        t = (x - 22) / 29.0
+        back = int(31
+                   - 7 * math.exp(-(((t - 0.20) / 0.17) ** 2))    # shoulder blades
+                   - 8 * math.exp(-(((t - 0.78) / 0.19) ** 2)))   # haunches
+        belly = int(46 - 2 * t)
+        for y in range(back, belly):
+            depth = (y - back) / max(1.0, float(belly - back))
+            c.put(x, y, "crimson" if depth < 0.28 else
+                  ("blood" if depth < 0.72 else "abyss"))
+
+    # Neck: a thick band running down and FORWARD off the shoulder hump, so the
+    # head hangs below the shoulders instead of continuing the back line.
+    for step in range(11):
+        nx, ny = 25 - step, 30 + step
+        for k in range(6):
+            c.put(nx + k, ny, "blood" if k < 4 else "abyss")
+        c.put(nx, ny, "crimson")
+
+    # Head: a WEDGE, deep at the skull and tapering to the muzzle. It was a
+    # flat rectangle, which with two square eyes in it read as a toaster. An
+    # animal's head is the one shape on the sprite that must not be a box.
+    # LIFTED OFF THE BELLY LINE, which is what actually made it a boot.
+    #
+    # Shortening the muzzle was not enough. The head's underside sat at y=47
+    # and so did the belly, so head and torso shared one unbroken bottom edge
+    # running the full width of the sprite — a sole. An animal reads as an
+    # animal partly because its head hangs clear of its chest, and the gap
+    # under the jaw is doing more work here than the skull's shape.
+    for x in range(11, 24):
+        t = (x - 11) / 12.0                       # 0 at the muzzle, 1 at the skull
+        top = int(40 - 4 * t)
+        bottom = int(49 + t)
+        for y in range(top, bottom):
+            depth = (y - top) / max(1.0, float(bottom - top))
+            c.put(x, y, "crimson" if depth < 0.30 else
+                  ("blood" if depth < 0.72 else "abyss"))
+    c.rect(20, 37, 4, 3, "blood")                 # brow ridge, breaking the block
+    c.rect(20, 36, 3, 2, "crimson")
+    for tooth in range(12, 21, 3):                # teeth on the jaw line
+        c.put(tooth, 48, "ivory")
+    c.rect(14, 43, 3, 2, "ember")                 # eyes, set back toward the skull
+    c.rect(18, 42, 3, 2, "ember")
+    c.put(14, 43, "gold")
+    c.put(20, 42, "gold")
+
+    # Legs: foreleg planted under the shoulder, hind leg coiled under the
+    # haunch. Different lengths and different angles — a matched pair would put
+    # the symmetry straight back.
+    c.rect(24, 44, 6, 13, "abyss")
+    c.rect(25, 45, 4, 11, "blood")
+    c.rect(23, 56, 8, 3, "abyss")
+    c.rect(42, 42, 7, 11, "abyss")
+    c.rect(43, 43, 5, 9, "blood")
+    c.rect(41, 52, 9, 3, "abyss")
+    c.rect(40, 55, 10, 3, "abyss")                # the coiled hind foot
+
+    # Tail: two pixels thick and rooted IN the rump. At one pixel it was a
+    # stray line floating off the back corner and read as an antenna.
+    for i in range(9):
+        tx, ty = 49 + i, 27 - int(i * 0.7)
+        c.put(tx, ty, "blood")
+        c.put(tx, ty + 1, "abyss")
+
+    # The one asymmetric mark. On the flank, not in the air above it — the old
+    # one hung clear of the silhouette and read as a second whisker.
+    c.line(33, 26, 39, 30, "ash")
     c.outline("void")
     return c
 
 
 def thorn_fiend() -> Canvas:
-    """Bramble given a body. Spikes are the silhouette, so they break the
-    outline in every direction rather than sitting flat."""
+    """Bramble given a body — hunched, shoulders forward, thorns swept back.
+
+    TWO THINGS WERE WRONG AND BOTH ARE INSTRUCTIVE.
+
+    It was shaded with _ramp's (lit, mid, dark) as ("moss", "iron", "slate").
+    Those last two are blue-grey NEUTRALS, and _ramp gives them 76% of the
+    width, so three quarters of a green creature was near-black. It did not
+    read as a shaded body, it read as a hole with a green rim — which is
+    exactly what ARCHITECTURE.md warns about under "void is never a fill",
+    arrived at from the other direction: not by filling with void, but by
+    shading so dark that the fill became one.
+
+    The palette carries ONE green. A green body therefore cannot have a
+    three-step green ramp, and the fix is not to hunt for a colour that is not
+    there — it is to change the PROPORTIONS. Moss now holds the majority of the
+    width and the neutrals are a shadow edge, so the mass reads green and still
+    turns away from the light.
+
+    Second: the thorns radiated at even angles through a full circle, which is
+    a sunburst. A dandelion, not a predator. They sweep up and back off the
+    shoulders now, in one direction, so they describe a posture instead of a
+    pattern.
+    """
     c = Canvas(ENEMY, ENEMY)
-    _taper(c, 22, 56, 12, 0.7, "moss", "iron", "slate", shrink=0.35)
-    c.disc(32, 22, 9, "moss")
-    c.disc(32, 23, 7, "slate")
-    for angle in range(0, 360, 34):               # thorn crown
+
+    # Mass first, in flat moss: overlapping discs, widest at the shoulders and
+    # tucking in toward a root-like base. Discs rather than a tapered column
+    # because a straight-sided body gives a straight-sided shadow, and a
+    # rectangle of iron down one edge reads as a grey slab standing next to the
+    # creature rather than as the creature's own dark side.
+    c.disc(30, 22, 8, "moss")                     # head
+    c.disc(31, 36, 13, "moss")                    # shoulders and chest
+    c.disc(32, 47, 10, "moss")                    # belly
+    c.disc(32, 54, 7, "moss")                     # base
+
+    # RAG THE OUTLINE. Discs alone gave a smooth closed curve, and a smooth
+    # closed curve full of one colour is a fruit — the previous pass read as an
+    # avocado with eyes. Bramble is jagged, and jaggedness has to be in the
+    # SILHOUETTE, because that is all anyone sees of a 64px sprite on a phone.
+    #
+    # The jitter is a fixed sine, not a random number: this file must produce
+    # byte-identical output on every run or check_generated.py fails the sweep.
+    for y in range(c.height):
+        filled = [x for x in range(c.width) if c.get(x, y) == "moss"]
+        if not filled:
+            continue
+        left, right = min(filled), max(filled)
+        for edge, direction in ((left, -1), (right, 1)):
+            bite = int(1.8 * (1.0 + math.sin(y * 2.3 + (0 if direction < 0 else 1.7))))
+            for step in range(bite):
+                c.put(edge - direction * step, y, None)
+
+    # Shadow after ragging, so it follows the ragged edge rather than the
+    # smooth one it replaced.
+    for y in range(c.height):
+        filled = [x for x in range(c.width) if c.get(x, y) == "moss"]
+        if not filled:
+            continue
+        right = max(filled)
+        for x in range(right - 2, right + 1):
+            if c.get(x, y) == "moss":
+                c.put(x, y, "iron")
+        if len(filled) > 13:
+            c.put(right, y, "slate")
+
+    # A hard notch where the head meets the shoulders. Two rows cut clean out,
+    # not shaded — at this size a change of value does not separate two masses,
+    # only a gap does.
+    for x in range(20, 44):
+        if c.get(x, 30) is not None:
+            c.put(x, 30, "slate")
+        if c.get(x, 31) is not None:
+            c.put(x, 31, "iron")
+
+    # Thorns: shoulders and spine, swept up and BACK. Angles are a narrow fan,
+    # not a circle.
+    # Two pixels thick, not one. A single-pixel spike on a 64px body is a
+    # whisker at any size a phone actually shows it at.
+    for angle, reach in ((-126, 13), (-104, 16), (-80, 15), (-58, 12), (-34, 9)):
         rad = math.radians(angle)
-        x0, y0 = 32 + math.cos(rad) * 8, 24 + math.sin(rad) * 8
-        x1, y1 = 32 + math.cos(rad) * 15, 24 + math.sin(rad) * 15
-        c.line(int(x0), int(y0), int(x1), int(y1), "moss")
-    for y in range(30, 54, 6):                    # barbs down the flanks
-        c.line(20, y, 13, y - 3, "moss")
-        c.line(44, y, 51, y - 3, "moss")
-    c.rect(28, 21, 3, 2, "gold")
-    c.rect(34, 21, 3, 2, "gold")
-    c.put(29, 21, "ivory")
-    c.put(35, 21, "ivory")
+        for step in range(4, reach):
+            x, y = int(30 + math.cos(rad) * step), int(21 + math.sin(rad) * step)
+            c.put(x, y, "moss")
+            c.put(x + 1, y, "moss" if step < reach - 3 else "bone")
+
+    # Barbs down the flanks, angled downward so they read as defence, not legs.
+    # Both sides in moss: drawing the right-hand ones in iron put them on top of
+    # the shadow, where they vanished.
+    for y in range(30, 54, 7):
+        c.line(19, y, 13, y + 4, "moss")
+        c.line(45, y, 51, y + 4, "moss")
+
+    # Eyes placed against the head's OWN centre (30, 21). _eyes() measures from
+    # x=32, which is the canvas centre and no longer where this head is.
+    c.rect(26, 20, 3, 2, "gold")
+    c.rect(32, 20, 3, 2, "gold")
+    c.put(26, 20, "ivory")
+    c.put(34, 20, "ivory")
+
+    # The one asymmetric mark: a thorn snapped off short, stub left behind.
+    c.put(20, 13, "slate")
+    c.put(21, 13, "slate")
+    c.put(21, 14, "slate")
     c.outline("void")
     return c
 
