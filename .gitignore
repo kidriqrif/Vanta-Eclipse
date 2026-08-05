@@ -55,3 +55,9 @@ desktop.ini
 # Python bytecode from the tools/ checkers
 __pycache__/
 *.pyc
+
+# graphify knowledge-graph output — generated, large, and rebuilt on demand.
+# Explicitly ignored because the Stop hook auto-commits and pushes this repo
+# to a PUBLIC remote, so anything left in the tree ships whether or not it was
+# meant to.
+graphify-out/
