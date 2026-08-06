@@ -56,7 +56,14 @@ func load_save_data(data: Dictionary) -> void:
 		if not _definitions_by_id.has(id):
 			continue
 		var entry: Dictionary = raw_owned[key]
-		_owned[id] = {"xp": float(entry.get("xp", 0.0)), "seen": bool(entry.get("seen", true))}
+		# "absorbed" defaults to 0.0 rather than being required, so a save
+		# written before boss cards existed loads as a pet that has eaten
+		# nothing instead of failing to load at all.
+		_owned[id] = {
+			"xp": float(entry.get("xp", 0.0)),
+			"seen": bool(entry.get("seen", true)),
+			"absorbed": maxf(0.0, float(entry.get("absorbed", 0.0))),
+		}
 	_active_id = StringName(data.get("active", ""))
 	if not _definitions_by_id.has(_active_id):
 		_active_id = &""
@@ -66,13 +73,55 @@ func load_save_data(data: Dictionary) -> void:
 
 
 ## Additive bonus fraction the ACTIVE pet contributes to a stat. 0.0 = none.
+##
+## Two terms: what the pet has grown into (level) and what it has been fed
+## (absorbed boss cards). Both land on the SAME stat, because a companion that
+## boosted one number by living and a different one by eating would need the
+## player to track two things to answer one question.
 func get_active_bonus_additive(stat: StringName) -> float:
 	if _active_id == &"":
 		return 0.0
 	var def: PetDefinition = _definitions_by_id.get(_active_id)
 	if def == null or def.bonus_stat != stat:
 		return 0.0
-	return def.bonus_per_level * get_level(_active_id)
+	return def.bonus_per_level * get_level(_active_id) + get_absorbed_bonus(_active_id)
+
+
+## The permanent bonus fraction a pet has absorbed from boss cards.
+func get_absorbed_bonus(id: StringName) -> float:
+	return float(_owned.get(id, {}).get("absorbed", 0.0))
+
+
+## Add to a pet's absorbed bonus, clamped to `cap`. Returns what was actually
+## added, which is less than asked for once the pet is near the ceiling — the
+## caller reports that number, so a card eaten into a full pet cannot claim to
+## have done something it did not.
+func add_absorbed_bonus(id: StringName, amount: float, cap: float) -> float:
+	if not _owned.has(id) or amount <= 0.0:
+		return 0.0
+	var before: float = get_absorbed_bonus(id)
+	var after: float = minf(cap, before + amount)
+	_owned[id]["absorbed"] = after
+	return after - before
+
+
+## Feed a pet XP directly, outside the kill loop. Unlike _grant_xp() this names
+## its target instead of assuming the active pet, because absorption is aimed.
+func grant_absorbed_xp(id: StringName, amount: float) -> void:
+	if not _owned.has(id) or amount <= 0.0:
+		return
+	var def: PetDefinition = _definitions_by_id.get(id)
+	if def == null:
+		return
+	var before_level: int = get_level(id)
+	var before_stage: int = get_stage(id)
+	var cap_xp: float = _xp_for_level(def.max_level)
+	_owned[id]["xp"] = minf(cap_xp, get_xp(id) + amount)
+	var after_level: int = get_level(id)
+	if after_level > before_level:
+		EventBus.pet_leveled.emit(id, after_level)
+		if get_stage(id) > before_stage:
+			EventBus.pet_evolved.emit(id, get_stage(id))
 
 
 # --- Public reads / actions --------------------------------------------------
@@ -168,7 +217,7 @@ func is_unseen(id: StringName) -> bool:
 func _grant(id: StringName, make_active: bool) -> void:
 	if _owned.has(id) or not _definitions_by_id.has(id):
 		return
-	_owned[id] = {"xp": 0.0, "seen": false}
+	_owned[id] = {"xp": 0.0, "seen": false, "absorbed": 0.0}
 	if make_active and _active_id == &"":
 		_active_id = id
 	SaveManager.save_game()

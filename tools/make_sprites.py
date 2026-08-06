@@ -887,6 +887,54 @@ def minigame_reflex_icon() -> Canvas:
     return c
 
 
+def minigame_lights_icon() -> Canvas:
+    """Four panes, two lit — the puzzle's whole idea in one glance."""
+    c = Canvas(ICON, ICON)
+    for x, y, lit in ((4, 4, True), (17, 4, False), (4, 17, False), (17, 17, True)):
+        c.rect(x, y, 11, 11, "gold" if lit else "iron")
+        c.frame(x, y, 11, 11, "ivory" if lit else "slate")
+    return c
+
+
+def minigame_sequence_icon() -> Canvas:
+    """Four runes around a ring with one calling — a sequence mid-playback."""
+    c = Canvas(ICON, ICON)
+    c.disc(16, 6, 5, "crimson")
+    c.disc(16, 6, 2, "ivory")
+    c.disc(6, 16, 5, "iron")
+    c.disc(26, 16, 5, "iron")
+    c.disc(16, 26, 5, "iron")
+    return c
+
+
+def minigame_sweeper_icon() -> Canvas:
+    """A gridded field with one rune showing. The grid has to read as CELLS,
+    so the lines run the full span rather than boxing each cell separately —
+    at 32px a per-cell frame closes up into a solid block."""
+    c = Canvas(ICON, ICON)
+    c.rect(3, 3, 26, 26, "slate")
+    for offset in (3, 11, 19, 27):
+        c.rect(offset, 3, 1, 26, "iron")
+        c.rect(3, offset, 26, 1, "iron")
+    c.disc(19, 19, 4, "ember")
+    c.disc(19, 19, 1, "ivory")
+    return c
+
+
+def card_frame_icon() -> Canvas:
+    """A blank trophy card. Drawn WHITE-ish on purpose: the collection tints
+    each one with its rarity colour through modulate, so any hue baked in here
+    would multiply against that and make every tier the wrong colour."""
+    c = Canvas(ICON, ICON)
+    c.rect(8, 3, 16, 26, "ivory")
+    c.rect(9, 4, 14, 24, "abyss")
+    c.disc(16, 12, 5, "ivory")
+    c.disc(16, 12, 3, "abyss")
+    c.rect(11, 21, 10, 2, "ash")
+    c.rect(11, 25, 6, 2, "ash")
+    return c
+
+
 def star_flourish() -> Canvas:
     c = Canvas(ICON, ICON)
     for y in range(-13, 14):                      # four-point star
@@ -1067,7 +1115,11 @@ UI = {
     "eclipse_icon": eclipse_icon, "essence_icon": essence_icon,
     "forge_icon": forge_icon, "ground_glow": ground_glow, "journal_icon": journal_icon,
     "lock_glyph": lock_glyph, "menu_divider": menu_divider,
+    "card_frame_icon": card_frame_icon,
+    "minigame_lights_icon": minigame_lights_icon,
     "minigame_reflex_icon": minigame_reflex_icon,
+    "minigame_sequence_icon": minigame_sequence_icon,
+    "minigame_sweeper_icon": minigame_sweeper_icon,
     "relic_eclipse_heart": relic_eclipse_heart,
     "relic_essence_prism": relic_essence_prism,
     "relic_hunters_sigil": relic_hunters_sigil,

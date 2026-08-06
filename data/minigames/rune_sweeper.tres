@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="MinigameDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/minigame_definition.gd" id="1"]
+[ext_resource type="Texture2D" path="res://sprites/ui/minigame_sweeper_icon.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"rune_sweeper"
+display_name = "Rune Sweeper"
+description = "Five buried runes. Uncover every safe cell."
+icon = ExtResource("2")
+scene_path = "res://scenes/minigames/rune_sweeper.tscn"
+unlock_level = 55
+reward_seconds = 340.0
+token_cost = 1
+lower_is_better = false
+sort_order = 6

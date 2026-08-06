@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="MinigameDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/minigame_definition.gd" id="1"]
+[ext_resource type="Texture2D" path="res://sprites/ui/minigame_sequence_icon.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"sequence_echo"
+display_name = "Sequence Echo"
+description = "Four runes call a growing pattern. Echo it back."
+icon = ExtResource("2")
+scene_path = "res://scenes/minigames/sequence_echo.tscn"
+unlock_level = 40
+reward_seconds = 300.0
+token_cost = 1
+lower_is_better = false
+sort_order = 5

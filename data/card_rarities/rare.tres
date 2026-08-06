@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CardRarityDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/card_rarity_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"rare"
+display_name = "Rare"
+drop_weight = 11.0
+potency_multiplier = 2.4
+minimum_boss_level = 25
+color = Color(0.243, 0.51, 1, 1)
+sort_order = 2

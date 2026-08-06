@@ -203,6 +203,12 @@ func _pass_seeded() -> void:
 	await _goto(SceneManager.SCENE_PETS)
 	await _shot("14_pets_owned")
 
+	# Seeded with cards, because an empty collection screen and a full one
+	# are different layouts and only one of them has a row to get wrong.
+	_seed_cards()
+	await _goto(SceneManager.SCENE_CARDS)
+	await _shot("14b_cards")
+
 	await _goto(SceneManager.SCENE_JOURNAL)
 	await _shot("15_journal_progress")
 
@@ -216,6 +222,7 @@ func _pass_seeded() -> void:
 	# renders none of them.
 	var games: Array[StringName] = [
 		&"void_reflex", &"memory_match", &"connect_four", &"battleship",
+		&"lights_out", &"sequence_echo", &"rune_sweeper",
 	]
 	var index: int = 18
 	for id: StringName in games:
@@ -389,6 +396,27 @@ func _bestiary_cell(label_text: String, texture: Texture2D, glow: Color) -> Cont
 
 ## A late-game save, written through each manager's own load_save_data where one
 ## exists, so the state is exactly what a real save would restore.
+## Fill the collection so the Cards screen is shot with rows in it — an empty
+## list and a populated one are different layouts, and only one has a row to get
+## wrong.
+##
+## Driven through the real signals rather than written into CardManager,
+## because a seed that reached past the roll would screenshot a state the game
+## cannot actually produce, and the roll is the part most likely to be wrong.
+##
+## The consequence is that WHICH tiers appear is the weighted roll's business,
+## not this function's: one boss win per tier threshold usually returns mostly
+## commons. That is the honest trade — these shots prove the screen renders real
+## cards, and they are not a swatch of all five rarity colours.
+func _seed_cards() -> void:
+	for rarity: CardRarityDefinition in CardManager.get_rarities():
+		EventBus.boss_fight_started.emit(
+			CombatManager.get_enemy_definition(),
+			maxi(1, rarity.minimum_boss_level), 100.0, 30.0
+		)
+		EventBus.boss_fight_won.emit(maxi(1, rarity.minimum_boss_level), 100.0, false)
+
+
 func _seed_late_game() -> void:
 	CurrencyManager.add(CurrencyManager.ESSENCE, 4.8e6)
 	CurrencyManager.add(CurrencyManager.VOID_SCRAPS, 1450.0)

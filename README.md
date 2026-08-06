@@ -19,10 +19,10 @@ that no longer matches the program that draws it.
 
 | | |
 | --- | --- |
-| Screens | 28 |
-| Autoload managers | 20 |
-| Content definitions (`.tres`) | 93 |
-| Generated sprites | 53 |
+| Screens | 32 |
+| Autoload managers | 21 |
+| Content definitions (`.tres`) | 101 |
+| Generated sprites | 57 |
 | Generated sounds | 16 |
 | Palette colours | 16 |
 | Font glyphs | 106 |
@@ -50,7 +50,7 @@ folder. That folder is intentionally not committed (see `.gitignore`).
 | Folder | Contents |
 | --- | --- |
 | `scenes/` | One subfolder per screen (`main_menu/`, `settings/`, `gameplay/`) |
-| `scripts/managers/` | The 20 autoload singletons — see the load-order table in `docs/ARCHITECTURE.md` |
+| `scripts/managers/` | The 21 autoload singletons — see the load-order table in `docs/ARCHITECTURE.md` |
 | `scripts/data/` | `Resource` subclasses defining the shape of every `.tres` |
 | `scripts/ui/` | Scripts attached to UI scenes |
 | `scripts/minigames/` | The Arcade minigames (Milestone 9+) |

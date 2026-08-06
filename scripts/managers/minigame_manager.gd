@@ -21,6 +21,9 @@ const MINIGAME_DEFINITION_PATHS: Array[String] = [
 	"res://data/minigames/memory_match.tres",
 	"res://data/minigames/connect_four.tres",
 	"res://data/minigames/battleship.tres",
+	"res://data/minigames/lights_out.tres",
+	"res://data/minigames/sequence_echo.tres",
+	"res://data/minigames/rune_sweeper.tres",
 ]
 
 ## Which minigame the host should load. The hub sets it immediately before

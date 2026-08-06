@@ -164,6 +164,16 @@ signal purchase_completed(product_id: StringName)
 ## Fired when the equipped tap-trail cosmetic changes.
 signal cosmetic_equipped(id: StringName)
 
+# --- Boss cards ---
+
+## Fired when a defeated boss leaves a trophy card. Carries the whole rolled
+## card, because every listener wants a different field of it and re-reading
+## the collection to find "the newest one" is a race with the next boss.
+signal card_collected(card: Dictionary)
+
+## Fired after a card is absorbed into a companion, with what it granted.
+signal card_absorbed(pet_id: StringName, xp: float, bonus: float)
+
 # --- UI presentation facts (Milestone 5) ---
 # Emitted by overlays (shop panel, blocking modals) so managers can defer
 # moments that need an unobstructed screen. Presentation facts, not state.

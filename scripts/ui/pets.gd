@@ -14,10 +14,12 @@ var _accent: Color = UIPalette.accent()
 @onready var _empty_label: Label = %EmptyLabel
 @onready var _companions_header: Label = %CompanionsHeader
 @onready var _back_button: Button = %BackButton
+@onready var _cards_button: Button = %CardsButton
 
 
 func _ready() -> void:
 	_back_button.pressed.connect(_on_back_pressed)
+	_cards_button.pressed.connect(_on_cards_pressed)
 	EventBus.active_pet_changed.connect(_on_changed)
 	EventBus.pet_leveled.connect(_on_changed2)
 	EventBus.pet_evolved.connect(_on_changed2)
@@ -212,6 +214,15 @@ func _on_changed(_id: StringName) -> void:
 
 func _on_changed2(_id: StringName, _n: int) -> void:
 	_refresh()
+
+
+## Cards live one step behind Pets rather than on the main navigation: a
+## card's only use is feeding the companion, so the screen that chooses the
+## companion is the one place the trip makes sense.
+func _on_cards_pressed() -> void:
+	PetManager.mark_all_seen()
+	SaveManager.save_game()
+	SceneManager.change_scene(SceneManager.SCENE_CARDS)
 
 
 func _on_back_pressed() -> void:

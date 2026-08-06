@@ -37,7 +37,7 @@ Nothing downstream matters until this passes.
 | --- | --- | --- |
 | `pixel_sprite.gdshader` fails to compile | Written without a compiler available — `check_shaders.py` is static and cannot prove a shader compiles | Enemy renders black, white, or untextured; shader error in Output |
 | A sprite renders soft instead of blocky | `textures/canvas_textures/default_texture_filter=0` (nearest) is a project setting, so anything overriding the filter per-node undoes it | Creatures look like the pre-revamp vector art, blurred rather than pixelated |
-| An autoload `_ready()` throws | 20 autoloads all run at boot, in order, before any screen | Black screen, or a stack trace naming a manager |
+| An autoload `_ready()` throws | 21 autoloads all run at boot, in order, before any screen | Black screen, or a stack trace naming a manager |
 | A `%UniqueName` misses at runtime | Statically checked, but scene-tree timing is not the same thing | `Node not found` on entering a screen |
 | A `.tres` fails to load into its typed property | Property names are checked, runtime coercion is not | Null texture, or a definition silently defaulting |
 

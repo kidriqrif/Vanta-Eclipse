@@ -373,7 +373,7 @@ MUTATIONS: list[Mutation] = [
         "check_docs.py",
         "the README's figures drift from the code they describe",
         "README.md",
-        "| Autoload managers | 20 |",
+        "| Autoload managers | 21 |",
         "| Autoload managers | 19 |",
     ),
     (

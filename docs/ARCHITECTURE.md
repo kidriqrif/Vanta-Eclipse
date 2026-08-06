@@ -38,6 +38,7 @@ sweep fails.
 | 18 | `MonetizationManager` | `monetization_manager.gd` | Opt-in ad offers, purchases, entitlements, cosmetics. No mechanic is ever pay-gated (GDD stance, non-negotiable). |
 | 19 | `PrestigeManager` | `prestige_manager.gd` | The Eclipse loop: run peak level, Void Crystal payout, and resetting the run-scoped managers. Loads last because it reaches across all of them. |
 | 20 | `AudioManager` | `audio_manager.gd` | Every sound the game makes. Listens to `EventBus` and nothing else, so no screen asks for audio — which is why adding sound to a finished game changed no UI script. Loads last because it only ever reacts. The 15 effects and the drone are **synthesised** by `tools/make_audio.py` from a fixed seed, not sourced: regenerating is byte-identical, a tweak is an edit rather than a re-recording, and there are no asset licences to audit before release. |
+| 21 | `CardManager` | `card_manager.gd` | Boss trophy cards: the rarity roll, the collection, and absorption into the active companion. Loads last because it reads `PetManager` and is read by nobody — a card only ever leaves the system through the pet it is fed to. |
 
 ## Art is generated, not drawn
 
@@ -126,6 +127,7 @@ against the code by `tools/check_architecture.py`:
 | `world` | `WorldManager` | `journal` | `QuestManager` |
 | `combat` | `CombatManager` | `shop` | `MonetizationManager` |
 | `idle` | `IdleManager` | `prestige` | `PrestigeManager` |
+| `cards` | `CardManager` | | |
 
 * Any system with persistent data calls
   `SaveManager.register_saveable("section_id", self)` in `_ready()` and

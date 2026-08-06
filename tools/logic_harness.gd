@@ -42,6 +42,7 @@ func _run() -> void:
 	_check_scenes_instantiate()
 	_check_round_trip()
 	_check_invariants()
+	_check_boss_cards()
 	_check_currency_hardening()
 	await _check_audio()
 	_check_future_save()
@@ -658,6 +659,88 @@ func _check_positive_control() -> void:
 ## The security pass hardened CurrencyManager against non-finite values. These
 ## assert the hardening from the outside, through the public API, so it cannot
 ## be removed without something going red.
+## Boss cards: the roll stays inside its table, and absorption is a CONVERSION
+## — a card leaves the collection and its value arrives on the pet.
+##
+## Absorption is the only destructive action in the game that is not a purchase,
+## so the thing worth asserting is conservation: exactly one card gone, the
+## bonus moved, and nothing granted twice. A double-grant here is invisible in
+## play (the number just goes up) and permanent in the save.
+func _check_boss_cards() -> void:
+	var rarities: Array[CardRarityDefinition] = CardManager.get_rarities()
+	_ok("card rarity table loaded", not rarities.is_empty(),
+		"%d tiers" % rarities.size())
+
+	# A tier no boss level can ever reach is a tier that does not exist. The
+	# first boss in the game is level 1, so at least one tier must admit it.
+	var reachable: bool = false
+	for rarity: CardRarityDefinition in rarities:
+		if rarity.minimum_boss_level <= 1 and rarity.drop_weight > 0.0:
+			reachable = true
+	_ok("some rarity can drop off the first boss", reachable)
+
+	var before_cards: int = CardManager.get_card_count()
+	EventBus.boss_fight_started.emit(
+		CombatManager.get_enemy_definition(), 40, 100.0, 30.0
+	)
+	EventBus.boss_fight_won.emit(40, 100.0, false)
+	_ok("a defeated boss leaves exactly one card",
+		CardManager.get_card_count() == before_cards + 1,
+		"%d -> %d" % [before_cards, CardManager.get_card_count()])
+
+	var cards: Array = CardManager.get_cards()
+	var newest: Dictionary = cards[cards.size() - 1] if not cards.is_empty() else {}
+	var stats_finite: bool = (
+		is_finite(float(newest.get("power", -1.0)))
+		and float(newest.get("power", -1.0)) > 0.0
+		and is_finite(float(newest.get("vigor", -1.0)))
+		and float(newest.get("vigor", -1.0)) > 0.0
+	)
+	_ok("rolled card stats are finite and positive", stats_finite, str(newest))
+	_ok("rolled card names a known rarity",
+		CardManager.get_rarity(StringName(newest.get("rarity", ""))) != null,
+		String(newest.get("rarity", "")))
+
+	var pet: StringName = PetManager.get_active_id()
+	if pet == &"":
+		_ok("absorb refuses with no active companion",
+			CardManager.absorb(0).is_empty())
+		return
+	var bonus_before: float = PetManager.get_absorbed_bonus(pet)
+	var xp_before: float = PetManager.get_xp(pet)
+	var count_before: int = CardManager.get_card_count()
+	var result: Dictionary = CardManager.absorb(count_before - 1)
+	_ok("absorb reports what it granted", not result.is_empty(), str(result))
+	_ok("absorbing destroys exactly one card",
+		CardManager.get_card_count() == count_before - 1,
+		"%d -> %d" % [count_before, CardManager.get_card_count()])
+	_ok("absorbing raised the pet's absorbed bonus",
+		PetManager.get_absorbed_bonus(pet) >= bonus_before,
+		"%f -> %f" % [bonus_before, PetManager.get_absorbed_bonus(pet)])
+	_ok("absorbing fed the pet XP",
+		PetManager.get_xp(pet) > xp_before,
+		"%f -> %f" % [xp_before, PetManager.get_xp(pet)])
+
+	# The cap is the thing standing between this system and a companion that
+	# outgrows every other stat, so it is asserted directly rather than trusted.
+	for _i: int in 400:
+		PetManager.add_absorbed_bonus(pet, 1.0, CardManager.ABSORBED_BONUS_CAP)
+	_ok("absorbed bonus is capped",
+		is_equal_approx(
+			PetManager.get_absorbed_bonus(pet), CardManager.ABSORBED_BONUS_CAP
+		),
+		"%f" % PetManager.get_absorbed_bonus(pet))
+	_ok("a full pet reports granting nothing",
+		is_zero_approx(
+			PetManager.add_absorbed_bonus(pet, 1.0, CardManager.ABSORBED_BONUS_CAP)
+		))
+
+	# Out-of-range indices are the UI's most likely mistake — a stale button
+	# bound to a card that has already been eaten.
+	_ok("absorb refuses an out-of-range index",
+		CardManager.absorb(-1).is_empty() and CardManager.absorb(9999).is_empty())
+
+
 func _check_currency_hardening() -> void:
 	var before: float = CurrencyManager.get_balance(CurrencyManager.ESSENCE)
 	CurrencyManager.add(CurrencyManager.ESSENCE, INF)
