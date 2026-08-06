@@ -42,9 +42,36 @@ cp project.godot "$BACKUP"
 # and left a duplicate ScreenshotHarness autoload behind on every run until
 # the sweep noticed there were 23 of them.
 LOG="$(mktemp)"
+
+# The harness SEEDS A LATE-GAME SAVE — currencies, prestige, equipment, boss
+# cards — and the managers it drives call SaveManager.save_game(), so all of it
+# lands in the player's real save file. tools/logic_run.sh has always backed the
+# save up for exactly this reason; this script never did, so every screenshot
+# run quietly granted the player 4.8M essence and pushed them to level 60.
+#
+# It went unnoticed because seeding is idempotent-looking: currencies are set,
+# not added. Boss cards are what exposed it — they APPEND, so the collection
+# grew by five every run and the twentieth card made it obvious.
+USER_DIR="${VANTA_USER_DIR:-$APPDATA/Godot/app_userdata/Vanta Eclipse}"
+SAVE="$USER_DIR/savegame.json"
+BACKUP_SAVE="$(mktemp)"
+had_save=0
+[ -f "$SAVE" ] && { cp "$SAVE" "$BACKUP_SAVE"; had_save=1; }
+
+restored=0
 restore() {
+	# EXIT fires after INT/TERM, so without this guard the second pass finds
+	# the backups already deleted and clobbers the real save with nothing.
+	[ "$restored" -eq 1 ] && return
+	restored=1
 	cp "$BACKUP" "$PROJECT_DIR/project.godot"
-	rm -f "$BACKUP" "$LOG"
+	if [ "$had_save" -eq 1 ]; then
+		[ -f "$BACKUP_SAVE" ] && cp "$BACKUP_SAVE" "$SAVE"
+	else
+		# There was no save before the run; the harness created one.
+		rm -f "$SAVE"
+	fi
+	rm -f "$BACKUP" "$BACKUP_SAVE" "$LOG"
 }
 trap restore EXIT INT TERM
 

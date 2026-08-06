@@ -51,9 +51,13 @@ func _build_target() -> void:
 	var stage: int = PetManager.get_stage(active)
 	_target.add_child(_centred("ABSORBING INTO", 18, UIPalette.muted()))
 	_target.add_child(_centred(def.stage_names[stage], 27, UIPalette.ink()))
+	# Body ink, not the accent. crimson on the void background clears AA (5.7:1)
+	# and not AAA, and this line is a small STAT rather than a mark — at 18px it
+	# was the least readable text on the screen. The accent earns its contrast
+	# on short labels, not on numbers someone has to read.
 	var absorbed: float = PetManager.get_absorbed_bonus(active)
 	_target.add_child(_centred(
-		"Absorbed bonus  +%.1f%%" % (absorbed * 100.0), 18, _accent
+		"Absorbed bonus  +%.1f%%" % (absorbed * 100.0), 27, UIPalette.ink()
 	))
 
 

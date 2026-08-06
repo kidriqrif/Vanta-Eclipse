@@ -363,8 +363,8 @@ MUTATIONS: list[Mutation] = [
         "check_generated.py",
         "a generator is edited without regenerating what it produces",
         "tools/make_font.py",
-        "ADVANCE = 6",
         "ADVANCE = 7",
+        "ADVANCE = 8",
     ),
     (
         # The README goes on asserting a number the code has moved past — the

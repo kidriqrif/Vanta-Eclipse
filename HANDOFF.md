@@ -144,6 +144,28 @@ shop sold six cosmetics that drew four trails, and "Verdant" was gold while
 distance floor of 120 — `check_ui.py` cannot do it, since its `HUE_SCOPES`
 deliberately stop at the UI and never enter `data/`.
 
+**The face is 6x7 in a 9-row box, monospace, advance 7.** It was 5 wide and
+widened on 2026-08-06 for small-text legibility: five columns is the floor for
+Latin lowercase and it showed — `m` could not carry three stems, so it was
+drawn with a middle stem that stopped halfway and read as `rn`. The sixth
+column buys a correct `m`, real counters in a/e/g/s, and diagonals in K/X/N
+that resolve instead of colliding. Text got 17% wider and nothing overflowed
+(stage 16 inspects 4,100+ controls).
+
+The BOX HEIGHT deliberately did not change, and should not. `GLYPH_H = 9` is
+load-bearing far outside `make_font.py`: the theme's sizes are 9x{2,3,4,5,6},
+`snap_font_sizes.py` snaps to it, `check_ui.py` fails a size that is not a
+whole multiple of it, and the FONTDEVICE audit reasons about it. Widening cost
+one atlas column; heightening would have cost all of that.
+
+**Punctuation is 2x2, not 1x1** — period, comma, colon, semicolon, middot. A
+single pixel is exactly what a fractional window scale rounds away, which is
+not hypothetical: it ate both periods in the main menu tagline.
+
+A third-party pixel font was considered and rejected. Every asset here is
+generated and stage 13 demands byte-identity with its generator; a downloaded
+face breaks that invariant and adds a licence to audit.
+
 **Every font size is a multiple of 9.** `vanta_pixel` is a bitmap face whose
 glyphs exist at 9px only; anything else makes Godot resample and go soft. Use
 `tools/snap_font_sizes.py`. Legal tiers in use: 18 / 27 / 36 / 45 / 54.
@@ -195,6 +217,13 @@ verifies**. Found repeatedly; assume more exist.
   it existed. It is now stage 16, and it reads each verdict BY NAME — findings
   are prefixed `FINDING:` precisely so a grep cannot mistake the first
   complaint about one screen for the conclusion about all of them.
+- **`screenshot_run.sh` was seeding the player's real save.** It drives a
+  late-game seed — 4.8M essence, level 60, prestige 2, full equipment — and the
+  managers it touches call `SaveManager.save_game()`. `logic_run.sh` had always
+  backed the save up for exactly this reason; this script never did. It hid
+  because seeding looks idempotent (currencies are SET, not added); boss cards
+  exposed it because they APPEND, and the collection grew by five a run until
+  the twentieth card made it obvious. Both scripts now back up and restore.
 - **A second `trap ... EXIT` REPLACES the first, it does not run alongside it.**
   Adding one to `screenshot_run.sh` silently disabled the `project.godot`
   restore, and every run appended another `ScreenshotHarness` autoload until
