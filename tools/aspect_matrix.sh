@@ -93,6 +93,14 @@ for entry in "${DEVICES[@]}"; do
 	echo "  $note"
 	echo "=============================================================="
 
+	# Let the previous engine process release the project before starting the
+	# next. Launching Godot back-to-back makes scene loads fail intermittently —
+	# a run done this way came back "20 scene(s) never loaded" and the identical
+	# shape passed cleanly on its own moments later. The harness reports that as
+	# LAYOUT: INCONCLUSIVE rather than a false OK, which is the guard working,
+	# but an inconclusive device costs the whole 15-minute matrix its meaning.
+	sleep 3
+
 	log=$(SHOT_RES="$res" VANTA_EXPECT_ASPECT="$aspect" GODOT="$BIN" \
 		bash tools/screenshot_run.sh "$OUT_ROOT/$label" 2>&1)
 

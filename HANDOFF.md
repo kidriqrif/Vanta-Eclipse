@@ -268,6 +268,36 @@ nothing because the anchor string did not exist in the file.
 
 ---
 
+## Device shapes — measured, and what is still unknown
+
+`bash tools/aspect_matrix.sh` renders the whole game at ten Android shapes and
+lets the layout audit measure each. All ten pass (`LAYOUT: OK`, ~4,140 controls
+per shape): 9:16 / 9:19.5 / 9:20 / 9:21 phones, 16:10 / 4:3 tablets and a
+foldable in portrait, plus 4:3 / 16:10 tablet and 20:9 phone in LANDSCAPE.
+
+Landscape is tested because the build targets SDK 36 and **Android 16 ignores
+`android:screenOrientation` on displays 600dp and wider**. The app is
+portrait-locked with no landscape layout, so a tablet or unfolded foldable will
+show it in landscape regardless, as will any phone in split-screen. Under
+`aspect="expand"` the viewport only ever GROWS, so nothing is cropped — instead
+content strands, and `scripts/ui/content_width_cap.gd` is what stops it.
+
+**This is layout only.** Nothing here exercises a GPU driver, real touch input,
+audio hardware, memory limits, install, or performance. There is no Android
+SDK, `adb` or emulator on this machine, and the game **has still never run on a
+physical device**. Do not read ten green shapes as device compatibility.
+
+The bundle's own gates, from the merged manifest: `minSdkVersion` 24,
+`glEsVersion` 3.0 required, and **arm64-v8a only** — which also excludes every
+x86_64 target, so the current AAB installs on neither ChromeOS nor a standard
+emulator. Adding `x86_64` would make emulator testing possible at no cost to
+end users, since Play splits an AAB per ABI. Play Console's device catalogue is
+the authoritative reach number; do not estimate it.
+
+Running Godot instances back-to-back makes scene loads fail intermittently, so
+the matrix settles 3s between devices. A flaked device reports `LAYOUT:
+INCONCLUSIVE`, never a false OK — if you see it, re-run that shape alone.
+
 ## Text and device pixels — a real constraint, not yet decided
 
 `vanta_pixel` exists at 9px only, and the theme uses 9x{2,3,4,5,6}. With
