@@ -47,6 +47,21 @@ DEVICES=(
 	"tablet_10x16|600x960|1200x1920|16:10 tablets in portrait"
 	"tablet_3x4|690x920|1440x1920|4:3 tablets in portrait"
 	"fold_5x6|765x918|1600x1920|foldable inner display, near square"
+	# LANDSCAPE. The app is portrait-locked
+	# (android:screenOrientation="portrait") and has no landscape layout, so
+	# for most of its life these shapes were not worth testing. They are now:
+	# the build targets SDK 36, and Android 16 IGNORES an orientation lock on
+	# displays 600dp and wider. A tablet or an unfolded foldable will therefore
+	# show this game in landscape whether it asks to or not, and so will any
+	# phone in split-screen.
+	#
+	# expand only ever GROWS the logical viewport, so nothing is cropped and
+	# nothing overflows — which is exactly why the layout audit alone cannot
+	# judge these. Read the "content column" figure, not the LAYOUT line: at
+	# 4267 logical pixels the 1080-wide UI occupies a quarter of the screen.
+	"tablet_land_4x3|960x720|2560x1920|4:3 tablet forced landscape (Android 16)"
+	"tablet_land_16x10|960x600|3072x1920|16:10 tablet forced landscape"
+	"phone_land_20x9|960x432|4267x1920|phone landscape / split-screen"
 )
 
 if [ -n "${GODOT:-}" ]; then
@@ -83,21 +98,40 @@ for entry in "${DEVICES[@]}"; do
 
 	echo "$log" | grep -E "LAYOUT:|WRONG ASPECT|asked for|as requested" | sed 's/^/  /'
 
-	# A clamped window renders the wrong shape while still producing plausible
-	# screenshots, so treat it as a failure of the RUN, not a layout finding.
-	if echo "$log" | grep -q "WRONG ASPECT"; then
-		summary+=$'\n'"  $label: RUN INVALID — window was clamped, shape not tested"
-		failures=$((failures + 1))
-		continue
-	fi
-	count=$(echo "$log" | grep -c "^LAYOUT: [0-9]* problem" || true)
-	if echo "$log" | grep -q "LAYOUT: OK"; then
-		summary+=$'\n'"  $label: OK"
-	else
-		n=$(echo "$log" | grep -oE "LAYOUT: [0-9]+ problem" | grep -oE "[0-9]+" | head -1)
-		summary+=$'\n'"  $label: ${n:-?} problem(s)"
-		failures=$((failures + 1))
-	fi
+	# These tests are bash pattern matches, NOT `echo "$log" | grep -q`.
+	#
+	# `grep -q` exits the instant it matches, which closes the pipe under it and
+	# kills `echo` with SIGPIPE (141). With `set -o pipefail` the PIPELINE then
+	# reports 141 — so a successful match reads as a failure, and does so only
+	# once the log is big enough that echo has not already finished writing.
+	# This script passed for months on a small log and began reporting all seven
+	# shapes as broken the moment the harness started emitting per-control
+	# findings, which took it past 200 KB. The layout was fine every time.
+	#
+	# It is the mirror image of the trap validate_all.sh documents twice: there,
+	# a pipe HID a failure; here, a pipe INVENTS one. Neither is visible in the
+	# output — only in the exit status nobody reads.
+	case "$log" in
+		*"WRONG ASPECT"*)
+			# A clamped window renders the wrong shape while still producing
+			# plausible screenshots, so this is a failure of the RUN, not a
+			# layout finding.
+			summary+=$'\n'"  $label: RUN INVALID — window was clamped, shape not tested"
+			failures=$((failures + 1))
+			continue
+			;;
+	esac
+	case "$log" in
+		*"LAYOUT: OK"*)
+			summary+=$'\n'"  $label: OK"
+			;;
+		*)
+			n=$(printf '%s' "$log" | grep -oE "LAYOUT: [0-9]+ problem" \
+				| grep -oE "[0-9]+" | tail -1 || true)
+			summary+=$'\n'"  $label: ${n:-?} problem(s)"
+			failures=$((failures + 1))
+			;;
+	esac
 done
 
 echo

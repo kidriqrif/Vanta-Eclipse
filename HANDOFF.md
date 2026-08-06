@@ -25,7 +25,7 @@ Green across the board as of this snapshot:
 | Gate | Command | Result |
 |---|---|---|
 | Full sweep, 16 stages | `bash tools/validate_all.sh` | exit 0 |
-| Mutation self-test | `python tools/selftest_checks.py` | 43/43 caught |
+| Mutation self-test | `python tools/selftest_checks.py` | 44/44 caught |
 | Runtime logic | (sweep stage 15) | 90/90 |
 | Screenshots + layout + font | (sweep stage 16) | LAYOUT OK, FONT OK, FONTDEVICE inconclusive at half scale |
 | Release bundle | `bash tools/build_android.sh release` | signed, `jar verified` |
@@ -217,6 +217,16 @@ verifies**. Found repeatedly; assume more exist.
   it existed. It is now stage 16, and it reads each verdict BY NAME — findings
   are prefixed `FINDING:` precisely so a grep cannot mistake the first
   complaint about one screen for the conclusion about all of them.
+- **A tooling autoload got COMMITTED AND PUSHED.** `screenshot_run.sh` injects
+  `ScreenshotHarness` into `project.godot` for the length of a run and removes
+  it on exit. That is safe until something commits the file mid-run — and the
+  auto-commit Stop hook did exactly that, while `aspect_matrix.sh` was left
+  running in the background across a turn boundary. Commit `3e764aa` shipped an
+  autoload that walks every screen and calls `quit()`, in place of the game.
+  **Never leave a run that touches `project.godot` running in the background**
+  while the auto-commit hook is live. `check_architecture.py` now fails on any
+  autoload in `TEST_ONLY_AUTOLOADS`, so the sweep names it directly instead of
+  reporting it as a documentation count mismatch.
 - **`screenshot_run.sh` was seeding the player's real save.** It drives a
   late-game seed — 4.8M essence, level 60, prestige 2, full equipment — and the
   managers it touches call `SaveManager.save_game()`. `logic_run.sh` had always

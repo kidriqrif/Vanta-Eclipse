@@ -175,6 +175,14 @@ MUTATIONS: list[Mutation] = [
     ),
     (
         "check_architecture.py",
+        "a tooling autoload is committed (a run captured mid-flight)",
+        "project.godot",
+        'CardManager="*res://scripts/managers/card_manager.gd"',
+        'CardManager="*res://scripts/managers/card_manager.gd"\n'
+        'ScreenshotHarness="*res://tools/screenshot_harness.gd"',
+    ),
+    (
+        "check_architecture.py",
         "autoload table: a row names the wrong manager",
         "docs/ARCHITECTURE.md",
         "| 19 | `PrestigeManager` |",

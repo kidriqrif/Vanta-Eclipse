@@ -210,7 +210,37 @@ def check_doc_counts() -> tuple[list[str], list[str]]:
     return problems, [f"{inspected} prose counts against {actual} autoloads"]
 
 
+# Autoloads that exist only for the duration of a tooling run.
+#
+# tools/screenshot_run.sh registers ScreenshotHarness into project.godot, runs,
+# and removes it again on exit. That is safe right up until something commits
+# the file mid-run — which is exactly what happened when the aspect matrix was
+# left running in the background across a turn boundary and an auto-commit hook
+# captured the injected state. The commit shipped an autoload that walks every
+# screen and calls get_tree().quit(), in place of the game.
+#
+# check_autoload_table() above does fail on this, but as a COUNT mismatch that
+# reads like a documentation problem and invites someone to "fix" the doc. This
+# says the actual thing, so the fix is obvious.
+TEST_ONLY_AUTOLOADS = {"ScreenshotHarness"}
+
+
+def check_no_test_autoloads() -> tuple[list[str], list[str]]:
+    declared = declared_autoloads()
+    problems: list[str] = []
+    for name, script in declared:
+        if name in TEST_ONLY_AUTOLOADS:
+            problems.append(
+                f"project.godot declares {name} ({script}) — a tooling autoload "
+                "that must never be committed. tools/screenshot_run.sh removes it "
+                "on exit, so this is a commit that captured a run in progress."
+            )
+    found = "none" if not problems else str(len(problems))
+    return problems, [f"{len(declared)} autoloads, {found} test-only"]
+
+
 CHECKS = [
+    ("no tooling autoload is committed", check_no_test_autoloads),
     ("autoload table matches project.godot", check_autoload_table),
     ("save sections match the code", check_save_sections),
     ("documents only name files that exist", check_doc_files_exist),

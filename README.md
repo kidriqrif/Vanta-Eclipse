@@ -20,14 +20,14 @@ that no longer matches the program that draws it.
 | | |
 | --- | --- |
 | Screens | 32 |
-| Autoload managers | 22 |
+| Autoload managers | 21 |
 | Content definitions (`.tres`) | 101 |
 | Generated sprites | 57 |
 | Generated sounds | 16 |
 | Palette colours | 16 |
 | Font glyphs | 106 |
 | Validation stages | 16 |
-| Self-test mutations | 43 |
+| Self-test mutations | 44 |
 
 Every number above is read from the file that defines it and refreshed
 by `tools/make_docs.py`; `tools/check_docs.py` fails the sweep if this
