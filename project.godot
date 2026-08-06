@@ -44,6 +44,7 @@ PrestigeManager="*res://scripts/managers/prestige_manager.gd"
 AudioManager="*res://scripts/managers/audio_manager.gd"
 CardManager="*res://scripts/managers/card_manager.gd"
 
+ScreenshotHarness="*res://tools/screenshot_harness.gd"
 [debug]
 
 gdscript/warnings/unused_signal=0

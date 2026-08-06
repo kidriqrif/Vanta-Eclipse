@@ -20,7 +20,7 @@ that no longer matches the program that draws it.
 | | |
 | --- | --- |
 | Screens | 32 |
-| Autoload managers | 21 |
+| Autoload managers | 22 |
 | Content definitions (`.tres`) | 101 |
 | Generated sprites | 57 |
 | Generated sounds | 16 |
