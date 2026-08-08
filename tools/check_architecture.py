@@ -143,7 +143,7 @@ def check_save_sections() -> tuple[list[str], list[str]]:
 # the "Where the shading lives" section, which names the deleted bevel shader
 # because the reason it was deleted is the point of the section.
 DOCS = ("docs/ARCHITECTURE.md", "design/TESTING-GUIDE.md",
-        "design/RELEASE-CHECKLIST.md", "README.md", "HANDOFF.md")
+        "design/RELEASE-CHECKLIST.md", "README.md", "CONTEXT.md")
 NAMED_FILE = re.compile(
     r"`(?:res://)?([\w./-]+\.(?:gd|gdshader|tres|tscn|png|svg|fnt|ttf|py|sh))`"
 )

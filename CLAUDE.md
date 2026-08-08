@@ -1,3 +1,12 @@
+## Read CONTEXT.md first
+
+[CONTEXT.md](CONTEXT.md) is the orientation document for a new session: what the
+game is, how it plays, the conventions that will bite you, the traps this
+project has already hit, and what is left before it can go on Google Play. Read
+it before touching anything. It replaced the old handoff document, and it is
+covered by stage 8 of the validation sweep, so its file references and autoload
+counts cannot silently rot.
+
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.

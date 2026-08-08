@@ -115,7 +115,7 @@ The save file (`user://savegame.json`) is one versioned JSON document:
 }
 ```
 
-Fourteen sections are registered, one per owning manager. The set is verified
+Fifteen sections are registered, one per owning manager. The set is verified
 against the code by `tools/check_architecture.py`:
 
 | Section | Owner | Section | Owner |
