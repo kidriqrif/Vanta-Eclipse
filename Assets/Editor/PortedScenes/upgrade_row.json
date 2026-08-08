@@ -1,0 +1,64 @@
+{
+  "source": "scenes/gameplay/upgrade_row.tscn",
+  "name": "upgrade_row",
+  "nodes": [
+    {
+      "name": "UpgradeRow",
+      "kind": "Panel",
+      "parent": null,
+      "script": "res://scripts/ui/upgrade_row.gd"
+    },
+    {
+      "name": "RowHBox",
+      "kind": "HBox",
+      "parent": ".",
+      "spacing": 20.0
+    },
+    {
+      "name": "InfoVBox",
+      "kind": "VBox",
+      "parent": "RowHBox",
+      "expandH": true,
+      "spacing": 6.0
+    },
+    {
+      "name": "NameLabel",
+      "kind": "Label",
+      "parent": "RowHBox/InfoVBox",
+      "text": "Upgrade",
+      "fontSize": 27,
+      "style": "PanelTitle",
+      "unique": true
+    },
+    {
+      "name": "DescLabel",
+      "kind": "Label",
+      "parent": "RowHBox/InfoVBox",
+      "text": "Description",
+      "fontSize": 18,
+      "style": "HeaderLabel",
+      "unique": true
+    },
+    {
+      "name": "LevelLabel",
+      "kind": "Label",
+      "parent": "RowHBox/InfoVBox",
+      "text": "Lv. 0",
+      "fontSize": 18,
+      "style": "AccentLabel",
+      "unique": true
+    },
+    {
+      "name": "BuyButton",
+      "kind": "Button",
+      "parent": "RowHBox",
+      "minSize": {
+        "x": 250.0,
+        "y": 120.0
+      },
+      "text": "0",
+      "fontSize": 27,
+      "unique": true
+    }
+  ]
+}

@@ -1,0 +1,185 @@
+{
+  "source": "scenes/gameplay/offline_rewards_modal.tscn",
+  "name": "offline_rewards_modal",
+  "nodes": [
+    {
+      "name": "OfflineRewardsModal",
+      "kind": "CanvasLayer",
+      "parent": null,
+      "script": "res://scripts/ui/offline_rewards_modal.gd"
+    },
+    {
+      "name": "Scrim",
+      "kind": "ColorRect",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "unique": true,
+      "color": {
+        "r": 0.031,
+        "g": 0.031,
+        "b": 0.047,
+        "a": 0.72
+      }
+    },
+    {
+      "name": "Card",
+      "kind": "Panel",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "anchorMax": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "offset": {
+        "left": -430.0,
+        "right": 430.0,
+        "top": -300.0,
+        "bottom": 300.0
+      },
+      "style": "ModalCard",
+      "unique": true
+    },
+    {
+      "name": "CardVBox",
+      "kind": "VBox",
+      "parent": "Card",
+      "spacing": 12.0,
+      "align": 1
+    },
+    {
+      "name": "TitleRow",
+      "kind": "HBox",
+      "parent": "Card/CardVBox",
+      "spacing": 20.0
+    },
+    {
+      "name": "StarLeft",
+      "kind": "Texture",
+      "parent": "Card/CardVBox/TitleRow",
+      "minSize": {
+        "x": 36.0,
+        "y": 36.0
+      },
+      "sprite": "res://sprites/ui/star_flourish.png"
+    },
+    {
+      "name": "TitleLabel",
+      "kind": "Label",
+      "parent": "Card/CardVBox/TitleRow",
+      "text": "WELCOME BACK",
+      "fontSize": 36,
+      "style": "TitleLabel"
+    },
+    {
+      "name": "StarRight",
+      "kind": "Texture",
+      "parent": "Card/CardVBox/TitleRow",
+      "minSize": {
+        "x": 36.0,
+        "y": 36.0
+      },
+      "sprite": "res://sprites/ui/star_flourish.png"
+    },
+    {
+      "name": "SubtitleLabel",
+      "kind": "Label",
+      "parent": "Card/CardVBox",
+      "text": "Your hero kept fighting while you were away.",
+      "fontSize": 27,
+      "hAlign": 1
+    },
+    {
+      "name": "AmountRow",
+      "kind": "HBox",
+      "parent": "Card/CardVBox",
+      "spacing": 12.0
+    },
+    {
+      "name": "EssenceIcon",
+      "kind": "Texture",
+      "parent": "Card/CardVBox/AmountRow",
+      "minSize": {
+        "x": 52.0,
+        "y": 52.0
+      },
+      "sprite": "res://sprites/ui/essence_icon.png"
+    },
+    {
+      "name": "AmountLabel",
+      "kind": "Label",
+      "parent": "Card/CardVBox/AmountRow",
+      "minSize": {
+        "x": 0.0,
+        "y": 96.0
+      },
+      "text": "+0 Essence",
+      "fontSize": 36,
+      "vAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "HoldHintLabel",
+      "kind": "Label",
+      "parent": "Card/CardVBox",
+      "text": "(tap and hold for exact amount)",
+      "fontSize": 18,
+      "style": "HeaderLabel",
+      "hAlign": 1
+    },
+    {
+      "name": "DurationLabel",
+      "kind": "Label",
+      "parent": "Card/CardVBox",
+      "text": "Away for 0m",
+      "fontSize": 18,
+      "style": "HeaderLabel",
+      "hAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "CapLabel",
+      "kind": "Label",
+      "parent": "Card/CardVBox",
+      "text": "(offline earnings cap at 8h)",
+      "fontSize": 18,
+      "style": "HeaderLabel",
+      "hAlign": 1,
+      "hidden": true,
+      "unique": true
+    },
+    {
+      "name": "DoubleButton",
+      "kind": "Button",
+      "parent": "Card/CardVBox",
+      "minSize": {
+        "x": 500.0,
+        "y": 110.0
+      },
+      "text": "WATCH · DOUBLE IT",
+      "hidden": true,
+      "unique": true
+    },
+    {
+      "name": "ConfirmButton",
+      "kind": "Button",
+      "parent": "Card/CardVBox",
+      "minSize": {
+        "x": 500.0,
+        "y": 110.0
+      },
+      "text": "COLLECT",
+      "style": "PrimaryButton",
+      "unique": true
+    }
+  ]
+}

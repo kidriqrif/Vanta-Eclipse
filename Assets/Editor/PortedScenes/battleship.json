@@ -1,0 +1,65 @@
+{
+  "source": "scenes/minigames/battleship.tscn",
+  "name": "battleship",
+  "nodes": [
+    {
+      "name": "Battleship",
+      "kind": "Control",
+      "parent": null,
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "script": "res://scripts/minigames/battleship.gd"
+    },
+    {
+      "name": "VBox",
+      "kind": "VBox",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "spacing": 16.0,
+      "align": 1
+    },
+    {
+      "name": "ShotsLabel",
+      "kind": "Label",
+      "parent": "VBox",
+      "text": "Shot 0 of 34 · 0 of 3 ships sunk",
+      "fontSize": 18,
+      "hAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "StatusLabel",
+      "kind": "Label",
+      "parent": "VBox",
+      "minSize": {
+        "x": 0.0,
+        "y": 46.0
+      },
+      "text": "FIND THE FLEET",
+      "fontSize": 27,
+      "hAlign": 1,
+      "vAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "CellGrid",
+      "kind": "Grid",
+      "parent": "VBox",
+      "unique": true,
+      "columns": 7
+    }
+  ]
+}

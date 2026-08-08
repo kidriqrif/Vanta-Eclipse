@@ -1,0 +1,13 @@
+{
+  "source": "scenes/gameplay/damage_number.tscn",
+  "name": "damage_number",
+  "nodes": [
+    {
+      "name": "DamageNumber",
+      "kind": "Label",
+      "parent": null,
+      "text": "0",
+      "script": "res://scripts/ui/damage_number.gd"
+    }
+  ]
+}

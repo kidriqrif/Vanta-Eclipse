@@ -1,0 +1,63 @@
+{
+  "source": "scenes/gameplay/enemy_view.tscn",
+  "name": "enemy_view",
+  "nodes": [
+    {
+      "name": "EnemyView",
+      "kind": "Control",
+      "parent": null,
+      "anchorMin": {
+        "x": 0.0,
+        "y": 1.0
+      },
+      "anchorMax": {
+        "x": 0.0,
+        "y": 1.0
+      },
+      "offset": {
+        "left": 0.0,
+        "right": 500.0,
+        "top": 0.0,
+        "bottom": 500.0
+      },
+      "script": "res://scripts/ui/enemy_view.gd"
+    },
+    {
+      "name": "GroundGlow",
+      "kind": "Texture",
+      "parent": ".",
+      "offset": {
+        "left": 130.0,
+        "right": 370.0,
+        "top": 466.0,
+        "bottom": 514.0
+      },
+      "unique": true,
+      "sprite": "res://sprites/ui/ground_glow.png"
+    },
+    {
+      "name": "SpriteHolder",
+      "kind": "Control",
+      "parent": ".",
+      "offset": {
+        "left": 0.0,
+        "right": 500.0,
+        "top": 0.0,
+        "bottom": 500.0
+      },
+      "unique": true
+    },
+    {
+      "name": "EnemySprite",
+      "kind": "Texture",
+      "parent": "SpriteHolder",
+      "offset": {
+        "left": 0.0,
+        "right": 500.0,
+        "top": 0.0,
+        "bottom": 500.0
+      },
+      "unique": true
+    }
+  ]
+}

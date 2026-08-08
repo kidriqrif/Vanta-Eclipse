@@ -1,0 +1,116 @@
+{
+  "source": "scenes/minigames/void_reflex.tscn",
+  "name": "void_reflex",
+  "nodes": [
+    {
+      "name": "VoidReflex",
+      "kind": "Control",
+      "parent": null,
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "script": "res://scripts/minigames/void_reflex.gd"
+    },
+    {
+      "name": "VBox",
+      "kind": "VBox",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "spacing": 20.0,
+      "align": 1
+    },
+    {
+      "name": "RoundLabel",
+      "kind": "Label",
+      "parent": "VBox",
+      "text": "Round 1 of 5",
+      "fontSize": 18,
+      "hAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "SigilButton",
+      "kind": "Button",
+      "parent": "VBox",
+      "minSize": {
+        "x": 400.0,
+        "y": 400.0
+      },
+      "unique": true
+    },
+    {
+      "name": "SigilRing",
+      "kind": "Panel",
+      "parent": "VBox/SigilButton",
+      "anchorMin": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "anchorMax": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "offset": {
+        "left": -190.0,
+        "right": 190.0,
+        "top": -190.0,
+        "bottom": 190.0
+      },
+      "hidden": true,
+      "unique": true
+    },
+    {
+      "name": "SigilIcon",
+      "kind": "Texture",
+      "parent": "VBox/SigilButton",
+      "anchorMin": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "anchorMax": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "offset": {
+        "left": -140.0,
+        "right": 140.0,
+        "top": -140.0,
+        "bottom": 140.0
+      },
+      "unique": true,
+      "sprite": "res://sprites/ui/minigame_reflex_icon.png"
+    },
+    {
+      "name": "StateLabel",
+      "kind": "Label",
+      "parent": "VBox",
+      "text": "WAIT",
+      "fontSize": 36,
+      "style": "HeaderLabel",
+      "hAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "ResultLabel",
+      "kind": "Label",
+      "parent": "VBox",
+      "text": "Tap the sigil the moment it flares.",
+      "fontSize": 18,
+      "style": "HeaderLabel",
+      "hAlign": 1,
+      "unique": true
+    }
+  ]
+}

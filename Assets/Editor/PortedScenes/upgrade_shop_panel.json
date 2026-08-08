@@ -1,0 +1,88 @@
+{
+  "source": "scenes/gameplay/upgrade_shop_panel.tscn",
+  "name": "upgrade_shop_panel",
+  "nodes": [
+    {
+      "name": "UpgradeShopPanel",
+      "kind": "Control",
+      "parent": null,
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 0.0
+      },
+      "offset": {
+        "left": 0.0,
+        "right": 0.0,
+        "top": 40.0,
+        "bottom": 1050.0
+      },
+      "script": "res://scripts/ui/upgrade_shop_panel.gd"
+    },
+    {
+      "name": "Panel",
+      "kind": "Panel",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "style": "OverlayPanel"
+    },
+    {
+      "name": "PanelVBox",
+      "kind": "VBox",
+      "parent": "Panel",
+      "spacing": 16.0
+    },
+    {
+      "name": "HeaderRow",
+      "kind": "HBox",
+      "parent": "Panel/PanelVBox",
+      "spacing": 20.0
+    },
+    {
+      "name": "HeaderLabel",
+      "kind": "Label",
+      "parent": "Panel/PanelVBox/HeaderRow",
+      "expandH": true,
+      "text": "UPGRADE SHOP",
+      "fontSize": 27,
+      "style": "PanelTitle",
+      "vAlign": 1
+    },
+    {
+      "name": "CloseButton",
+      "kind": "Button",
+      "parent": "Panel/PanelVBox/HeaderRow",
+      "minSize": {
+        "x": 180.0,
+        "y": 96.0
+      },
+      "text": "CLOSE",
+      "fontSize": 27,
+      "unique": true
+    },
+    {
+      "name": "Scroll",
+      "kind": "Scroll",
+      "parent": "Panel/PanelVBox",
+      "expandV": true
+    },
+    {
+      "name": "RowsVBox",
+      "kind": "VBox",
+      "parent": "Panel/PanelVBox/Scroll",
+      "expandH": true,
+      "spacing": 14.0,
+      "unique": true
+    }
+  ]
+}

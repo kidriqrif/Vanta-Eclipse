@@ -1,0 +1,145 @@
+{
+  "source": "scenes/gear/forge_panel.tscn",
+  "name": "forge_panel",
+  "nodes": [
+    {
+      "name": "ForgePanel",
+      "kind": "Control",
+      "parent": null,
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 0.0
+      },
+      "offset": {
+        "left": 0.0,
+        "right": 0.0,
+        "top": 40.0,
+        "bottom": 1050.0
+      },
+      "script": "res://scripts/ui/forge_panel.gd"
+    },
+    {
+      "name": "Panel",
+      "kind": "Panel",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "style": "OverlayPanel"
+    },
+    {
+      "name": "PanelVBox",
+      "kind": "VBox",
+      "parent": "Panel",
+      "spacing": 18.0
+    },
+    {
+      "name": "HeaderRow",
+      "kind": "HBox",
+      "parent": "Panel/PanelVBox",
+      "spacing": 20.0
+    },
+    {
+      "name": "ForgeIcon",
+      "kind": "Texture",
+      "parent": "Panel/PanelVBox/HeaderRow",
+      "minSize": {
+        "x": 46.0,
+        "y": 46.0
+      },
+      "sprite": "res://sprites/ui/forge_icon.png"
+    },
+    {
+      "name": "HeaderLabel",
+      "kind": "Label",
+      "parent": "Panel/PanelVBox/HeaderRow",
+      "expandH": true,
+      "text": "THE FORGE",
+      "fontSize": 27,
+      "style": "PanelTitle",
+      "vAlign": 1
+    },
+    {
+      "name": "ForgeCloseButton",
+      "kind": "Button",
+      "parent": "Panel/PanelVBox/HeaderRow",
+      "minSize": {
+        "x": 180.0,
+        "y": 96.0
+      },
+      "text": "CLOSE",
+      "fontSize": 27,
+      "unique": true
+    },
+    {
+      "name": "PromptLabel",
+      "kind": "Label",
+      "parent": "Panel/PanelVBox",
+      "text": "Forge a random item for a slot at your current level.",
+      "fontSize": 18,
+      "style": "HeaderLabel",
+      "hAlign": 1
+    },
+    {
+      "name": "SlotScroll",
+      "kind": "Scroll",
+      "parent": "Panel/PanelVBox",
+      "minSize": {
+        "x": 0.0,
+        "y": 264.0
+      }
+    },
+    {
+      "name": "SlotRow",
+      "kind": "HBox",
+      "parent": "Panel/PanelVBox/SlotScroll",
+      "spacing": 14.0,
+      "unique": true
+    },
+    {
+      "name": "CostLabel",
+      "kind": "Label",
+      "parent": "Panel/PanelVBox",
+      "text": "0 / 20 Void Scraps",
+      "fontSize": 27,
+      "hAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "OddsLabel",
+      "kind": "Label",
+      "parent": "Panel/PanelVBox",
+      "text": "Common 74%  ·  Rare 20%  ·  Epic 5%  ·  Legendary 0.9%  ·  Mythic 0.1%",
+      "fontSize": 18,
+      "style": "HeaderLabel",
+      "hAlign": 1
+    },
+    {
+      "name": "ForgeButton",
+      "kind": "Button",
+      "parent": "Panel/PanelVBox",
+      "minSize": {
+        "x": 0.0,
+        "y": 120.0
+      },
+      "text": "FORGE",
+      "style": "PrimaryButton",
+      "unique": true
+    },
+    {
+      "name": "Spacer",
+      "kind": "Control",
+      "parent": "Panel/PanelVBox",
+      "expandV": true
+    }
+  ]
+}

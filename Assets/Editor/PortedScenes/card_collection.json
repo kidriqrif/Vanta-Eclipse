@@ -1,0 +1,132 @@
+{
+  "source": "scenes/cards/card_collection.tscn",
+  "name": "card_collection",
+  "nodes": [
+    {
+      "name": "CardCollection",
+      "kind": "Control",
+      "parent": null,
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "script": "res://scripts/ui/card_collection.gd"
+    },
+    {
+      "name": "VoidBackground",
+      "kind": "Instance",
+      "parent": ".",
+      "instance": "res://scenes/common/void_background.tscn"
+    },
+    {
+      "name": "MarginContainer",
+      "kind": "Margin",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "padding": {
+        "left": 40.0,
+        "top": 48.0,
+        "right": 40.0,
+        "bottom": 32.0
+      }
+    },
+    {
+      "name": "VBox",
+      "kind": "VBox",
+      "parent": "MarginContainer",
+      "spacing": 18.0
+    },
+    {
+      "name": "HeaderRow",
+      "kind": "HBox",
+      "parent": "MarginContainer/VBox",
+      "spacing": 20.0
+    },
+    {
+      "name": "BackButton",
+      "kind": "Button",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "minSize": {
+        "x": 180.0,
+        "y": 96.0
+      },
+      "text": "BACK",
+      "unique": true
+    },
+    {
+      "name": "TitleLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "expandH": true,
+      "text": "CARDS",
+      "fontSize": 45,
+      "style": "TitleLabel",
+      "hAlign": 1
+    },
+    {
+      "name": "HeaderSpacer",
+      "kind": "Control",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "minSize": {
+        "x": 180.0,
+        "y": 0.0
+      }
+    },
+    {
+      "name": "TargetPanel",
+      "kind": "Panel",
+      "parent": "MarginContainer/VBox"
+    },
+    {
+      "name": "TargetBox",
+      "kind": "VBox",
+      "parent": "MarginContainer/VBox/TargetPanel",
+      "spacing": 12.0,
+      "unique": true
+    },
+    {
+      "name": "CollectionHeader",
+      "kind": "Label",
+      "parent": "MarginContainer/VBox",
+      "text": "COLLECTION",
+      "fontSize": 27,
+      "style": "HeaderLabel",
+      "unique": true
+    },
+    {
+      "name": "CollectionScroll",
+      "kind": "Scroll",
+      "parent": "MarginContainer/VBox",
+      "expandV": true
+    },
+    {
+      "name": "CollectionList",
+      "kind": "VBox",
+      "parent": "MarginContainer/VBox/CollectionScroll",
+      "expandH": true,
+      "spacing": 12.0,
+      "unique": true
+    },
+    {
+      "name": "EmptyLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/VBox/CollectionScroll/CollectionList",
+      "text": "No cards yet. Defeat a boss.",
+      "fontSize": 18,
+      "style": "HeaderLabel",
+      "hAlign": 1,
+      "unique": true
+    }
+  ]
+}

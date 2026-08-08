@@ -1,0 +1,65 @@
+{
+  "source": "scenes/minigames/connect_four.tscn",
+  "name": "connect_four",
+  "nodes": [
+    {
+      "name": "ConnectFour",
+      "kind": "Control",
+      "parent": null,
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "script": "res://scripts/minigames/connect_four.gd"
+    },
+    {
+      "name": "VBox",
+      "kind": "VBox",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "spacing": 16.0
+    },
+    {
+      "name": "StatusLabel",
+      "kind": "Label",
+      "parent": "VBox",
+      "minSize": {
+        "x": 0.0,
+        "y": 48.0
+      },
+      "text": "YOUR TURN",
+      "fontSize": 27,
+      "hAlign": 1,
+      "vAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "HintLabel",
+      "kind": "Label",
+      "parent": "VBox",
+      "text": "Tap a column to drop. Four in a row wins.",
+      "fontSize": 18,
+      "style": "HeaderLabel",
+      "hAlign": 1
+    },
+    {
+      "name": "BoardRow",
+      "kind": "HBox",
+      "parent": "VBox",
+      "expandV": true,
+      "spacing": 8.0,
+      "unique": true
+    }
+  ]
+}

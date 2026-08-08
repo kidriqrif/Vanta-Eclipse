@@ -1,0 +1,67 @@
+{
+  "source": "scenes/gameplay/auto_attack_toast.tscn",
+  "name": "auto_attack_toast",
+  "nodes": [
+    {
+      "name": "AutoAttackToast",
+      "kind": "CanvasLayer",
+      "parent": null,
+      "script": "res://scripts/ui/auto_attack_toast.gd"
+    },
+    {
+      "name": "ToastPanel",
+      "kind": "Panel",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.5,
+        "y": 1.0
+      },
+      "anchorMax": {
+        "x": 0.5,
+        "y": 1.0
+      },
+      "offset": {
+        "left": -400.0,
+        "right": 400.0,
+        "top": 430.0,
+        "bottom": 610.0
+      },
+      "style": "CelebrationToast",
+      "unique": true
+    },
+    {
+      "name": "ToastVBox",
+      "kind": "VBox",
+      "parent": "ToastPanel",
+      "spacing": 6.0,
+      "align": 1
+    },
+    {
+      "name": "IconRect",
+      "kind": "Texture",
+      "parent": "ToastPanel/ToastVBox",
+      "minSize": {
+        "x": 56.0,
+        "y": 56.0
+      },
+      "sprite": "res://sprites/ui/auto_attack_icon.png"
+    },
+    {
+      "name": "HeadlineLabel",
+      "kind": "Label",
+      "parent": "ToastPanel/ToastVBox",
+      "text": "AUTO-ATTACK UNLOCKED",
+      "fontSize": 36,
+      "style": "AccentHeaderLabel",
+      "hAlign": 1
+    },
+    {
+      "name": "BodyLabel",
+      "kind": "Label",
+      "parent": "ToastPanel/ToastVBox",
+      "text": "Your hero fights on, even when you're not tapping.",
+      "fontSize": 18,
+      "hAlign": 1
+    }
+  ]
+}

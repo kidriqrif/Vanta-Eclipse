@@ -1,0 +1,171 @@
+{
+  "source": "scenes/eclipse/eclipse.tscn",
+  "name": "eclipse",
+  "nodes": [
+    {
+      "name": "Eclipse",
+      "kind": "Control",
+      "parent": null,
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "script": "res://scripts/ui/eclipse.gd"
+    },
+    {
+      "name": "VoidBackground",
+      "kind": "Instance",
+      "parent": ".",
+      "instance": "res://scenes/common/void_background.tscn"
+    },
+    {
+      "name": "MarginContainer",
+      "kind": "Margin",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "padding": {
+        "left": 40.0,
+        "top": 48.0,
+        "right": 40.0,
+        "bottom": 32.0
+      }
+    },
+    {
+      "name": "VBox",
+      "kind": "VBox",
+      "parent": "MarginContainer",
+      "spacing": 18.0
+    },
+    {
+      "name": "HeaderRow",
+      "kind": "HBox",
+      "parent": "MarginContainer/VBox",
+      "spacing": 20.0
+    },
+    {
+      "name": "BackButton",
+      "kind": "Button",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "minSize": {
+        "x": 180.0,
+        "y": 96.0
+      },
+      "text": "BACK",
+      "unique": true
+    },
+    {
+      "name": "TitleLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "expandH": true,
+      "text": "ECLIPSE",
+      "fontSize": 45,
+      "style": "TitleLabel",
+      "hAlign": 1,
+      "vAlign": 1
+    },
+    {
+      "name": "CrystalPill",
+      "kind": "Panel",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "style": "BadgePanel"
+    },
+    {
+      "name": "CrystalHBox",
+      "kind": "HBox",
+      "parent": "MarginContainer/VBox/HeaderRow/CrystalPill",
+      "spacing": 8.0
+    },
+    {
+      "name": "CrystalIcon",
+      "kind": "Texture",
+      "parent": "MarginContainer/VBox/HeaderRow/CrystalPill/CrystalHBox",
+      "minSize": {
+        "x": 34.0,
+        "y": 34.0
+      },
+      "sprite": "res://sprites/ui/void_crystal_icon.png"
+    },
+    {
+      "name": "CrystalLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/VBox/HeaderRow/CrystalPill/CrystalHBox",
+      "text": "0",
+      "fontSize": 27,
+      "vAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "SegmentRow",
+      "kind": "HBox",
+      "parent": "MarginContainer/VBox",
+      "spacing": 12.0
+    },
+    {
+      "name": "AscendTab",
+      "kind": "Button",
+      "parent": "MarginContainer/VBox/SegmentRow",
+      "minSize": {
+        "x": 0.0,
+        "y": 96.0
+      },
+      "expandH": true,
+      "text": "ASCEND",
+      "unique": true
+    },
+    {
+      "name": "PowersTab",
+      "kind": "Button",
+      "parent": "MarginContainer/VBox/SegmentRow",
+      "minSize": {
+        "x": 0.0,
+        "y": 96.0
+      },
+      "expandH": true,
+      "text": "POWERS",
+      "unique": true
+    },
+    {
+      "name": "AscendScroll",
+      "kind": "Scroll",
+      "parent": "MarginContainer/VBox",
+      "expandV": true,
+      "unique": true
+    },
+    {
+      "name": "AscendBox",
+      "kind": "VBox",
+      "parent": "MarginContainer/VBox/AscendScroll",
+      "expandH": true,
+      "spacing": 16.0,
+      "unique": true
+    },
+    {
+      "name": "PowersScroll",
+      "kind": "Scroll",
+      "parent": "MarginContainer/VBox",
+      "expandV": true,
+      "hidden": true,
+      "unique": true
+    },
+    {
+      "name": "PowersList",
+      "kind": "VBox",
+      "parent": "MarginContainer/VBox/PowersScroll",
+      "expandH": true,
+      "spacing": 14.0,
+      "unique": true
+    }
+  ]
+}

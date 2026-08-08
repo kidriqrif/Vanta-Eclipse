@@ -1,0 +1,69 @@
+{
+  "source": "scenes/common/result_banner.tscn",
+  "name": "result_banner",
+  "nodes": [
+    {
+      "name": "ResultBanner",
+      "kind": "CanvasLayer",
+      "parent": null,
+      "script": "res://scripts/ui/result_banner.gd"
+    },
+    {
+      "name": "BannerPanel",
+      "kind": "Panel",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.5,
+        "y": 1.0
+      },
+      "anchorMax": {
+        "x": 0.5,
+        "y": 1.0
+      },
+      "offset": {
+        "left": -400.0,
+        "right": 400.0,
+        "top": 430.0,
+        "bottom": 610.0
+      },
+      "style": "CelebrationToast",
+      "unique": true
+    },
+    {
+      "name": "BannerVBox",
+      "kind": "VBox",
+      "parent": "BannerPanel",
+      "spacing": 6.0,
+      "align": 1
+    },
+    {
+      "name": "BannerIcon",
+      "kind": "Texture",
+      "parent": "BannerPanel/BannerVBox",
+      "minSize": {
+        "x": 56.0,
+        "y": 56.0
+      },
+      "unique": true
+    },
+    {
+      "name": "BannerHeadline",
+      "kind": "Label",
+      "parent": "BannerPanel/BannerVBox",
+      "text": "HEADLINE",
+      "fontSize": 36,
+      "style": "HeaderLabel",
+      "hAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "BannerBody",
+      "kind": "Label",
+      "parent": "BannerPanel/BannerVBox",
+      "text": "Body",
+      "fontSize": 18,
+      "hAlign": 1,
+      "unique": true
+    }
+  ]
+}

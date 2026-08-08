@@ -1,0 +1,134 @@
+{
+  "source": "scenes/pets/pets.tscn",
+  "name": "pets",
+  "nodes": [
+    {
+      "name": "Pets",
+      "kind": "Control",
+      "parent": null,
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "script": "res://scripts/ui/pets.gd"
+    },
+    {
+      "name": "VoidBackground",
+      "kind": "Instance",
+      "parent": ".",
+      "instance": "res://scenes/common/void_background.tscn"
+    },
+    {
+      "name": "MarginContainer",
+      "kind": "Margin",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "padding": {
+        "left": 40.0,
+        "top": 48.0,
+        "right": 40.0,
+        "bottom": 32.0
+      }
+    },
+    {
+      "name": "VBox",
+      "kind": "VBox",
+      "parent": "MarginContainer",
+      "spacing": 18.0
+    },
+    {
+      "name": "HeaderRow",
+      "kind": "HBox",
+      "parent": "MarginContainer/VBox",
+      "spacing": 20.0
+    },
+    {
+      "name": "BackButton",
+      "kind": "Button",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "minSize": {
+        "x": 180.0,
+        "y": 96.0
+      },
+      "text": "BACK",
+      "unique": true
+    },
+    {
+      "name": "TitleLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "expandH": true,
+      "text": "PETS",
+      "fontSize": 45,
+      "style": "TitleLabel",
+      "hAlign": 1
+    },
+    {
+      "name": "CardsButton",
+      "kind": "Button",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "minSize": {
+        "x": 180.0,
+        "y": 96.0
+      },
+      "text": "CARDS",
+      "unique": true
+    },
+    {
+      "name": "ShowcasePanel",
+      "kind": "Panel",
+      "parent": "MarginContainer/VBox"
+    },
+    {
+      "name": "ShowcaseBox",
+      "kind": "VBox",
+      "parent": "MarginContainer/VBox/ShowcasePanel",
+      "spacing": 12.0,
+      "unique": true
+    },
+    {
+      "name": "CompanionsHeader",
+      "kind": "Label",
+      "parent": "MarginContainer/VBox",
+      "text": "COMPANIONS",
+      "fontSize": 27,
+      "style": "HeaderLabel",
+      "unique": true
+    },
+    {
+      "name": "RosterScroll",
+      "kind": "Scroll",
+      "parent": "MarginContainer/VBox",
+      "expandV": true
+    },
+    {
+      "name": "RosterList",
+      "kind": "VBox",
+      "parent": "MarginContainer/VBox/RosterScroll",
+      "expandH": true,
+      "spacing": 12.0,
+      "unique": true
+    },
+    {
+      "name": "EmptyLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/VBox/RosterScroll/RosterList",
+      "text": "No companions yet.",
+      "fontSize": 18,
+      "style": "HeaderLabel",
+      "hAlign": 1,
+      "unique": true
+    }
+  ]
+}

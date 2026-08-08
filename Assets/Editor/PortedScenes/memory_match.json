@@ -1,0 +1,66 @@
+{
+  "source": "scenes/minigames/memory_match.tscn",
+  "name": "memory_match",
+  "nodes": [
+    {
+      "name": "MemoryMatch",
+      "kind": "Control",
+      "parent": null,
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "script": "res://scripts/minigames/memory_match.gd"
+    },
+    {
+      "name": "VBox",
+      "kind": "VBox",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "spacing": 16.0
+    },
+    {
+      "name": "AttemptsLabel",
+      "kind": "Label",
+      "parent": "VBox",
+      "text": "Attempt 0 of 12 · 0 of 6 pairs",
+      "fontSize": 18,
+      "hAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "StatusLabel",
+      "kind": "Label",
+      "parent": "VBox",
+      "minSize": {
+        "x": 0.0,
+        "y": 44.0
+      },
+      "text": "",
+      "fontSize": 27,
+      "style": "HeaderLabel",
+      "hAlign": 1,
+      "vAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "CardGrid",
+      "kind": "Grid",
+      "parent": "VBox",
+      "expandV": true,
+      "unique": true,
+      "columns": 3
+    }
+  ]
+}

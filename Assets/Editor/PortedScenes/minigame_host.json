@@ -1,0 +1,97 @@
+{
+  "source": "scenes/minigames/minigame_host.tscn",
+  "name": "minigame_host",
+  "nodes": [
+    {
+      "name": "MinigameHost",
+      "kind": "Control",
+      "parent": null,
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "script": "res://scripts/ui/minigame_host.gd"
+    },
+    {
+      "name": "VoidBackground",
+      "kind": "Instance",
+      "parent": ".",
+      "instance": "res://scenes/common/void_background.tscn"
+    },
+    {
+      "name": "MarginContainer",
+      "kind": "Margin",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "padding": {
+        "left": 40.0,
+        "top": 48.0,
+        "right": 40.0,
+        "bottom": 32.0
+      }
+    },
+    {
+      "name": "VBox",
+      "kind": "VBox",
+      "parent": "MarginContainer",
+      "spacing": 18.0
+    },
+    {
+      "name": "HeaderRow",
+      "kind": "HBox",
+      "parent": "MarginContainer/VBox",
+      "spacing": 20.0
+    },
+    {
+      "name": "QuitButton",
+      "kind": "Button",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "minSize": {
+        "x": 180.0,
+        "y": 96.0
+      },
+      "text": "QUIT",
+      "unique": true
+    },
+    {
+      "name": "TitleLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "expandH": true,
+      "text": "MINIGAME",
+      "fontSize": 45,
+      "style": "TitleLabel",
+      "hAlign": 1,
+      "vAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "HeaderSpacer",
+      "kind": "Control",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "minSize": {
+        "x": 180.0,
+        "y": 0.0
+      },
+      "unique": true
+    },
+    {
+      "name": "GameBody",
+      "kind": "Control",
+      "parent": "MarginContainer/VBox",
+      "expandV": true,
+      "unique": true
+    }
+  ]
+}

@@ -1,0 +1,534 @@
+{
+  "source": "scenes/gameplay/gameplay.tscn",
+  "name": "gameplay",
+  "nodes": [
+    {
+      "name": "Gameplay",
+      "kind": "Control",
+      "parent": null,
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "script": "res://scripts/ui/gameplay.gd"
+    },
+    {
+      "name": "VoidBackground",
+      "kind": "Instance",
+      "parent": ".",
+      "instance": "res://scenes/common/void_background.tscn"
+    },
+    {
+      "name": "MarginContainer",
+      "kind": "Margin",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "padding": {
+        "left": 40.0,
+        "top": 40.0,
+        "right": 40.0,
+        "bottom": 28.0
+      }
+    },
+    {
+      "name": "GameplayVBox",
+      "kind": "VBox",
+      "parent": "MarginContainer",
+      "spacing": 18.0
+    },
+    {
+      "name": "TopBar",
+      "kind": "HBox",
+      "parent": "MarginContainer/GameplayVBox",
+      "spacing": 24.0
+    },
+    {
+      "name": "WorldVBox",
+      "kind": "VBox",
+      "parent": "MarginContainer/GameplayVBox/TopBar",
+      "expandH": true,
+      "spacing": 4.0
+    },
+    {
+      "name": "WorldLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/GameplayVBox/TopBar/WorldVBox",
+      "text": "DARK FOREST",
+      "fontSize": 27,
+      "style": "HeaderLabel",
+      "unique": true
+    },
+    {
+      "name": "StageLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/GameplayVBox/TopBar/WorldVBox",
+      "text": "Enemy Lv. 1",
+      "fontSize": 18,
+      "style": "HeaderLabel",
+      "unique": true
+    },
+    {
+      "name": "AutoAttackBadge",
+      "kind": "Panel",
+      "parent": "MarginContainer/GameplayVBox/TopBar/WorldVBox",
+      "style": "BadgePanel",
+      "hidden": true,
+      "unique": true
+    },
+    {
+      "name": "BadgeHBox",
+      "kind": "HBox",
+      "parent": "MarginContainer/GameplayVBox/TopBar/WorldVBox/AutoAttackBadge",
+      "spacing": 10.0
+    },
+    {
+      "name": "BadgeIcon",
+      "kind": "Texture",
+      "parent": "MarginContainer/GameplayVBox/TopBar/WorldVBox/AutoAttackBadge/BadgeHBox",
+      "minSize": {
+        "x": 28.0,
+        "y": 28.0
+      },
+      "sprite": "res://sprites/ui/auto_attack_icon.png"
+    },
+    {
+      "name": "BadgeLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/GameplayVBox/TopBar/WorldVBox/AutoAttackBadge/BadgeHBox",
+      "text": "AUTO-ATTACK ACTIVE",
+      "fontSize": 18,
+      "style": "AccentLabel"
+    },
+    {
+      "name": "JournalButton",
+      "kind": "Button",
+      "parent": "MarginContainer/GameplayVBox/TopBar",
+      "minSize": {
+        "x": 96.0,
+        "y": 96.0
+      },
+      "unique": true
+    },
+    {
+      "name": "JournalPill",
+      "kind": "Panel",
+      "parent": "MarginContainer/GameplayVBox/TopBar/JournalButton",
+      "anchorMin": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "offset": {
+        "left": -62.0,
+        "right": 8.0,
+        "top": -8.0,
+        "bottom": 34.0
+      },
+      "style": "BadgePanel",
+      "hidden": true,
+      "unique": true
+    },
+    {
+      "name": "JournalCount",
+      "kind": "Label",
+      "parent": "MarginContainer/GameplayVBox/TopBar/JournalButton/JournalPill",
+      "text": "0",
+      "fontSize": 18,
+      "hAlign": 1,
+      "vAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "ShopButton",
+      "kind": "Button",
+      "parent": "MarginContainer/GameplayVBox/TopBar",
+      "minSize": {
+        "x": 96.0,
+        "y": 96.0
+      },
+      "text": "SHOP",
+      "unique": true
+    },
+    {
+      "name": "MenuButton",
+      "kind": "Button",
+      "parent": "MarginContainer/GameplayVBox/TopBar",
+      "minSize": {
+        "x": 200.0,
+        "y": 96.0
+      },
+      "text": "MENU",
+      "unique": true
+    },
+    {
+      "name": "EssenceDisplay",
+      "kind": "HBox",
+      "parent": "MarginContainer/GameplayVBox",
+      "spacing": 12.0,
+      "align": 1,
+      "unique": true
+    },
+    {
+      "name": "EssenceIcon",
+      "kind": "Texture",
+      "parent": "MarginContainer/GameplayVBox/EssenceDisplay",
+      "minSize": {
+        "x": 44.0,
+        "y": 44.0
+      },
+      "sprite": "res://sprites/ui/essence_icon.png"
+    },
+    {
+      "name": "EssenceLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/GameplayVBox/EssenceDisplay",
+      "text": "0",
+      "fontSize": 36,
+      "vAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "EnemyNameLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/GameplayVBox",
+      "text": "Gloom Wisp",
+      "fontSize": 36,
+      "style": "PanelTitle",
+      "hAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "BossPlate",
+      "kind": "HBox",
+      "parent": "MarginContainer/GameplayVBox",
+      "spacing": 14.0,
+      "hidden": true,
+      "unique": true
+    },
+    {
+      "name": "BossSkullIcon",
+      "kind": "Texture",
+      "parent": "MarginContainer/GameplayVBox/BossPlate",
+      "minSize": {
+        "x": 36.0,
+        "y": 36.0
+      },
+      "sprite": "res://sprites/ui/boss_skull_icon.png"
+    },
+    {
+      "name": "BossNameLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/GameplayVBox/BossPlate",
+      "text": "HOLLOW WARDEN",
+      "fontSize": 36,
+      "style": "AccentHeaderLabel",
+      "unique": true
+    },
+    {
+      "name": "HealthBar",
+      "kind": "ProgressBar",
+      "parent": "MarginContainer/GameplayVBox",
+      "minSize": {
+        "x": 0.0,
+        "y": 46.0
+      },
+      "unique": true
+    },
+    {
+      "name": "HealthLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/GameplayVBox/HealthBar",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "text": "4 / 4",
+      "fontSize": 18,
+      "hAlign": 1,
+      "vAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "TimerBar",
+      "kind": "Instance",
+      "parent": "MarginContainer/GameplayVBox",
+      "instance": "res://scenes/common/countdown_timer_bar.tscn"
+    },
+    {
+      "name": "CombatArea",
+      "kind": "Control",
+      "parent": "MarginContainer/GameplayVBox",
+      "expandV": true,
+      "unique": true
+    },
+    {
+      "name": "EnemyView",
+      "kind": "Instance",
+      "parent": "MarginContainer/GameplayVBox/CombatArea",
+      "instance": "res://scenes/gameplay/enemy_view.tscn"
+    },
+    {
+      "name": "CompanionButton",
+      "kind": "Button",
+      "parent": "MarginContainer/GameplayVBox/CombatArea",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "offset": {
+        "left": 8.0,
+        "right": 208.0,
+        "top": -248.0,
+        "bottom": -48.0
+      },
+      "minSize": {
+        "x": 200.0,
+        "y": 200.0
+      },
+      "hidden": true,
+      "unique": true
+    },
+    {
+      "name": "LevelPill",
+      "kind": "Panel",
+      "parent": "MarginContainer/GameplayVBox/CombatArea/CompanionButton",
+      "anchorMin": {
+        "x": 0.5,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 0.5,
+        "y": 0.0
+      },
+      "offset": {
+        "left": -64.0,
+        "right": 64.0,
+        "top": -54.0,
+        "bottom": -10.0
+      },
+      "style": "BadgePanel",
+      "unique": true
+    },
+    {
+      "name": "LevelLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/GameplayVBox/CombatArea/CompanionButton/LevelPill",
+      "text": "Lv. 1",
+      "fontSize": 18,
+      "style": "AccentLabel",
+      "hAlign": 1,
+      "vAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "NewPill",
+      "kind": "Panel",
+      "parent": "MarginContainer/GameplayVBox/CombatArea/CompanionButton",
+      "anchorMin": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "offset": {
+        "left": -96.0,
+        "right": -6.0,
+        "top": 6.0,
+        "bottom": 48.0
+      },
+      "style": "BadgePanel",
+      "hidden": true,
+      "unique": true
+    },
+    {
+      "name": "NewLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/GameplayVBox/CombatArea/CompanionButton/NewPill",
+      "text": "NEW",
+      "fontSize": 18,
+      "style": "AccentLabel",
+      "hAlign": 1,
+      "vAlign": 1
+    },
+    {
+      "name": "FxLayer",
+      "kind": "Control",
+      "parent": "MarginContainer/GameplayVBox/CombatArea",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "unique": true
+    },
+    {
+      "name": "KillsLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/GameplayVBox",
+      "text": "Void creatures slain: 0",
+      "fontSize": 18,
+      "style": "HeaderLabel",
+      "hAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "ChallengeBossButton",
+      "kind": "Button",
+      "parent": "MarginContainer/GameplayVBox",
+      "minSize": {
+        "x": 0.0,
+        "y": 110.0
+      },
+      "text": "CHALLENGE BOSS",
+      "style": "PrimaryButton",
+      "hidden": true,
+      "unique": true
+    },
+    {
+      "name": "BottomRow",
+      "kind": "HBox",
+      "parent": "MarginContainer/GameplayVBox",
+      "spacing": 16.0
+    },
+    {
+      "name": "GearButton",
+      "kind": "Button",
+      "parent": "MarginContainer/GameplayVBox/BottomRow",
+      "minSize": {
+        "x": 0.0,
+        "y": 110.0
+      },
+      "expandH": true,
+      "text": "GEAR",
+      "unique": true
+    },
+    {
+      "name": "CountPill",
+      "kind": "Panel",
+      "parent": "MarginContainer/GameplayVBox/BottomRow/GearButton",
+      "anchorMin": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "offset": {
+        "left": -62.0,
+        "right": 8.0,
+        "top": -8.0,
+        "bottom": 34.0
+      },
+      "style": "BadgePanel",
+      "hidden": true,
+      "unique": true
+    },
+    {
+      "name": "CountLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/GameplayVBox/BottomRow/GearButton/CountPill",
+      "text": "0",
+      "fontSize": 18,
+      "hAlign": 1,
+      "vAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "UpgradesButton",
+      "kind": "Button",
+      "parent": "MarginContainer/GameplayVBox/BottomRow",
+      "minSize": {
+        "x": 0.0,
+        "y": 110.0
+      },
+      "expandH": true,
+      "text": "UPGRADES",
+      "unique": true
+    },
+    {
+      "name": "EclipseButton",
+      "kind": "Button",
+      "parent": "MarginContainer/GameplayVBox/BottomRow",
+      "minSize": {
+        "x": 0.0,
+        "y": 110.0
+      },
+      "expandH": true,
+      "text": "ECLIPSE",
+      "hidden": true,
+      "unique": true
+    },
+    {
+      "name": "ArcadeButton",
+      "kind": "Button",
+      "parent": "MarginContainer/GameplayVBox/BottomRow",
+      "minSize": {
+        "x": 0.0,
+        "y": 110.0
+      },
+      "expandH": true,
+      "text": "ARCADE",
+      "hidden": true,
+      "unique": true
+    },
+    {
+      "name": "FooterBar",
+      "kind": "HBox",
+      "parent": "MarginContainer/GameplayVBox"
+    },
+    {
+      "name": "SessionLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/GameplayVBox/FooterBar",
+      "expandH": true,
+      "text": "Session #1",
+      "fontSize": 18,
+      "style": "MutedLabel",
+      "unique": true
+    },
+    {
+      "name": "PlayTimeLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/GameplayVBox/FooterBar",
+      "text": "0m 00s",
+      "fontSize": 18,
+      "style": "MutedLabel",
+      "hAlign": 2,
+      "unique": true
+    },
+    {
+      "name": "UpgradeShopPanel",
+      "kind": "Instance",
+      "parent": ".",
+      "instance": "res://scenes/gameplay/upgrade_shop_panel.tscn"
+    }
+  ]
+}

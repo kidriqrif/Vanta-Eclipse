@@ -1,0 +1,146 @@
+{
+  "source": "scenes/shop/shop.tscn",
+  "name": "shop",
+  "nodes": [
+    {
+      "name": "Shop",
+      "kind": "Control",
+      "parent": null,
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "script": "res://scripts/ui/shop.gd"
+    },
+    {
+      "name": "VoidBackground",
+      "kind": "Instance",
+      "parent": ".",
+      "instance": "res://scenes/common/void_background.tscn"
+    },
+    {
+      "name": "MarginContainer",
+      "kind": "Margin",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "padding": {
+        "left": 40.0,
+        "top": 48.0,
+        "right": 40.0,
+        "bottom": 32.0
+      }
+    },
+    {
+      "name": "VBox",
+      "kind": "VBox",
+      "parent": "MarginContainer",
+      "spacing": 16.0
+    },
+    {
+      "name": "HeaderRow",
+      "kind": "HBox",
+      "parent": "MarginContainer/VBox",
+      "spacing": 20.0
+    },
+    {
+      "name": "BackButton",
+      "kind": "Button",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "minSize": {
+        "x": 180.0,
+        "y": 96.0
+      },
+      "text": "BACK",
+      "unique": true
+    },
+    {
+      "name": "TitleLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "expandH": true,
+      "text": "SHOP",
+      "fontSize": 45,
+      "style": "TitleLabel",
+      "hAlign": 1,
+      "vAlign": 1
+    },
+    {
+      "name": "ShardLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "text": "0 Shards",
+      "fontSize": 18,
+      "vAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "DevBanner",
+      "kind": "Panel",
+      "parent": "MarginContainer/VBox",
+      "unique": true
+    },
+    {
+      "name": "DevLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/VBox/DevBanner",
+      "text": "Development build — purchases are simulated and nothing is charged.",
+      "fontSize": 18,
+      "hAlign": 1
+    },
+    {
+      "name": "TabRow",
+      "kind": "HBox",
+      "parent": "MarginContainer/VBox",
+      "spacing": 12.0
+    },
+    {
+      "name": "OffersTab",
+      "kind": "Button",
+      "parent": "MarginContainer/VBox/TabRow",
+      "minSize": {
+        "x": 0.0,
+        "y": 96.0
+      },
+      "expandH": true,
+      "text": "OFFERS",
+      "unique": true
+    },
+    {
+      "name": "CosmeticsTab",
+      "kind": "Button",
+      "parent": "MarginContainer/VBox/TabRow",
+      "minSize": {
+        "x": 0.0,
+        "y": 96.0
+      },
+      "expandH": true,
+      "text": "TRAILS",
+      "unique": true
+    },
+    {
+      "name": "ItemScroll",
+      "kind": "Scroll",
+      "parent": "MarginContainer/VBox",
+      "expandV": true
+    },
+    {
+      "name": "ItemList",
+      "kind": "VBox",
+      "parent": "MarginContainer/VBox/ItemScroll",
+      "expandH": true,
+      "spacing": 14.0,
+      "unique": true
+    }
+  ]
+}

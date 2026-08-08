@@ -1,0 +1,25 @@
+{
+  "source": "scenes/common/void_background.tscn",
+  "name": "void_background",
+  "nodes": [
+    {
+      "name": "VoidBackground",
+      "kind": "ColorRect",
+      "parent": null,
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "color": {
+        "r": 0.031,
+        "g": 0.031,
+        "b": 0.047,
+        "a": 1.0
+      }
+    }
+  ]
+}

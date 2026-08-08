@@ -1,0 +1,111 @@
+{
+  "source": "scenes/gear/inspector_card.tscn",
+  "name": "inspector_card",
+  "nodes": [
+    {
+      "name": "InspectorCard",
+      "kind": "CanvasLayer",
+      "parent": null,
+      "script": "res://scripts/ui/inspector_card.gd"
+    },
+    {
+      "name": "Scrim",
+      "kind": "ColorRect",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "unique": true,
+      "color": {
+        "r": 0.031,
+        "g": 0.031,
+        "b": 0.047,
+        "a": 0.6
+      }
+    },
+    {
+      "name": "Card",
+      "kind": "Panel",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "anchorMax": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "offset": {
+        "left": -450.0,
+        "right": 450.0,
+        "top": -540.0,
+        "bottom": 540.0
+      },
+      "style": "ModalCard",
+      "unique": true
+    },
+    {
+      "name": "CardVBox",
+      "kind": "VBox",
+      "parent": "Card",
+      "spacing": 14.0
+    },
+    {
+      "name": "CardBody",
+      "kind": "VBox",
+      "parent": "Card/CardVBox",
+      "expandV": true,
+      "spacing": 10.0,
+      "unique": true
+    },
+    {
+      "name": "ActionRow",
+      "kind": "HBox",
+      "parent": "Card/CardVBox",
+      "spacing": 16.0
+    },
+    {
+      "name": "EquipButton",
+      "kind": "Button",
+      "parent": "Card/CardVBox/ActionRow",
+      "minSize": {
+        "x": 0.0,
+        "y": 110.0
+      },
+      "expandH": true,
+      "text": "EQUIP",
+      "style": "PrimaryButton",
+      "unique": true
+    },
+    {
+      "name": "SalvageButton",
+      "kind": "Button",
+      "parent": "Card/CardVBox/ActionRow",
+      "minSize": {
+        "x": 0.0,
+        "y": 110.0
+      },
+      "expandH": true,
+      "text": "SALVAGE",
+      "style": "DangerButton",
+      "unique": true
+    },
+    {
+      "name": "CloseButton",
+      "kind": "Button",
+      "parent": "Card/CardVBox/ActionRow",
+      "minSize": {
+        "x": 0.0,
+        "y": 110.0
+      },
+      "expandH": true,
+      "text": "CLOSE",
+      "unique": true
+    }
+  ]
+}

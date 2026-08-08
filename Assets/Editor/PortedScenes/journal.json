@@ -1,0 +1,163 @@
+{
+  "source": "scenes/journal/journal.tscn",
+  "name": "journal",
+  "nodes": [
+    {
+      "name": "Journal",
+      "kind": "Control",
+      "parent": null,
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "script": "res://scripts/ui/journal.gd"
+    },
+    {
+      "name": "VoidBackground",
+      "kind": "Instance",
+      "parent": ".",
+      "instance": "res://scenes/common/void_background.tscn"
+    },
+    {
+      "name": "MarginContainer",
+      "kind": "Margin",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "padding": {
+        "left": 40.0,
+        "top": 48.0,
+        "right": 40.0,
+        "bottom": 32.0
+      }
+    },
+    {
+      "name": "VBox",
+      "kind": "VBox",
+      "parent": "MarginContainer",
+      "spacing": 16.0
+    },
+    {
+      "name": "HeaderRow",
+      "kind": "HBox",
+      "parent": "MarginContainer/VBox",
+      "spacing": 20.0
+    },
+    {
+      "name": "BackButton",
+      "kind": "Button",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "minSize": {
+        "x": 180.0,
+        "y": 96.0
+      },
+      "text": "BACK",
+      "unique": true
+    },
+    {
+      "name": "TitleLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "expandH": true,
+      "text": "JOURNAL",
+      "fontSize": 45,
+      "style": "TitleLabel",
+      "hAlign": 1,
+      "vAlign": 1
+    },
+    {
+      "name": "ReadyPill",
+      "kind": "Panel",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "style": "BadgePanel",
+      "hidden": true,
+      "unique": true
+    },
+    {
+      "name": "ReadyLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/VBox/HeaderRow/ReadyPill",
+      "text": "0 READY",
+      "fontSize": 18,
+      "vAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "TabRow",
+      "kind": "HBox",
+      "parent": "MarginContainer/VBox",
+      "spacing": 12.0
+    },
+    {
+      "name": "QuestsTab",
+      "kind": "Button",
+      "parent": "MarginContainer/VBox/TabRow",
+      "minSize": {
+        "x": 0.0,
+        "y": 96.0
+      },
+      "expandH": true,
+      "text": "QUESTS",
+      "unique": true
+    },
+    {
+      "name": "DailyTab",
+      "kind": "Button",
+      "parent": "MarginContainer/VBox/TabRow",
+      "minSize": {
+        "x": 0.0,
+        "y": 96.0
+      },
+      "expandH": true,
+      "text": "DAILY",
+      "unique": true
+    },
+    {
+      "name": "AchievementsTab",
+      "kind": "Button",
+      "parent": "MarginContainer/VBox/TabRow",
+      "minSize": {
+        "x": 0.0,
+        "y": 96.0
+      },
+      "expandH": true,
+      "text": "TROPHIES",
+      "unique": true
+    },
+    {
+      "name": "ResetLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/VBox",
+      "text": "Resets in 4h",
+      "fontSize": 18,
+      "style": "HeaderLabel",
+      "hAlign": 1,
+      "hidden": true,
+      "unique": true
+    },
+    {
+      "name": "GoalScroll",
+      "kind": "Scroll",
+      "parent": "MarginContainer/VBox",
+      "expandV": true
+    },
+    {
+      "name": "GoalList",
+      "kind": "VBox",
+      "parent": "MarginContainer/VBox/GoalScroll",
+      "expandH": true,
+      "spacing": 14.0,
+      "unique": true
+    }
+  ]
+}

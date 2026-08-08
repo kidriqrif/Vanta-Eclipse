@@ -1,0 +1,187 @@
+{
+  "source": "scenes/gear/gear.tscn",
+  "name": "gear",
+  "nodes": [
+    {
+      "name": "Gear",
+      "kind": "Control",
+      "parent": null,
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "script": "res://scripts/ui/gear.gd"
+    },
+    {
+      "name": "VoidBackground",
+      "kind": "Instance",
+      "parent": ".",
+      "instance": "res://scenes/common/void_background.tscn"
+    },
+    {
+      "name": "MarginContainer",
+      "kind": "Margin",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "padding": {
+        "left": 40.0,
+        "top": 48.0,
+        "right": 40.0,
+        "bottom": 32.0
+      }
+    },
+    {
+      "name": "VBox",
+      "kind": "VBox",
+      "parent": "MarginContainer",
+      "spacing": 20.0
+    },
+    {
+      "name": "HeaderRow",
+      "kind": "HBox",
+      "parent": "MarginContainer/VBox",
+      "spacing": 20.0
+    },
+    {
+      "name": "BackButton",
+      "kind": "Button",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "minSize": {
+        "x": 180.0,
+        "y": 96.0
+      },
+      "text": "BACK",
+      "unique": true
+    },
+    {
+      "name": "TitleLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "expandH": true,
+      "text": "GEAR",
+      "fontSize": 45,
+      "style": "TitleLabel",
+      "hAlign": 1
+    },
+    {
+      "name": "ScrapsDisplay",
+      "kind": "HBox",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "spacing": 8.0,
+      "align": 2
+    },
+    {
+      "name": "ScrapsIcon",
+      "kind": "Texture",
+      "parent": "MarginContainer/VBox/HeaderRow/ScrapsDisplay",
+      "minSize": {
+        "x": 40.0,
+        "y": 40.0
+      },
+      "sprite": "res://sprites/ui/void_scraps_icon.png"
+    },
+    {
+      "name": "ScrapsLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/VBox/HeaderRow/ScrapsDisplay",
+      "text": "0",
+      "fontSize": 27,
+      "vAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "SlotGrid",
+      "kind": "Grid",
+      "parent": "MarginContainer/VBox",
+      "unique": true,
+      "columns": 4
+    },
+    {
+      "name": "ForgeButton",
+      "kind": "Button",
+      "parent": "MarginContainer/VBox",
+      "minSize": {
+        "x": 0.0,
+        "y": 110.0
+      },
+      "text": "THE FORGE",
+      "style": "PrimaryButton",
+      "unique": true
+    },
+    {
+      "name": "InventoryHeader",
+      "kind": "HBox",
+      "parent": "MarginContainer/VBox",
+      "spacing": 16.0
+    },
+    {
+      "name": "InventoryLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/VBox/InventoryHeader",
+      "expandH": true,
+      "text": "INVENTORY",
+      "fontSize": 27,
+      "style": "HeaderLabel",
+      "vAlign": 1
+    },
+    {
+      "name": "SalvageCommonsButton",
+      "kind": "Button",
+      "parent": "MarginContainer/VBox/InventoryHeader",
+      "minSize": {
+        "x": 0.0,
+        "y": 96.0
+      },
+      "text": "Salvage Commons",
+      "fontSize": 18,
+      "unique": true
+    },
+    {
+      "name": "InventoryScroll",
+      "kind": "Scroll",
+      "parent": "MarginContainer/VBox",
+      "expandV": true
+    },
+    {
+      "name": "InventoryList",
+      "kind": "VBox",
+      "parent": "MarginContainer/VBox/InventoryScroll",
+      "expandH": true,
+      "spacing": 12.0,
+      "unique": true
+    },
+    {
+      "name": "EmptyLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/VBox/InventoryScroll/InventoryList",
+      "text": "No items yet — defeat enemies to find gear.",
+      "fontSize": 18,
+      "style": "HeaderLabel",
+      "hAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "ForgePanel",
+      "kind": "Instance",
+      "parent": ".",
+      "instance": "res://scenes/gear/forge_panel.tscn"
+    },
+    {
+      "name": "RelicCollectionPanel",
+      "kind": "Instance",
+      "parent": ".",
+      "instance": "res://scenes/gear/relic_collection_panel.tscn"
+    }
+  ]
+}

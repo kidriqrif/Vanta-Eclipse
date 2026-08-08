@@ -1,0 +1,237 @@
+{
+  "source": "scenes/settings/settings_menu.tscn",
+  "name": "settings_menu",
+  "nodes": [
+    {
+      "name": "SettingsMenu",
+      "kind": "Control",
+      "parent": null,
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "script": "res://scripts/ui/settings_menu.gd"
+    },
+    {
+      "name": "VoidBackground",
+      "kind": "Instance",
+      "parent": ".",
+      "instance": "res://scenes/common/void_background.tscn"
+    },
+    {
+      "name": "MarginContainer",
+      "kind": "Margin",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "padding": {
+        "left": 64.0,
+        "top": 56.0,
+        "right": 64.0,
+        "bottom": 44.0
+      }
+    },
+    {
+      "name": "SettingsVBox",
+      "kind": "VBox",
+      "parent": "MarginContainer",
+      "spacing": 30.0
+    },
+    {
+      "name": "TitleLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/SettingsVBox",
+      "text": "SETTINGS",
+      "fontSize": 54,
+      "style": "TitleLabel",
+      "hAlign": 1
+    },
+    {
+      "name": "AudioPanel",
+      "kind": "Panel",
+      "parent": "MarginContainer/SettingsVBox"
+    },
+    {
+      "name": "AudioVBox",
+      "kind": "VBox",
+      "parent": "MarginContainer/SettingsVBox/AudioPanel",
+      "spacing": 16.0
+    },
+    {
+      "name": "AudioHeader",
+      "kind": "Label",
+      "parent": "MarginContainer/SettingsVBox/AudioPanel/AudioVBox",
+      "text": "AUDIO",
+      "style": "HeaderLabel"
+    },
+    {
+      "name": "MasterLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/SettingsVBox/AudioPanel/AudioVBox",
+      "text": "Master Volume"
+    },
+    {
+      "name": "MasterSlider",
+      "kind": "Slider",
+      "parent": "MarginContainer/SettingsVBox/AudioPanel/AudioVBox",
+      "minSize": {
+        "x": 0.0,
+        "y": 48.0
+      },
+      "unique": true
+    },
+    {
+      "name": "MusicLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/SettingsVBox/AudioPanel/AudioVBox",
+      "text": "Music Volume"
+    },
+    {
+      "name": "MusicSlider",
+      "kind": "Slider",
+      "parent": "MarginContainer/SettingsVBox/AudioPanel/AudioVBox",
+      "minSize": {
+        "x": 0.0,
+        "y": 48.0
+      },
+      "unique": true
+    },
+    {
+      "name": "SfxLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/SettingsVBox/AudioPanel/AudioVBox",
+      "text": "Sound Effects Volume"
+    },
+    {
+      "name": "SfxSlider",
+      "kind": "Slider",
+      "parent": "MarginContainer/SettingsVBox/AudioPanel/AudioVBox",
+      "minSize": {
+        "x": 0.0,
+        "y": 48.0
+      },
+      "unique": true
+    },
+    {
+      "name": "GamePanel",
+      "kind": "Panel",
+      "parent": "MarginContainer/SettingsVBox"
+    },
+    {
+      "name": "GameVBox",
+      "kind": "VBox",
+      "parent": "MarginContainer/SettingsVBox/GamePanel",
+      "spacing": 16.0
+    },
+    {
+      "name": "GameHeader",
+      "kind": "Label",
+      "parent": "MarginContainer/SettingsVBox/GamePanel/GameVBox",
+      "text": "GAME",
+      "style": "HeaderLabel"
+    },
+    {
+      "name": "HapticsRow",
+      "kind": "HBox",
+      "parent": "MarginContainer/SettingsVBox/GamePanel/GameVBox"
+    },
+    {
+      "name": "HapticsLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/SettingsVBox/GamePanel/GameVBox/HapticsRow",
+      "expandH": true,
+      "text": "Haptic Feedback"
+    },
+    {
+      "name": "HapticsToggle",
+      "kind": "Toggle",
+      "parent": "MarginContainer/SettingsVBox/GamePanel/GameVBox/HapticsRow",
+      "unique": true
+    },
+    {
+      "name": "LastSaveLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/SettingsVBox/GamePanel/GameVBox",
+      "text": "Not saved yet this session.",
+      "fontSize": 18,
+      "style": "HeaderLabel",
+      "unique": true
+    },
+    {
+      "name": "SaveGameButton",
+      "kind": "Button",
+      "parent": "MarginContainer/SettingsVBox/GamePanel/GameVBox",
+      "minSize": {
+        "x": 0.0,
+        "y": 120.0
+      },
+      "text": "SAVE GAME",
+      "unique": true
+    },
+    {
+      "name": "AboutPanel",
+      "kind": "Panel",
+      "parent": "MarginContainer/SettingsVBox"
+    },
+    {
+      "name": "AboutVBox",
+      "kind": "VBox",
+      "parent": "MarginContainer/SettingsVBox/AboutPanel",
+      "spacing": 18.0
+    },
+    {
+      "name": "AboutHeader",
+      "kind": "Label",
+      "parent": "MarginContainer/SettingsVBox/AboutPanel/AboutVBox",
+      "text": "ABOUT",
+      "style": "HeaderLabel"
+    },
+    {
+      "name": "VersionLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/SettingsVBox/AboutPanel/AboutVBox",
+      "text": "Version",
+      "fontSize": 18,
+      "style": "MutedLabel",
+      "unique": true
+    },
+    {
+      "name": "PrivacyButton",
+      "kind": "Button",
+      "parent": "MarginContainer/SettingsVBox/AboutPanel/AboutVBox",
+      "minSize": {
+        "x": 0.0,
+        "y": 120.0
+      },
+      "text": "PRIVACY POLICY",
+      "unique": true
+    },
+    {
+      "name": "Spacer",
+      "kind": "Control",
+      "parent": "MarginContainer/SettingsVBox",
+      "expandV": true
+    },
+    {
+      "name": "BackButton",
+      "kind": "Button",
+      "parent": "MarginContainer/SettingsVBox",
+      "minSize": {
+        "x": 0.0,
+        "y": 140.0
+      },
+      "text": "BACK",
+      "unique": true
+    }
+  ]
+}

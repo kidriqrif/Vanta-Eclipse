@@ -1,0 +1,61 @@
+{
+  "source": "scenes/minigames/lights_out.tscn",
+  "name": "lights_out",
+  "nodes": [
+    {
+      "name": "LightsOut",
+      "kind": "Control",
+      "parent": null,
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "script": "res://scripts/minigames/lights_out.gd"
+    },
+    {
+      "name": "VBox",
+      "kind": "VBox",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "spacing": 27.0,
+      "align": 1
+    },
+    {
+      "name": "MovesLabel",
+      "kind": "Label",
+      "parent": "VBox",
+      "text": "Moves 0",
+      "fontSize": 18,
+      "hAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "Grid",
+      "kind": "Grid",
+      "parent": "VBox",
+      "unique": true,
+      "columns": 4
+    },
+    {
+      "name": "StateLabel",
+      "kind": "Label",
+      "parent": "VBox",
+      "text": "Clear every pane. A tap flips its neighbours too.",
+      "fontSize": 18,
+      "style": "HeaderLabel",
+      "hAlign": 1,
+      "unique": true
+    }
+  ]
+}

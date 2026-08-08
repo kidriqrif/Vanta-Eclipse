@@ -1,0 +1,152 @@
+{
+  "source": "scenes/main_menu/main_menu.tscn",
+  "name": "main_menu",
+  "nodes": [
+    {
+      "name": "MainMenu",
+      "kind": "Control",
+      "parent": null,
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "script": "res://scripts/ui/main_menu.gd"
+    },
+    {
+      "name": "VoidBackground",
+      "kind": "Instance",
+      "parent": ".",
+      "instance": "res://scenes/common/void_background.tscn"
+    },
+    {
+      "name": "MarginContainer",
+      "kind": "Margin",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "padding": {
+        "left": 72.0,
+        "top": 56.0,
+        "right": 72.0,
+        "bottom": 44.0
+      }
+    },
+    {
+      "name": "MenuVBox",
+      "kind": "VBox",
+      "parent": "MarginContainer",
+      "spacing": 26.0
+    },
+    {
+      "name": "TopSpacer",
+      "kind": "Control",
+      "parent": "MarginContainer/MenuVBox",
+      "expandV": true
+    },
+    {
+      "name": "Emblem",
+      "kind": "Texture",
+      "parent": "MarginContainer/MenuVBox",
+      "minSize": {
+        "x": 0.0,
+        "y": 250.0
+      },
+      "sprite": "res://sprites/ui/eclipse_emblem.png"
+    },
+    {
+      "name": "TitleLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/MenuVBox",
+      "text": "VANTA ECLIPSE",
+      "style": "TitleLabel",
+      "hAlign": 1
+    },
+    {
+      "name": "SubtitleLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/MenuVBox",
+      "text": "Devour the light. Ascend.",
+      "style": "HeaderLabel",
+      "hAlign": 1
+    },
+    {
+      "name": "Divider",
+      "kind": "Texture",
+      "parent": "MarginContainer/MenuVBox",
+      "minSize": {
+        "x": 0.0,
+        "y": 4.0
+      },
+      "sprite": "res://sprites/ui/menu_divider.png"
+    },
+    {
+      "name": "MidSpacer",
+      "kind": "Control",
+      "parent": "MarginContainer/MenuVBox",
+      "minSize": {
+        "x": 0.0,
+        "y": 20.0
+      }
+    },
+    {
+      "name": "PlayButton",
+      "kind": "Button",
+      "parent": "MarginContainer/MenuVBox",
+      "minSize": {
+        "x": 0.0,
+        "y": 150.0
+      },
+      "text": "PLAY",
+      "style": "PrimaryButton",
+      "unique": true
+    },
+    {
+      "name": "SettingsButton",
+      "kind": "Button",
+      "parent": "MarginContainer/MenuVBox",
+      "minSize": {
+        "x": 0.0,
+        "y": 132.0
+      },
+      "text": "SETTINGS",
+      "unique": true
+    },
+    {
+      "name": "QuitButton",
+      "kind": "Button",
+      "parent": "MarginContainer/MenuVBox",
+      "minSize": {
+        "x": 0.0,
+        "y": 132.0
+      },
+      "text": "QUIT",
+      "unique": true
+    },
+    {
+      "name": "BottomSpacer",
+      "kind": "Control",
+      "parent": "MarginContainer/MenuVBox",
+      "expandV": true
+    },
+    {
+      "name": "VersionLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/MenuVBox",
+      "text": "v0.0.0",
+      "fontSize": 18,
+      "style": "HeaderLabel",
+      "hAlign": 1,
+      "unique": true
+    }
+  ]
+}

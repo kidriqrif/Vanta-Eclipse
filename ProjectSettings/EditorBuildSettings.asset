@@ -6,6 +6,99 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/Bootstrap.unity
-    guid: d2d5f5185ce45a343b98ba106ecfb183
+    path: Assets/Scenes/MainMenu.unity
+    guid: 3c7db80272f730d43bc120783af5a556
+  - enabled: 1
+    path: Assets/Scenes/Arcade.unity
+    guid: 08a3c1697c39f6c418d70c369bef205c
+  - enabled: 1
+    path: Assets/Scenes/AutoAttackToast.unity
+    guid: 53f95927d8a2adb499f0188c541cbf28
+  - enabled: 1
+    path: Assets/Scenes/Battleship.unity
+    guid: b522334993f5be34c991c51e1178f129
+  - enabled: 1
+    path: Assets/Scenes/CardCollection.unity
+    guid: aec1d7493a4a7c642b7c7f416a1de7a7
+  - enabled: 1
+    path: Assets/Scenes/ConnectFour.unity
+    guid: 15d15c4a20fd0e845bd7ef8ed51ff2b8
+  - enabled: 1
+    path: Assets/Scenes/CountdownTimerBar.unity
+    guid: b4ae27b766f518d4a82be9c0acf91a53
+  - enabled: 1
+    path: Assets/Scenes/DamageNumber.unity
+    guid: dd108b174478ef24398b4bc08d938d1b
+  - enabled: 1
+    path: Assets/Scenes/Eclipse.unity
+    guid: 77a2e32f9cd7bb946a442934650312ce
+  - enabled: 1
+    path: Assets/Scenes/EnemyView.unity
+    guid: 9e0f94a83eb3b6f40a8ad0c7b0939e39
+  - enabled: 1
+    path: Assets/Scenes/ForgePanel.unity
+    guid: 7edc9e2b1a01a7d44ac40e9e01ba5a18
+  - enabled: 1
+    path: Assets/Scenes/Gameplay.unity
+    guid: b3d9740642cb0cb40a69b75adf9b06ae
+  - enabled: 1
+    path: Assets/Scenes/Gear.unity
+    guid: c7f68fccafd2dc3418d189a17c0d506a
+  - enabled: 1
+    path: Assets/Scenes/InspectorCard.unity
+    guid: 5f3f003f60990454cabf4cdd76f7cdce
+  - enabled: 1
+    path: Assets/Scenes/Journal.unity
+    guid: b1b3ad7c82d71d946a688600e6246c28
+  - enabled: 1
+    path: Assets/Scenes/LightsOut.unity
+    guid: 8fd90b64c68b1b6459782f238a12c607
+  - enabled: 1
+    path: Assets/Scenes/LootToast.unity
+    guid: 598cd76bf6340204391d3fd9e451fe9a
+  - enabled: 1
+    path: Assets/Scenes/MemoryMatch.unity
+    guid: 6b0ab1ab9fbad344e97e083610daec79
+  - enabled: 1
+    path: Assets/Scenes/MinigameHost.unity
+    guid: d0802dc5c740a414cae2fce191d9caab
+  - enabled: 1
+    path: Assets/Scenes/OfflineRewardsModal.unity
+    guid: e9972c8f2f403784cbc64345be8b89fe
+  - enabled: 1
+    path: Assets/Scenes/Pets.unity
+    guid: f9b959714e58ef240a93bda1860855e0
+  - enabled: 1
+    path: Assets/Scenes/RelicCollectionPanel.unity
+    guid: 402d2d0c7d2fa52468cd8d2a01cc3a15
+  - enabled: 1
+    path: Assets/Scenes/ResultBanner.unity
+    guid: 963db9dacf0debf46980f970e6248637
+  - enabled: 1
+    path: Assets/Scenes/RuneSweeper.unity
+    guid: 92e37ff455450454593d7c3e27a4f23d
+  - enabled: 1
+    path: Assets/Scenes/SequenceEcho.unity
+    guid: 84dc677df1622404eb3d1f43a8c898b1
+  - enabled: 1
+    path: Assets/Scenes/SettingsMenu.unity
+    guid: c38ef249f4af0e14eb121208a0610726
+  - enabled: 1
+    path: Assets/Scenes/Shop.unity
+    guid: cfe65740382d6ec47880ee565a5dd449
+  - enabled: 1
+    path: Assets/Scenes/UpgradeRow.unity
+    guid: 81d84b8e2d3c52a49803a81bcd0f6dcf
+  - enabled: 1
+    path: Assets/Scenes/UpgradeShopPanel.unity
+    guid: 0c7b9ddd709d6464682864c5cd9f72eb
+  - enabled: 1
+    path: Assets/Scenes/VoidBackground.unity
+    guid: fef59988d2f663d4f9f82b8bae1d7aee
+  - enabled: 1
+    path: Assets/Scenes/VoidReflex.unity
+    guid: b2b75b5ef93d5ae44b2b4f435524c958
+  - enabled: 1
+    path: Assets/Scenes/WorldUnlockModal.unity
+    guid: f0e64aab3d7b421439b85901076b49f9
   m_configObjects: {}

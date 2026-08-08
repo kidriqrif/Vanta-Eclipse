@@ -1,0 +1,146 @@
+{
+  "source": "scenes/arcade/arcade.tscn",
+  "name": "arcade",
+  "nodes": [
+    {
+      "name": "Arcade",
+      "kind": "Control",
+      "parent": null,
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "script": "res://scripts/ui/arcade.gd"
+    },
+    {
+      "name": "VoidBackground",
+      "kind": "Instance",
+      "parent": ".",
+      "instance": "res://scenes/common/void_background.tscn"
+    },
+    {
+      "name": "MarginContainer",
+      "kind": "Margin",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "padding": {
+        "left": 40.0,
+        "top": 48.0,
+        "right": 40.0,
+        "bottom": 32.0
+      }
+    },
+    {
+      "name": "VBox",
+      "kind": "VBox",
+      "parent": "MarginContainer",
+      "spacing": 18.0
+    },
+    {
+      "name": "HeaderRow",
+      "kind": "HBox",
+      "parent": "MarginContainer/VBox",
+      "spacing": 20.0
+    },
+    {
+      "name": "BackButton",
+      "kind": "Button",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "minSize": {
+        "x": 180.0,
+        "y": 96.0
+      },
+      "text": "BACK",
+      "unique": true
+    },
+    {
+      "name": "TitleLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "expandH": true,
+      "text": "ARCADE",
+      "fontSize": 45,
+      "style": "TitleLabel",
+      "hAlign": 1,
+      "vAlign": 1
+    },
+    {
+      "name": "TokenPill",
+      "kind": "Panel",
+      "parent": "MarginContainer/VBox/HeaderRow",
+      "style": "BadgePanel"
+    },
+    {
+      "name": "TokenHBox",
+      "kind": "HBox",
+      "parent": "MarginContainer/VBox/HeaderRow/TokenPill",
+      "spacing": 8.0
+    },
+    {
+      "name": "TokenIcon",
+      "kind": "Texture",
+      "parent": "MarginContainer/VBox/HeaderRow/TokenPill/TokenHBox",
+      "minSize": {
+        "x": 34.0,
+        "y": 34.0
+      },
+      "sprite": "res://sprites/ui/arcade_token_icon.png"
+    },
+    {
+      "name": "TokenLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/VBox/HeaderRow/TokenPill/TokenHBox",
+      "text": "5 / 5",
+      "fontSize": 27,
+      "vAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "NextTokenLabel",
+      "kind": "Label",
+      "parent": "MarginContainer/VBox",
+      "text": "Next token in 30m",
+      "fontSize": 18,
+      "style": "HeaderLabel",
+      "hAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "OfferButton",
+      "kind": "Button",
+      "parent": "MarginContainer/VBox",
+      "minSize": {
+        "x": 0.0,
+        "y": 110.0
+      },
+      "text": "WATCH FOR A TOKEN",
+      "hidden": true,
+      "unique": true
+    },
+    {
+      "name": "CardScroll",
+      "kind": "Scroll",
+      "parent": "MarginContainer/VBox",
+      "expandV": true
+    },
+    {
+      "name": "CardList",
+      "kind": "VBox",
+      "parent": "MarginContainer/VBox/CardScroll",
+      "expandH": true,
+      "spacing": 14.0,
+      "unique": true
+    }
+  ]
+}

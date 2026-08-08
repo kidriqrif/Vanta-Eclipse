@@ -1,0 +1,61 @@
+{
+  "source": "scenes/minigames/rune_sweeper.tscn",
+  "name": "rune_sweeper",
+  "nodes": [
+    {
+      "name": "RuneSweeper",
+      "kind": "Control",
+      "parent": null,
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "script": "res://scripts/minigames/rune_sweeper.gd"
+    },
+    {
+      "name": "VBox",
+      "kind": "VBox",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "spacing": 27.0,
+      "align": 1
+    },
+    {
+      "name": "StatusLabel",
+      "kind": "Label",
+      "parent": "VBox",
+      "text": "0 of 20 cells clear",
+      "fontSize": 18,
+      "hAlign": 1,
+      "unique": true
+    },
+    {
+      "name": "Grid",
+      "kind": "Grid",
+      "parent": "VBox",
+      "unique": true,
+      "columns": 5
+    },
+    {
+      "name": "StateLabel",
+      "kind": "Label",
+      "parent": "VBox",
+      "text": "Uncover every safe cell. The first tap is always safe.",
+      "fontSize": 18,
+      "style": "HeaderLabel",
+      "hAlign": 1,
+      "unique": true
+    }
+  ]
+}

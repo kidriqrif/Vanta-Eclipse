@@ -1,0 +1,98 @@
+{
+  "source": "scenes/gear/relic_collection_panel.tscn",
+  "name": "relic_collection_panel",
+  "nodes": [
+    {
+      "name": "RelicCollectionPanel",
+      "kind": "Control",
+      "parent": null,
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 0.0
+      },
+      "offset": {
+        "left": 0.0,
+        "right": 0.0,
+        "top": 40.0,
+        "bottom": 1050.0
+      },
+      "script": "res://scripts/ui/relic_collection_panel.gd"
+    },
+    {
+      "name": "Panel",
+      "kind": "Panel",
+      "parent": ".",
+      "anchorMin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "anchorMax": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "style": "OverlayPanel"
+    },
+    {
+      "name": "PanelVBox",
+      "kind": "VBox",
+      "parent": "Panel",
+      "spacing": 18.0
+    },
+    {
+      "name": "HeaderRow",
+      "kind": "HBox",
+      "parent": "Panel/PanelVBox",
+      "spacing": 20.0
+    },
+    {
+      "name": "HeaderLabel",
+      "kind": "Label",
+      "parent": "Panel/PanelVBox/HeaderRow",
+      "expandH": true,
+      "text": "RELICS",
+      "fontSize": 27,
+      "style": "HeaderLabel",
+      "vAlign": 1
+    },
+    {
+      "name": "RelicCloseButton",
+      "kind": "Button",
+      "parent": "Panel/PanelVBox/HeaderRow",
+      "minSize": {
+        "x": 180.0,
+        "y": 96.0
+      },
+      "text": "CLOSE",
+      "fontSize": 27,
+      "unique": true
+    },
+    {
+      "name": "RelicScroll",
+      "kind": "Scroll",
+      "parent": "Panel/PanelVBox",
+      "expandV": true
+    },
+    {
+      "name": "RelicList",
+      "kind": "VBox",
+      "parent": "Panel/PanelVBox/RelicScroll",
+      "expandH": true,
+      "spacing": 14.0,
+      "unique": true
+    },
+    {
+      "name": "RelicEmptyLabel",
+      "kind": "Label",
+      "parent": "Panel/PanelVBox/RelicScroll/RelicList",
+      "text": "No relic attuned. Relics are recovered from the bosses of the Frozen Ruins and beyond.",
+      "fontSize": 18,
+      "style": "HeaderLabel",
+      "hAlign": 1,
+      "unique": true
+    }
+  ]
+}
