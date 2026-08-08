@@ -18,7 +18,7 @@ namespace VantaEclipse.Data
         public string id = "";
         public string displayName = "";
         public Sprite icon = null;
-        public bool sealed = false;
+        public bool @sealed = false;
         public string sealedFlavor = "";
     }
 }

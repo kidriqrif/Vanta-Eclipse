@@ -123,8 +123,8 @@ namespace VantaEclipse.Core
 
         // --- Equipment & loot (Milestone 6) ---
 
-        public event Action<Dictionary<string, object>> ItemDropped;
-        public void RaiseItemDropped(Dictionary<string, object> item) => ItemDropped?.Invoke(item);
+        public event Action<Item> ItemDropped;
+        public void RaiseItemDropped(Item item) => ItemDropped?.Invoke(item);
 
         public event Action InventoryChanged;
         public void RaiseInventoryChanged() => InventoryChanged?.Invoke();

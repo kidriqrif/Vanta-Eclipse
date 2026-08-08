@@ -46,61 +46,40 @@ namespace VantaEclipse.Managers
 
         // --- Save contract -------------------------------------------------
 
+        // The currency constants are themselves the save-file keys, so the
+        // document and the balance table cannot drift apart.
         public Dictionary<string, object> GetSaveData() => new()
         {
-            { "essence", _balances[Essence] },
-            { "void_crystals", _balances[VoidCrystals] },
-            { "astral_shards", _balances[AstralShards] },
-            { "void_scraps", _balances[VoidScraps] },
+            { Essence, _balances[Essence] },
+            { VoidCrystals, _balances[VoidCrystals] },
+            { AstralShards, _balances[AstralShards] },
+            { VoidScraps, _balances[VoidScraps] },
         };
 
         public void LoadSaveData(Dictionary<string, object> data)
         {
-            _balances[Essence] = Sanitize(data, "essence");
-            _balances[VoidCrystals] = Sanitize(data, "void_crystals");
-            _balances[AstralShards] = Sanitize(data, "astral_shards");
-            _balances[VoidScraps] = Sanitize(data, "void_scraps");
+            // SaveRead rejects NaN and infinity; the Max(0) is the balance-only
+            // rule on top. Both halves matter, and neither is redundant:
+            //
+            // Clamping alone is not enough. JSON has no literal for infinity,
+            // but a double that overflows parses to one, and Max(0, inf) is inf
+            // while Max(0, NaN) is NaN — both sail straight through. The poison
+            // is self-perpetuating: infinity round-trips through the save as a
+            // huge literal and parses back to infinity on the next load, so a
+            // single bad value survives every save from then on. A NaN balance
+            // is worse than a large one: every comparison against NaN is false,
+            // so the balance check in TrySpend() never refuses and the
+            // subtraction leaves NaN behind — an unlimited wallet that also
+            // never visibly changes.
+            //
+            // Reachable without a hex editor: this is an incremental game whose
+            // numbers grow exponentially, so a long enough run can overflow a
+            // float on its own.
+            foreach (var currency in new[] { Essence, VoidCrystals, AstralShards, VoidScraps })
+                _balances[currency] = Mathf.Max(0f, SaveRead.Float(data, currency));
+
             foreach (var pair in _balances)
                 Game.Events.RaiseCurrencyChanged(pair.Key, pair.Value);
-        }
-
-        /// <summary>
-        /// Read one balance out of a save document, rejecting anything that
-        /// isn't a real number.
-        ///
-        /// Clamping alone is not enough. JSON has no literal for infinity, but
-        /// a double that overflows parses to infinity, and Max(0, inf) is inf
-        /// while Max(0, NaN) is NaN — both sail straight through. That matters
-        /// because the poison is self-perpetuating: infinity round-trips
-        /// through the save as a huge literal and parses back to infinity on
-        /// the next load, so a single bad value survives every save from then
-        /// on. A NaN balance is worse than a large one: every comparison
-        /// against NaN is false, so the balance check in TrySpend() never
-        /// refuses and the subtraction leaves NaN behind — an unlimited wallet
-        /// that also never visibly changes.
-        ///
-        /// Reachable without a hex editor: this is an incremental game whose
-        /// numbers grow exponentially, so a long enough run can overflow a
-        /// float on its own.
-        /// </summary>
-        static float Sanitize(Dictionary<string, object> data, string label)
-        {
-            if (!data.TryGetValue(label, out var raw) || raw == null) return 0f;
-
-            float value;
-            try { value = System.Convert.ToSingle(raw); }
-            catch (System.Exception)
-            {
-                Debug.LogError($"CurrencyManager: {label} was {raw} in the save — reset to 0.");
-                return 0f;
-            }
-
-            if (float.IsNaN(value) || float.IsInfinity(value))
-            {
-                Debug.LogError($"CurrencyManager: {label} was {value} in the save — reset to 0.");
-                return 0f;
-            }
-            return Mathf.Max(0f, value);
         }
 
         // --- Public API ----------------------------------------------------

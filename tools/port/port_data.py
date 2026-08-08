@@ -299,9 +299,31 @@ def gen_csharp(d: Definition) -> str:
     return "\n".join(out) + "\n"
 
 
+# C# reserved words. A GDScript @export can legally be named `sealed` (and
+# SlotDefinition has one), which generates uncompilable C#. Escaping with a
+# verbatim identifier keeps the FIELD NAME itself unchanged — `@sealed` is the
+# field `sealed` — so DefinitionImporter's reflection lookup and the plain
+# snake->camel mapping both still work. Renaming the field instead would have
+# meant teaching the importer about exceptions.
+CS_KEYWORDS = {
+    "abstract", "as", "base", "bool", "break", "byte", "case", "catch", "char",
+    "checked", "class", "const", "continue", "decimal", "default", "delegate",
+    "do", "double", "else", "enum", "event", "explicit", "extern", "false",
+    "finally", "fixed", "float", "for", "foreach", "goto", "if", "implicit",
+    "in", "int", "interface", "internal", "is", "lock", "long", "namespace",
+    "new", "null", "object", "operator", "out", "override", "params",
+    "private", "protected", "public", "readonly", "ref", "return", "sbyte",
+    "sealed", "short", "sizeof", "stackalloc", "static", "string", "struct",
+    "switch", "this", "throw", "true", "try", "typeof", "uint", "ulong",
+    "unchecked", "unsafe", "ushort", "using", "virtual", "void", "volatile",
+    "while",
+}
+
+
 def to_camel(snake: str) -> str:
     head, *rest = snake.split("_")
-    return head + "".join(p.capitalize() for p in rest)
+    name = head + "".join(p.capitalize() for p in rest)
+    return f"@{name}" if name in CS_KEYWORDS else name
 
 
 # --- main ----------------------------------------------------------------

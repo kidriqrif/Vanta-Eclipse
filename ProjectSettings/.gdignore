@@ -1,0 +1,4 @@
+# Godot: do not scan the Unity project. Without this, Godot imports every
+# PNG under Assets/Art/ as a texture, which changed the validation sweep's
+# live-object and control counts and failed stage 15. Retire this file with
+# the Godot tree.
