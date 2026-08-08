@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1a8d22139d045c43b3113a10930e61b, type: 3}
+  m_Name: crystalline
+  m_EditorClassIdentifier: Assembly-CSharp::VantaEclipse.Data.SkillNodeDefinition
+  id: crystalline
+  branch: Ascendance
+  displayName: Crystalline
+  description: Void Crystal gain +6% per level.
+  effectKind: 0
+  effectStat: crystal_gain
+  valuePerLevel: 0.06
+  displayAsPercent: 1
+  baseCost: 8
+  costGrowth: 1.7
+  maxLevel: 10
+  prereqId: 
+  prereqLevel: 1
+  sortOrder: 0

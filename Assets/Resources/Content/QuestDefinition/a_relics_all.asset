@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b150aea7febc2984598af9ca5d861a3d, type: 3}
+  m_Name: a_relics_all
+  m_EditorClassIdentifier: Assembly-CSharp::VantaEclipse.Data.QuestDefinition
+  id: a_relics_all
+  displayName: Relic Keeper
+  description: Recover all 5 relics.
+  kind: 2
+  metric: relics_owned
+  metricShape: 1
+  target: 5
+  rewardKind: 3
+  rewardAmount: 150
+  sortOrder: 4

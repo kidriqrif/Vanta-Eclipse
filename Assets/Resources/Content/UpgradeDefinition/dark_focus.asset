@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 194be66e52f0ec443b6e015bc682f0c7, type: 3}
+  m_Name: dark_focus
+  m_EditorClassIdentifier: Assembly-CSharp::VantaEclipse.Data.UpgradeDefinition
+  id: dark_focus
+  displayName: Dark Focus
+  description: Critical chance +0.5% per level.
+  stat: crit_chance
+  modifierType: 0
+  valuePerLevel: 0.005
+  displayAsPercent: 1
+  baseCost: 30
+  costGrowth: 1.3
+  maxLevel: 30
+  sortOrder: 2

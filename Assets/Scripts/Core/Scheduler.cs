@@ -48,8 +48,11 @@ namespace VantaEclipse.Core
             if (callback != null) EndOfFrameQueue.Add(callback);
         }
 
-        /// <summary>Called once per frame by GameRuntime, with scaled delta.</summary>
-        internal static void Tick(float deltaTime)
+        /// <summary>Called once per frame by GameRuntime, with scaled delta.
+        /// Public rather than internal so tests can drive the clock directly —
+        /// Unity compiles editor and test code into separate assemblies, where
+        /// `internal` is not visible.</summary>
+        public static void Tick(float deltaTime)
         {
             // Walk backwards so a callback that schedules another timer does not
             // disturb the iteration, and so removal is O(1).

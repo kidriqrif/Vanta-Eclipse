@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1a8d22139d045c43b3113a10930e61b, type: 3}
+  m_Name: abundance
+  m_EditorClassIdentifier: Assembly-CSharp::VantaEclipse.Data.SkillNodeDefinition
+  id: abundance
+  branch: Fortune
+  displayName: Abundance
+  description: Essence gain +10% per level.
+  effectKind: 0
+  effectStat: essence
+  valuePerLevel: 0.1
+  displayAsPercent: 1
+  baseCost: 4
+  costGrowth: 1.55
+  maxLevel: 12
+  prereqId: 
+  prereqLevel: 1
+  sortOrder: 0
