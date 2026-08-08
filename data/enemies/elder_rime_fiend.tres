@@ -6,7 +6,7 @@
 [resource]
 script = ExtResource("1")
 id = &"elder_rime_fiend"
-display_name = "Elder Rime Fiend"
+display_name = "Elder Rime Cluster"
 texture = ExtResource("2")
 hp_multiplier = 1.25
 glow_color = Color(1, 0.227, 0.275, 1)

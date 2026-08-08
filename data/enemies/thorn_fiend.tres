@@ -6,7 +6,7 @@
 [resource]
 script = ExtResource("1")
 id = &"thorn_fiend"
-display_name = "Thorn Fiend"
+display_name = "Spore Bloom"
 texture = ExtResource("2")
 hp_multiplier = 1.25
 glow_color = Color(0.784, 0.784, 0.855, 1)

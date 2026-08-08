@@ -6,7 +6,7 @@
 [resource]
 script = ExtResource("1")
 id = &"elder_hollow_sentinel"
-display_name = "Elder Hollow Sentinel"
+display_name = "Elder Derelict Sentinel"
 texture = ExtResource("2")
 hp_multiplier = 1.0
 glow_color = Color(1, 0.227, 0.275, 1)

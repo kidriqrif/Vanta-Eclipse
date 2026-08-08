@@ -99,6 +99,39 @@ theme, scenes, `data/`. `tools/snap_palette.py` snaps drifted colours to the
 can land a colour on a different entry than the one it has always been. Migrate
 by palette NAME, then run `snap_palette.py` and confirm it reports 0 moved.
 
+**The creature set is CELESTIAL, not medieval.** The first roster was a suit
+of armour, a crowned king in robes, a thorn plant, a stone giant and a hooded
+ghost — a competent fantasy bestiary attached to a game called *Vanta Eclipse*
+whose tagline is "Devour the light." Two motifs carry the rework and every
+creature uses at least one:
+
+* **Eclipse** — a body DARKER than the background, ringed by the light it is
+  blocking. `_corona()` draws a ring and punches the middle out rather than
+  drawing a lit ball: a creature that glows is a lamp, a creature with a corona
+  is a hole with light behind it. The Hollow Sovereign is the game's own name
+  drawn as a creature.
+* **Alien** — no bilateral face, no crown, no clothing. `_eye_ring()` spaces
+  eyes around a circle; the dots are ordinary, a ring of them is what no
+  vertebrate has. Where a shape must be symmetric to read, the symmetry is
+  ORBITAL, not left-right.
+
+Pets hover, carry ONE large eye, and wear the same halo scaled down — made
+friendly by being round rather than sharp. A halo is drawn BEHIND the body via
+`_pet_base(halo=…)`: drawing it afterwards and punching its middle out erases
+the body, which shipped Blaze as a bare orange ring with nothing inside it.
+
+**`shade_stalker`'s geometry is not up for redesign.** Four attempts have now
+failed the same way — one-pixel limbs off a round body is a tick, a symmetric
+dome with a head under it is a mushroom, and a pair of Gaussian humps filled to
+a flat belly is a BRIDGE, which is what "make it more alien" produced. Restyle
+the surface (it wears chitin banding and a row of eyes now); leave the skeleton
+alone.
+
+Four enemies were RENAMED to match what is now drawn — Thorn Fiend → Spore
+Bloom, Frost Shade → Comet Drifter, Rime Fiend → Rime Cluster, Hollow Sentinel
+→ Derelict Sentinel. Only `display_name` changed; `id` is a save key and must
+never be renamed.
+
 **Seven Arcade minigames.** `lights_out`, `sequence_echo` and `rune_sweeper`
 joined the original four and needed no framework change, which is the claim
 `MinigameDefinition` makes and this is the first time anything tested it: a

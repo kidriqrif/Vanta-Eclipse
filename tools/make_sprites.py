@@ -73,14 +73,61 @@ def _eyes(canvas: Canvas, y: int, inner: int, colour: str, glint: str = "ivory")
 
 
 # --- enemies (64x64) ----------------------------------------------------------
+#
+# THE SET IS CELESTIAL, NOT MEDIEVAL.
+#
+# The first roster was a suit of armour, a crowned king in robes, a thorn
+# plant, a stone giant and a hooded ghost — a competent fantasy bestiary
+# attached to a game called Vanta Eclipse whose tagline is "Devour the light."
+# Nothing in it had anything to do with either half of the name.
+#
+# Two motifs carry the rework, and every creature uses at least one:
+#
+#   ECLIPSE — a body DARKER than the background it sits on, ringed by the light
+#   it is blocking. That is the whole read of an eclipse, and it is why
+#   _corona() draws a ring and punches the middle out rather than drawing a lit
+#   ball. A creature that glows is a lamp; a creature with a corona is a hole
+#   with light behind it.
+#
+#   ALIEN — no bilateral face, no crown, no armour. Eyes come in threes and
+#   rings, limbs are unequal, nothing wears clothing. Where a shape has to be
+#   symmetric to read at all (the Sovereign), the symmetry is ORBITAL rather
+#   than left-right.
+
+
+def _corona(canvas: Canvas, cx: int, cy: int, radius: int,
+            outer: str, inner: str, core: str = "void") -> None:
+    """A ring of light around a hole. The eclipse motif, shared by the set.
+
+    Drawn outside-in, punching a transparent gap before filling the core, so
+    the body is genuinely separated from its own halo. Filling a lit disc and
+    darkening the middle looks identical at rest and wrong the moment anything
+    passes behind it.
+    """
+    canvas.disc(cx, cy, radius, outer)
+    canvas.disc(cx, cy, radius - 2, inner)
+    canvas.disc(cx, cy, radius - 4, None)
+    canvas.disc(cx, cy, radius - 5, core)
+
+
+def _eye_ring(canvas: Canvas, cx: int, cy: int, radius: float, count: int,
+              colour: str, glint: str = "ivory") -> None:
+    """Eyes spaced around a circle. Alien by ARRANGEMENT, not by shape — the
+    dots are ordinary; a ring of them is what no vertebrate has."""
+    for i in range(count):
+        angle = math.tau * i / count - math.tau / 4.0
+        ex = int(cx + math.cos(angle) * radius)
+        ey = int(cy + math.sin(angle) * radius)
+        canvas.rect(ex, ey, 2, 2, colour)
+        canvas.put(ex, ey, glint)
 
 
 def gloom_wisp() -> Canvas:
-    """A mote of void-light, guttering.
+    """A void mote wearing its own eclipse, trailing the light it has eaten.
 
-    The first attempt trailed a one-pixel tail and read as a balloon on a
-    string. There is no LINE anywhere in a wisp: the wake is overlapping discs
-    that shrink and drift, so it dissipates instead of dangling.
+    The wake is overlapping discs that shrink and drift, never a line: there is
+    no LINE anywhere in a wisp, and a one-pixel tail reads as a balloon on a
+    string.
     """
     c = Canvas(ENEMY, ENEMY)
     for i in range(6):                            # wake first, core draws over
@@ -88,54 +135,39 @@ def gloom_wisp() -> Canvas:
         if radius < 2:
             break
         x = 32 + int(3.5 * math.sin(i * 0.95))
-        y = 30 + i * 4
+        y = 34 + i * 4
         c.disc(x, y, radius, "abyss" if i > 2 else "violet")
         if radius > 3:
             c.disc(x, y, radius - 3, "azure")
-    c.disc(32, 24, 12, "violet")
-    c.disc(32, 23, 9, "azure")
-    c.disc(32, 22, 6, "bone")
-    c.disc(31, 21, 3, "ivory")
-    # Bite pixels out of the halo. A perfect circle reads as a bubble.
-    for degrees in range(0, 360, 22):
-        radians = math.radians(degrees)
-        c.put(int(32 + math.cos(radians) * 12), int(24 + math.sin(radians) * 12), None)
-    c.rect(28, 21, 2, 3, "void")
-    c.rect(34, 21, 2, 3, "void")
+    _corona(c, 32, 24, 15, "violet", "azure")
+    # Three eyes, off-centre. Two would be a face; three cannot be.
+    for ex, ey in ((28, 20), (35, 19), (31, 26)):
+        c.rect(ex, ey, 2, 2, "frost")
+        c.put(ex, ey, "ivory")
+    for mx, my, r in ((13, 16, 2), (52, 42, 2), (48, 11, 1)):
+        c.disc(mx, my, r, "violet")               # motes still in orbit
     c.outline("void")
     return c
 
 
 def shade_stalker() -> Canvas:
-    """A predator mid-stalk: heavy shoulders rising ABOVE a head carried low,
-    and two thick planted forelimbs.
+    """A carapace predator mid-stalk: heavy shoulders rising ABOVE a head
+    carried low, and two thick planted forelimbs.
 
-    The first attempt used four one-pixel limbs radiating from a round body,
-    which is the recipe for a tick. Mass beats detail at this size — the
-    posture has to be readable from the silhouette alone.
+    NOTHING IS MIRRORED, and the geometry here is not up for redesign. Four
+    earlier attempts failed: one-pixel limbs off a round body is a tick; a
+    symmetric dome with a head under it is a mushroom; and a pair of Gaussian
+    humps filled straight down to a flat belly is a BRIDGE — two towers with a
+    span between them, which is what replacing this body with "something more
+    alien" produced. A predator is asymmetric along its LENGTH, its head hangs
+    clear of its chest, and its legs are unequal. Restyle the surface; leave
+    the skeleton alone.
+
+    The back line has two humps with a dip between them. One smooth arc over
+    two posts is a boot in profile; the dip is the shape a cat makes when it
+    gathers itself, and nothing inanimate has it.
     """
     c = Canvas(ENEMY, ENEMY)
-
-    # THE THIRD ATTEMPT, AND WHY THE FIRST TWO FAILED THE SAME WAY.
-    #
-    # Attempt one was four one-pixel limbs off a round body: a tick. Attempt
-    # two raised a symmetric dome of haunches centred on x=32 and hung a small
-    # head under it — which is a mushroom, and with two lighter shoulder discs
-    # on it, a mask. Both failed for one reason: a predator is defined by
-    # ASYMMETRY ALONG ITS LENGTH. Front and back of an animal do not match, and
-    # anything mirrored about the vertical centre line stops being a creature
-    # facing somewhere and becomes an ornament.
-    #
-    # So this one is drawn in profile-ish three-quarter: head low and forward
-    # at the left, spine rising to haunches at the right. Nothing is mirrored.
-
-    # Torso, with TWO humps in the back line: shoulder blades forward, haunches
-    # aft, and a dip between them.
-    #
-    # A single rising curve is what kept this reading as a boot no matter how
-    # the head was redrawn. One smooth arc over two posts is a shoe in profile;
-    # the dip is the whole difference, because it is the shape a cat makes when
-    # it gathers itself and nothing inanimate has it.
     for x in range(22, 52):
         t = (x - 22) / 29.0
         back = int(31
@@ -147,6 +179,16 @@ def shade_stalker() -> Canvas:
             c.put(x, y, "crimson" if depth < 0.28 else
                   ("blood" if depth < 0.72 else "abyss"))
 
+    # Chitin banding across the back. This is the whole alien restyle: the mass
+    # underneath is unchanged, but segmented plating reads as shell where a
+    # smooth ramp read as fur.
+    for x in range(26, 50, 5):
+        t = (x - 22) / 29.0
+        back = int(31
+                   - 7 * math.exp(-(((t - 0.20) / 0.17) ** 2))
+                   - 8 * math.exp(-(((t - 0.78) / 0.19) ** 2)))
+        c.rect(x, back + 1, 1, int(46 - 2 * t) - back - 2, "abyss")
+
     # Neck: a thick band running down and FORWARD off the shoulder hump, so the
     # head hangs below the shoulders instead of continuing the back line.
     for step in range(11):
@@ -155,16 +197,10 @@ def shade_stalker() -> Canvas:
             c.put(nx + k, ny, "blood" if k < 4 else "abyss")
         c.put(nx, ny, "crimson")
 
-    # Head: a WEDGE, deep at the skull and tapering to the muzzle. It was a
-    # flat rectangle, which with two square eyes in it read as a toaster. An
-    # animal's head is the one shape on the sprite that must not be a box.
-    # LIFTED OFF THE BELLY LINE, which is what actually made it a boot.
-    #
-    # Shortening the muzzle was not enough. The head's underside sat at y=47
-    # and so did the belly, so head and torso shared one unbroken bottom edge
-    # running the full width of the sprite — a sole. An animal reads as an
-    # animal partly because its head hangs clear of its chest, and the gap
-    # under the jaw is doing more work here than the skull's shape.
+    # Head: a WEDGE, deep at the skull and tapering to the muzzle. A flat
+    # rectangle with two square eyes in it read as a toaster. LIFTED OFF THE
+    # BELLY LINE — head and torso sharing one unbroken bottom edge is a sole,
+    # and the gap under the jaw does more work here than the skull's shape.
     for x in range(11, 24):
         t = (x - 11) / 12.0                       # 0 at the muzzle, 1 at the skull
         top = int(40 - 4 * t)
@@ -175,16 +211,17 @@ def shade_stalker() -> Canvas:
                   ("blood" if depth < 0.72 else "abyss"))
     c.rect(20, 37, 4, 3, "blood")                 # brow ridge, breaking the block
     c.rect(20, 36, 3, 2, "crimson")
-    for tooth in range(12, 21, 3):                # teeth on the jaw line
+    for tooth in range(12, 21, 3):                # mandible teeth on the jaw line
         c.put(tooth, 48, "ivory")
-    c.rect(14, 43, 3, 2, "ember")                 # eyes, set back toward the skull
-    c.rect(18, 42, 3, 2, "ember")
-    c.put(14, 43, "gold")
-    c.put(20, 42, "gold")
+    # A ROW of eyes rather than a pair — the one change to the head, and the
+    # cheapest way to say "not a mammal" without touching the silhouette.
+    for i, ex in enumerate((13, 16, 19)):
+        c.rect(ex, 42 + (i % 2), 2, 2, "frost")
+        c.put(ex, 42 + (i % 2), "ivory")
 
     # Legs: foreleg planted under the shoulder, hind leg coiled under the
-    # haunch. Different lengths and different angles — a matched pair would put
-    # the symmetry straight back.
+    # haunch. Different lengths and angles — a matched pair would put the
+    # symmetry straight back.
     c.rect(24, 44, 6, 13, "abyss")
     c.rect(25, 45, 4, 11, "blood")
     c.rect(23, 56, 8, 3, "abyss")
@@ -208,338 +245,236 @@ def shade_stalker() -> Canvas:
 
 
 def thorn_fiend() -> Canvas:
-    """Bramble given a body — hunched, shoulders forward, thorns swept back.
+    """A spore bloom: a sac of bioluminescence that grew where the light died.
 
-    TWO THINGS WERE WRONG AND BOTH ARE INSTRUCTIVE.
-
-    It was shaded with _ramp's (lit, mid, dark) as ("moss", "iron", "slate").
-    Those last two are blue-grey NEUTRALS, and _ramp gives them 76% of the
-    width, so three quarters of a green creature was near-black. It did not
-    read as a shaded body, it read as a hole with a green rim — which is
-    exactly what ARCHITECTURE.md warns about under "void is never a fill",
-    arrived at from the other direction: not by filling with void, but by
-    shading so dark that the fill became one.
-
-    The palette carries ONE green. A green body therefore cannot have a
-    three-step green ramp, and the fix is not to hunt for a colour that is not
-    there — it is to change the PROPORTIONS. Moss now holds the majority of the
-    width and the neutrals are a shadow edge, so the mass reads green and still
-    turns away from the light.
-
-    Second: the thorns radiated at even angles through a full circle, which is
-    a sunburst. A dandelion, not a predator. They sweep up and back off the
-    shoulders now, in one direction, so they describe a posture instead of a
-    pattern.
+    The palette carries ONE green, so a green body cannot be shaded in green.
+    The sac ramps moss into abyss and the light comes from gold pods sitting ON
+    it — which is also the honest way a bioluminescent thing works.
     """
     c = Canvas(ENEMY, ENEMY)
-
-    # Mass first, in flat moss: overlapping discs, widest at the shoulders and
-    # tucking in toward a root-like base. Discs rather than a tapered column
-    # because a straight-sided body gives a straight-sided shadow, and a
-    # rectangle of iron down one edge reads as a grey slab standing next to the
-    # creature rather than as the creature's own dark side.
-    c.disc(30, 22, 8, "moss")                     # head
-    c.disc(31, 36, 13, "moss")                    # shoulders and chest
-    c.disc(32, 47, 10, "moss")                    # belly
-    c.disc(32, 54, 7, "moss")                     # base
-
-    # RAG THE OUTLINE. Discs alone gave a smooth closed curve, and a smooth
-    # closed curve full of one colour is a fruit — the previous pass read as an
-    # avocado with eyes. Bramble is jagged, and jaggedness has to be in the
-    # SILHOUETTE, because that is all anyone sees of a 64px sprite on a phone.
-    #
-    # The jitter is a fixed sine, not a random number: this file must produce
-    # byte-identical output on every run or check_generated.py fails the sweep.
-    for y in range(c.height):
-        filled = [x for x in range(c.width) if c.get(x, y) == "moss"]
-        if not filled:
-            continue
-        left, right = min(filled), max(filled)
-        for edge, direction in ((left, -1), (right, 1)):
-            bite = int(1.8 * (1.0 + math.sin(y * 2.3 + (0 if direction < 0 else 1.7))))
-            for step in range(bite):
-                c.put(edge - direction * step, y, None)
-
-    # Shadow after ragging, so it follows the ragged edge rather than the
-    # smooth one it replaced.
-    for y in range(c.height):
-        filled = [x for x in range(c.width) if c.get(x, y) == "moss"]
-        if not filled:
-            continue
-        right = max(filled)
-        for x in range(right - 2, right + 1):
-            if c.get(x, y) == "moss":
-                c.put(x, y, "iron")
-        if len(filled) > 13:
-            c.put(right, y, "slate")
-
-    # A hard notch where the head meets the shoulders. Two rows cut clean out,
-    # not shaded — at this size a change of value does not separate two masses,
-    # only a gap does.
-    for x in range(20, 44):
-        if c.get(x, 30) is not None:
-            c.put(x, 30, "slate")
-        if c.get(x, 31) is not None:
-            c.put(x, 31, "iron")
-
-    # Thorns: shoulders and spine, swept up and BACK. Angles are a narrow fan,
-    # not a circle.
-    # Two pixels thick, not one. A single-pixel spike on a 64px body is a
-    # whisker at any size a phone actually shows it at.
-    for angle, reach in ((-126, 13), (-104, 16), (-80, 15), (-58, 12), (-34, 9)):
-        rad = math.radians(angle)
-        for step in range(4, reach):
-            x, y = int(30 + math.cos(rad) * step), int(21 + math.sin(rad) * step)
-            c.put(x, y, "moss")
-            c.put(x + 1, y, "moss" if step < reach - 3 else "bone")
-
-    # Barbs down the flanks, angled downward so they read as defence, not legs.
-    # Both sides in moss: drawing the right-hand ones in iron put them on top of
-    # the shadow, where they vanished.
-    for y in range(30, 54, 7):
-        c.line(19, y, 13, y + 4, "moss")
-        c.line(45, y, 51, y + 4, "moss")
-
-    # Eyes placed against the head's OWN centre (30, 21). _eyes() measures from
-    # x=32, which is the canvas centre and no longer where this head is.
-    c.rect(26, 20, 3, 2, "gold")
-    c.rect(32, 20, 3, 2, "gold")
-    c.put(26, 20, "ivory")
-    c.put(34, 20, "ivory")
-
-    # The one asymmetric mark: a thorn snapped off short, stub left behind.
-    c.put(20, 13, "slate")
-    c.put(21, 13, "slate")
-    c.put(21, 14, "slate")
+    for y in range(18, 44):                       # bulbous sac, widest low
+        t = (y - 18) / 26.0
+        half = int(4 + 13.0 * math.sin(t * 2.4) ** 0.7)
+        _ramp(c, 32, y, half, "moss", "abyss", "void")
+    for px, py, r in ((24, 24, 3), (39, 22, 3), (32, 17, 2), (21, 33, 2), (43, 32, 3)):
+        c.disc(px, py, r, "gold")                 # glowing pods
+        c.disc(px, py, r - 1, "ivory")
+    for tx in (18, 25, 32, 39, 46):               # tendrils, uneven lengths
+        length = 8 + (tx % 4) * 3
+        for i in range(length):
+            c.put(tx + int(1.6 * math.sin(i * 0.5)), 43 + i, "moss")
+    _eye_ring(c, 32, 30, 7.0, 5, "frost")
     c.outline("void")
     return c
 
 
 def hollow_sentinel() -> Canvas:
-    """Armour with nobody in it. Hard rectangles only — no curve anywhere, so
-    it never reads as flesh.
+    """A derelict probe still running its scan. Hard rectangles only, so it
+    never reads as flesh — but the rectangles are a HULL, not a breastplate.
 
-    The armour is AZURE, not steel. Drawn in iron and slate it was 94% neutral
-    and read as a grey rectangle on a near-black background — the silhouette
-    was correct and completely inert. A hue carries the plate and the two
-    neutrals it kept (the visor's void, the outline) are the holes, which is
-    the right way round: the empty parts of a hollow suit should be the dark
-    ones. Gold bands and ember visor-glow survive because they now sit on a
-    blue field instead of on grey.
+    Azure with a single ember lens. The armour it used to be was 94% neutral
+    and read as a grey box on a near-black background: the silhouette was
+    right and completely inert.
     """
     c = Canvas(ENEMY, ENEMY)
-    c.rect(20, 24, 24, 26, "frost")               # torso, lit rim
-    c.rect(22, 26, 20, 22, "azure")
-    c.rect(24, 30, 16, 3, "gold")                 # belt bands
-    c.rect(24, 38, 16, 2, "gold")
-    c.rect(24, 12, 16, 14, "frost")               # helm
-    c.rect(26, 14, 12, 10, "azure")
-    c.rect(26, 18, 12, 3, "void")                 # visor slit, deliberately empty
-    c.rect(27, 19, 3, 1, "ember")
-    c.rect(35, 19, 3, 1, "ember")
-    for sx in (14, 44):                           # pauldrons
-        c.rect(sx, 24, 6, 8, "azure")
-        c.rect(sx + 1, 25, 4, 6, "frost")
-    c.rect(16, 32, 5, 16, "azure")                # arms
-    c.rect(43, 32, 5, 16, "azure")
-    c.rect(22, 50, 8, 10, "azure")                # legs
-    c.rect(34, 50, 8, 10, "azure")
-    c.line(30, 26, 30, 48, "frost")               # a split down the breastplate
+    c.rect(22, 22, 20, 24, "frost")               # hull, lit rim
+    c.rect(24, 24, 16, 20, "azure")
+    c.rect(24, 28, 16, 2, "gold")                 # instrument bands
+    c.rect(24, 36, 16, 2, "gold")
+    for vx in (8, 44):                            # solar vanes, not pauldrons
+        c.rect(vx, 20, 12, 3, "iron")
+        for i in range(4):
+            c.rect(vx + i * 3, 23, 2, 9, "azure")
+    c.rect(28, 12, 8, 10, "frost")                # sensor head
+    c.rect(30, 14, 4, 6, "abyss")
+    c.disc(32, 17, 2, "ember")                    # the one lens
+    c.rect(31, 4, 2, 8, "iron")                   # antenna
+    c.disc(32, 4, 3, "gold")
+    c.disc(32, 4, 1, "ivory")
+    c.rect(26, 46, 4, 10, "azure")                # landing struts
+    c.rect(34, 46, 4, 10, "azure")
     c.outline("void")
     return c
 
 
 def silent_colossus() -> Canvas:
-    """Fills the frame. Weight comes from a low centre of mass and a head that
-    is far too small for the shoulders.
+    """A planetoid that woke up. Fills the frame, and its weight comes from a
+    low centre of mass rather than from detail.
 
-    It is MOLTEN, not stone. In iron and slate it was the worst offender in
-    the set — 96.9% neutral, a grey mass whose only colour was a four-pixel
-    seam. Running the trunk ramp warm (ember over blood over abyss) keeps the
-    exact same shading structure and low centre of mass while making the body
-    itself the light source. The seam had to change with it: gold-on-ember
-    disappeared, so the core is now ivory inside gold, which is the brightest
-    pair the palette allows and still reads as heat.
+    Molten, not stone: the body is its own light source and the craters are
+    punched out of it rather than drawn on.
     """
     c = Canvas(ENEMY, ENEMY)
-    c.rect(10, 22, 44, 12, "blood")               # enormous shoulder span
-    c.rect(12, 24, 40, 8, "ember")
-    for y in range(34, 58):                       # blocky trunk
-        half = 16 - abs(y - 46) // 3
-        _ramp(c, 32, y, half, "ember", "blood", "abyss")
-    c.rect(27, 14, 10, 10, "ember")               # small head
-    c.rect(29, 16, 6, 6, "abyss")
-    c.rect(29, 18, 2, 2, "gold")
-    c.rect(33, 18, 2, 2, "gold")
-    for ax in (8, 48):                            # pillar arms
-        c.rect(ax, 26, 8, 26, "blood")
-        c.rect(ax + 1, 28, 5, 22, "ember")
-    c.rect(30, 36, 4, 12, "gold")                 # core seam
-    c.rect(31, 38, 2, 8, "ivory")
+    c.disc(32, 34, 22, "blood")                   # the mass
+    c.disc(32, 34, 19, "ember")
+    c.disc(30, 31, 13, "gold")                    # molten core showing through
+    c.disc(30, 31, 9, "ivory")
+    for cx, cy, r in ((16, 26, 4), (46, 24, 3), (43, 45, 5), (20, 46, 3)):
+        c.disc(cx, cy, r, "blood")                # craters
+        c.disc(cx, cy, r - 1, "abyss")
+    for i in range(3):                            # orbiting debris
+        angle = math.tau * i / 3.0 + 0.4
+        c.disc(int(32 + math.cos(angle) * 27), int(34 + math.sin(angle) * 27),
+               2, "iron")
+    _eye_ring(c, 30, 31, 5.0, 3, "void", "crimson")
     c.outline("void")
     return c
 
 
 def hollow_sovereign() -> Canvas:
-    """The world boss. Everything else is one hue; this one is crowned in gold
-    over crimson so it is legible as the exception."""
+    """The world boss: the eclipse itself.
+
+    Everything else in the set wears one hue; this one is a black disc inside a
+    full gold corona, which is the game's own name drawn as a creature. Its
+    symmetry is ORBITAL rather than left-right — spokes at even angles, not a
+    mirrored face — so it reads as a body in the sky rather than as a king.
+    """
     c = Canvas(ENEMY, ENEMY)
-    _taper(c, 24, 60, 15, 0.75, "crimson", "blood", "abyss", shrink=0.4)
-    # A V mantle across the shoulders and ONE vertical seam. The first version
-    # banded the robe horizontally from edge to edge every five rows, which is
-    # a barcode — and it ran the eye across the sprite instead of up to the
-    # crown, which is the only thing marking this as the boss.
-    for i in range(13):
-        c.rect(19 + i, 25 + i, 3, 2, "gold")
-        c.rect(42 - i, 25 + i, 3, 2, "gold")
-    c.rect(31, 36, 2, 20, "gold")
-    c.rect(31, 38, 1, 16, "ember")
-    c.disc(32, 20, 10, "blood")
-    c.disc(32, 21, 8, "void")                     # a hollow crown has no face
-    c.rect(28, 20, 3, 3, "crimson")
-    c.rect(34, 20, 3, 3, "crimson")
-    c.put(28, 20, "ember")
-    c.put(36, 20, "ember")
-    for x, height in [(21, 7), (26, 11), (31, 15), (36, 11), (41, 7)]:
-        c.rect(x, 18 - height, 3, height, "gold")
-        c.put(x + 1, 18 - height, "ivory")
-    _ragged_hem(c, 16, 49, 58, 3.5)
-    c.line(30, 12, 27, 28, "ivory")
+    for i in range(12):                           # corona spokes
+        angle = math.tau * i / 12.0
+        for step in range(18, 30):
+            c.put(int(32 + math.cos(angle) * step),
+                  int(32 + math.sin(angle) * step),
+                  "gold" if step < 25 else "ember")
+    _corona(c, 32, 32, 19, "gold", "crimson")
+    c.disc(32, 32, 13, "void")                    # the disc that eats the light
+    _eye_ring(c, 32, 32, 8.0, 6, "crimson", "gold")
+    c.disc(32, 32, 3, "ivory")                    # the one bright point left
     c.outline("void")
     return c
 
 
 def frost_shade() -> Canvas:
-    """A drowned spirit frozen mid-drift: ice sheeting off the shoulders, a
-    fractured mask, a shroud that thins toward the base.
+    """A comet drifter: a frozen nucleus and the tail it is still shedding.
 
-    The shroud ramps frost over azure rather than azure over iron. Two of the
-    three ramp steps used to be neutral, which put a grey core inside an ice
-    creature and left it 62% neutral — cold in name and drab on screen. Ice is
-    the one thing in the set that has a light of its own.
+    The tail is STREAKS, not a row of discs. Discs gave a string of beads that
+    read as debris rather than motion; a comet tail is directional, so these
+    are lines that thin and dim along their length and the nucleus draws over
+    their root.
+
+    The nucleus is deliberately NOT a circle. The pets are circles, and a round
+    blue ball at 64px reads as the same creature as a round blue pet at 48 —
+    which is what the first version did.
     """
     c = Canvas(ENEMY, ENEMY)
-    for y in range(20, 61):
-        t = (y - 20) / 40.0
-        half = int(11 * (1.0 - t * 0.72) ** 0.8) + 1
-        _ramp(c, 32, y, half, "frost", "azure", "abyss")
-    _ragged_hem(c, 18, 47, 59)
-    c.disc(32, 17, 8, "azure")
-    c.disc(32, 18, 7, "frost")
-    c.disc(32, 19, 6, "void")
-    c.rect(29, 17, 2, 2, "frost")
-    c.rect(34, 17, 2, 2, "frost")
-    c.put(29, 17, "ivory")
-    c.put(35, 17, "ivory")
-    for px, py, w, h in [(17, 25, 7, 3), (19, 30, 6, 2), (21, 35, 5, 2)]:
-        c.rect(px, py, w, h, "bone")
-        c.rect(px, py, w - 2, h - 1, "frost")
-    c.mirror_x()
-    c.line(33, 11, 30, 23, "bone")
+    for k in range(7):
+        spread = (k - 3) * 2
+        for i in range(26):
+            t = i / 26.0
+            x = 26 - int(t * 22) + int(spread * t)
+            y = 34 + int(t * 22) + int(spread * t * 0.4)
+            if 0 <= x < ENEMY and 0 <= y < ENEMY:
+                c.put(x, y, "frost" if t < 0.25 else ("azure" if t < 0.6 else "abyss"))
+    for dx, dy, r in ((34, 24, 11), (28, 20, 8), (38, 30, 7), (30, 30, 6)):
+        c.disc(dx, dy, r, "frost")
+    for dx, dy, r in ((34, 24, 8), (29, 21, 5), (37, 29, 4)):
+        c.disc(dx, dy, r, "azure")
+    c.disc(33, 25, 5, "abyss")
+    for sx, sy in ((24, 14), (44, 20), (42, 36), (22, 31)):
+        c.disc(sx, sy, 2, "ivory")                # ice plates catching light
+    _eye_ring(c, 33, 25, 4.0, 4, "ivory", "frost")
     c.outline("void")
     return c
 
 
 def rime_fiend() -> Canvas:
-    """All hard facets, against the Frost Shade's soft form wrapped in plates —
-    the two share a world and must never read as the same creature."""
+    """All hard facets, against the comet's soft round nucleus — the two share
+    a world and must never read as the same creature."""
     c = Canvas(ENEMY, ENEMY)
-    for y in range(24, 58):                       # faceted crystal trunk
-        t = abs(y - 40) / 16.0
-        half = int(13 * (1.0 - t * 0.6))
-        step = ((y // 5) % 3) - 1                 # blocky facet steps
-        _ramp(c, 32 + step, y, max(4, half), "frost", "azure", "iron")
-    # Shards GROW from the trunk. The first version placed free-floating
-    # squares beside the body and the sprite read as scattered debris rather
-    # than one creature — so each wedge starts at the outermost filled pixel of
-    # its own row and tapers outward from there, guaranteeing a shared edge.
-    for row, length in [(29, 11), (37, 14), (45, 11), (52, 8)]:
-        for side in (-1, 1):
-            edge = 32
-            for step_out in range(32):
-                probe = 32 + side * step_out
-                if c.get(probe, row) is not None:
-                    edge = probe
-            for i in range(length):
-                thickness = max(1, (length - i) // 2)
-                for dy in range(-thickness, thickness + 1):
-                    c.put(edge + side * i, row + dy,
-                          "frost" if i < length // 2 else "azure")
-    c.rect(24, 14, 16, 12, "azure")               # angular head
-    c.rect(26, 16, 12, 8, "iron")
-    c.rect(27, 18, 4, 3, "ivory")
-    c.rect(33, 18, 4, 3, "ivory")
-    c.rect(28, 19, 2, 1, "frost")
-    c.rect(34, 19, 2, 1, "frost")
-    for i, x in enumerate(range(26, 40, 4)):      # crown spines
-        c.rect(x, 8 - (i % 2) * 2, 2, 8, "bone")
+    for i in range(9):                            # shards radiating from a core
+        angle = math.tau * i / 9.0 + 0.2
+        for step in range(4, 24):
+            width = max(1, (24 - step) // 5)
+            sx = int(32 + math.cos(angle) * step)
+            sy = int(32 + math.sin(angle) * step)
+            c.rect(sx, sy, width, width, "frost" if step < 14 else "azure")
+    c.disc(32, 32, 9, "azure")                    # core
+    c.disc(32, 32, 6, "frost")
+    c.disc(32, 32, 3, "abyss")
+    _eye_ring(c, 32, 32, 4.0, 3, "ivory", "azure")
     c.outline("void")
     return c
 
 
 # --- pets (48x48) -------------------------------------------------------------
+#
+# Companions are ALIEN AND FLOATING. They kept feet and a two-eyed face through
+# the whole first pass, which made them pets from a different game — the one
+# creature class a player looks at for hours had nothing to do with the void.
+# They hover now, carry ONE large eye instead of a pair, and each wears a ring
+# of its own: the same eclipse motif the enemies have, scaled down and made
+# friendly by being ROUND rather than sharp.
 
 
-def _pet_base(body: str, mid: str, dark: str, accent: str, big: bool) -> Canvas:
+def _pet_base(body: str, mid: str, dark: str, accent: str, big: bool,
+              halo: tuple[str, str] | None = None) -> Canvas:
     c = Canvas(PET, PET)
     size = 13 if big else 10
     cx = PET // 2
-    c.disc(cx, 26, size, mid)                     # round body — pets are soft
-    c.disc(cx, 25, size - 3, body)
-    c.disc(cx - 3, 22, size - 6, accent)
-    c.disc(cx, 15, size - 4, mid)                 # head
-    c.disc(cx, 15, size - 6, body)
-    for foot in (cx - 6, cx + 2):                 # feet
-        c.rect(foot, 36, 4, 3, dark)
-    c.rect(cx - 5, 13, 3, 3, "void")
-    c.rect(cx + 2, 13, 3, 3, "void")
-    c.put(cx - 5, 13, accent)
-    c.put(cx + 2, 13, accent)
+    # The halo is drawn FIRST, behind everything. Drawing it afterwards and
+    # punching its middle out erases the body it is supposed to surround —
+    # which is exactly what happened to Blaze, and it shipped as a bare orange
+    # ring with nothing inside it.
+    if halo is not None:
+        c.disc(cx, 23, size + 7, halo[0])
+        c.disc(cx, 23, size + 5, halo[1])
+        c.disc(cx, 23, size + 3, None)
+    c.disc(cx, 24, size, mid)                     # soft round body
+    c.disc(cx, 23, size - 3, body)
+    c.disc(cx - 3, 20, size - 6, accent)
+    # ONE eye, big enough to BE the face. Two small ones read as a mammal.
+    c.disc(cx, 21, size - 5, "void")
+    c.disc(cx, 21, size - 7, accent)
+    c.disc(cx - 1, 20, max(1, size - 9), "ivory")
+    for i in range(3):                            # hover motes where feet were
+        c.disc(cx - 7 + i * 7, 38 + (i % 2), 2, dark)
     return c
 
 
 def pet_ember() -> Canvas:
     c = _pet_base("ember", "crimson", "blood", "gold", big=False)
-    for i, x in enumerate(range(18, 31, 4)):      # a small flame tuft
-        c.rect(x, 4 + (i % 2) * 2, 3, 5, "gold")
-        c.put(x + 1, 4 + (i % 2) * 2, "ivory")
+    for i in range(8):                            # a warm ring, not a flame tuft
+        angle = math.tau * i / 8.0
+        c.put(int(24 + math.cos(angle) * 15), int(23 + math.sin(angle) * 15), "gold")
     c.outline("void")
     return c
 
 
 def pet_blaze() -> Canvas:
-    """Ember evolved: bigger, hotter, wings of flame."""
-    c = _pet_base("gold", "ember", "crimson", "ivory", big=True)
-    for wing in (6, 34):
-        for i in range(4):
-            c.rect(wing + i, 16 + i * 2, 8 - i, 3, "ember")
-            c.rect(wing + i, 16 + i * 2, 6 - i, 2, "gold")
-    for i, x in enumerate(range(16, 33, 4)):
-        c.rect(x, 1 + (i % 2) * 2, 3, 7, "gold")
-        c.put(x + 1, 1 + (i % 2) * 2, "ivory")
+    """Ember evolved: bigger, hotter, and its ring has closed into a corona."""
+    c = _pet_base("gold", "ember", "crimson", "ivory", big=True,
+                  halo=("ember", "gold"))
+    for i in range(6):
+        angle = math.tau * i / 6.0 + 0.3
+        c.disc(int(24 + math.cos(angle) * 19), int(23 + math.sin(angle) * 19), 2, "ivory")
     c.outline("void")
     return c
 
 
 def pet_frostling() -> Canvas:
     c = _pet_base("frost", "azure", "iron", "ivory", big=False)
-    for i, x in enumerate(range(19, 30, 4)):      # a crest of ice
-        c.rect(x, 3 + (i % 2) * 2, 2, 6, "bone")
+    for i in range(8):
+        angle = math.tau * i / 8.0
+        c.put(int(24 + math.cos(angle) * 15), int(23 + math.sin(angle) * 15), "bone")
     c.outline("void")
     return c
 
 
 def pet_frostwyrm() -> Canvas:
-    """Frostling evolved: serpentine, winged, and the only pet with a tail."""
-    c = _pet_base("frost", "azure", "iron", "ivory", big=True)
-    for wing in (4, 36):
+    """Frostling evolved: serpentine, winged, and the only pet with a tail.
+
+    The crest of bone spikes it used to wear read as a comb at 48px and was the
+    last fantasy holdover in the set. It wears the same halo as Blaze instead,
+    so the two evolutions rhyme.
+    """
+    c = _pet_base("frost", "azure", "iron", "ivory", big=True,
+                  halo=("azure", "frost"))
+    for wing in (2, 36):
         for i in range(5):
             c.rect(wing + i, 14 + i * 2, 9 - i, 2, "azure")
             c.rect(wing + i, 14 + i * 2, 7 - i, 1, "frost")
-    for i, y in enumerate(range(36, 46, 2)):      # tail
+    for i, y in enumerate(range(38, 46, 2)):      # tail
         c.rect(24 + int(4 * math.sin(i)), y, 4 - i // 3, 2, "azure")
-    for i, x in enumerate(range(17, 32, 3)):
-        c.rect(x, 1 + (i % 2) * 2, 2, 7, "bone")
     c.outline("void")
     return c
 

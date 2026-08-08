@@ -6,7 +6,7 @@
 [resource]
 script = ExtResource("1")
 id = &"frost_shade"
-display_name = "Frost Shade"
+display_name = "Comet Drifter"
 texture = ExtResource("2")
 hp_multiplier = 0.85
 glow_color = Color(0.784, 0.784, 0.855, 1)
