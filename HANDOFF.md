@@ -5,6 +5,16 @@
 re-run the sweep to get current ones. Everything under "Conventions" and
 "Traps" is durable; everything under "State" decays.
 
+Hand-written, but no longer unchecked: this file is in `check_architecture.py`'s
+`DOCS`, so stage 8 fails if it backticks a source path that does not exist, or
+states an autoload count that disagrees with `project.godot`. It was NOT in that
+list for most of its life, which is how it spent a commit describing a script
+that had been deleted — the exact drift the checker was written to catch, on the
+one document this file tells you to read first. **Backticks mean a live path**;
+a file being described historically goes in bold instead. (The sentence you are
+reading tripped that rule on its first draft, which is the check earning its
+keep immediately.)
+
 ---
 
 ## What this is
@@ -171,8 +181,11 @@ A card's only exit is absorption: feeding one to the ACTIVE companion converts
 POWER into pet XP and VIGOR into a permanent addition to that pet's passive,
 then destroys it. That is why nothing is equippable and there is no card slot —
 a collection you must curate is a second inventory and the game already has
-one. The absorbed bonus is capped (`CardManager.ABSORBED_BONUS_CAP`, 0.5);
-without it a long enough game makes the companion the only stat that matters.
+one. The absorbed bonus is capped (`PetManager.ABSORBED_BONUS_CAP`, 0.5) —
+PetManager owns the ceiling because it owns the field, the getter that feeds
+PlayerStats and the save round-trip; passing the cap in from CardManager made
+the invariant a convention at one call site instead of a rule. Without it a
+long enough game makes the companion the only stat that matters.
 The cap is asserted directly in `tools/logic_harness.gd`, along with the thing
 worth asserting about a conversion: exactly one card leaves and the value
 arrives once. A double-grant here is invisible in play and permanent in a save.
@@ -268,9 +281,12 @@ verifies**. Found repeatedly; assume more exist.
   running in the background across a turn boundary. Commit `3e764aa` shipped an
   autoload that walks every screen and calls `quit()`, in place of the game.
   **Never leave a run that touches `project.godot` running in the background**
-  while the auto-commit hook is live. `check_architecture.py` now fails on any
-  autoload in `TEST_ONLY_AUTOLOADS`, so the sweep names it directly instead of
-  reporting it as a documentation count mismatch.
+  while the auto-commit hook is live. `check_architecture.py` now fails any
+  autoload whose script does not live under `scripts/managers/`, so the sweep
+  names it directly instead of reporting a documentation count mismatch. It
+  asserts that PROPERTY rather than a list of harness names on purpose: the
+  first version allowlisted `ScreenshotHarness` and silently ignored
+  `LogicHarness`, which `logic_run.sh` injects the same way.
 - **Restoring a save means restoring BOTH files.** `SaveManager` writes
   atomically via `savegame.backup.json`, and its load path falls back to that
   backup when the main file is missing. A harness that removes only
@@ -332,7 +348,17 @@ Landscape is tested because the build targets SDK 36 and **Android 16 ignores
 portrait-locked with no landscape layout, so a tablet or unfolded foldable will
 show it in landscape regardless, as will any phone in split-screen. Under
 `aspect="expand"` the viewport only ever GROWS, so nothing is cropped — instead
-content strands, and `scripts/ui/content_width_cap.gd` is what stops it.
+content strands, and `SceneManager._width_cap_inset()` is what stops it.
+
+That cap lives in `scripts/managers/scene_manager.gd` as a second term inside
+`_apply_safe_area()`, NOT as a script on each screen. It was tried that way and
+it was wrong: a per-scene script writing `margin_left`/`margin_right` on the
+root MarginContainer, on the same `size_changed` signal the safe area uses,
+does not compose with the safe area — it replaces it, and the scene script
+connects later so it wins. It silently dropped the cutout inset on exactly the
+notched phones the safe area exists for. Both insets are added to the same
+baseline in one place now, and screen #12 gets the cap without anyone
+remembering to attach anything.
 
 **This is layout only.** Nothing here exercises a GPU driver, real touch input,
 audio hardware, memory limits, install, or performance. There is no Android
