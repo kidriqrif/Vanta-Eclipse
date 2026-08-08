@@ -119,6 +119,8 @@ for entry in "${DEVICES[@]}"; do
 	# It is the mirror image of the trap validate_all.sh documents twice: there,
 	# a pipe HID a failure; here, a pipe INVENTS one. Neither is visible in the
 	# output — only in the exit status nobody reads.
+	# ONE `case`, first match wins — so the clamp test keeps its precedence over
+	# the layout verdict without a second block re-opening the same subject.
 	case "$log" in
 		*"WRONG ASPECT"*)
 			# A clamped window renders the wrong shape while still producing
@@ -126,10 +128,7 @@ for entry in "${DEVICES[@]}"; do
 			# layout finding.
 			summary+=$'\n'"  $label: RUN INVALID — window was clamped, shape not tested"
 			failures=$((failures + 1))
-			continue
 			;;
-	esac
-	case "$log" in
 		*"LAYOUT: OK"*)
 			summary+=$'\n'"  $label: OK"
 			;;

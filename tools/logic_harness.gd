@@ -724,15 +724,15 @@ func _check_boss_cards() -> void:
 	# The cap is the thing standing between this system and a companion that
 	# outgrows every other stat, so it is asserted directly rather than trusted.
 	for _i: int in 400:
-		PetManager.add_absorbed_bonus(pet, 1.0, CardManager.ABSORBED_BONUS_CAP)
+		PetManager.add_absorbed_bonus(pet, 1.0)
 	_ok("absorbed bonus is capped",
 		is_equal_approx(
-			PetManager.get_absorbed_bonus(pet), CardManager.ABSORBED_BONUS_CAP
+			PetManager.get_absorbed_bonus(pet), PetManager.ABSORBED_BONUS_CAP
 		),
 		"%f" % PetManager.get_absorbed_bonus(pet))
 	_ok("a full pet reports granting nothing",
 		is_zero_approx(
-			PetManager.add_absorbed_bonus(pet, 1.0, CardManager.ABSORBED_BONUS_CAP)
+			PetManager.add_absorbed_bonus(pet, 1.0)
 		))
 
 	# Out-of-range indices are the UI's most likely mistake — a stale button

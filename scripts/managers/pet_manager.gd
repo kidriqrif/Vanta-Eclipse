@@ -11,13 +11,18 @@ const XP_PER_KILL: float = 3.0
 const STARTER_ID: StringName = &"ember"
 ## Chance a Frozen-Ruins boss yields the second pet (once, if unowned).
 const PET_DROP_CHANCE: float = 0.15
+## Ceiling on the bonus one pet may absorb from boss cards. It lives HERE, with
+## the field it clamps and the getter that feeds PlayerStats, rather than being
+## handed in by whichever system happens to be doing the feeding — an invariant
+## enforced by convention at one call site is not enforced.
+const ABSORBED_BONUS_CAP: float = 0.5
 
 const PET_DEFINITION_PATHS: Array[String] = [
 	"res://data/pets/ember.tres",
 	"res://data/pets/frostling.tres",
 ]
 
-## id (StringName) -> { "xp": float, "seen": bool }
+## id (StringName) -> { "xp": float, "seen": bool, "absorbed": float }
 var _owned: Dictionary = {}
 var _active_id: StringName = &""
 var _definitions_by_id: Dictionary = {}
@@ -92,22 +97,24 @@ func get_absorbed_bonus(id: StringName) -> float:
 	return float(_owned.get(id, {}).get("absorbed", 0.0))
 
 
-## Add to a pet's absorbed bonus, clamped to `cap`. Returns what was actually
-## added, which is less than asked for once the pet is near the ceiling — the
-## caller reports that number, so a card eaten into a full pet cannot claim to
-## have done something it did not.
-func add_absorbed_bonus(id: StringName, amount: float, cap: float) -> float:
+## Add to a pet's absorbed bonus, clamped to ABSORBED_BONUS_CAP. Returns what
+## was actually added, which is less than asked for once the pet is near the
+## ceiling — the caller reports that number, so a card eaten into a full pet
+## cannot claim to have done something it did not.
+func add_absorbed_bonus(id: StringName, amount: float) -> float:
 	if not _owned.has(id) or amount <= 0.0:
 		return 0.0
 	var before: float = get_absorbed_bonus(id)
-	var after: float = minf(cap, before + amount)
+	var after: float = minf(ABSORBED_BONUS_CAP, before + amount)
 	_owned[id]["absorbed"] = after
 	return after - before
 
 
-## Feed a pet XP directly, outside the kill loop. Unlike _grant_xp() this names
-## its target instead of assuming the active pet, because absorption is aimed.
-func grant_absorbed_xp(id: StringName, amount: float) -> void:
+## Feed one pet XP. Names its TARGET rather than assuming the active pet:
+## absorption is aimed and the kill loop is not, and that lone difference is
+## what had this existing twice, as two copies of the same twelve statements
+## that both had to be kept in step through every level-up and evolution.
+func grant_xp(id: StringName, amount: float) -> void:
 	if not _owned.has(id) or amount <= 0.0:
 		return
 	var def: PetDefinition = _definitions_by_id.get(id)
@@ -226,23 +233,6 @@ func _grant(id: StringName, make_active: bool) -> void:
 		EventBus.active_pet_changed.emit(id)
 
 
-func _grant_xp(amount: float) -> void:
-	if _active_id == &"":
-		return
-	var def: PetDefinition = _definitions_by_id.get(_active_id)
-	if def == null:
-		return
-	var before_level: int = get_level(_active_id)
-	var before_stage: int = get_stage(_active_id)
-	var cap_xp: float = _xp_for_level(def.max_level)
-	_owned[_active_id]["xp"] = minf(cap_xp, get_xp(_active_id) + amount)
-	var after_level: int = get_level(_active_id)
-	if after_level > before_level:
-		EventBus.pet_leveled.emit(_active_id, after_level)
-		if get_stage(_active_id) > before_stage:
-			EventBus.pet_evolved.emit(_active_id, get_stage(_active_id))
-
-
 func _xp_for_level(level: int) -> float:
 	# Total XP to reach a level: XP_BASE * (level-1)*level/2.
 	var l: int = maxi(1, level) - 1
@@ -267,12 +257,12 @@ func _on_enemy_spawned(_definition: EnemyDefinition, level: int, _max_hp: float)
 
 
 func _on_enemy_died(_level: int, _total_kills: int) -> void:
-	_grant_xp(XP_PER_KILL)
+	grant_xp(_active_id, XP_PER_KILL)
 
 
 func _on_offline_kills(kills: int) -> void:
 	if kills > 0:
-		_grant_xp(XP_PER_KILL * kills)
+		grant_xp(_active_id, XP_PER_KILL * kills)
 
 
 func _on_boss_fight_won(_level: int, _payout: float, _is_world_boss: bool) -> void:

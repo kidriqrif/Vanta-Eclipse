@@ -41,12 +41,16 @@ SECTION_CELL = re.compile(r"`(\w+)`\s*\|\s*`(\w+)`")
 
 
 def declared_autoloads() -> list[tuple[str, str]]:
-    """[(autoload name, script basename)] in project.godot declaration order."""
+    """[(autoload name, full res:// script path)] in declaration order.
+
+    The full path, not the basename: check_no_test_autoloads() asserts where an
+    autoload's script LIVES, and a basename cannot answer that.
+    """
     out: list[tuple[str, str]] = []
     for line in (ROOT / "project.godot").read_text(encoding="utf-8").splitlines():
         m = AUTOLOAD_DECL.match(line.strip())
         if m:
-            out.append((m.group(1), m.group(2).rsplit("/", 1)[-1]))
+            out.append((m.group(1), m.group(2)))
     return out
 
 
@@ -74,7 +78,8 @@ def check_autoload_table() -> tuple[list[str], list[str]]:
     for i, (order, name, script) in enumerate(documented):
         if i >= len(actual):
             break
-        real_name, real_script = actual[i]
+        real_name, real_path = actual[i]
+        real_script = real_path.rsplit("/", 1)[-1]
         if order != i + 1:
             problems.append(
                 f"row {i + 1} (`{name}`) is numbered {order} — ordinals must run 1..N"
@@ -210,31 +215,36 @@ def check_doc_counts() -> tuple[list[str], list[str]]:
     return problems, [f"{inspected} prose counts against {actual} autoloads"]
 
 
-# Autoloads that exist only for the duration of a tooling run.
+# Every autoload's script must live under scripts/managers/.
 #
-# tools/screenshot_run.sh registers ScreenshotHarness into project.godot, runs,
-# and removes it again on exit. That is safe right up until something commits
-# the file mid-run — which is exactly what happened when the aspect matrix was
-# left running in the background across a turn boundary and an auto-commit hook
-# captured the injected state. The commit shipped an autoload that walks every
-# screen and calls get_tree().quit(), in place of the game.
+# tools/screenshot_run.sh and tools/logic_run.sh each inject an autoload from
+# tools/ for the length of a run and remove it on exit. That is safe right up
+# until something commits the file mid-run — which is what happened when the
+# aspect matrix was left running in the background across a turn boundary and
+# the auto-commit hook captured the injected state. The commit shipped an
+# autoload that walks every screen and calls get_tree().quit(), in place of the
+# game.
 #
-# check_autoload_table() above does fail on this, but as a COUNT mismatch that
-# reads like a documentation problem and invites someone to "fix" the doc. This
-# says the actual thing, so the fix is obvious.
-TEST_ONLY_AUTOLOADS = {"ScreenshotHarness"}
+# This asserts the PROPERTY rather than listing names. A name allowlist only
+# ever covers the harnesses somebody remembered: the first version of this
+# check named ScreenshotHarness and silently ignored LogicHarness, which is
+# injected by the same trick with the same exposure. A path rule needs no
+# cooperation from the thing it guards and covers the next one for free.
+MANAGER_DIR = "res://scripts/managers/"
 
 
 def check_no_test_autoloads() -> tuple[list[str], list[str]]:
     declared = declared_autoloads()
     problems: list[str] = []
-    for name, script in declared:
-        if name in TEST_ONLY_AUTOLOADS:
-            problems.append(
-                f"project.godot declares {name} ({script}) — a tooling autoload "
-                "that must never be committed. tools/screenshot_run.sh removes it "
-                "on exit, so this is a commit that captured a run in progress."
-            )
+    for name, path in declared:
+        if path.startswith(MANAGER_DIR):
+            continue
+        problems.append(
+            f"project.godot declares {name} ({path}) — every autoload's script "
+            f"belongs under {MANAGER_DIR}. A tooling harness is injected for the "
+            "length of a run and removed on exit, so this is a commit that "
+            "captured a run in progress."
+        )
     found = "none" if not problems else str(len(problems))
     return problems, [f"{len(declared)} autoloads, {found} test-only"]
 

@@ -406,8 +406,6 @@ func _bestiary_cell(label_text: String, texture: Texture2D, glow: Color) -> Cont
 # --- Seeding -------------------------------------------------------------------
 
 
-## A late-game save, written through each manager's own load_save_data where one
-## exists, so the state is exactly what a real save would restore.
 ## Fill the collection so the Cards screen is shot with rows in it — an empty
 ## list and a populated one are different layouts, and only one has a row to get
 ## wrong.
@@ -422,13 +420,15 @@ func _bestiary_cell(label_text: String, texture: Texture2D, glow: Color) -> Cont
 ## cards, and they are not a swatch of all five rarity colours.
 func _seed_cards() -> void:
 	for rarity: CardRarityDefinition in CardManager.get_rarities():
+		var level: int = maxi(1, rarity.minimum_boss_level)
 		EventBus.boss_fight_started.emit(
-			CombatManager.get_enemy_definition(),
-			maxi(1, rarity.minimum_boss_level), 100.0, 30.0
+			CombatManager.get_enemy_definition(), level, 100.0, 30.0
 		)
-		EventBus.boss_fight_won.emit(maxi(1, rarity.minimum_boss_level), 100.0, false)
+		EventBus.boss_fight_won.emit(level, 100.0, false)
 
 
+## A late-game save, written through each manager's own load_save_data where one
+## exists, so the state is exactly what a real save would restore.
 func _seed_late_game() -> void:
 	CurrencyManager.add(CurrencyManager.ESSENCE, 4.8e6)
 	CurrencyManager.add(CurrencyManager.VOID_SCRAPS, 1450.0)

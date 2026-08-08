@@ -9,11 +9,6 @@ extends Control
 ## The blank card, tinted per row by its rarity's colour.
 const CARD_FRAME: Texture2D = preload("res://sprites/ui/card_frame_icon.png")
 
-## The theme's one bright accent, read from the theme rather than restated: one
-## palette, one source. Cards belong to the pet loop and borrow the accent the
-## Pets screen already wears rather than introducing another.
-var _accent: Color = UIPalette.accent()
-
 @onready var _target: VBoxContainer = %TargetBox
 @onready var _list: VBoxContainer = %CollectionList
 @onready var _empty_label: Label = %EmptyLabel
@@ -26,7 +21,6 @@ func _ready() -> void:
 	EventBus.card_collected.connect(_on_card_collected)
 	EventBus.card_absorbed.connect(_on_card_absorbed)
 	EventBus.active_pet_changed.connect(_on_pet_changed)
-	CardManager.mark_all_seen()
 	_refresh()
 
 
@@ -80,20 +74,31 @@ func _build_list() -> void:
 	var cards: Array = CardManager.get_cards()
 	_empty_label.visible = cards.is_empty()
 	_collection_header.text = "COLLECTION (%d)" % cards.size()
+	# Hoisted out of the row loop: these are constant for the whole build, and
+	# each UIPalette call is a theme lookup. On a full collection that was ~700
+	# lookups and 200 identical get_active_id() calls per rebuild.
+	var has_pet: bool = PetManager.get_active_id() != &""
+	var palette: Dictionary = {
+		"raised": UIPalette.raised(),
+		"muted": UIPalette.muted(),
+		"ink": UIPalette.ink(),
+	}
 	# Newest first. The card a player just won is the one they came to look at,
 	# and the collection is append-ordered, so this walks it backwards.
 	for index: int in range(cards.size() - 1, -1, -1):
-		_list.add_child(_make_row(cards[index], index))
+		_list.add_child(_make_row(cards[index], index, has_pet, palette))
 
 
-func _make_row(card: Dictionary, index: int) -> PanelContainer:
+func _make_row(
+	card: Dictionary, index: int, has_pet: bool, palette: Dictionary
+) -> PanelContainer:
 	var rarity: CardRarityDefinition = CardManager.get_rarity(
 		StringName(card.get("rarity", ""))
 	)
 	var tint: Color = rarity.color if rarity != null else UIPalette.ink()
 	var row := PanelContainer.new()
 	var style := StyleBoxFlat.new()
-	style.bg_color = UIPalette.raised()
+	style.bg_color = palette["raised"]
 	style.set_content_margin_all(16)
 	# The rarity spine. A card's tier is the first thing a player sorts on, so
 	# it is carried by an edge that survives being skimmed, not by the text.
@@ -132,7 +137,7 @@ func _make_row(card: Dictionary, index: int) -> PanelContainer:
 	var meta := Label.new()
 	meta.text = "%s · Lv. %d" % [tier, int(card.get("level", 1))]
 	meta.add_theme_font_size_override("font_size", 18)
-	meta.add_theme_color_override("font_color", UIPalette.muted())
+	meta.add_theme_color_override("font_color", palette["muted"])
 	text_box.add_child(meta)
 
 	var stats := Label.new()
@@ -142,14 +147,14 @@ func _make_row(card: Dictionary, index: int) -> PanelContainer:
 		float(card.get("focus", 0.0)),
 	]
 	stats.add_theme_font_size_override("font_size", 18)
-	stats.add_theme_color_override("font_color", UIPalette.ink())
+	stats.add_theme_color_override("font_color", palette["ink"])
 	text_box.add_child(stats)
 
 	var absorb := Button.new()
 	absorb.text = "ABSORB"
 	absorb.custom_minimum_size = Vector2(200, 96)
 	absorb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	absorb.disabled = PetManager.get_active_id() == &""
+	absorb.disabled = not has_pet
 	absorb.pressed.connect(_on_absorb_pressed.bind(index))
 	hbox.add_child(absorb)
 	return row
@@ -164,11 +169,13 @@ func _on_absorb_pressed(index: int) -> void:
 	# index on a button that is still on screen would feed the wrong card next.
 	if CardManager.absorb(index).is_empty():
 		return
-	_refresh()
+	# Only the list. absorb() emits card_absorbed synchronously before it
+	# returns, so _on_card_absorbed has already rebuilt the target panel —
+	# calling _refresh() here would build it a second time every tap.
+	_build_list()
 
 
 func _on_card_collected(_card: Dictionary) -> void:
-	CardManager.mark_all_seen()
 	_refresh()
 
 

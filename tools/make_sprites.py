@@ -51,27 +51,6 @@ def _ramp(canvas: Canvas, x: int, y: int, half: int, lit: str, mid: str, dark: s
         canvas.put(px, y, lit if depth < 0.24 else (mid if depth < 0.64 else dark))
 
 
-def _taper(canvas: Canvas, top: int, bottom: int, width: float, curve: float,
-           lit: str, mid: str, dark: str, shrink: float = 0.72) -> None:
-    """A body that narrows from `width` at the top to a point at the bottom."""
-    for y in range(top, bottom):
-        t = (y - top) / max(1.0, float(bottom - top))
-        half = int(width * (1.0 - t * shrink) ** curve) + 1
-        _ramp(canvas, 32 if canvas.width == ENEMY else canvas.width // 2, y, half, lit, mid, dark)
-
-
-def _ragged_hem(canvas: Canvas, left: int, right: int, base: int, depth: float = 3.0) -> None:
-    for x in range(left, right):
-        notch = int(depth * (1.0 + math.sin(x * 1.9)))
-        for y in range(base - notch, base + 2):
-            canvas.put(x, y, None)
-
-
-def _eyes(canvas: Canvas, y: int, inner: int, colour: str, glint: str = "ivory") -> None:
-    canvas.rect(32 - inner - 2, y, 2, 2, colour)
-    canvas.put(32 - inner - 2, y, glint)
-
-
 # --- enemies (64x64) ----------------------------------------------------------
 #
 # THE SET IS CELESTIAL, NOT MEDIEVAL.
@@ -96,7 +75,7 @@ def _eyes(canvas: Canvas, y: int, inner: int, colour: str, glint: str = "ivory")
 
 
 def _corona(canvas: Canvas, cx: int, cy: int, radius: int,
-            outer: str, inner: str, core: str = "void") -> None:
+            outer: str, inner: str, core: str | None = "void") -> None:
     """A ring of light around a hole. The eclipse motif, shared by the set.
 
     Drawn outside-in, punching a transparent gap before filling the core, so
@@ -168,12 +147,22 @@ def shade_stalker() -> Canvas:
     gathers itself, and nothing inanimate has it.
     """
     c = Canvas(ENEMY, ENEMY)
-    for x in range(22, 52):
+
+    def spine(x: int) -> tuple[int, int]:
+        """(back, belly) for one column.
+
+        ONE definition of the back line. The banding below used to restate this
+        expression character for character, so retuning the humps silently
+        detached the plating from the back it is meant to sit on.
+        """
         t = (x - 22) / 29.0
-        back = int(31
-                   - 7 * math.exp(-(((t - 0.20) / 0.17) ** 2))    # shoulder blades
-                   - 8 * math.exp(-(((t - 0.78) / 0.19) ** 2)))   # haunches
-        belly = int(46 - 2 * t)
+        return (int(31
+                    - 7 * math.exp(-(((t - 0.20) / 0.17) ** 2))    # shoulder blades
+                    - 8 * math.exp(-(((t - 0.78) / 0.19) ** 2))),  # haunches
+                int(46 - 2 * t))
+
+    for x in range(22, 52):
+        back, belly = spine(x)
         for y in range(back, belly):
             depth = (y - back) / max(1.0, float(belly - back))
             c.put(x, y, "crimson" if depth < 0.28 else
@@ -183,11 +172,8 @@ def shade_stalker() -> Canvas:
     # underneath is unchanged, but segmented plating reads as shell where a
     # smooth ramp read as fur.
     for x in range(26, 50, 5):
-        t = (x - 22) / 29.0
-        back = int(31
-                   - 7 * math.exp(-(((t - 0.20) / 0.17) ** 2))
-                   - 8 * math.exp(-(((t - 0.78) / 0.19) ** 2)))
-        c.rect(x, back + 1, 1, int(46 - 2 * t) - back - 2, "abyss")
+        back, belly = spine(x)
+        c.rect(x, back + 1, 1, belly - back - 2, "abyss")
 
     # Neck: a thick band running down and FORWARD off the shoulder hump, so the
     # head hangs below the shoulders instead of continuing the back line.
@@ -416,9 +402,9 @@ def _pet_base(body: str, mid: str, dark: str, accent: str, big: bool,
     # which is exactly what happened to Blaze, and it shipped as a bare orange
     # ring with nothing inside it.
     if halo is not None:
-        c.disc(cx, 23, size + 7, halo[0])
-        c.disc(cx, 23, size + 5, halo[1])
-        c.disc(cx, 23, size + 3, None)
+        # core=None leaves the middle punched out so the body drawn below fills
+        # it. The same ring the enemies wear, one radius smaller.
+        _corona(c, cx, 23, size + 7, halo[0], halo[1], None)
     c.disc(cx, 24, size, mid)                     # soft round body
     c.disc(cx, 23, size - 3, body)
     c.disc(cx - 3, 20, size - 6, accent)

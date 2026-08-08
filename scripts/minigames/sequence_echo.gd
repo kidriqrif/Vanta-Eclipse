@@ -33,20 +33,12 @@ var _gap_timer: Timer
 
 func _ready() -> void:
 	_grid.columns = 2
-	_lit_timer = _make_timer(_on_lit_elapsed)
-	_gap_timer = _make_timer(_on_gap_elapsed)
+	_lit_timer = make_timer(_on_lit_elapsed)
+	_gap_timer = make_timer(_on_gap_elapsed)
 	_build_runes()
 	for _i: int in START_LENGTH:
 		_sequence.append(randi() % RUNES)
 	_start_playback()
-
-
-func _make_timer(handler: Callable) -> Timer:
-	var timer := Timer.new()
-	timer.one_shot = true
-	timer.timeout.connect(handler)
-	add_child(timer)
-	return timer
 
 
 func _build_runes() -> void:
@@ -65,12 +57,10 @@ func _build_runes() -> void:
 ## Lit and dark differ by FILL and BORDER WIDTH as well as colour, so the
 ## pattern is followable without relying on hue.
 func _set_rune_lit(index: int, lit: bool) -> void:
-	var style := StyleBoxFlat.new()
-	style.bg_color = UIPalette.accent() if lit else UIPalette.surface()
-	style.border_color = UIPalette.ink() if lit else UIPalette.line()
-	style.set_border_width_all(6 if lit else 2)
-	for state: String in ["normal", "hover", "pressed", "focus"]:
-		_buttons[index].add_theme_stylebox_override(state, style)
+	if lit:
+		paint_button(_buttons[index], UIPalette.accent(), UIPalette.ink(), 6)
+	else:
+		paint_button(_buttons[index], UIPalette.surface(), UIPalette.line(), 2)
 
 
 # --- Playback ----------------------------------------------------------------

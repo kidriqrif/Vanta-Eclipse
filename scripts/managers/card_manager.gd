@@ -34,10 +34,6 @@ const POWER_PER_LEVEL: float = 8.0
 ## levelling the pet.
 const VIGOR_TO_BONUS: float = 0.002
 
-## Ceiling on absorbed bonus per pet. Without it a long enough game turns the
-## companion into the only stat that matters.
-const ABSORBED_BONUS_CAP: float = 0.5
-
 ## Hard cap on stored cards. Bosses are endless, so the collection has to be.
 const COLLECTION_LIMIT: int = 200
 
@@ -64,8 +60,13 @@ func _load_rarities() -> void:
 	for file: String in dir.get_files():
 		# Exported builds rename .tres to .remap; loading the un-suffixed path
 		# resolves both, which is the same trick the other definition loaders
-		# in this project use.
-		var path: String = RARITY_DIR + "/" + file.trim_suffix(".remap")
+		# in this project use. The extension is checked AFTER that trim, for the
+		# same reason QuestManager and MonetizationManager check it: without it
+		# any stray file in the directory is handed straight to load().
+		var file_name: String = file.trim_suffix(".remap")
+		if not file_name.ends_with(".tres"):
+			continue
+		var path: String = RARITY_DIR + "/" + file_name
 		var definition: CardRarityDefinition = load(path)
 		if definition == null or definition.id == &"":
 			continue
@@ -111,7 +112,6 @@ func _sanitise(raw: Dictionary) -> Dictionary:
 		"power": maxf(0.0, float(raw.get("power", 0.0))),
 		"vigor": maxf(0.0, float(raw.get("vigor", 0.0))),
 		"focus": maxf(0.0, float(raw.get("focus", 0.0))),
-		"seen": bool(raw.get("seen", true)),
 	}
 
 
@@ -134,19 +134,6 @@ func get_rarities() -> Array[CardRarityDefinition]:
 	return _rarities.duplicate()
 
 
-func get_unseen_count() -> int:
-	var count: int = 0
-	for card: Dictionary in _cards:
-		if not bool(card.get("seen", true)):
-			count += 1
-	return count
-
-
-func mark_all_seen() -> void:
-	for card: Dictionary in _cards:
-		card["seen"] = true
-
-
 # --- Absorption --------------------------------------------------------------
 
 
@@ -166,9 +153,9 @@ func absorb(index: int) -> Dictionary:
 	var power: float = float(card.get("power", 0.0))
 	var vigor: float = float(card.get("vigor", 0.0))
 	var granted_bonus: float = PetManager.add_absorbed_bonus(
-		active, vigor * VIGOR_TO_BONUS, ABSORBED_BONUS_CAP
+		active, vigor * VIGOR_TO_BONUS
 	)
-	PetManager.grant_absorbed_xp(active, power)
+	PetManager.grant_xp(active, power)
 	_cards.remove_at(index)
 	SaveManager.save_game()
 	var result: Dictionary = {
@@ -218,7 +205,6 @@ func _roll_card(boss: EnemyDefinition, level: int) -> Dictionary:
 		"power": float(level) * POWER_PER_LEVEL * potency * _spread(),
 		"vigor": (1.0 + 2.0 * randf()) * potency * _spread(),
 		"focus": 10.0 * potency * _spread(),
-		"seen": false,
 	}
 
 

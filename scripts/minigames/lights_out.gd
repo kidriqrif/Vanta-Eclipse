@@ -76,15 +76,18 @@ func _on_cell_pressed(index: int) -> void:
 
 
 func _redraw() -> void:
+	# Hoisted: four theme lookups for the whole board rather than two per cell.
+	# Lit and dark differ in FILL and BORDER WIDTH, not hue alone, so the board
+	# stays readable without colour (UX §7).
+	var lit_fill: Color = UIPalette.accent()
+	var dark_fill: Color = UIPalette.surface()
+	var lit_edge: Color = UIPalette.ink()
+	var dark_edge: Color = UIPalette.line()
 	for index: int in _buttons.size():
-		var style := StyleBoxFlat.new()
-		# Lit and dark differ in FILL and BORDER, not hue alone, so the board
-		# stays readable without colour (UX §7).
-		style.bg_color = UIPalette.accent() if _lit[index] else UIPalette.surface()
-		style.border_color = UIPalette.ink() if _lit[index] else UIPalette.line()
-		style.set_border_width_all(4 if _lit[index] else 2)
-		for state: String in ["normal", "hover", "pressed", "focus"]:
-			_buttons[index].add_theme_stylebox_override(state, style)
+		if _lit[index]:
+			paint_button(_buttons[index], lit_fill, lit_edge, 4)
+		else:
+			paint_button(_buttons[index], dark_fill, dark_edge, 2)
 	var remaining: int = _lit.count(true)
 	_moves_label.text = "Moves %d of %d · %d lit" % [_moves, MOVE_LIMIT, remaining]
 

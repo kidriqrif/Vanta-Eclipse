@@ -66,6 +66,34 @@ func teardown() -> void:
 	set_process_unhandled_input(false)
 
 
+## A one-shot child Timer wired to `handler`.
+##
+## CHILD, not get_tree().create_timer(): a SceneTree timer is owned by the tree,
+## so teardown() cannot reach it and a forfeited run keeps firing under the
+## result banner. Every game needs this and four of them had written it out.
+func make_timer(handler: Callable) -> Timer:
+	var timer := Timer.new()
+	timer.one_shot = true
+	timer.timeout.connect(handler)
+	add_child(timer)
+	return timer
+
+
+## Paint a button flat in one fill and one border, across EVERY state.
+##
+## Setting only "normal" is the trap: a board cell repainted on tap reverts to
+## the theme's look the moment a finger rests on it, because hover/pressed are
+## still the theme's. The disabled state is included so a finished board keeps
+## the colours it ended on.
+func paint_button(button: Button, fill: Color, border: Color, width: int) -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = fill
+	style.border_color = border
+	style.set_border_width_all(width)
+	for state: String in ["normal", "hover", "pressed", "focus", "disabled"]:
+		button.add_theme_stylebox_override(state, style)
+
+
 ## Start a tween the framework can stop. Use this instead of create_tween():
 ## the SceneTree drives tweens independently of process_mode, so an unmanaged
 ## one keeps animating after a run resolves and can flip a card or drop a piece

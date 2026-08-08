@@ -41,21 +41,14 @@ func _ready() -> void:
 
 
 func _style_hidden(cell: Button) -> void:
-	var style := StyleBoxFlat.new()
-	style.bg_color = UIPalette.raised()
-	style.border_color = UIPalette.line()
-	style.set_border_width_all(2)
-	for state: String in ["normal", "hover", "pressed", "focus"]:
-		cell.add_theme_stylebox_override(state, style)
+	paint_button(cell, UIPalette.raised(), UIPalette.line(), 2)
 
 
 func _style_revealed(cell: Button, danger: bool) -> void:
-	var style := StyleBoxFlat.new()
-	style.bg_color = UIPalette.surface()
-	style.border_color = UIPalette.accent() if danger else UIPalette.line()
-	style.set_border_width_all(4 if danger else 1)
-	for state: String in ["normal", "hover", "pressed", "focus", "disabled"]:
-		cell.add_theme_stylebox_override(state, style)
+	if danger:
+		paint_button(cell, UIPalette.surface(), UIPalette.accent(), 4)
+	else:
+		paint_button(cell, UIPalette.surface(), UIPalette.line(), 1)
 
 
 # --- Field -------------------------------------------------------------------

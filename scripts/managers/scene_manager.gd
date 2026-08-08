@@ -22,6 +22,9 @@ const SCENE_MINIGAME_HOST: String = "res://scenes/minigames/minigame_host.tscn"
 const SCENE_JOURNAL: String = "res://scenes/journal/journal.tscn"
 const SCENE_SHOP: String = "res://scenes/shop/shop.tscn"
 
+## The width the layout was designed against. Content never exceeds it.
+const MAX_CONTENT_WIDTH: float = 1080.0
+
 const FADE_DURATION: float = 0.25
 ## The base black, not a violet-tinted one — the transition should read as the
 ## screen going out, not as a colour washing over it.
@@ -125,10 +128,34 @@ func _apply_safe_area() -> void:
 		))
 	var base: Vector4 = margin.get_meta(SAFE_AREA_META)
 	var inset: Vector4 = _safe_area_inset()
-	margin.add_theme_constant_override(&"margin_left", int(base.x + inset.x))
+	# The width cap is a SECOND inset term on the same margins, which is why it
+	# lives here and not in a script on the MarginContainer itself. A separate
+	# script writing margin_left/margin_right on this node, on this signal,
+	# does not compose with the safe area — it replaces it. The per-scene
+	# version connected later than this autoload, so it won, and it silently
+	# dropped the cutout inset on exactly the phones that need it.
+	var cap: float = _width_cap_inset(margin)
+	margin.add_theme_constant_override(&"margin_left", int(base.x + inset.x + cap))
 	margin.add_theme_constant_override(&"margin_top", int(base.y + inset.y))
-	margin.add_theme_constant_override(&"margin_right", int(base.z + inset.z))
+	margin.add_theme_constant_override(&"margin_right", int(base.z + inset.z + cap))
 	margin.add_theme_constant_override(&"margin_bottom", int(base.w + inset.w))
+
+
+## Half the width past MAX_CONTENT_WIDTH, as a side inset. 0 on every phone.
+##
+## The layout is drawn for a 1080-wide portrait viewport, and stretch
+## aspect="expand" only ever GROWS the viewport: a taller phone gets extra
+## height, a tablet extra width, and nothing is ever cropped. That is right up
+## to a point and wrong past it — at 3072 logical px (a 16:10 tablet in
+## landscape) a bottom bar built for 1080 stretches to three times its width
+## and the content it framed is a ribbon in an empty field. The layout audit
+## passes throughout, because stranding is not overflow.
+##
+## This stopped being hypothetical at targetSdk 36: Android 16 ignores
+## android:screenOrientation on displays 600dp and wider, so a portrait-locked
+## game gets shown in landscape whether it asks to or not.
+func _width_cap_inset(margin: MarginContainer) -> float:
+	return maxf(0.0, margin.get_viewport_rect().size.x - MAX_CONTENT_WIDTH) * 0.5
 
 
 ## Left/top/right/bottom inset in VIEWPORT units.
