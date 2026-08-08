@@ -91,3 +91,8 @@ __pycache__/
 # to a PUBLIC remote, so anything left in the tree ships whether or not it was
 # meant to.
 graphify-out/
+
+# Unity build output. `build/` is already ignored above for the Godot exports;
+# this note is here so the reason survives the Godot tree's removal — the APK
+# and AAB are 27 MB artifacts rebuilt by tools, never reviewed, and the Stop
+# hook pushes to a public remote every turn.

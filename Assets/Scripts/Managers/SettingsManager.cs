@@ -1,6 +1,10 @@
 // Ported from scripts/managers/settings_manager.gd
 using UnityEngine;
 using UnityEngine.Audio;
+// AndroidHaptics is referenced only inside a UNITY_ANDROID && !UNITY_EDITOR
+// block, so a missing using here compiles fine in the editor and fails the
+// device build — which is exactly what it did.
+using VantaEclipse.Core;
 
 namespace VantaEclipse.Managers
 {

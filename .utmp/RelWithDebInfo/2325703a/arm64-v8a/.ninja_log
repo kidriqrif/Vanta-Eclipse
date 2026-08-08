@@ -1,0 +1,12 @@
+# ninja log v5
+345	2144	8078996870839430	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	bb57c371f3cbcc6c
+2148	3554	8078996883289075	C:/Users/kidri/Vanta Eclipse/Vanta-Eclipse-1/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/2325703a/obj/arm64-v8a/libswappywrapper.so	d86c66c57f8dcc74
+183	4402	8078996893149365	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	90786d0213d5938d
+201	4424	8078996893179943	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	6b6201f85599de29
+2	4473	8078996893850944	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	c01d3be06cdbddee
+229	4571	8078996894849813	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	508d953b6abff745
+135	4642	8078996895806821	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	d03d20b49ac0d703
+317	5084	8078996900345455	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	3d0cb2f34e69cf86
+153	5132	8078996900850376	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	3f02d93c9a34ec77
+34	5285	8078996902300664	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	4613c3008544fe0c
+5285	5452	8078996904057609	C:/Users/kidri/Vanta Eclipse/Vanta-Eclipse-1/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/2325703a/obj/arm64-v8a/libgame.so	3bc3da1989c167ec
