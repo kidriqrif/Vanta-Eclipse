@@ -120,6 +120,17 @@ friendly by being round rather than sharp. A halo is drawn BEHIND the body via
 `_pet_base(halo=…)`: drawing it afterwards and punching its middle out erases
 the body, which shipped Blaze as a bare orange ring with nothing inside it.
 
+**Empty-slot icons are sci-fi, and still NEUTRAL.** The weapon is a beam
+emitter, armour a ringed planet, the helm a pressure dome, boots a thruster,
+gloves a grav cuff, the ring an orbital band and the relic a hovering monolith.
+They stay in `iron`/`ash`/`bone` on purpose: `_slot()` exists to draw ABSENCE,
+so a glowing laser blade would read as equipped loot in an empty socket. Change
+the form, never the palette.
+
+A ringed planet only reads as a ring if its front half crosses OVER the body.
+Drawing the whole ellipse and cutting just the occluded part gives a disc
+sitting on debris, which is how the first attempt shipped.
+
 **`shade_stalker`'s geometry is not up for redesign.** Four attempts have now
 failed the same way — one-pixel limbs off a round body is a tick, a symmetric
 dome with a head under it is a mushroom, and a pair of Gaussian humps filled to

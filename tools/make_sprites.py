@@ -900,71 +900,99 @@ def _slot(draw) -> Canvas:
 
 def slot_weapon() -> Canvas:
     def draw(c: Canvas) -> None:
-        # Upright, not diagonal. The diagonal version was three pixels wide at
-        # every point and read as a dropped stick — a sword is a WIDE blade, a
-        # crossguard and a pommel, and all three have to survive at 32px.
-        for i, y in enumerate(range(4, 22)):      # blade, tapering to a point
-            span = 1 if i < 2 else 3
+        # A beam emitter, not a sword. Upright for the same reason the sword
+        # was upright: a diagonal is three pixels wide at every point and reads
+        # as a dropped stick.
+        #
+        # The blade is LIGHT, so it is drawn as a hot core with a falloff
+        # either side, rather than as a solid bar with an edge — an edge is the
+        # one thing a beam does not have, and it was the whole read of the
+        # sword this replaces.
+        for y in range(3, 19):
+            span = 1 if y < 5 else 2
             c.rect(16 - span, y, span * 2, 1, "ash")
-            c.rect(16 - span + 1, y, span * 2 - 2, 1, "bone")
-        c.rect(8, 21, 16, 3, "iron")              # crossguard
-        c.rect(9, 22, 14, 1, "ash")
-        c.rect(14, 24, 4, 5, "iron")              # grip
-        c.rect(12, 28, 8, 3, "ash")               # pommel
+            c.rect(15, y, 2, 1, "bone")
+        c.rect(11, 19, 10, 3, "iron")             # emitter shroud
+        c.rect(12, 20, 8, 1, "ash")
+        c.rect(13, 22, 6, 8, "iron")              # grip
+        c.rect(14, 24, 4, 1, "ash")               # power cell bands
+        c.rect(14, 27, 4, 1, "ash")
     return _slot(draw)
 
 
 def slot_armor() -> Canvas:
     def draw(c: Canvas) -> None:
-        c.rect(8, 6, 16, 4, "iron")
-        for y in range(10, 26):
-            span = 8 - (y - 10) // 3
-            c.rect(16 - span, y, span * 2, 1, "iron")
-        c.rect(14, 12, 4, 10, "ash")
+        # A world, not a breastplate. Plating in this game is cut from
+        # somewhere, so the icon is the somewhere.
+        c.disc(16, 13, 8, "iron")
+        c.disc(16, 13, 6, "ash")
+        for y in (10, 13, 16):                    # cloud bands
+            c.rect(8, y, 16, 1, "iron")
+        # The ring is an ellipse whose FRONT half is drawn OVER the planet and
+        # whose back half is hidden behind it. Cutting only the occluded part
+        # and never crossing in front gives a disc sitting on debris — which is
+        # exactly how the first version read. The crossing is what says orbit.
+        for i in range(96):
+            angle = math.tau * i / 96.0
+            x = int(16 + math.cos(angle) * 15.0)
+            y = int(18 + math.sin(angle) * 4.5)
+            if math.sin(angle) > 0 or (x - 16) ** 2 + (y - 13) ** 2 > 72:
+                c.put(x, y, "bone")
+                c.put(x, y + 1, "iron")
     return _slot(draw)
 
 
 def slot_helmet() -> Canvas:
     def draw(c: Canvas) -> None:
-        c.disc(16, 15, 10, "iron")
-        c.rect(6, 15, 20, 9, "iron")
-        c.rect(10, 14, 12, 4, "void")             # visor
-        c.rect(15, 18, 2, 6, "void")
+        c.disc(16, 14, 10, "iron")                # pressure dome
+        c.rect(6, 14, 20, 8, "iron")
+        c.disc(16, 14, 8, "ash")                  # visor glass
+        c.disc(16, 14, 6, "void")
+        c.rect(6, 22, 20, 4, "iron")              # neck ring
+        c.rect(7, 23, 18, 1, "ash")
     return _slot(draw)
 
 
 def slot_gloves() -> Canvas:
     def draw(c: Canvas) -> None:
-        c.rect(9, 12, 14, 14, "iron")
-        for x in range(9, 22, 4):                 # fingers
-            c.rect(x, 6, 3, 7, "iron")
-        c.rect(21, 14, 5, 6, "ash")               # thumb
+        c.rect(9, 14, 14, 12, "iron")             # forearm cuff
+        c.rect(10, 16, 12, 2, "ash")
+        c.rect(10, 21, 12, 2, "ash")
+        for x in (10, 15, 20):                    # emitter nodes, not fingers
+            c.disc(x + 1, 9, 3, "iron")
+            c.disc(x + 1, 9, 1, "ash")
     return _slot(draw)
 
 
 def slot_boots() -> Canvas:
     def draw(c: Canvas) -> None:
-        c.rect(10, 5, 8, 15, "iron")
-        c.rect(10, 20, 16, 6, "iron")
-        c.rect(11, 6, 6, 12, "ash")
+        c.rect(11, 4, 9, 14, "iron")              # shin
+        c.rect(12, 6, 6, 10, "ash")
+        c.rect(9, 18, 14, 5, "iron")              # ankle housing
+        c.rect(11, 23, 10, 4, "iron")             # thruster bell
+        c.rect(12, 27, 8, 2, "ash")               # exhaust
+        c.rect(14, 29, 4, 2, "bone")
     return _slot(draw)
 
 
 def slot_ring() -> Canvas:
     def draw(c: Canvas) -> None:
-        c.disc(16, 19, 10, "iron")
-        c.disc(16, 19, 7, None)
-        c.rect(13, 5, 6, 6, "ash")                # the stone
-        c.rect(14, 6, 4, 4, "frost")
+        c.disc(16, 17, 10, "iron")                # an orbital band
+        c.disc(16, 17, 8, "ash")
+        c.disc(16, 17, 6, None)
+        c.disc(16, 6, 3, "iron")                  # a mote riding it
+        c.disc(16, 6, 1, "bone")
     return _slot(draw)
 
 
 def slot_relic() -> Canvas:
     def draw(c: Canvas) -> None:
-        for y in range(-11, 12):
-            span = int((11 - abs(y)) * 0.75) + 1
-            c.rect(16 - span, 16 + y, span * 2, 1, "iron")
-        c.rect(13, 13, 6, 6, "ash")
+        c.rect(12, 3, 8, 19, "iron")              # a monolith, hovering
+        c.rect(13, 5, 6, 15, "ash")
+        c.rect(14, 8, 4, 2, "iron")               # inscribed bands
+        c.rect(14, 13, 4, 2, "iron")
+        c.disc(16, 27, 7, "iron")                 # the pad it hovers over
+        c.disc(16, 27, 5, None)
     return _slot(draw)
 
 
