@@ -37,9 +37,13 @@ namespace VantaEclipse.Core
         public static IdleManager Idle { get; private set; }
         public static PrestigeManager Prestige { get; private set; }
 
+        /// <summary>Scene transitions. A MonoBehaviour, because fading and
+        /// async loading are coroutines. Null outside play mode.</summary>
+        public static SceneFlow Flow { get; private set; }
+
         // Remaining autoloads still to port, in project.godot's order:
-        //   SceneManager, MinigameManager, QuestManager, CardManager,
-        //   AudioManager, MonetizationManager
+        //   MinigameManager, QuestManager, CardManager, AudioManager,
+        //   MonetizationManager
 
         public static bool IsBooted { get; private set; }
 
@@ -80,7 +84,11 @@ namespace VantaEclipse.Core
             // reason; here the ordering is just... the order.
             Save.InitialLoad();
 
-            if (Application.isPlaying) GameRuntime.Spawn();
+            if (Application.isPlaying)
+            {
+                GameRuntime.Spawn();
+                Flow = SceneFlow.Spawn();
+            }
         }
 
         /// <summary>Every manager that owns save state, in the order it should
