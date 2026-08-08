@@ -41,14 +41,22 @@ Out: audio/sfx/*.wav, audio/music/*.wav
 """
 
 import math
+import os
 import pathlib
 import random
 import struct
 import wave
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-SFX_DIR = ROOT / "audio" / "sfx"
-MUSIC_DIR = ROOT / "audio" / "music"
+
+# Where the WAVs land. Overridable for the same reason make_sprites.py grew the
+# same knob: the Unity port needs these files under Assets/Resources/Audio/
+# while the Godot tree still needs them under audio/, and one generator feeding
+# two destinations beats a fork. Set VANTA_AUDIO_OUT to a path relative to the
+# repo root. When the Godot tree goes, the default moves and this stays.
+_AUDIO_ROOT = ROOT / os.environ.get("VANTA_AUDIO_OUT", "audio")
+SFX_DIR = _AUDIO_ROOT / "sfx"
+MUSIC_DIR = _AUDIO_ROOT / "music"
 
 SFX_RATE = 44100
 # The drone has nothing above ~4kHz, so half the rate is transparent and

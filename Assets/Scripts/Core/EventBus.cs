@@ -216,8 +216,8 @@ namespace VantaEclipse.Core
         /// the whole rolled card, because every listener wants a different
         /// field of it and re-reading the collection to find "the newest one"
         /// is a race with the next boss.</summary>
-        public event Action<Dictionary<string, object>> CardCollected;
-        public void RaiseCardCollected(Dictionary<string, object> card) => CardCollected?.Invoke(card);
+        public event Action<Card> CardCollected;
+        public void RaiseCardCollected(Card card) => CardCollected?.Invoke(card);
 
         public event Action<string, float, float> CardAbsorbed;
         public void RaiseCardAbsorbed(string petId, float xp, float bonus)

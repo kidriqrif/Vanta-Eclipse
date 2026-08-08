@@ -44,6 +44,8 @@ namespace VantaEclipse.EditorTools
                 StatLayering();
                 SaveRoundTrip();
                 SchedulerRuns();
+                CardRolls();
+                AudioAssetsExist();
             }
             catch (Exception e)
             {
@@ -246,6 +248,59 @@ namespace VantaEclipse.EditorTools
             Scheduler.Tick(0f);
             Check("deferred ran on next tick", deferred);
             Scheduler.Clear();
+        }
+
+        static void CardRolls()
+        {
+            Game.Reset();
+            var rarities = Game.Cards.GetRarities();
+            Check("card rarities load", rarities.Count == 5);
+
+            // A level-1 boss must still produce a card. The rarity floor is
+            // applied by EXCLUDING tiers rather than re-rolling, because a
+            // re-roll loop on a table whose entries are all excluded never
+            // terminates — and the first boss in the game is exactly that case.
+            int lowestFloor = int.MaxValue;
+            foreach (var r in rarities) lowestFloor = Mathf.Min(lowestFloor, r.minimumBossLevel);
+            Check("some tier is reachable at level 1", lowestFloor <= 1);
+
+            // Drive a real boss win and confirm a card lands in the collection.
+            var boss = DefinitionRegistry.Get<Data.EnemyDefinition>("elder_gloom_wisp");
+            Check("boss definition exists", boss != null);
+
+            int before = Game.Cards.GetCardCount();
+            Game.Events.RaiseBossFightStarted(boss, 10, 100f, 30f);
+            Game.Events.RaiseBossFightWon(10, 50f, false);
+            Check("boss win produced a card", Game.Cards.GetCardCount() == before + 1);
+
+            var card = Game.Cards.GetCards()[Game.Cards.GetCardCount() - 1];
+            Check("card names its boss", card.Boss == "elder_gloom_wisp");
+            Check("card rolled positive power", card.Power > 0f);
+            Check("card rarity is a real tier",
+                DefinitionRegistry.Has<Data.CardRarityDefinition>(card.Rarity));
+
+            // Absorbing with no active pet must refuse rather than throw.
+            Check("absorb without an active pet refuses", Game.Cards.Absorb(0) == null);
+            Check("absorb out of range refuses", Game.Cards.Absorb(9999) == null);
+        }
+
+        static void AudioAssetsExist()
+        {
+            // AudioManager is a MonoBehaviour and only spawns in play mode, so
+            // what is checkable here is that every clip it will ask for is
+            // actually present under Resources — a missing one is silent at
+            // runtime and easy to never notice.
+            string[] sfx =
+            {
+                "tap_hit", "crit_hit", "enemy_death", "boss_defeat", "fanfare",
+                "confirm", "loot", "boss_warn", "fail", "whoosh", "goal",
+                "claim", "levelup", "eclipse", "click",
+            };
+            int found = 0;
+            foreach (var name in sfx)
+                if (Resources.Load<AudioClip>($"Audio/sfx/{name}") != null) found++;
+            Check($"all {sfx.Length} sfx clips load", found == sfx.Length);
+            Check("music clip loads", Resources.Load<AudioClip>("Audio/music/ambient_void") != null);
         }
 
         // --- harness -------------------------------------------------------

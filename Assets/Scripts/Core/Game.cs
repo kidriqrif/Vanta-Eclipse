@@ -37,13 +37,16 @@ namespace VantaEclipse.Core
         public static IdleManager Idle { get; private set; }
         public static PrestigeManager Prestige { get; private set; }
 
-        /// <summary>Scene transitions. A MonoBehaviour, because fading and
-        /// async loading are coroutines. Null outside play mode.</summary>
+        public static CardManager Cards { get; private set; }
+
+        /// <summary>Scene transitions and sound. MonoBehaviours, because
+        /// fading, async loading, and AudioSources need engine callbacks. Both
+        /// are null outside play mode.</summary>
         public static SceneFlow Flow { get; private set; }
+        public static AudioManager Audio { get; private set; }
 
         // Remaining autoloads still to port, in project.godot's order:
-        //   MinigameManager, QuestManager, CardManager, AudioManager,
-        //   MonetizationManager
+        //   MinigameManager, QuestManager, MonetizationManager
 
         public static bool IsBooted { get; private set; }
 
@@ -76,6 +79,7 @@ namespace VantaEclipse.Core
             Combat = new CombatManager();
             Idle = new IdleManager();
             Prestige = new PrestigeManager();
+            Cards = new CardManager();
 
             IsBooted = true;
 
@@ -88,6 +92,7 @@ namespace VantaEclipse.Core
             {
                 GameRuntime.Spawn();
                 Flow = SceneFlow.Spawn();
+                Audio = AudioManager.Spawn();
             }
         }
 
@@ -106,6 +111,7 @@ namespace VantaEclipse.Core
             yield return Combat;
             yield return Idle;
             yield return Prestige;
+            yield return Cards;
         }
 
         /// <summary>Tear down and rebuild. Tests call this between cases; the
