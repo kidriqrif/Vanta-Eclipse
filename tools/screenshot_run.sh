@@ -52,11 +52,22 @@ LOG="$(mktemp)"
 # It went unnoticed because seeding is idempotent-looking: currencies are set,
 # not added. Boss cards are what exposed it — they APPEND, so the collection
 # grew by five every run and the twentieth card made it obvious.
+#
+# BOTH files, not just savegame.json. SaveManager writes atomically by copying
+# the current save to savegame.backup.json before swapping, and its load path
+# falls back to that backup when the main file is missing or unreadable. So
+# removing only savegame.json leaves the harness's seeded run sitting in the
+# backup slot, and the very next launch restores it — a "reset" save that comes
+# back at level 60 with 20 boss cards.
 USER_DIR="${VANTA_USER_DIR:-$APPDATA/Godot/app_userdata/Vanta Eclipse}"
 SAVE="$USER_DIR/savegame.json"
+SAVE_BAK="$USER_DIR/savegame.backup.json"
 BACKUP_SAVE="$(mktemp)"
+BACKUP_SAVE_BAK="$(mktemp)"
 had_save=0
+had_backup=0
 [ -f "$SAVE" ] && { cp "$SAVE" "$BACKUP_SAVE"; had_save=1; }
+[ -f "$SAVE_BAK" ] && { cp "$SAVE_BAK" "$BACKUP_SAVE_BAK"; had_backup=1; }
 
 restored=0
 restore() {
@@ -71,7 +82,12 @@ restore() {
 		# There was no save before the run; the harness created one.
 		rm -f "$SAVE"
 	fi
-	rm -f "$BACKUP" "$BACKUP_SAVE" "$LOG"
+	if [ "$had_backup" -eq 1 ]; then
+		[ -f "$BACKUP_SAVE_BAK" ] && cp "$BACKUP_SAVE_BAK" "$SAVE_BAK"
+	else
+		rm -f "$SAVE_BAK"
+	fi
+	rm -f "$BACKUP" "$BACKUP_SAVE" "$BACKUP_SAVE_BAK" "$LOG"
 }
 trap restore EXIT INT TERM
 

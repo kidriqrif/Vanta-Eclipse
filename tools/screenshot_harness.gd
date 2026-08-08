@@ -179,6 +179,18 @@ func _pass_cold() -> void:
 	await _goto(SceneManager.SCENE_PETS)
 	await _shot("08_pets_empty")
 
+	# The Cards screen with nothing in it, and with no companion to absorb INTO
+	# — a cold save has not awakened the roster yet, so this is the only pass
+	# that renders the "no active companion" branch of the target panel.
+	#
+	# It was missing until the save was reset and the empty state turned out
+	# never to have been drawn: the screen was added straight into pass 2,
+	# which seeds cards before opening it. A screen that is only ever shot with
+	# content is a screen whose empty state is unreviewed, which is exactly what
+	# this pass exists to prevent.
+	await _goto(SceneManager.SCENE_CARDS)
+	await _shot("09_cards_empty")
+
 
 # --- Pass 2: a late-game save ------------------------------------------------
 

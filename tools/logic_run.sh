@@ -31,10 +31,18 @@ fi
 
 USER_DIR="${VANTA_USER_DIR:-$APPDATA/Godot/app_userdata/Vanta Eclipse}"
 SAVE="$USER_DIR/savegame.json"
+# Both files. SaveManager writes atomically via savegame.backup.json and its
+# load path FALLS BACK to that backup when the main file is missing, so
+# restoring only savegame.json leaves this run's state in the backup slot for
+# the next launch to pick up.
+SAVE_BAK="$USER_DIR/savegame.backup.json"
 BACKUP_SAVE="$(mktemp)"
+BACKUP_SAVE_BAK="$(mktemp)"
 BACKUP_PROJECT="$(mktemp)"
 had_save=0
+had_backup=0
 [ -f "$SAVE" ] && { cp "$SAVE" "$BACKUP_SAVE"; had_save=1; }
+[ -f "$SAVE_BAK" ] && { cp "$SAVE_BAK" "$BACKUP_SAVE_BAK"; had_backup=1; }
 cp project.godot "$BACKUP_PROJECT"
 
 restored=0
@@ -51,7 +59,12 @@ restore() {
 		# There was no save before the run; the harness created one.
 		rm -f "$SAVE"
 	fi
-	rm -f "$BACKUP_SAVE" "$BACKUP_PROJECT"
+	if [ "$had_backup" -eq 1 ]; then
+		[ -f "$BACKUP_SAVE_BAK" ] && cp "$BACKUP_SAVE_BAK" "$SAVE_BAK"
+	else
+		rm -f "$SAVE_BAK"
+	fi
+	rm -f "$BACKUP_SAVE" "$BACKUP_SAVE_BAK" "$BACKUP_PROJECT"
 }
 trap restore EXIT INT TERM
 

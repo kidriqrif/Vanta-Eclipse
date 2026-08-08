@@ -227,6 +227,14 @@ verifies**. Found repeatedly; assume more exist.
   while the auto-commit hook is live. `check_architecture.py` now fails on any
   autoload in `TEST_ONLY_AUTOLOADS`, so the sweep names it directly instead of
   reporting it as a documentation count mismatch.
+- **Restoring a save means restoring BOTH files.** `SaveManager` writes
+  atomically via `savegame.backup.json`, and its load path falls back to that
+  backup when the main file is missing. A harness that removes only
+  `savegame.json` therefore leaves its own seeded run in the backup slot, and
+  the next launch restores it — a "reset" save that comes back at level 60 with
+  20 boss cards. Both `logic_run.sh` and `screenshot_run.sh` now track and
+  restore the pair. Verified: from a truly empty user dir, each leaves zero
+  save files behind.
 - **`screenshot_run.sh` was seeding the player's real save.** It drives a
   late-game seed — 4.8M essence, level 60, prestige 2, full equipment — and the
   managers it touches call `SaveManager.save_game()`. `logic_run.sh` had always
