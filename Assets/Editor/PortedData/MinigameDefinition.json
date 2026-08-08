@@ -1,0 +1,110 @@
+[
+  {
+    "_source": "data/minigames/void_reflex.tres",
+    "id": "void_reflex",
+    "display_name": "Void Reflex",
+    "description": "Five sigils. Tap each the instant it flares.",
+    "icon": "res://sprites/ui/minigame_reflex_icon.png",
+    "scene_path": "res://scenes/minigames/void_reflex.tscn",
+    "unlock_level": 20,
+    "reward_seconds": 240.0,
+    "token_cost": 1,
+    "sort_order": 0
+  },
+  {
+    "_source": "data/minigames/memory_match.tres",
+    "id": "memory_match",
+    "display_name": "Memory Match",
+    "description": "Six pairs, twelve attempts. Remember where they are.",
+    "icon": "res://sprites/minigames/face_hexagon.png",
+    "scene_path": "res://scenes/minigames/memory_match.tscn",
+    "unlock_level": 30,
+    "reward_seconds": 420.0,
+    "token_cost": 1,
+    "lower_is_better": true,
+    "context": {
+      "attempt_budget": 12,
+      "pairs": 6
+    },
+    "sort_order": 1
+  },
+  {
+    "_source": "data/minigames/connect_four.tres",
+    "id": "connect_four",
+    "display_name": "Connect Four",
+    "description": "Four in a row against the void. Centre columns are strongest.",
+    "icon": "res://sprites/minigames/disc_player.png",
+    "scene_path": "res://scenes/minigames/connect_four.tscn",
+    "unlock_level": 40,
+    "reward_seconds": 520.0,
+    "token_cost": 1,
+    "lower_is_better": true,
+    "context": {
+      "ai_blunder": 0.6,
+      "columns": 7,
+      "rows": 6
+    },
+    "sort_order": 2
+  },
+  {
+    "_source": "data/minigames/battleship.tres",
+    "id": "battleship",
+    "display_name": "Void Salvo",
+    "description": "Three hidden ships, thirty-four shots. Sink the fleet.",
+    "icon": "res://sprites/minigames/shot_hit.png",
+    "scene_path": "res://scenes/minigames/battleship.tscn",
+    "unlock_level": 60,
+    "reward_seconds": 520.0,
+    "token_cost": 1,
+    "lower_is_better": true,
+    "context": {
+      "fleet": [
+        4,
+        3,
+        2
+      ],
+      "shots": 34,
+      "size": 7
+    },
+    "sort_order": 3
+  },
+  {
+    "_source": "data/minigames/lights_out.tres",
+    "id": "lights_out",
+    "display_name": "Lights Out",
+    "description": "Sixteen panes. Each tap flips its neighbours too.",
+    "icon": "res://sprites/ui/minigame_lights_icon.png",
+    "scene_path": "res://scenes/minigames/lights_out.tscn",
+    "unlock_level": 30,
+    "reward_seconds": 260.0,
+    "token_cost": 1,
+    "lower_is_better": false,
+    "sort_order": 4
+  },
+  {
+    "_source": "data/minigames/sequence_echo.tres",
+    "id": "sequence_echo",
+    "display_name": "Sequence Echo",
+    "description": "Four runes call a growing pattern. Echo it back.",
+    "icon": "res://sprites/ui/minigame_sequence_icon.png",
+    "scene_path": "res://scenes/minigames/sequence_echo.tscn",
+    "unlock_level": 40,
+    "reward_seconds": 300.0,
+    "token_cost": 1,
+    "lower_is_better": false,
+    "sort_order": 5
+  },
+  {
+    "_source": "data/minigames/rune_sweeper.tres",
+    "id": "rune_sweeper",
+    "display_name": "Rune Sweeper",
+    "description": "Five buried runes. Uncover every safe cell.",
+    "icon": "res://sprites/ui/minigame_sweeper_icon.png",
+    "scene_path": "res://scenes/minigames/rune_sweeper.tscn",
+    "unlock_level": 55,
+    "reward_seconds": 340.0,
+    "token_cost": 1,
+    "lower_is_better": false,
+    "sort_order": 6
+  }
+]

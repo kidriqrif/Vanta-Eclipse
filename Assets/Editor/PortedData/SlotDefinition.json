@@ -1,0 +1,58 @@
+[
+  {
+    "_source": "data/slots/armor.tres",
+    "id": "armor",
+    "display_name": "Armor",
+    "icon": "res://sprites/ui/slot_armor.png",
+    "sealed": false,
+    "sealed_flavor": ""
+  },
+  {
+    "_source": "data/slots/boots.tres",
+    "id": "boots",
+    "display_name": "Boots",
+    "icon": "res://sprites/ui/slot_boots.png",
+    "sealed": false,
+    "sealed_flavor": ""
+  },
+  {
+    "_source": "data/slots/gloves.tres",
+    "id": "gloves",
+    "display_name": "Gloves",
+    "icon": "res://sprites/ui/slot_gloves.png",
+    "sealed": false,
+    "sealed_flavor": ""
+  },
+  {
+    "_source": "data/slots/helmet.tres",
+    "id": "helmet",
+    "display_name": "Helmet",
+    "icon": "res://sprites/ui/slot_helmet.png",
+    "sealed": false,
+    "sealed_flavor": ""
+  },
+  {
+    "_source": "data/slots/relic.tres",
+    "id": "relic",
+    "display_name": "Relic",
+    "icon": "res://sprites/ui/slot_relic.png",
+    "sealed": true,
+    "sealed_flavor": "Relics awaken in the Astral Temple"
+  },
+  {
+    "_source": "data/slots/ring.tres",
+    "id": "ring",
+    "display_name": "Ring",
+    "icon": "res://sprites/ui/slot_ring.png",
+    "sealed": false,
+    "sealed_flavor": ""
+  },
+  {
+    "_source": "data/slots/weapon.tres",
+    "id": "weapon",
+    "display_name": "Weapon",
+    "icon": "res://sprites/ui/slot_weapon.png",
+    "sealed": false,
+    "sealed_flavor": ""
+  }
+]

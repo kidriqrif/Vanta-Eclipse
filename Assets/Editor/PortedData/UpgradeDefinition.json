@@ -1,0 +1,72 @@
+[
+  {
+    "_source": "data/upgrades/void_claws.tres",
+    "id": "void_claws",
+    "display_name": "Void Claws",
+    "description": "Tap damage +1 per level.",
+    "stat": "tap_damage",
+    "modifier_type": 0,
+    "value_per_level": 1.0,
+    "display_as_percent": false,
+    "base_cost": 5.0,
+    "cost_growth": 1.13,
+    "max_level": 0,
+    "sort_order": 0
+  },
+  {
+    "_source": "data/upgrades/eclipse_fangs.tres",
+    "id": "eclipse_fangs",
+    "display_name": "Eclipse Fangs",
+    "description": "Tap damage +10% per level.",
+    "stat": "tap_damage",
+    "modifier_type": 1,
+    "value_per_level": 0.1,
+    "display_as_percent": false,
+    "base_cost": 60.0,
+    "cost_growth": 1.22,
+    "max_level": 0,
+    "sort_order": 1
+  },
+  {
+    "_source": "data/upgrades/dark_focus.tres",
+    "id": "dark_focus",
+    "display_name": "Dark Focus",
+    "description": "Critical chance +0.5% per level.",
+    "stat": "crit_chance",
+    "modifier_type": 0,
+    "value_per_level": 0.005,
+    "display_as_percent": true,
+    "base_cost": 30.0,
+    "cost_growth": 1.3,
+    "max_level": 30,
+    "sort_order": 2
+  },
+  {
+    "_source": "data/upgrades/blood_moon.tres",
+    "id": "blood_moon",
+    "display_name": "Blood Moon",
+    "description": "Critical damage +25% per level.",
+    "stat": "crit_damage",
+    "modifier_type": 0,
+    "value_per_level": 0.25,
+    "display_as_percent": true,
+    "base_cost": 45.0,
+    "cost_growth": 1.35,
+    "max_level": 20,
+    "sort_order": 3
+  },
+  {
+    "_source": "data/upgrades/essence_siphon.tres",
+    "id": "essence_siphon",
+    "display_name": "Essence Siphon",
+    "description": "Essence from kills +10% per level.",
+    "stat": "essence_gain",
+    "modifier_type": 1,
+    "value_per_level": 0.1,
+    "display_as_percent": false,
+    "base_cost": 35.0,
+    "cost_growth": 1.25,
+    "max_level": 0,
+    "sort_order": 4
+  }
+]

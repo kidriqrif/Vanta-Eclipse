@@ -1,0 +1,33 @@
+[
+  {
+    "_source": "data/ads/offline_double.tres",
+    "id": "offline_double",
+    "display_name": "Double Offline Reward",
+    "description": "Double the Essence you just earned while away.",
+    "reward_kind": 2,
+    "reward_amount": 1.0,
+    "daily_cap": 3,
+    "contextual": true,
+    "sort_order": 0
+  },
+  {
+    "_source": "data/ads/arcade_token.tres",
+    "id": "arcade_token",
+    "display_name": "Bonus Arcade Token",
+    "description": "One extra Arcade Token, on the house.",
+    "reward_kind": 1,
+    "reward_amount": 1.0,
+    "daily_cap": 3,
+    "sort_order": 1
+  },
+  {
+    "_source": "data/ads/essence_boost.tres",
+    "id": "essence_boost",
+    "display_name": "Essence Surge",
+    "description": "Ten minutes of Essence at your current rate.",
+    "reward_kind": 0,
+    "reward_amount": 600.0,
+    "daily_cap": 5,
+    "sort_order": 2
+  }
+]

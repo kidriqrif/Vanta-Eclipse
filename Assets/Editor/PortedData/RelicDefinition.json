@@ -1,0 +1,57 @@
+[
+  {
+    "_source": "data/relics/eclipse_heart.tres",
+    "id": "eclipse_heart",
+    "display_name": "Eclipse Heart",
+    "sigil": "res://sprites/ui/relic_eclipse_heart.png",
+    "effect_id": "offline_mult",
+    "effect_value": 3.0,
+    "effect_description": "Offline rewards are tripled.",
+    "flavor": "It beats in the dark between sessions.",
+    "drop_weight": 1.0
+  },
+  {
+    "_source": "data/relics/essence_prism.tres",
+    "id": "essence_prism",
+    "display_name": "Essence Prism",
+    "sigil": "res://sprites/ui/relic_essence_prism.png",
+    "effect_id": "essence_mult",
+    "effect_value": 2.0,
+    "effect_description": "Essence gain is doubled.",
+    "flavor": "One beam in, two out.",
+    "drop_weight": 1.0
+  },
+  {
+    "_source": "data/relics/hunters_sigil.tres",
+    "id": "hunters_sigil",
+    "display_name": "Hunter's Sigil",
+    "sigil": "res://sprites/ui/relic_hunters_sigil.png",
+    "effect_id": "boss_pct",
+    "effect_value": 0.5,
+    "effect_description": "Boss damage increased by 50%.",
+    "flavor": "Forged to fell the mighty.",
+    "drop_weight": 1.0
+  },
+  {
+    "_source": "data/relics/shatterstone.tres",
+    "id": "shatterstone",
+    "display_name": "Shatterstone",
+    "sigil": "res://sprites/ui/relic_shatterstone.png",
+    "effect_id": "crit_dmg",
+    "effect_value": 1.0,
+    "effect_description": "Critical damage increased by 100%.",
+    "flavor": "Every crack runs deeper.",
+    "drop_weight": 1.0
+  },
+  {
+    "_source": "data/relics/twin_fang.tres",
+    "id": "twin_fang",
+    "display_name": "Twin Fang",
+    "sigil": "res://sprites/ui/relic_twin_fang.png",
+    "effect_id": "attack_speed",
+    "effect_value": 2.0,
+    "effect_description": "Auto-attacks strike twice as fast.",
+    "flavor": "Two strikes where there was one.",
+    "drop_weight": 1.0
+  }
+]

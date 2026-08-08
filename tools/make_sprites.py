@@ -28,13 +28,20 @@ Run: python3 tools/make_sprites.py [--sheet]
 """
 
 import math
+import os
 import pathlib
 import sys
 
 from pixelart import Canvas, write_png
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-OUT = ROOT / "sprites"
+
+# Where the PNGs land. Overridable because the Unity port needs the same
+# sprites under Assets/Art/ while the Godot tree still needs them under
+# sprites/ — the generator is the shared source, so it grew a destination
+# rather than a fork. Set VANTA_SPRITE_OUT to a path relative to the repo
+# root. When the Godot tree goes, the default moves and this stays.
+OUT = ROOT / os.environ.get("VANTA_SPRITE_OUT", "sprites")
 
 ENEMY = 64
 PET = 48

@@ -1,0 +1,206 @@
+[
+  {
+    "_source": "data/enemies/elder_frost_shade.tres",
+    "id": "elder_frost_shade",
+    "display_name": "Elder Comet Drifter",
+    "texture": "res://sprites/enemies/frost_shade.png",
+    "hp_multiplier": 0.85,
+    "glow_color": {
+      "r": 1.0,
+      "g": 0.227,
+      "b": 0.275,
+      "a": 1.0
+    },
+    "is_boss": true,
+    "view_scale": 1.3
+  },
+  {
+    "_source": "data/enemies/elder_gloom_wisp.tres",
+    "id": "elder_gloom_wisp",
+    "display_name": "Elder Gloom Wisp",
+    "texture": "res://sprites/enemies/gloom_wisp.png",
+    "hp_multiplier": 0.85,
+    "glow_color": {
+      "r": 1.0,
+      "g": 0.227,
+      "b": 0.275,
+      "a": 1.0
+    },
+    "is_boss": true,
+    "view_scale": 1.3
+  },
+  {
+    "_source": "data/enemies/elder_hollow_sentinel.tres",
+    "id": "elder_hollow_sentinel",
+    "display_name": "Elder Derelict Sentinel",
+    "texture": "res://sprites/enemies/hollow_sentinel.png",
+    "hp_multiplier": 1.0,
+    "glow_color": {
+      "r": 1.0,
+      "g": 0.227,
+      "b": 0.275,
+      "a": 1.0
+    },
+    "is_boss": true,
+    "view_scale": 1.3
+  },
+  {
+    "_source": "data/enemies/elder_rime_fiend.tres",
+    "id": "elder_rime_fiend",
+    "display_name": "Elder Rime Cluster",
+    "texture": "res://sprites/enemies/rime_fiend.png",
+    "hp_multiplier": 1.25,
+    "glow_color": {
+      "r": 1.0,
+      "g": 0.227,
+      "b": 0.275,
+      "a": 1.0
+    },
+    "is_boss": true,
+    "view_scale": 1.3
+  },
+  {
+    "_source": "data/enemies/elder_shade_stalker.tres",
+    "id": "elder_shade_stalker",
+    "display_name": "Elder Shade Stalker",
+    "texture": "res://sprites/enemies/shade_stalker.png",
+    "hp_multiplier": 1.0,
+    "glow_color": {
+      "r": 1.0,
+      "g": 0.227,
+      "b": 0.275,
+      "a": 1.0
+    },
+    "is_boss": true,
+    "view_scale": 1.3
+  },
+  {
+    "_source": "data/enemies/elder_thorn_fiend.tres",
+    "id": "elder_thorn_fiend",
+    "display_name": "Elder Spore Bloom",
+    "texture": "res://sprites/enemies/thorn_fiend.png",
+    "hp_multiplier": 1.25,
+    "glow_color": {
+      "r": 1.0,
+      "g": 0.227,
+      "b": 0.275,
+      "a": 1.0
+    },
+    "is_boss": true,
+    "view_scale": 1.3
+  },
+  {
+    "_source": "data/enemies/frost_shade.tres",
+    "id": "frost_shade",
+    "display_name": "Comet Drifter",
+    "texture": "res://sprites/enemies/frost_shade.png",
+    "hp_multiplier": 0.85,
+    "glow_color": {
+      "r": 0.784,
+      "g": 0.784,
+      "b": 0.855,
+      "a": 1.0
+    },
+    "is_boss": false,
+    "view_scale": 1.0
+  },
+  {
+    "_source": "data/enemies/gloom_wisp.tres",
+    "id": "gloom_wisp",
+    "display_name": "Gloom Wisp",
+    "texture": "res://sprites/enemies/gloom_wisp.png",
+    "hp_multiplier": 0.85,
+    "glow_color": {
+      "r": 0.784,
+      "g": 0.784,
+      "b": 0.855,
+      "a": 1.0
+    }
+  },
+  {
+    "_source": "data/enemies/hollow_sentinel.tres",
+    "id": "hollow_sentinel",
+    "display_name": "Derelict Sentinel",
+    "texture": "res://sprites/enemies/hollow_sentinel.png",
+    "hp_multiplier": 1.0,
+    "glow_color": {
+      "r": 0.784,
+      "g": 0.784,
+      "b": 0.855,
+      "a": 1.0
+    },
+    "is_boss": false,
+    "view_scale": 1.0
+  },
+  {
+    "_source": "data/enemies/hollow_sovereign.tres",
+    "id": "hollow_sovereign",
+    "display_name": "The Hollow Sovereign",
+    "texture": "res://sprites/enemies/hollow_sovereign.png",
+    "hp_multiplier": 1.0,
+    "glow_color": {
+      "r": 1.0,
+      "g": 0.227,
+      "b": 0.275,
+      "a": 1.0
+    },
+    "is_boss": true,
+    "view_scale": 1.4
+  },
+  {
+    "_source": "data/enemies/rime_fiend.tres",
+    "id": "rime_fiend",
+    "display_name": "Rime Cluster",
+    "texture": "res://sprites/enemies/rime_fiend.png",
+    "hp_multiplier": 1.25,
+    "glow_color": {
+      "r": 0.784,
+      "g": 0.784,
+      "b": 0.855,
+      "a": 1.0
+    },
+    "is_boss": false,
+    "view_scale": 1.0
+  },
+  {
+    "_source": "data/enemies/shade_stalker.tres",
+    "id": "shade_stalker",
+    "display_name": "Shade Stalker",
+    "texture": "res://sprites/enemies/shade_stalker.png",
+    "hp_multiplier": 1.0,
+    "glow_color": {
+      "r": 0.784,
+      "g": 0.784,
+      "b": 0.855,
+      "a": 1.0
+    }
+  },
+  {
+    "_source": "data/enemies/silent_colossus.tres",
+    "id": "silent_colossus",
+    "display_name": "The Silent Colossus",
+    "texture": "res://sprites/enemies/silent_colossus.png",
+    "hp_multiplier": 1.0,
+    "glow_color": {
+      "r": 1.0,
+      "g": 0.227,
+      "b": 0.275,
+      "a": 1.0
+    },
+    "is_boss": true,
+    "view_scale": 1.4
+  },
+  {
+    "_source": "data/enemies/thorn_fiend.tres",
+    "id": "thorn_fiend",
+    "display_name": "Spore Bloom",
+    "texture": "res://sprites/enemies/thorn_fiend.png",
+    "hp_multiplier": 1.25,
+    "glow_color": {
+      "r": 0.784,
+      "g": 0.784,
+      "b": 0.855,
+      "a": 1.0
+    }
+  }
+]

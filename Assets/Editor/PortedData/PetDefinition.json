@@ -1,0 +1,38 @@
+[
+  {
+    "_source": "data/pets/ember.tres",
+    "id": "ember",
+    "stage_names": [
+      "Ember",
+      "Blaze"
+    ],
+    "stage_sprites": [
+      "res://sprites/pets/pet_ember.png",
+      "res://sprites/pets/pet_blaze.png"
+    ],
+    "evolution_levels": [
+      10
+    ],
+    "bonus_stat": "essence",
+    "bonus_per_level": 0.02,
+    "max_level": 30
+  },
+  {
+    "_source": "data/pets/frostling.tres",
+    "id": "frostling",
+    "stage_names": [
+      "Frostling",
+      "Frostwyrm"
+    ],
+    "stage_sprites": [
+      "res://sprites/pets/pet_frostling.png",
+      "res://sprites/pets/pet_frostwyrm.png"
+    ],
+    "evolution_levels": [
+      10
+    ],
+    "bonus_stat": "tap_pct",
+    "bonus_per_level": 0.02,
+    "max_level": 30
+  }
+]

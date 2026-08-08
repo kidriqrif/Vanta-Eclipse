@@ -1,0 +1,40 @@
+[
+  {
+    "_source": "data/worlds/dark_forest.tres",
+    "id": "dark_forest",
+    "display_name": "Dark Forest",
+    "first_level": 1,
+    "enemy_definition_paths": [
+      "res://data/enemies/gloom_wisp.tres",
+      "res://data/enemies/thorn_fiend.tres",
+      "res://data/enemies/shade_stalker.tres"
+    ],
+    "boss_definition_paths": [
+      "res://data/enemies/elder_gloom_wisp.tres",
+      "res://data/enemies/elder_thorn_fiend.tres",
+      "res://data/enemies/elder_shade_stalker.tres",
+      "res://data/enemies/elder_thorn_fiend.tres",
+      "res://data/enemies/hollow_sovereign.tres"
+    ],
+    "essence_multiplier": 1.0
+  },
+  {
+    "_source": "data/worlds/frozen_ruins.tres",
+    "id": "frozen_ruins",
+    "display_name": "Frozen Ruins",
+    "first_level": 51,
+    "enemy_definition_paths": [
+      "res://data/enemies/frost_shade.tres",
+      "res://data/enemies/rime_fiend.tres",
+      "res://data/enemies/hollow_sentinel.tres"
+    ],
+    "boss_definition_paths": [
+      "res://data/enemies/elder_frost_shade.tres",
+      "res://data/enemies/elder_rime_fiend.tres",
+      "res://data/enemies/elder_hollow_sentinel.tres",
+      "res://data/enemies/elder_rime_fiend.tres",
+      "res://data/enemies/silent_colossus.tres"
+    ],
+    "essence_multiplier": 2.5
+  }
+]

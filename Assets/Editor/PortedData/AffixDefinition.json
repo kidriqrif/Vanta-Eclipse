@@ -1,0 +1,62 @@
+[
+  {
+    "_source": "data/affixes/boss.tres",
+    "id": "boss",
+    "stat": "boss",
+    "display_template": "Boss Damage +{value}",
+    "min_value": 0.06,
+    "max_value": 0.18,
+    "is_percent": true,
+    "level_scale": 0.0
+  },
+  {
+    "_source": "data/affixes/crit_chance.tres",
+    "id": "crit_chance",
+    "stat": "crit_chance",
+    "display_template": "Crit Chance +{value}",
+    "min_value": 0.004,
+    "max_value": 0.012,
+    "is_percent": true,
+    "level_scale": 0.0
+  },
+  {
+    "_source": "data/affixes/crit_damage.tres",
+    "id": "crit_damage",
+    "stat": "crit_damage",
+    "display_template": "Crit Damage +{value}",
+    "min_value": 0.08,
+    "max_value": 0.25,
+    "is_percent": true,
+    "level_scale": 0.0
+  },
+  {
+    "_source": "data/affixes/essence.tres",
+    "id": "essence",
+    "stat": "essence",
+    "display_template": "Essence Gain +{value}",
+    "min_value": 0.04,
+    "max_value": 0.12,
+    "is_percent": true,
+    "level_scale": 0.0
+  },
+  {
+    "_source": "data/affixes/tap_flat.tres",
+    "id": "tap_flat",
+    "stat": "tap_flat",
+    "display_template": "Tap Damage +{value}",
+    "min_value": 0.06,
+    "max_value": 0.18,
+    "is_percent": false,
+    "level_scale": 0.0
+  },
+  {
+    "_source": "data/affixes/tap_pct.tres",
+    "id": "tap_pct",
+    "stat": "tap_pct",
+    "display_template": "Tap Damage +{value}",
+    "min_value": 0.04,
+    "max_value": 0.1,
+    "is_percent": true,
+    "level_scale": 0.0
+  }
+]

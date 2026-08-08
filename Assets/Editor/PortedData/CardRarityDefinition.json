@@ -1,0 +1,77 @@
+[
+  {
+    "_source": "data/card_rarities/legendary.tres",
+    "id": "legendary",
+    "display_name": "Legendary",
+    "drop_weight": 1.0,
+    "potency_multiplier": 6.0,
+    "minimum_boss_level": 110,
+    "color": {
+      "r": 1.0,
+      "g": 0.824,
+      "b": 0.235,
+      "a": 1.0
+    },
+    "sort_order": 0
+  },
+  {
+    "_source": "data/card_rarities/epic.tres",
+    "id": "epic",
+    "display_name": "Epic",
+    "drop_weight": 4.0,
+    "potency_multiplier": 3.8,
+    "minimum_boss_level": 60,
+    "color": {
+      "r": 0.659,
+      "g": 0.361,
+      "b": 1.0,
+      "a": 1.0
+    },
+    "sort_order": 1
+  },
+  {
+    "_source": "data/card_rarities/rare.tres",
+    "id": "rare",
+    "display_name": "Rare",
+    "drop_weight": 11.0,
+    "potency_multiplier": 2.4,
+    "minimum_boss_level": 25,
+    "color": {
+      "r": 0.243,
+      "g": 0.51,
+      "b": 1.0,
+      "a": 1.0
+    },
+    "sort_order": 2
+  },
+  {
+    "_source": "data/card_rarities/uncommon.tres",
+    "id": "uncommon",
+    "display_name": "Uncommon",
+    "drop_weight": 26.0,
+    "potency_multiplier": 1.55,
+    "minimum_boss_level": 1,
+    "color": {
+      "r": 0.416,
+      "g": 0.863,
+      "b": 0.243,
+      "a": 1.0
+    },
+    "sort_order": 3
+  },
+  {
+    "_source": "data/card_rarities/common.tres",
+    "id": "common",
+    "display_name": "Common",
+    "drop_weight": 58.0,
+    "potency_multiplier": 1.0,
+    "minimum_boss_level": 1,
+    "color": {
+      "r": 0.525,
+      "g": 0.525,
+      "b": 0.635,
+      "a": 1.0
+    },
+    "sort_order": 4
+  }
+]

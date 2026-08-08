@@ -1,0 +1,36 @@
+[
+  {
+    "_source": "data/products/remove_ads.tres",
+    "id": "remove_ads",
+    "store_id": "vanta_remove_ads",
+    "display_name": "Remove Ads",
+    "description": "Every bonus offer becomes free and instant, forever. Daily limits still apply.",
+    "kind": 0,
+    "price_text": "$4.99",
+    "sort_order": 0
+  },
+  {
+    "_source": "data/products/starter_pack.tres",
+    "id": "starter_pack",
+    "store_id": "vanta_starter_pack",
+    "display_name": "Starter Pack",
+    "description": "25 Void Crystals, 5 Arcade Tokens, and the Ember Trail.",
+    "kind": 1,
+    "price_text": "$2.99",
+    "crystals": 25.0,
+    "tokens": 5,
+    "cosmetic_id": "trail_ember",
+    "sort_order": 1
+  },
+  {
+    "_source": "data/products/shards_small.tres",
+    "id": "shards_small",
+    "store_id": "vanta_shards_small",
+    "display_name": "Astral Shards",
+    "description": "200 Astral Shards for cosmetics.",
+    "kind": 2,
+    "price_text": "$1.99",
+    "shards": 200.0,
+    "sort_order": 2
+  }
+]

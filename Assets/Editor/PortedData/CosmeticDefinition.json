@@ -1,0 +1,116 @@
+[
+  {
+    "_source": "data/cosmetics/trail_void.tres",
+    "id": "trail_void",
+    "display_name": "Void Trail",
+    "trail_color": {
+      "r": 0.659,
+      "g": 0.361,
+      "b": 1.0,
+      "a": 1.0
+    },
+    "number_color": {
+      "r": 0.965,
+      "g": 0.965,
+      "b": 0.988,
+      "a": 1.0
+    },
+    "shard_price": 0.0,
+    "sort_order": 0
+  },
+  {
+    "_source": "data/cosmetics/trail_ember.tres",
+    "id": "trail_ember",
+    "display_name": "Ember Trail",
+    "trail_color": {
+      "r": 1.0,
+      "g": 0.541,
+      "b": 0.157,
+      "a": 1.0
+    },
+    "number_color": {
+      "r": 0.965,
+      "g": 0.965,
+      "b": 0.988,
+      "a": 1.0
+    },
+    "shard_price": 120.0,
+    "sort_order": 1
+  },
+  {
+    "_source": "data/cosmetics/trail_frost.tres",
+    "id": "trail_frost",
+    "display_name": "Frost Trail",
+    "trail_color": {
+      "r": 0.243,
+      "g": 0.863,
+      "b": 0.98,
+      "a": 1.0
+    },
+    "number_color": {
+      "r": 0.965,
+      "g": 0.965,
+      "b": 0.988,
+      "a": 1.0
+    },
+    "shard_price": 120.0,
+    "sort_order": 2
+  },
+  {
+    "_source": "data/cosmetics/trail_crystal.tres",
+    "id": "trail_crystal",
+    "display_name": "Crystal Trail",
+    "trail_color": {
+      "r": 1.0,
+      "g": 0.431,
+      "b": 0.753,
+      "a": 1.0
+    },
+    "number_color": {
+      "r": 0.965,
+      "g": 0.965,
+      "b": 0.988,
+      "a": 1.0
+    },
+    "shard_price": 150.0,
+    "sort_order": 3
+  },
+  {
+    "_source": "data/cosmetics/trail_verdant.tres",
+    "id": "trail_verdant",
+    "display_name": "Verdant Trail",
+    "trail_color": {
+      "r": 0.416,
+      "g": 0.863,
+      "b": 0.243,
+      "a": 1.0
+    },
+    "number_color": {
+      "r": 0.965,
+      "g": 0.965,
+      "b": 0.988,
+      "a": 1.0
+    },
+    "shard_price": 150.0,
+    "sort_order": 4
+  },
+  {
+    "_source": "data/cosmetics/trail_aureate.tres",
+    "id": "trail_aureate",
+    "display_name": "Aureate Trail",
+    "trail_color": {
+      "r": 1.0,
+      "g": 0.824,
+      "b": 0.235,
+      "a": 1.0
+    },
+    "number_color": {
+      "r": 0.965,
+      "g": 0.965,
+      "b": 0.988,
+      "a": 1.0
+    },
+    "shard_price": 200.0,
+    "sort_order": 5
+  }
+]
