@@ -38,6 +38,9 @@ namespace VantaEclipse.Core
         public static PrestigeManager Prestige { get; private set; }
 
         public static CardManager Cards { get; private set; }
+        public static MinigameManager Arcade { get; private set; }
+        public static QuestManager Journal { get; private set; }
+        public static MonetizationManager Shop { get; private set; }
 
         /// <summary>Scene transitions and sound. MonoBehaviours, because
         /// fading, async loading, and AudioSources need engine callbacks. Both
@@ -45,8 +48,7 @@ namespace VantaEclipse.Core
         public static SceneFlow Flow { get; private set; }
         public static AudioManager Audio { get; private set; }
 
-        // Remaining autoloads still to port, in project.godot's order:
-        //   MinigameManager, QuestManager, MonetizationManager
+        // All 21 autoloads are ported.
 
         public static bool IsBooted { get; private set; }
 
@@ -79,7 +81,12 @@ namespace VantaEclipse.Core
             Combat = new CombatManager();
             Idle = new IdleManager();
             Prestige = new PrestigeManager();
+            // Arcade before Journal: QuestManager pays token rewards through it
+            // and reads its count at load. Shop last, as in the autoload block.
+            Arcade = new MinigameManager();
+            Journal = new QuestManager();
             Cards = new CardManager();
+            Shop = new MonetizationManager();
 
             IsBooted = true;
 
@@ -111,7 +118,10 @@ namespace VantaEclipse.Core
             yield return Combat;
             yield return Idle;
             yield return Prestige;
+            yield return Arcade;
+            yield return Journal;
             yield return Cards;
+            yield return Shop;
         }
 
         /// <summary>Tear down and rebuild. Tests call this between cases; the

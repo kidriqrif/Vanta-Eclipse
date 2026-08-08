@@ -46,6 +46,9 @@ namespace VantaEclipse.Core
             Scheduler.Tick(scaled);
             Game.Combat.Tick(scaled);
             Game.Idle.Tick(scaled);
+            // Unscaled: the UTC-day rollover is wall-clock, and a paused game
+            // must still cross midnight.
+            Game.Journal.Tick(unscaled);
 
             _autosaveAccumulator += unscaled;
             if (_autosaveAccumulator >= SaveManagerConstants.AutosaveInterval)
