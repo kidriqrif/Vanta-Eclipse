@@ -96,3 +96,11 @@ graphify-out/
 # this note is here so the reason survives the Godot tree's removal — the APK
 # and AAB are 27 MB artifacts rebuilt by tools, never reviewed, and the Stop
 # hook pushes to a public remote every turn.
+
+# IL2CPP / Bee build intermediates. Unity writes these into the PROJECT ROOT,
+# not under Library/, so none of the Unity entries above catch them — 55 files
+# of CMake caches and ninja graphs were committed and pushed to the public
+# remote before this line existed.
+.utmp/
+Logs/
+UserSettings/
