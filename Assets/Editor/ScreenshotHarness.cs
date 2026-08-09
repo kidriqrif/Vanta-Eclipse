@@ -246,6 +246,7 @@ namespace VantaEclipse.EditorTools
                     float scale = 0f;
                     int texts = 0;
                     float coverage = 0f;
+                    string note = null;
 
                     try
                     {
@@ -263,8 +264,28 @@ namespace VantaEclipse.EditorTools
                             if (coverage < 0.2f)
                                 problems.Add($"screen is effectively blank ({coverage:F2}% off-background)");
 
-                            Measure(shape, problems, out texts, out scale);
-                            MeasureOverlap(problems);
+
+                            // A screen is allowed to send the player somewhere
+                            // else. MinigameHost does exactly that when nothing
+                            // has chosen a board for it, so four of its captures
+                            // were mid-transition frames — genuinely empty, and
+                            // measured against Arcade's node paths under
+                            // MinigameHost's name. A capture of a scene that is
+                            // no longer the one under test proves nothing about
+                            // either of them.
+                            string active = SceneManager.GetActiveScene().name;
+                            if (active != sceneName || VantaEclipse.Core.SceneFlow.IsTransitioning)
+                            {
+                                note = active != sceneName
+                                    ? $"navigated to {active}"
+                                    : "mid-transition";
+                                problems.Clear();
+                            }
+                            else
+                            {
+                                Measure(shape, problems, out texts, out scale);
+                                MeasureOverlap(problems);
+                            }
                         }
 
                         string file = Path.Combine(outDir, $"{sceneName}__{shape.Name}.png");
@@ -291,7 +312,7 @@ namespace VantaEclipse.EditorTools
                         coverage.ToString("F2", CultureInfo.InvariantCulture),
                         scale.ToString("F4", CultureInfo.InvariantCulture),
                         // Quoted: the problem strings carry commas of their own.
-                        "\"" + (problems.Count == 0 ? "-" : string.Join(" | ", problems)) + "\""));
+                        "\"" + (problems.Count > 0 ? string.Join(" | ", problems) : note ?? "-") + "\""));
 
                     yield return null;
                 }
@@ -536,13 +557,19 @@ namespace VantaEclipse.EditorTools
                 {
                     if (!child.gameObject.activeInHierarchy) continue;
                     if (child is not RectTransform rect) continue;
+                    // A child the group is told to ignore is decoration sitting
+                    // behind the row on purpose — a frame's Fill is the whole
+                    // point of the pattern. Counting it as an overlapping row
+                    // reported every bordered tile in Gear as broken.
+                    var ignored = child.GetComponent<LayoutElement>();
+                    if (ignored != null && ignored.ignoreLayout) continue;
 
                     // A row collapsed to nothing is the SettingsMenu defect
                     // itself: the group ran, produced zero-height children, and
                     // every label drew on top of the next. Skipping these as
                     // "no rect to compare" is how the first version of this
                     // check missed the screen it was written for.
-                    if (rect.rect.height <= 1f && rect.childCount > 0)
+                    if (rect.rect.height <= 1f && ActiveChildren(rect) > 0)
                     {
                         problems.Add($"'{Name(group)}' row '{rect.name}' collapsed to " +
                                      $"{rect.rect.width:F0}x{rect.rect.height:F0}");
@@ -577,6 +604,21 @@ namespace VantaEclipse.EditorTools
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// A container with nothing switched on inside it is SUPPOSED to be
+        /// zero tall. The Shop's tab row is the case: with stub providers there
+        /// is no paid tab, so the row has children in the hierarchy and none of
+        /// them active, and collapsing is the correct behaviour rather than the
+        /// defect this check hunts.
+        /// </summary>
+        static int ActiveChildren(Transform node)
+        {
+            int n = 0;
+            foreach (Transform child in node)
+                if (child.gameObject.activeInHierarchy) n++;
+            return n;
         }
 
         static bool IsMasked(Transform node)

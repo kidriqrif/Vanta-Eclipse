@@ -89,6 +89,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7459273672021332998}
   - component: {fileID: 6132755591800749332}
+  - component: {fileID: 6345157848966014131}
   m_Layer: 0
   m_Name: Grid
   m_TagString: Untagged
@@ -139,6 +140,19 @@ MonoBehaviour:
   m_Spacing: {x: 0, y: 0}
   m_Constraint: 1
   m_ConstraintCount: 2
+--- !u!114 &6345157848966014131
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2003609072587458568}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e208552092f868c478410845c550b846, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VantaEclipse.UI.GridCellFitter
+  aspect: 1.085
 --- !u!1 &4673116859514801481
 GameObject:
   m_ObjectHideFlags: 0

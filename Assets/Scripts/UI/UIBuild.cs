@@ -194,6 +194,10 @@ namespace VantaEclipse.UI
 
                 var fillGo = Node("Fill", root.transform);
                 Stretch((RectTransform)fillGo.transform, borderWidth);
+                // Decoration, not a row. Without this the layout group added
+                // below would stack the fill above the content and give the
+                // frame twice the height it needs.
+                fillGo.AddComponent<LayoutElement>().ignoreLayout = true;
                 fillImage = fillGo.AddComponent<Image>();
                 fillImage.color = fill;
                 fillImage.raycastTarget = false;
@@ -205,8 +209,37 @@ namespace VantaEclipse.UI
                 fillImage.raycastTarget = false;
             }
 
+            // THE FRAME MUST HUG ITS CONTENT, and a stretched Content child
+            // cannot make it. In Godot every Control propagated a combined
+            // minimum size up the tree for free, so a Panel wrapping a VBox was
+            // as tall as the VBox without anyone saying so. Unity propagates
+            // nothing: an Image reports no preferred size, so a frame dropped
+            // into a VerticalLayoutGroup with childControlHeight came out ZERO
+            // pixels tall and every row inside it drew on top of the next. That
+            // was 9 of the 11 screens.
+            //
+            // A VerticalLayoutGroup on the root fixes it because a layout group
+            // IS an ILayoutElement: it reports its children's preferred height
+            // as its own, so the size flows up the way Godot's did. The padding
+            // reproduces exactly the inset the Stretch call used to apply.
+            int inset = Mathf.RoundToInt(borderWidth + padding);
+            var hug = root.AddComponent<VerticalLayoutGroup>();
+            hug.padding = new RectOffset(inset, inset, inset, inset);
+            hug.childForceExpandWidth = true;
+            hug.childForceExpandHeight = false;
+            hug.childControlWidth = true;
+            hug.childControlHeight = true;
+
+            // Content needs one too, for the same reason one level down: it is
+            // now a laid-out child of the root's group, so it has to report a
+            // height of its own or the root hugs nothing. Zero padding, so the
+            // geometry is exactly what the old Stretch(inset) produced.
             var content = Node("Content", root.transform);
-            Stretch((RectTransform)content.transform, borderWidth + padding);
+            var contentGroup = content.AddComponent<VerticalLayoutGroup>();
+            contentGroup.childForceExpandWidth = true;
+            contentGroup.childForceExpandHeight = false;
+            contentGroup.childControlWidth = true;
+            contentGroup.childControlHeight = true;
             return new Panel(root, (RectTransform)content.transform, borderImage, fillImage);
         }
 

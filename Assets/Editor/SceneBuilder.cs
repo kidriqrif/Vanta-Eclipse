@@ -134,6 +134,7 @@ namespace VantaEclipse.EditorTools
             var byPath = new Dictionary<string, GameObject>();
             GameObject root = null;
             int count = 0;
+            var built = new List<(GameObject Go, string Kind)>();
 
             foreach (JObject node in nodes)
             {
@@ -162,8 +163,11 @@ namespace VantaEclipse.EditorTools
                 if (go == null) continue;
 
                 byPath[key == "" ? name : $"{key}/{name}"] = go;
+                built.Add((go, kind));
                 count++;
             }
+
+            HugContainers(built);
 
             if (root != null)
             {
@@ -205,6 +209,7 @@ namespace VantaEclipse.EditorTools
             var byPath = new Dictionary<string, GameObject>();
             GameObject root = null;
             int count = 0;
+            var built = new List<(GameObject Go, string Kind)>();
 
             foreach (JObject node in nodes)
             {
@@ -239,8 +244,11 @@ namespace VantaEclipse.EditorTools
 
                 string ownPath = key == "" ? name : $"{key}/{name}";
                 byPath[ownPath] = go;
+                built.Add((go, kind));
                 count++;
             }
+
+            HugContainers(built);
 
             EditorSceneManager.SaveScene(scene, $"{SceneDir}/{sceneName}.unity");
             return count;
@@ -353,6 +361,10 @@ namespace VantaEclipse.EditorTools
                         float s = (float)node["spacing"];
                         group.spacing = new Vector2(s, s);
                     }
+                    // A GridLayoutGroup imposes a FIXED cellSize and defaults to
+                    // 100x100 — the columns count above is meaningless without
+                    // it. GridCellFitter derives the cell from the live width.
+                    go.AddComponent<GridCellFitter>();
                     break;
                 }
 
@@ -409,6 +421,16 @@ namespace VantaEclipse.EditorTools
 
                 case "Toggle":
                 {
+                    // A Toggle is two stretched Images and nothing that reports
+                    // a size, so inside a row it collapses to zero height and
+                    // takes the row with it. 72 is the accessibility floor the
+                    // rest of the UI uses for a tap target (§4B), snapped onto
+                    // the 9px grid the whole layout is built on.
+                    var box = go.AddComponent<LayoutElement>();
+                    box.minWidth = box.preferredWidth = 72f;
+                    box.minHeight = box.preferredHeight = 72f;
+                    box.flexibleWidth = 0f;
+
                     var toggle = go.AddComponent<Toggle>();
                     var background = new GameObject("Background", typeof(RectTransform));
                     background.transform.SetParent(go.transform, false);
@@ -441,11 +463,69 @@ namespace VantaEclipse.EditorTools
 
         // --- property application ------------------------------------------
 
+        /// <summary>
+        /// Make a bare container report the height of its contents.
+        ///
+        /// Godot propagated a combined minimum size up every Control, so a
+        /// Panel wrapping a VBox was as tall as the VBox and nobody wrote that
+        /// down. Unity propagates nothing: an Image reports no preferred size,
+        /// so `SettingsVBox` (childControlHeight = true) gave AudioPanel a
+        /// height of ZERO and the AUDIO, GAME and ABOUT rows all drew on top of
+        /// each other. Nine of the eleven screens had a version of this.
+        ///
+        /// A VerticalLayoutGroup is the fix because a layout group IS an
+        /// ILayoutElement — it reports its children's preferred height as its
+        /// own, which is exactly the propagation that went missing.
+        ///
+        /// ONLY when the parent lays this node out. A screen root and a
+        /// full-bleed overlay are also Controls with children, and stacking
+        /// THEIR children vertically would break layouts that currently work —
+        /// MainMenu and Gameplay are the two screens that were already correct
+        /// and neither may regress.
+        /// </summary>
+        /// <summary>
+        /// Runs after the whole tree exists, because whether a node needs this
+        /// depends on what ended up INSIDE it — which Make() cannot know while
+        /// it is still building the node's siblings.
+        /// </summary>
+        static void HugContainers(List<(GameObject Go, string Kind)> built)
+        {
+            foreach (var (go, kind) in built)
+            {
+                if (kind != "Panel" && kind != "Control" && kind != "ColorRect") continue;
+                if (go == null || go.GetComponent<LayoutGroup>() != null) continue;
+                if (go.transform.childCount == 0) continue;
+
+                var parent = go.transform.parent;
+                if (parent == null || parent.GetComponent<LayoutGroup>() == null) continue;
+
+                // A container holding a COMPONENT does not get a layout group.
+                // gameplay's CombatArea is the only one: its child is the
+                // EnemyView prefab, which positions itself inside its own 500px
+                // box the way Godot let it. Laying it out instead stretches that
+                // box to the container's width and the enemy — anchored to the
+                // box's top-left — slides to the left edge and half off-screen.
+                // The node still needs to report a height, and its Godot
+                // EXPAND flag already gave it one through ApplyLayoutElement.
+                bool holdsComponent = false;
+                foreach (Transform child in go.transform)
+                    if (PrefabUtility.IsAnyPrefabInstanceRoot(child.gameObject)) holdsComponent = true;
+                if (holdsComponent) continue;
+
+                var group = go.AddComponent<VerticalLayoutGroup>();
+                group.childForceExpandWidth = true;
+                group.childForceExpandHeight = false;
+                group.childControlWidth = true;
+                group.childControlHeight = true;
+            }
+        }
+
         static void ApplyRect(RectTransform rect, JObject node)
         {
             var anchorMin = ReadVector(node["anchorMin"]);
             var anchorMax = ReadVector(node["anchorMax"]);
-            if (anchorMin.HasValue && anchorMax.HasValue)
+            bool explicitAnchors = anchorMin.HasValue && anchorMax.HasValue;
+            if (explicitAnchors)
             {
                 rect.anchorMin = anchorMin.Value;
                 rect.anchorMax = anchorMax.Value;
@@ -455,6 +535,21 @@ namespace VantaEclipse.EditorTools
 
             if (node["offset"] is JObject offset)
             {
+                // GODOT'S DEFAULT ANCHOR IS THE TOP-LEFT POINT — all four anchor
+                // values 0 — and export_scenes.py only recorded anchors where
+                // the scene overrode them. So a node with offsets and no
+                // recorded anchors is a top-left-anchored box, and leaving it on
+                // this builder's full-stretch default turns "500 wide" into
+                // "500 wider than the parent". That compounds down a chain:
+                // EnemyView 500 -> SpriteHolder 1000 -> EnemySprite 1500, which
+                // is precisely how a 500px creature rendered as a 1500px monster
+                // bleeding off both edges of a 1080px screen. 80 rects across
+                // the project were built this way.
+                if (!explicitAnchors)
+                {
+                    rect.anchorMin = new Vector2(0f, 1f);
+                    rect.anchorMax = new Vector2(0f, 1f);
+                }
                 // Godot's Y grows downward, Unity's upward, so top and bottom
                 // swap sign as well as slot.
                 float left = (float)offset["left"];
@@ -466,13 +561,40 @@ namespace VantaEclipse.EditorTools
             }
 
             var minSize = ReadVector(node["minSize"]);
-            if (minSize.HasValue)
+            if (!minSize.HasValue) return;
+
+            // A node its parent lays out gets its size from the LayoutElement
+            // ApplyLayoutElement adds; writing a rect here as well is at best
+            // redundant and at worst a size the group then fights.
+            if (rect.parent != null && rect.parent.GetComponent<LayoutGroup>() != null) return;
+
+            // UNDER STRETCH ANCHORS sizeDelta IS NOT A SIZE. It is an offset
+            // from the parent's edges, so writing 500 into it means "500 bigger
+            // than the parent" — which is how EnemyView's 500px sprite became a
+            // 1500px monster bleeding off both sides of the screen: three
+            // nested rects each adding 500 to the one above. Collapse the
+            // anchors on the axis that is taking a real size, and only where
+            // the node is still on the default full stretch, so an explicit
+            // anchor or offset from the layout is never overwritten.
+            bool positioned = node["offset"] != null;
+            var min = rect.anchorMin;
+            var max = rect.anchorMax;
+            var size = rect.sizeDelta;
+
+            if (minSize.Value.x > 0f)
             {
-                var size = rect.sizeDelta;
-                if (minSize.Value.x > 0f) size.x = minSize.Value.x;
-                if (minSize.Value.y > 0f) size.y = minSize.Value.y;
-                rect.sizeDelta = size;
+                if (!positioned && min.x == 0f && max.x == 1f) min.x = max.x = 0.5f;
+                size.x = minSize.Value.x;
             }
+            if (minSize.Value.y > 0f)
+            {
+                if (!positioned && min.y == 0f && max.y == 1f) min.y = max.y = 0.5f;
+                size.y = minSize.Value.y;
+            }
+
+            rect.anchorMin = min;
+            rect.anchorMax = max;
+            rect.sizeDelta = size;
         }
 
         static void ApplyLayoutElement(GameObject go, JObject node)
@@ -542,6 +664,52 @@ namespace VantaEclipse.EditorTools
 
             var rect = go.GetComponent<RectTransform>();
             if (rect != null) ApplyRect(rect, node);
+
+            // A fixed-size component placed with no coordinates of its own
+            // belongs in the MIDDLE of its container, not in the corner.
+            //
+            // The prefab root keeps the anchors it was authored with, which for
+            // enemy_view is a 500x500 box at the top-left — correct inside the
+            // component, meaningless at the use site. gameplay.tscn gives its
+            // EnemyView no anchors and no offset, so the box landed against
+            // CombatArea's top-left edge and the creature rendered half off the
+            // side of the screen. `production/screenshots/02_gameplay_seeded.png`
+            // is what it looked like when it worked: centred, with the ground
+            // glow under it.
+            //
+            // Only for a fixed-size root (anchorMin == anchorMax). A stretched
+            // one — VoidBackground — is meant to fill its parent, and giving it
+            // a centre anchor would shrink it to nothing.
+            if (rect != null
+                && node["anchorMin"] == null && node["offset"] == null
+                && parent.GetComponent<LayoutGroup>() == null
+                && rect.anchorMin == rect.anchorMax)
+            {
+                rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+                rect.anchoredPosition = Vector2.zero;
+            }
+
+            // A prefab dropped into a layout group has to declare a size. Its
+            // root is a plain RectTransform, which reports no preferred height,
+            // so `childControlHeight` gives it ZERO and the whole component
+            // vanishes — that is how EnemyView came out 1000x0 inside
+            // CombatArea, with the sprite spilling off both edges of a box that
+            // was not there. The prefab's own authored rect is the size it was
+            // drawn at, so that is what it declares.
+            if (rect != null
+                && parent.GetComponent<LayoutGroup>() != null
+                && go.GetComponent<LayoutGroup>() == null
+                && go.GetComponent<LayoutElement>() == null)
+            {
+                var authored = ((RectTransform)prefab.transform).sizeDelta;
+                if (authored.x > 0f || authored.y > 0f)
+                {
+                    var element = go.AddComponent<LayoutElement>();
+                    if (authored.x > 0f) { element.minWidth = authored.x; element.preferredWidth = authored.x; }
+                    if (authored.y > 0f) { element.minHeight = authored.y; element.preferredHeight = authored.y; }
+                }
+            }
+
             // No ApplyScript: the behaviour came with the prefab. Adding it
             // again here would give the object two copies, both subscribing to
             // the same EventBus signals.

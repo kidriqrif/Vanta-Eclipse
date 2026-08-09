@@ -32,6 +32,17 @@ namespace VantaEclipse.Core
         Image _fadeImage;
         CanvasGroup _fadeGroup;
 
+        /// <summary>
+        /// True while the screen is behind the fade overlay.
+        ///
+        /// Read by the screenshot harness, which otherwise photographs the
+        /// black quarter-second between two screens and reports it as a blank
+        /// screen — which is exactly what MinigameHost looked like when it
+        /// bounced straight back to Arcade with no board chosen.
+        /// </summary>
+        public static bool IsTransitioning => Game.IsBooted && Game.Flow != null
+                                              && Game.Flow._isTransitioning;
+
         internal static SceneFlow Spawn()
         {
             var go = new GameObject("[SceneFlow]");

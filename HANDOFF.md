@@ -36,7 +36,7 @@ Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) first.
 | Gate | Command | Result |
 |---|---|---|
 | Full sweep, 8 stages | `bash tools/validate_all.sh` | **FAILS at stage 8** |
-| Screens rendered | `bash tools/screenshots.sh` | 110 captures, 9/11 screens broken |
+| Screens rendered | `bash tools/screenshots.sh` | 110 captures, 8 problems on 2 screens |
 | C# compile | (sweep stage 1) | clean |
 | Project invariants | `python tools/check_unity.py` | 6/6 OK |
 | Font coverage | `python tools/check_glyphs.py` | 95 characters, 106 glyphs |
@@ -60,11 +60,28 @@ deliberately absent from the invocation and both get "helpfully" added back:
 `-nographics` gives a null graphics device and every capture comes back empty,
 and `-quit` closes the editor before play mode has even started.
 
-**It fails, and it is right to.** 9 of the 11 screens have `VerticalLayoutGroup`
-rows that collapse to zero height, so their contents draw on top of each other;
-only MainMenu and Gameplay are clean. That is the single largest known defect in
-the project and it was invisible to every other stage, all of which were green
-while it was true.
+**It found nine broken screens on its first run**, all of one defect: Unity
+propagates no minimum size up a UI tree, so every container that derived its
+height from its children reported ZERO and its rows drew on top of each other.
+Godot did that propagation for free and the port reproduced the hierarchy
+without it. Fixed at the two places that build UI — `SceneBuilder` for the
+converted scenes and `UIBuild.Frame` for the screens that build themselves in
+code — after which 9 of the 11 screens are clean at all ten shapes.
+
+**It still fails, on 8 captures out of 110, and both remainders are real:**
+
+- `Gameplay` — the enemy sprite hangs 45-68px off the bottom on the four
+  tallest shapes. The taller the display, the narrower the canvas gets in
+  reference units, and the vertical stack above the combat area does not
+  shrink with it.
+- `Gear` — the relic tile's three-line label overlaps the row under it by 6-9px
+  at 19.5:9 and taller, where a quarter of the canvas width is 221 units rather
+  than 250.
+
+Both are the tall-screen consequence described under "Text and device pixels";
+neither is a collapse. MinigameHost's captures are informational: with no board
+chosen it fades straight back to Arcade, and the harness now says so rather
+than reporting the black quarter-second as a blank screen.
 
 ---
 
@@ -92,19 +109,18 @@ stage of the sweep, which is why stage 8 now exists):
 
 What remains:
 
-1. **9 of 11 screens have collapsed layout rows.** See stage 8 above and "Open"
-   below. This is the biggest one, and it is not a Play-policy problem — it is
-   a the-game-looks-broken problem.
-
-2. **The Shop shows a development banner** — "Development build — purchases are
+1. **The Shop shows a development banner** — "Development build — purchases are
    simulated and nothing is charged". `MonetizationManager.UseStubProviders =
    true` hides all paid surfaces, which is correct (there is no ad SDK and no
    Play Billing in the bundle), and the banner is now gated on
    `Debug.isDebugBuild` as well, so a release build does not show it. Verify
    that on the real artifact before trusting it.
 
-3. **Play Console forms not done**: Data Safety, IARC content rating, App
+2. **Play Console forms not done**: Data Safety, IARC content rating, App
    access.
+
+3. **Two tall-screen layout defects** remain, listed under stage 8. Cosmetic,
+   not blocking, and now measured rather than guessed at.
 
 The privacy policy blocker is **cleared**: GitHub Pages is on, the page is
 live at `https://kidriqrif.github.io/Vanta-Eclipse/privacy-policy.html`, the
@@ -294,16 +310,19 @@ Three ways out, none taken — this is a design decision:
 
 ## Open, needing a human decision
 
-- **Fix the collapsed layout rows.** Stage 8 reports them on 9 of 11 screens:
-  every `VerticalLayoutGroup` child that has no height source ends up 0 tall and
-  its rows draw on top of each other (`SettingsMenu`'s AUDIO / GAME / ABOUT
-  panels are the clearest case; `Shop`, `Arcade`, `Journal`, `Gear`, `Pets`,
-  `CardCollection`, `Eclipse` and `MinigameHost` all have it). This is a
-  conversion defect, not a Unity one — the same screens were correct in Godot,
-  which is what `production/screenshots/` still shows. Whoever picks this up
-  should decide once, in `SceneBuilder`, how a Godot `VBoxContainer` maps to a
-  layout group + `ContentSizeFitter`/`LayoutElement`, then regenerate, rather
-  than nudging 9 scenes by hand.
+- **The last two stage-8 failures**, both on tall shapes: Gameplay's enemy
+  sprite hanging off the bottom, and Gear's relic label overlapping the row
+  under it. Both want a decision about what gives on a display taller than
+  9:16 — the enemy box, the vertical rhythm above it, or the tile aspect —
+  rather than another local nudge.
+
+- **`SceneBuilder` is now load-bearing again.** It was written as a one-shot
+  migration tool and its own header still says the JSON and the exporter go
+  away with the Godot tree. They have not: fixing the layout collapse meant
+  fixing the GENERATOR and regenerating all 32 layouts, which is the only
+  reason the fix is one change rather than nine. If anyone hand-edits a scene
+  now, the next regeneration silently eats it. Either keep editing the
+  generator, or retire it deliberately and say so here.
 - **Nothing enforces documentation accuracy any more.** `check_architecture.py`
   parsed GDScript and went with the tree; `check_docs.py` still verifies the
   generated fact blocks, but no check fails on a backticked path in this file
