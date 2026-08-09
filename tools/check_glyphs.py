@@ -14,26 +14,42 @@ it renders as nothing at all, and a label silently loses a word.
 
 Being over-strict here costs a design choice. Being under-strict ships blank
 gaps to players, in text nobody re-reads after the day it was written.
+
+Sources scanned:
+    Assets/Scripts/**/*.cs               string and interpolated literals
+    Assets/Resources/Content/**/*.asset  the authored display fields
 """
 
 import pathlib
 import re
 import sys
 
-from _tree import rglob
-
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-FNT = ROOT / "fonts" / "vanta_pixel.fnt"
+FNT = ROOT / "Assets" / "Resources" / "Fonts" / "vanta_pixel.fnt"
 
 CHAR_ID = re.compile(r"^char id=(\d+)", re.M)
-# Visible strings in scenes and content resources.
-FIELD = re.compile(
-    r'^(?:text|display_name|description|title|name|flavou?r\w*)\s*=\s*"([^"]*)"', re.M
+
+# The authored text fields in a ScriptableObject asset. Unity writes them as
+# plain YAML scalars, quoted only when they need to be.
+ASSET_FIELD = re.compile(
+    r"^\s*(?:displayName|description|flavor|sealedFlavor|effectDescription|"
+    r"priceText|displayTemplate|stageNames)\s*:\s*(.+)$", re.M
 )
-LITERAL = re.compile(r'"([^"]*)"')
+
+# A C# string literal, verbatim or not. Interpolated holes are stripped
+# separately, because "{count}" is a placeholder and never rendered.
+LITERAL = re.compile(r'@?"((?:[^"\\]|\\.)*)"')
+HOLE = re.compile(r"\{[^{}]*\}")
+
 # Diagnostics never reach a player, and they legitimately carry odd characters
 # from engine messages and file paths.
-DIAGNOSTIC = re.compile(r"push_error|push_warning|printerr|\bprint\(|assert\(")
+DIAGNOSTIC = re.compile(r"Debug\.Log|Debug\.LogWarning|Debug\.LogError|nameof\(")
+
+# Names, not prose: a resource path or a node name is looked up, never drawn.
+NOT_RENDERED = re.compile(
+    r'^(?:Assets/|Resources/|Art/|Audio/|Prefabs/|Fonts/|Shaders/|Content/|'
+    r'[A-Za-z0-9_./-]+\.(?:png|wav|ogg|asset|prefab|unity|shader|mat|cs|json|fnt))'
+)
 
 
 def covered() -> set[str]:
@@ -52,21 +68,28 @@ def used() -> dict[str, list[str]]:
             if len(sites[char]) < 3 and where not in sites[char]:
                 sites[char].append(where)
 
-    for pattern in ("scenes/**/*.tscn", "data/**/*.tres", "ui/**/*.tres"):
-        for path in rglob(ROOT, pattern):
-            rel = path.relative_to(ROOT).as_posix()
-            for match in FIELD.finditer(path.read_text(encoding="utf-8")):
-                for char in match.group(1):
-                    note(char, rel)
+    content = ROOT / "Assets" / "Resources" / "Content"
+    for path in sorted(content.rglob("*.asset")) if content.exists() else []:
+        rel = path.relative_to(ROOT).as_posix()
+        for match in ASSET_FIELD.finditer(path.read_text(encoding="utf-8")):
+            value = match.group(1).strip().strip("'\"")
+            for char in value:
+                note(char, rel)
 
-    for path in rglob(ROOT, "scripts/**/*.gd"):
+    scripts = ROOT / "Assets" / "Scripts"
+    for path in sorted(scripts.rglob("*.cs")) if scripts.exists() else []:
         rel = path.relative_to(ROOT).as_posix()
         for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            stripped = line.lstrip()
+            # Comments carry prose that is never drawn, and this file is full of
+            # it — an em dash in a comment is not a missing glyph.
+            if stripped.startswith(("//", "///", "*", "/*")):
+                continue
             if DIAGNOSTIC.search(line):
                 continue
             for match in LITERAL.finditer(line):
-                text = match.group(1)
-                if text.startswith(("res://", "uid://", "user://")):
+                text = HOLE.sub("", match.group(1))
+                if NOT_RENDERED.match(text):
                     continue
                 for char in text:
                     note(char, f"{rel}:{number}")

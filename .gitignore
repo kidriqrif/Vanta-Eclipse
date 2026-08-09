@@ -30,24 +30,39 @@ sysinfo.txt
 crashlytics-build.properties
 *.stackdump
 
-# --- Godot (being retired; see PORT.md) -----------------------------------
-# Godot 4 generated cache and import data (rebuilt automatically on project open)
-.godot/
+# --- Unity ------------------------------------------------------------------
+# Regenerated on open, machine-specific, or enormous. ProjectSettings/ and
+# Packages/ are deliberately TRACKED: they are build configuration (SDK levels,
+# scripting backend, orientation, the scene list, the package manifest), and
+# leaving build configuration untracked is exactly how the release checklist
+# came to assert settings that no file specified.
+Library/
+Temp/
+Obj/
+obj/
+Logs/
+UserSettings/
+MemoryCaptures/
+Recordings/
+*.csproj
+*.sln
+*.user
+*.pidb
+*.booproj
+*.svd
+*.unitypackage
+*.apk
+*.aab
 
-# export_presets.cfg is deliberately TRACKED — it is build configuration
-# (architecture, SDK levels, permissions, exclude filters, icons, package
-# name), and keeping it untracked is exactly how the release checklist came
-# to assert settings that no file specified. Since Godot 4.4 the secrets live
-# in export_credentials.cfg instead, so that is what gets ignored.
+# The signing password is passed to Unity on the command line by
+# tools/build_android.sh and never written into ProjectSettings, which is
+# tracked. This is the file that holds it.
 export_credentials.cfg
-
-# Android build template (installed locally, never committed)
-android/
 
 # Keystores and signing secrets must NEVER be committed.
 #
-# This list is deliberately wider than the two extensions Godot's own docs
-# mention, because the Stop hook runs `git add -A` and pushes to a PUBLIC
+# This list is deliberately wide, because the Stop hook runs `git add -A`
+# and pushes to a PUBLIC
 # repository on every turn. Nothing here is reviewed before it leaves the
 # machine, so the ignore list — not vigilance — is the only thing standing
 # between a credential and the internet. Every pattern below is a file the
@@ -79,9 +94,6 @@ desktop.ini
 # not something a fresh clone should inherit)
 .claude/settings.local.json
 
-# Screenshots from tools/screenshot_run.sh
-.godot-shots/
-
 # Python bytecode from the tools/ checkers
 __pycache__/
 *.pyc
@@ -92,15 +104,12 @@ __pycache__/
 # meant to.
 graphify-out/
 
-# Unity build output. `build/` is already ignored above for the Godot exports;
-# this note is here so the reason survives the Godot tree's removal — the APK
-# and AAB are 27 MB artifacts rebuilt by tools, never reviewed, and the Stop
-# hook pushes to a public remote every turn.
+# Build output. The APK and AAB are ~27 MB artifacts rebuilt by tools, never
+# reviewed, and the Stop hook pushes to a public remote every turn.
+build/
 
 # IL2CPP / Bee build intermediates. Unity writes these into the PROJECT ROOT,
-# not under Library/, so none of the Unity entries above catch them — 55 files
-# of CMake caches and ninja graphs were committed and pushed to the public
-# remote before this line existed.
+# not under Library/, so the Library/ entry above does not catch them — 55
+# files of CMake caches and ninja graphs were committed and pushed to the
+# public remote before this line existed.
 .utmp/
-Logs/
-UserSettings/

@@ -55,10 +55,11 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 # icon.png is written to make_icons.ROOT rather than to its ICONS directory, so
 # that module gets both constants redirected and is compared by basename.
 GENERATORS = [
-    ("make_sprites", {"OUT": "sprites"}, (".png",)),
-    ("make_audio", {"SFX_DIR": "audio/sfx", "MUSIC_DIR": "audio/music"}, (".wav",)),
-    ("make_font", {"OUT": "fonts"}, (".png", ".fnt")),
-    ("make_icons", {"ICONS": "production/icons", "ROOT": "."}, (".png",)),
+    ("make_sprites", {"OUT": "Assets/Resources/Art"}, (".png",)),
+    ("make_audio", {"SFX_DIR": "Assets/Resources/Audio/sfx",
+                    "MUSIC_DIR": "Assets/Resources/Audio/music"}, (".wav",)),
+    ("make_font", {"OUT": "Assets/Resources/Fonts"}, (".png", ".fnt")),
+    ("make_icons", {"ICONS": "production/icons", "LAUNCHER": "Assets/Icons"}, (".png",)),
 ]
 
 

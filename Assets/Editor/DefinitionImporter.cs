@@ -24,7 +24,7 @@ namespace VantaEclipse.EditorTools
         // Resources.LoadAll, which is the closest analogue to how the Godot
         // managers did load("res://data/...") at _ready time.
         const string ContentDir = "Assets/Resources/Content";
-        const string ArtDir = "Assets/Art";
+        const string ArtDir = "Assets/Resources/Art";
 
         [MenuItem("Vanta Eclipse/Import Ported Data")]
         public static void Import()

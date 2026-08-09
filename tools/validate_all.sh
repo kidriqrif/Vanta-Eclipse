@@ -1,152 +1,111 @@
 #!/usr/bin/env bash
-# The full static sweep. Run from anywhere; before every commit.
+# The whole validation sweep. Every stage is a hard gate; the script exits
+# non-zero if any of them fail, and it runs all of them regardless so one
+# failure does not hide the next five.
 #
-# gdparse and gdlint cover syntax and style. Everything after them covers
-# classes of runtime error those two pass cleanly — each has bitten this
-# project at least once, and each is listed in the file that implements it.
+# Run: bash tools/validate_all.sh
 #
-# pipefail is essential: a stage written as `check | sed` reports sed's exit
-# status, not the check's, so without it a failing stage silently passes.
-set -u
-set -o pipefail
-cd "$(dirname "$0")/.."
-status=0
+# WHAT HAPPENED TO STAGES 1-5, 9, 15 AND 16
+#
+# The Godot sweep had sixteen stages, and eight of them existed because
+# GDScript resolves names at runtime: gdparse and gdlint, a scene/resource
+# structure pass, an autoload-member check, a semantic pass over every script,
+# a shader-parameter pass, a logic harness run inside the engine, and a
+# screenshot harness. A misspelled autoload member or a signal connected with
+# the wrong arity was silent until the line ran, so it had to be found by
+# reading the source.
+#
+# In C# every one of those is a compile error. Stage 1 here — a real Unity
+# batchmode compile — is a stricter and more honest version of all five script
+# stages than any parser written in this directory could be, and the smoke test
+# in stage 7 replaces the logic harness with 49 assertions run against the real
+# managers.
+#
+# The screenshot harness has NO replacement yet. It rendered every screen at
+# three aspect ratios and checked layout, glyph box and device pixels, and
+# nothing in this sweep does that now. That is a real gap, stated here rather
+# than quietly dropped.
 
-# Pick an interpreter. On Windows `python3` is usually the Microsoft Store
-# alias stub: it EXISTS on PATH and exits non-zero with an ad, so presence
-# alone is not enough — each candidate has to actually execute something.
-PY=""
-for candidate in "${PYTHON:-}" python3 python; do
-  [ -n "$candidate" ] || continue
-  if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c "" >/dev/null 2>&1; then
-    PY="$candidate"
-    break
-  fi
-done
-if [ -z "$PY" ]; then
-  echo "no working python found (tried \$PYTHON, python3, python)" >&2
+set -uo pipefail
+cd "$(dirname "$0")/.."
+
+status=0
+fail() { echo "   FAIL"; status=1; }
+
+# Probe by RUNNING it, not by `command -v`. On Windows `python3` resolves to
+# the Microsoft Store app-execution alias, which exists on PATH, exits 9009 and
+# prints an advert — so a presence test picks an interpreter that cannot run a
+# single stage, and all six report FAIL for the same fake reason.
+PYTHON="${PYTHON:-}"
+if [ -z "$PYTHON" ]; then
+  for candidate in python3 python py; do
+    if "$candidate" -c "import sys" >/dev/null 2>&1; then PYTHON="$candidate"; break; fi
+  done
+fi
+if [ -z "$PYTHON" ]; then
+  echo "no working python found (tried \$PYTHON, python3, python, py)" >&2
   exit 1
 fi
 
-echo "1. gdparse"
-if command -v gdparse >/dev/null 2>&1; then
-  parse_failed=0
-  for f in $(find scripts -name '*.gd'); do
-    gdparse "$f" >/dev/null 2>&1 || { echo "   FAIL $f"; parse_failed=1; status=1; }
-  done
-  [ $parse_failed -eq 0 ] && echo "   OK"
+UNITY="${UNITY:-/c/Program Files/Unity/Hub/Editor/6000.5.7f1/Editor/Unity.exe}"
+PROJECT="$(pwd)"
+LOGDIR="${TMPDIR:-/tmp}"
+
+run_unity() {  # run_unity <method> <logfile>
+  "$UNITY" -batchmode -quit -nographics \
+    -projectPath "$PROJECT" \
+    -executeMethod "$1" \
+    -logFile "$2" >/dev/null 2>&1
+}
+
+echo "1. C# compiles (Unity batchmode)"
+if [ ! -x "$UNITY" ] && [ ! -f "$UNITY" ]; then
+  echo "   SKIPPED (no Unity at \$UNITY: $UNITY)"
 else
-  # Without this guard a missing gdtoolkit prints FAIL for every file in the
-  # project, which reads as 40 broken scripts rather than one absent tool.
-  echo "   SKIPPED (gdparse not installed: pip install gdtoolkit)"
-fi
-
-echo "2. gdlint"
-if command -v gdlint >/dev/null 2>&1; then
-  # The exit status has to be captured BEFORE the pipe: piping to tail made
-  # $? the status of tail, which is always 0, so every lint error this stage
-  # ever found was printed and then ignored. A whole stage was decorative.
-  lint_out=$(gdlint $(find scripts -name '*.gd') 2>&1)
-  lint_status=$?
-  printf '%s\n' "$lint_out" | tail -2 | sed 's/^/   /'
-  if [ "$lint_status" -ne 0 ]; then
-    printf '%s\n' "$lint_out" | grep -E "Error|Warning" | head -20 | sed 's/^/   /'
-    status=1
-  fi
-else
-  echo "   SKIPPED (gdlint not installed: pip install gdtoolkit)"
-fi
-
-echo "3. scene/resource structure"
-"$PY" tools/validate_godot_files.py . | sed 's/^/   /' || status=1
-
-echo "4. autoload members exist"
-"$PY" tools/check_autoload_calls.py | sed 's/^/   /' || status=1
-
-echo "5. GDScript semantics (names, arity, handlers, paths, load order)"
-"$PY" tools/check_scripts.py | sed 's/^/   /' || status=1
-
-echo "6. content library (properties, enums, ids, reachability)"
-"$PY" tools/check_data.py | sed 's/^/   /' || status=1
-
-echo "7. data-to-code wiring (stats, metrics, enum dispatch)"
-"$PY" tools/check_wiring.py | sed 's/^/   /' || status=1
-
-echo "8. architecture docs match the code (autoloads, save sections)"
-"$PY" tools/check_architecture.py | sed 's/^/   /' || status=1
-
-echo "9. shaders and material parameters"
-"$PY" tools/check_shaders.py | sed 's/^/   /' || status=1
-
-echo "10. UI theme discipline and asset reachability"
-"$PY" tools/check_ui.py | sed 's/^/   /' || status=1
-
-echo "11. font coverage (every rendered glyph exists in the face)"
-"$PY" tools/check_glyphs.py | sed 's/^/   /' || status=1
-
-# Stage 10 reads colour out of source files and stops there, so half the
-# project's colour — the pixels inside the 58 shipped PNGs — had nothing
-# looking at it at all. This opens the images.
-echo "12. generated art (every pixel is one of the 16 palette colours)"
-"$PY" tools/check_pixels.py | sed 's/^/   /' || status=1
-
-# Everything above compares what the files say to each other. This one runs
-# the game: it seeds every save section, pushes it through the real save/load
-# path, and asserts the economy invariants. A dropped field or a non-idempotent
-# load produces no parse error and no visual difference, so nothing earlier in
-# this script can see it.
-# Stage 12 proves the pixels are on-palette. This proves they are the pixels
-# the generators still produce — the difference between "this art is valid" and
-# "this art is current". A hand-edited sprite, or one left over from before a
-# generator changed, passes 12 and fails here.
-echo "13. shipped assets match their generators (byte-identical)"
-"$PY" tools/check_generated.py | sed 's/^/   /' || status=1
-
-# Stage 8 checks that ARCHITECTURE.md names files that exist. This one checks
-# that the README and the public GitHub Pages site still describe THIS project:
-# every figure in them is regenerated from the file that defines it, so a stale
-# count fails here instead of being read by someone as fact.
-echo "14. README and the published site match the code"
-"$PY" tools/check_docs.py | sed 's/^/   /' || status=1
-
-echo "15. runtime logic (save round-trip, invariants)"
-if bash tools/logic_run.sh >/tmp/vanta_logic.$$ 2>&1; then
-  # The verdict line by name, NOT tail -1. Anything the engine prints after the
-  # harness has spoken — a leak warning, a driver notice — is not the result,
-  # and this stage spent a while reporting one of those as if it were.
-  grep -E "^ *LOGIC: " /tmp/vanta_logic.$$ | sed 's/^ *//;s/^/   /'
-else
-  sed 's/^/   /' /tmp/vanta_logic.$$ | tail -12
-  status=1
-fi
-rm -f /tmp/vanta_logic.$$
-
-# Stage 15 runs the game with no renderer. This one runs it with a real one and
-# then LOOKS at the result: every screen walked for overflow, every text control
-# checked against the glyph box, and every glyph checked against the pixels the
-# rasteriser actually produced.
-#
-# It was not part of this script before, which is why the tagline on the main
-# menu could lose both its periods and stay green through fifteen stages. The
-# harness had been finding things and reporting them to nobody: it always
-# exited 0, so even when it printed problems the sweep never heard.
-#
-# Skippable, because it is the one stage that needs a GPU and ~90s. CI without
-# a display sets VANTA_SKIP_SHOTS=1; a developer machine should not.
-echo "16. rendered screens (layout, glyph box, device pixels)"
-if [ "${VANTA_SKIP_SHOTS:-0}" = "1" ]; then
-  echo "   SKIPPED (VANTA_SKIP_SHOTS=1)"
-elif ! command -v timeout >/dev/null 2>&1; then
-  echo "   SKIPPED (no timeout(1); the harness needs its hard cap)"
-else
-  if bash tools/screenshot_run.sh >/tmp/vanta_shots.$$ 2>&1; then
-    grep -E "^(LAYOUT|FONT|FONTDEVICE): " /tmp/vanta_shots.$$ | sed 's/^/   /'
+  log="$LOGDIR/vanta_compile.$$"
+  if run_unity VantaEclipse.EditorTools.PortSmokeTest.Run "$log"; then
+    echo "   OK"
   else
-    grep -E "^(LAYOUT|FONT|FONTDEVICE): " /tmp/vanta_shots.$$ | sed 's/^/   /'
-    grep -E "^ *FINDING: " /tmp/vanta_shots.$$ | sed 's/^ *//;s/^/   /' | head -15
-    status=1
+    grep -E "error CS" "$log" | sort -u | sed 's/^/   /'
+    fail
   fi
-  rm -f /tmp/vanta_shots.$$
+  rm -f "$log" 2>/dev/null || true
 fi
 
+echo "2. project invariants (palette, glyph box, scene/prefab/sprite names)"
+$PYTHON tools/check_unity.py || fail
+
+echo "3. font coverage (every rendered glyph exists in the face)"
+$PYTHON tools/check_glyphs.py || fail
+
+echo "4. generated art (every pixel is one of the 16 palette colours)"
+$PYTHON tools/check_pixels.py || fail
+
+echo "5. shipped assets match their generators (byte-identical)"
+$PYTHON tools/check_generated.py || fail
+
+echo "6. README and the published site match the code"
+$PYTHON tools/check_docs.py || fail
+
+echo "7. runtime logic (save round-trip, invariants)"
+if [ ! -x "$UNITY" ] && [ ! -f "$UNITY" ]; then
+  echo "   SKIPPED (no Unity at \$UNITY: $UNITY)"
+else
+  log="$LOGDIR/vanta_smoke.$$"
+  if run_unity VantaEclipse.EditorTools.PortSmokeTest.Run "$log" \
+     && grep -q "0 failed" "$log"; then
+    grep -E "PortSmokeTest:" "$log" | sed 's/^/   /'
+  else
+    grep -E "FAIL|PortSmokeTest:" "$log" | sed 's/^/   /'
+    fail
+  fi
+  rm -f "$log" 2>/dev/null || true
+fi
+
+echo
+if [ $status -eq 0 ]; then
+  echo "sweep: OK"
+else
+  echo "sweep: FAILED"
+fi
 exit $status

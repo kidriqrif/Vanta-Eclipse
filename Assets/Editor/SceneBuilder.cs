@@ -28,9 +28,35 @@ namespace VantaEclipse.EditorTools
     {
         const string JsonDir = "Assets/Editor/PortedScenes";
         const string SceneDir = "Assets/Scenes";
-        const string ArtDir = "Assets/Art";
+        const string PrefabDir = "Assets/Resources/Prefabs";
+        const string ArtDir = "Assets/Resources/Art";
 
         static readonly Vector2 ReferenceResolution = new(1080f, 1920f);
+
+        /// <summary>
+        /// Layouts that are components, not screens.
+        ///
+        /// Godot drew no distinction: a .tscn was a .tscn, and `preload(...)
+        /// .instantiate()` worked on any of them. Unity splits the two — a
+        /// Scene is loaded (one at a time, replacing what was there) and a
+        /// Prefab is instantiated (many at once, into whatever is open). Every
+        /// one of these is spawned by a script or embedded in a screen, so
+        /// building them as scenes produced 21 entries in Build Settings that
+        /// nothing could ever navigate to, and left the screens that embed them
+        /// holding empty placeholders.
+        /// </summary>
+        static readonly HashSet<string> Components = new()
+        {
+            // Embedded in a screen's layout, or spawned by one at runtime.
+            "AutoAttackToast", "CountdownTimerBar", "DamageNumber", "EnemyView",
+            "ForgePanel", "InspectorCard", "LootToast", "OfflineRewardsModal",
+            "RelicCollectionPanel", "ResultBanner", "UpgradeRow",
+            "UpgradeShopPanel", "VoidBackground", "WorldUnlockModal",
+            // The arcade boards. MinigameHost instantiates exactly one of these
+            // into itself, chosen by the MinigameDefinition the player picked.
+            "Battleship", "ConnectFour", "LightsOut", "MemoryMatch",
+            "RuneSweeper", "SequenceEcho", "VoidReflex",
+        };
 
         [MenuItem("Vanta Eclipse/Build Screens From Ported Layouts")]
         public static void BuildAll()
@@ -42,30 +68,111 @@ namespace VantaEclipse.EditorTools
             }
 
             Directory.CreateDirectory(SceneDir);
-            var built = new List<string>();
-            int nodeTotal = 0;
+            Directory.CreateDirectory(PrefabDir);
 
+            // Read every layout before building any of it. Screens resolve their
+            // Instance nodes against the prefab tree, so the prefabs have to
+            // exist first — which means two ordered passes, not one loop.
+            var layouts = new List<(string Name, JArray Nodes)>();
             foreach (var path in Directory.GetFiles(JsonDir, "*.json"))
             {
                 var doc = JObject.Parse(File.ReadAllText(path));
-                string sceneName = ToPascal((string)doc["name"]);
-                int nodes = BuildScene(sceneName, (JArray)doc["nodes"]);
-                nodeTotal += nodes;
-                built.Add(sceneName);
+                layouts.Add((ToPascal((string)doc["name"]), (JArray)doc["nodes"]));
+            }
+
+            int nodeTotal = 0;
+            var prefabs = new List<string>();
+            var screens = new List<string>();
+
+            // Pass 1 — components, into an empty scene so nothing lands in a
+            // real one on the way past.
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            foreach (var (name, nodes) in layouts)
+            {
+                if (!Components.Contains(name)) continue;
+                nodeTotal += BuildPrefab(name, nodes);
+                prefabs.Add(name);
+            }
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            // Pass 2 — screens.
+            foreach (var (name, nodes) in layouts)
+            {
+                if (Components.Contains(name)) continue;
+                nodeTotal += BuildScene(name, nodes);
+                screens.Add(name);
             }
 
             // Register every screen in Build Settings, main menu first — it is
             // the entry point, and Unity loads index 0 on launch.
-            var scenes = new List<EditorBuildSettingsScene>();
-            built.Sort((a, b) => a == "MainMenu" ? -1 : b == "MainMenu" ? 1 : string.Compare(a, b));
-            foreach (var name in built)
-                scenes.Add(new EditorBuildSettingsScene($"{SceneDir}/{name}.unity", true));
-            EditorBuildSettings.scenes = scenes.ToArray();
+            screens.Sort((a, b) => a == "MainMenu" ? -1 : b == "MainMenu" ? 1 : string.Compare(a, b));
+            var registered = new List<EditorBuildSettingsScene>();
+            foreach (var name in screens)
+                registered.Add(new EditorBuildSettingsScene($"{SceneDir}/{name}.unity", true));
+            EditorBuildSettings.scenes = registered.ToArray();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"Screens built: {built.Count} scenes, {nodeTotal} nodes, " +
-                      $"{scenes.Count} registered in Build Settings.");
+            Debug.Log($"Built {screens.Count} screens and {prefabs.Count} prefabs, " +
+                      $"{nodeTotal} nodes; {registered.Count} scenes in Build Settings.");
+        }
+
+        /// <summary>
+        /// Build one component layout and save it as a prefab.
+        ///
+        /// Unlike a screen this keeps the layout's own root: damage_number's
+        /// root IS the Label, and replacing it with a bare Control (which is
+        /// what a screen root gets, so it can carry the safe-area inset) would
+        /// throw away the thing the prefab exists to be.
+        /// </summary>
+        static int BuildPrefab(string prefabName, JArray nodes)
+        {
+            // A throwaway parent so Make() has something to attach the root to;
+            // the root is lifted out of it before it is destroyed.
+            var holder = new GameObject("~PrefabHolder", typeof(RectTransform));
+            var byPath = new Dictionary<string, GameObject>();
+            GameObject root = null;
+            int count = 0;
+
+            foreach (JObject node in nodes)
+            {
+                string name = (string)node["name"];
+                string kind = (string)node["kind"];
+                string parentPath = (string)node["parent"];
+
+                if (parentPath == null)
+                {
+                    root = Make(kind, name, node, holder);
+                    if (root == null) break;
+                    byPath[""] = root;
+                    count++;
+                    continue;
+                }
+
+                string key = parentPath == "." ? "" : parentPath;
+                if (!byPath.TryGetValue(key, out var parent))
+                {
+                    Debug.LogWarning($"{prefabName}: '{name}' has no parent at '{parentPath}' — " +
+                                     "attaching to the root instead.");
+                    parent = root;
+                }
+
+                var go = Make(kind, name, node, parent);
+                if (go == null) continue;
+
+                byPath[key == "" ? name : $"{key}/{name}"] = go;
+                count++;
+            }
+
+            if (root != null)
+            {
+                root.transform.SetParent(null, false);
+                PrefabUtility.SaveAsPrefabAsset(root, $"{PrefabDir}/{prefabName}.prefab");
+                Object.DestroyImmediate(root);
+            }
+            Object.DestroyImmediate(holder);
+            return count;
         }
 
         static int BuildScene(string sceneName, JArray nodes)
@@ -141,6 +248,18 @@ namespace VantaEclipse.EditorTools
 
         static GameObject Make(string kind, string name, JObject node, GameObject parent)
         {
+            // An instanced sub-scene resolves to the prefab pass 1 built from
+            // the same layout. Godot's .tscn recorded which scene was embedded;
+            // export_scenes.py carried that through, so this is a lookup rather
+            // than a guess. A miss falls through to an empty Control, which is
+            // what every one of these used to be.
+            if (kind == "Instance")
+            {
+                var instanced = MakeInstance(name, node, parent);
+                if (instanced != null) return instanced;
+                kind = "Control";
+            }
+
             var go = new GameObject(name, typeof(RectTransform));
             go.transform.SetParent(parent.transform, false);
             var rect = go.GetComponent<RectTransform>();
@@ -152,7 +271,6 @@ namespace VantaEclipse.EditorTools
             {
                 case "Control":
                 case "CanvasLayer":
-                case "Instance":
                     break;
 
                 case "Label":
@@ -396,11 +514,45 @@ namespace VantaEclipse.EditorTools
             group.childControlHeight = true;
         }
 
+        /// <summary>
+        /// Instantiate the prefab a Godot Instance node referred to.
+        /// Returns null when there is no prefab for it, so the caller can fall
+        /// back to an empty Control rather than lose the node.
+        /// </summary>
+        static GameObject MakeInstance(string name, JObject node, GameObject parent)
+        {
+            string resPath = (string)node["instance"];
+            if (string.IsNullOrEmpty(resPath)) return null;
+
+            string stem = Path.GetFileNameWithoutExtension(resPath);
+            string prefabName = ToPascal(stem);
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabDir}/{prefabName}.prefab");
+            if (prefab == null)
+            {
+                Debug.LogWarning($"SceneBuilder: no prefab '{prefabName}' for instanced " +
+                                 $"'{resPath}' — '{name}' built as an empty Control.");
+                return null;
+            }
+
+            var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent.transform);
+            // Godot lets an instance be renamed at its use site, and several are
+            // (gameplay's countdown_timer_bar is "TimerBar"). The screens look
+            // their nodes up by name, so the use-site name wins.
+            go.name = name;
+
+            var rect = go.GetComponent<RectTransform>();
+            if (rect != null) ApplyRect(rect, node);
+            // No ApplyScript: the behaviour came with the prefab. Adding it
+            // again here would give the object two copies, both subscribing to
+            // the same EventBus signals.
+            return go;
+        }
+
         static void MakeText(GameObject go, JObject node, VantaTheme.Style style = null)
         {
             style ??= VantaTheme.Get((string)node["style"]);
             var text = go.AddComponent<Text>();
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = Fonts.Body;
             text.text = (string)node["text"] ?? "";
             text.color = style.Text;
 

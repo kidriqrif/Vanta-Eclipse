@@ -52,10 +52,11 @@ from pixelart import PALETTE, rgb  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
-SCOPES = ("sprites/**/*.png", "icon.png", "production/icons/*.png")
+SCOPES = ("Assets/Resources/Art/**/*.png", "Assets/Icons/*.png",
+          "production/icons/*.png")
 
 # Written white-on-alpha and multiplied by font_color at draw time. See above.
-FONT_ATLAS = "fonts/vanta_pixel.png"
+FONT_ATLAS = "Assets/Resources/Fonts/vanta_pixel.png"
 WHITE = (255, 255, 255)
 
 

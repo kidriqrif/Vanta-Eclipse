@@ -18,7 +18,7 @@ authoring time is not a property that lasts, so the durable fix is not to write
 more carefully but to stop writing the perishable parts by hand.
 
 So the numbers come from the code that defines them — the autoload count from
-project.godot, the palette size from pixelart.py, the glyph count from the font
+BuildAndroid.cs, the palette size from pixelart.py, the glyph count from the font
 itself — and tools/check_docs.py fails the sweep when what is committed differs
 from what this produces. "Remember to update the docs" is not a mechanism.
 "The build goes red" is.
@@ -59,42 +59,45 @@ END = "<!-- end generated -->"
 
 
 def facts() -> dict[str, object]:
-    project = (ROOT / "project.godot").read_text(encoding="utf-8")
-    font = (ROOT / "fonts/vanta_pixel.fnt").read_text(encoding="utf-8")
+    build = (ROOT / "Assets/Editor/BuildAndroid.cs").read_text(encoding="utf-8")
+    version_txt = (ROOT / "ProjectSettings/ProjectVersion.txt").read_text(encoding="utf-8")
+    font = (ROOT / "Assets/Resources/Fonts/vanta_pixel.fnt").read_text(encoding="utf-8")
     sweep = (ROOT / "tools/validate_all.sh").read_text(encoding="utf-8")
-    presets = (ROOT / "export_presets.cfg").read_text(encoding="utf-8")
-    sys.path.insert(0, str(ROOT / "tools"))
-    import selftest_checks
+    locator = (ROOT / "Assets/Scripts/Core/Game.cs").read_text(encoding="utf-8")
+    settings = (ROOT / "ProjectSettings/EditorBuildSettings.asset").read_text(encoding="utf-8")
 
     return {
-        "version": _one(r'version/name="([^"]+)"', presets),
-        # The engine version the project declares, not one written down twice.
-        "godot": _one(r'config/features=PackedStringArray\("([\d.]+)"', project),
-        "target_sdk": _one(r'gradle_build/target_sdk="(\d+)"', presets),
-        "min_sdk": _one(r'gradle_build/min_sdk="(\d+)"', presets),
-        "autoloads": len(re.findall(r'^\w+="\*res://', project, re.M)),
-        "sprites": len(list((ROOT / "sprites").rglob("*.png"))),
-        "sounds": len(list((ROOT / "audio").rglob("*.wav"))),
-        "definitions": len(list((ROOT / "data").rglob("*.tres"))),
-        "scenes": len(list((ROOT / "scenes").rglob("*.tscn"))),
+        # Every player-facing number is read from the artefact that DEFINES it,
+        # never from another document. A number copied between two documents is
+        # a number that can disagree with itself.
+        "version": _one(r'VersionName\s*=\s*"([^"]+)"', build),
+        "unity": _one(r"m_EditorVersion:\s*(\S+)", version_txt),
+        "target_sdk": _one(r"TargetSdk\s*=\s*(?:\(AndroidSdkVersions\))?(?:AndroidSdkVersions\.AndroidApiLevel)?(\d+)", build),
+        "min_sdk": _one(r"MinSdk\s*=\s*(?:\(AndroidSdkVersions\))?(?:AndroidSdkVersions\.AndroidApiLevel)?(\d+)", build),
+        # What Godot called autoloads: the managers the service locator builds.
+        "managers": len(re.findall(r"public static \w+ \w+ \{ get; private set; \}", locator)),
+        "sprites": len(list((ROOT / "Assets/Resources/Art").rglob("*.png"))),
+        "sounds": len(list((ROOT / "Assets/Resources/Audio").rglob("*.wav"))),
+        "definitions": len(list((ROOT / "Assets/Resources/Content").rglob("*.asset"))),
+        "scenes": len(re.findall(r"Assets/Scenes/\w+\.unity", settings)),
+        "prefabs": len(list((ROOT / "Assets/Resources/Prefabs").glob("*.prefab"))),
         "palette": len(PALETTE),
         "glyphs": int(_one(r"chars count=(\d+)", font)),
         "stages": len(re.findall(r'^echo "(\d+)\. ', sweep, re.M)),
-        "mutations": len(selftest_checks.MUTATIONS),
         # Content counts, so the PROSE cannot go stale either. The first draft
         # of this page wrote "all sixteen sounds" and "four real minigames" as
         # words, which is the same bug as a hardcoded table — it just takes
         # longer to notice, because nobody proofreads a sentence for arithmetic.
-        "worlds": _count("data/worlds"),
-        "relics": _count("data/relics"),
-        "pets": _count("data/pets"),
-        "minigames": _count("data/minigames"),
-        "slots": _count("data/slots"),
+        "worlds": _count("WorldDefinition"),
+        "relics": _count("RelicDefinition"),
+        "pets": _count("PetDefinition"),
+        "minigames": _count("MinigameDefinition"),
+        "slots": _count("SlotDefinition"),
     }
 
 
-def _count(folder: str) -> int:
-    return len(list((ROOT / folder).glob("*.tres")))
+def _count(kind: str) -> int:
+    return len(list((ROOT / "Assets/Resources/Content" / kind).glob("*.asset")))
 
 
 # Small counts read as words in a sentence and as digits in a table. Deriving
@@ -166,7 +169,7 @@ def css() -> str:
 
 def mark() -> str:
     """The real app icon, inlined. Same bytes the launcher shows."""
-    raw = (ROOT / "icon.png").read_bytes()
+    raw = (ROOT / "Assets/Icons/launcher_192.png").read_bytes()
     return base64.b64encode(raw).decode("ascii")
 
 
@@ -180,14 +183,13 @@ def index_html() -> str:
         f'<tr><td>{label}</td><td class="n">{value}</td></tr>'
         for label, value in [
             ("Screens", f["scenes"]),
-            ("Autoload managers", f["autoloads"]),
+            ("Managers", f["managers"]),
             ("Content definitions", f["definitions"]),
             ("Generated sprites", f["sprites"]),
             ("Generated sounds", f["sounds"]),
             ("Palette colours", f["palette"]),
             ("Font glyphs", f["glyphs"]),
             ("Validation stages", f["stages"]),
-            ("Self-test mutations", f["mutations"]),
         ]
     )
     return f"""<!DOCTYPE html>
@@ -209,7 +211,7 @@ def index_html() -> str:
 </header>
 
 <h2>What it is</h2>
-<p>An idle RPG for Android, built in Godot {f["godot"]}. Tap to strike, or unlock
+<p>An idle RPG for Android, built in Unity {f["unity"]}. Tap to strike, or unlock
 the auto-attacker and let your hero fight without you. {words(f["worlds"])}
 worlds, a boss on every tenth gate, {words(f["slots"])} equipment slots,
 {words(f["relics"])} relics, {words(f["pets"])} pets, an arcade of
@@ -271,20 +273,19 @@ def readme_block() -> str:
     return "\n".join([
         BEGIN,
         "",
-        f"**Version {f['version']}** &middot; Godot {f['godot']} &middot; "
+        f"**Version {f['version']}** &middot; Unity {f['unity']} &middot; "
         f"Android {f['min_sdk']}+, targets API {f['target_sdk']}",
         "",
         "| | |",
         "| --- | --- |",
         f"| Screens | {f['scenes']} |",
-        f"| Autoload managers | {f['autoloads']} |",
-        f"| Content definitions (`.tres`) | {f['definitions']} |",
+        f"| Managers | {f['managers']} |",
+        f"| Content definitions (`.asset`) | {f['definitions']} |",
         f"| Generated sprites | {f['sprites']} |",
         f"| Generated sounds | {f['sounds']} |",
         f"| Palette colours | {f['palette']} |",
         f"| Font glyphs | {f['glyphs']} |",
         f"| Validation stages | {f['stages']} |",
-        f"| Self-test mutations | {f['mutations']} |",
         "",
         "Every number above is read from the file that defines it and refreshed",
         "by `tools/make_docs.py`; `tools/check_docs.py` fails the sweep if this",

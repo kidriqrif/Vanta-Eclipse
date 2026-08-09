@@ -3,42 +3,62 @@
 This document explains how the project is organized and the rules every new
 system must follow. It is the first thing to read before adding code.
 
-## The manager (autoload) pattern
+## The manager pattern
 
-Godot lets us register scripts as **autoloads**: they are created once when the
-game starts, never destroyed, and are reachable from any script by name.
-All long-lived game logic lives in autoload managers under `scripts/managers/`.
-Scenes (screens) are throwaway views: they read data from managers, display it,
-and forward player input back to managers. **Scenes never own game state.**
+Godot let us register scripts as **autoloads**: created once at launch, alive
+for the whole session, reachable by name from anywhere. Unity has no such
+construct, so `Assets/Scripts/Core/Game.cs` is a static service locator built
+from a `[RuntimeInitializeOnLoadMethod]` that runs **before the first scene
+loads**. That is the closest Unity gets: it fires whichever scene the editor
+starts in, so entering play mode on any screen works exactly the way it did in
+Godot.
 
-Load order matters. This table is the declaration order in `project.godot` and
-is verified against it by `tools/check_architecture.py` — if you add, remove, or
-reorder an autoload, update this table in the same commit or the validation
-sweep fails.
+All long-lived game logic lives in managers under `Assets/Scripts/Managers/`.
+Screens never own game state; they read managers and listen to `EventBus`.
 
-| Order | Autoload | File | Responsibility |
+Construction order matters, and it is the order in `Game.Boot()`. If you add or
+reorder a manager, update this table in the same commit.
+
+| Order | Manager | Locator | Responsibility |
 | --- | --- | --- | --- |
-| 1 | `EventBus` | `event_bus.gd` | Global signals. No logic, no state. |
-| 2 | `SettingsManager` | `settings_manager.gd` | Player preferences (`user://settings.cfg`), audio bus volumes, haptics. |
-| 3 | `SaveManager` | `save_manager.gd` | Versioned JSON save file, autosave, atomic writes, migrations. |
-| 4 | `GameManager` | `game_manager.gd` | Game version, play time, session count. Deliberately small &mdash; it does NOT pause: an idle game must keep running. |
-| 5 | `CurrencyManager` | `currency_manager.gd` | All currency balances (essence, void crystals, astral shards). Only add()/try_spend() may change them. |
-| 6 | `UpgradeManager` | `upgrade_manager.gd` | Upgrade definitions + owned levels; answers stat-modifier queries. |
-| 7 | `EquipmentManager` | `equipment_manager.gd` | Inventory, equipped items, procedural generation, drops, salvage, forge. Ahead of `PlayerStats` so it can read the affix sums; items are serialized dicts, affix/slot pools are `.tres`. |
-| 8 | `RelicManager` | `relic_manager.gd` | Relic collection, the active relic, and the awaken state. Ahead of `PlayerStats`/`IdleManager`, which read its effect-query getters. |
-| 9 | `PetManager` | `pet_manager.gd` | Pet roster, active pet, XP/level/evolution. Ahead of `PlayerStats`, which reads its bonus getter. |
-| 10 | `SkillTreeManager` | `skill_tree_manager.gd` | Ascendant Powers definitions and purchased levels. Ahead of `PlayerStats`. Powers are PERMANENT — they never reset on an Eclipse. |
-| 11 | `PlayerStats` | `player_stats.gd` | All player combat stats behind `get_*()` functions; every layer above (upgrades, equipment, relics, pets, powers) stacks inside them. |
-| 12 | `SceneManager` | `scene_manager.gd` | Scene switching with fade + threaded loading. Ahead of the combat managers so they may compare scene-path constants (M5). |
-| 13 | `WorldManager` | `world_manager.gd` | World definitions, unlock progression (grandfather migration), palettes, essence multipliers. Never calls upward. |
-| 14 | `CombatManager` | `combat_manager.gd` | Three-state combat machine (normal/boss/farm), gates, countdown, rewards, world-driven rosters. |
-| 15 | `IdleManager` | `idle_manager.gd` | Auto-attack unlock/ticking, offline-reward eligibility and granting (priced at the effective farm level), app-resume hook. Its `enemy_spawned` connection order relative to CombatManager's `game_loaded` handler is load-bearing (see its comments). |
-| 16 | `MinigameManager` | `minigame_manager.gd` | The Arcade: minigame definitions, the Arcade Token meter, per-game records, payout pricing. After `IdleManager`, whose live essence rate prices every reward. |
-| 17 | `QuestManager` | `quest_manager.gd` | The Journal: quest chain, daily set, achievements. After `MinigameManager`, whose token grant it pays with. |
-| 18 | `MonetizationManager` | `monetization_manager.gd` | Opt-in ad offers, purchases, entitlements, cosmetics. No mechanic is ever pay-gated (GDD stance, non-negotiable). |
-| 19 | `PrestigeManager` | `prestige_manager.gd` | The Eclipse loop: run peak level, Void Crystal payout, and resetting the run-scoped managers. Loads last because it reaches across all of them. |
-| 20 | `AudioManager` | `audio_manager.gd` | Every sound the game makes. Listens to `EventBus` and nothing else, so no screen asks for audio — which is why adding sound to a finished game changed no UI script. Loads last because it only ever reacts. The 15 effects and the drone are **synthesised** by `tools/make_audio.py` from a fixed seed, not sourced: regenerating is byte-identical, a tweak is an edit rather than a re-recording, and there are no asset licences to audit before release. |
-| 21 | `CardManager` | `card_manager.gd` | Boss trophy cards: the rarity roll, the collection, and absorption into the active companion. Loads last because it reads `PetManager` and is read by nobody — a card only ever leaves the system through the pet it is fed to. |
+| 1 | `EventBus` | `Game.Events` | Global signals as C# events. No logic, no state. |
+| 2 | `SettingsManager` | `Game.Settings` | Player preferences (PlayerPrefs), audio mixer volumes, haptics. |
+| 3 | `SaveManager` | `Game.Save` | Versioned JSON save file, autosave, atomic writes, migrations. |
+| 4 | `GameManager` | `Game.State` | Game version, play time, session count. Deliberately small &mdash; it does NOT pause: an idle game must keep running. |
+| 5 | `CurrencyManager` | `Game.Currency` | All currency balances (essence, void crystals, astral shards, void scraps). Only `Add()`/`TrySpend()` may change them. |
+| 6 | `UpgradeManager` | `Game.Upgrades` | Upgrade definitions + owned levels; answers stat-modifier queries. |
+| 7 | `EquipmentManager` | `Game.Equipment` | Inventory, equipped items, procedural generation, drops, salvage, forge. Ahead of `PlayerStats` so it can read the affix sums. |
+| 8 | `RelicManager` | `Game.Relics` | Relic collection, the active relic, and the awaken state. Ahead of `PlayerStats`/`IdleManager`, which read its effect getters. |
+| 9 | `PetManager` | `Game.Pets` | Pet roster, active pet, XP/level/evolution. Ahead of `PlayerStats`, which reads its bonus getter. |
+| 10 | `SkillTreeManager` | `Game.Skills` | Ascendant Powers definitions and purchased levels. Ahead of `PlayerStats`. Powers are PERMANENT — they never reset on an Eclipse. |
+| 11 | `PlayerStats` | `Game.Stats` | All player combat stats behind `Get*()` methods; every layer above (upgrades, equipment, relics, pets, powers) stacks inside them. |
+| 12 | `WorldManager` | `Game.Worlds` | World definitions, unlock progression, essence multipliers. Never calls upward. |
+| 13 | `CombatManager` | `Game.Combat` | Three-state combat machine (normal/boss/farm), gates, countdown, rewards, world-driven rosters. |
+| 14 | `IdleManager` | `Game.Idle` | Auto-attack unlock/ticking, offline-reward eligibility and granting, app-resume hook. |
+| 15 | `MinigameManager` | `Game.Arcade` | The Arcade: minigame definitions, the Arcade Token meter, per-game records, payout pricing. After `IdleManager`, whose live essence rate prices every reward. |
+| 16 | `QuestManager` | `Game.Journal` | The Journal: quest chain, daily set, achievements. After `MinigameManager`, whose token grant it pays with. |
+| 17 | `MonetizationManager` | `Game.Shop` | Opt-in ad offers, purchases, entitlements, cosmetics. No mechanic is ever pay-gated (GDD stance, non-negotiable). |
+| 18 | `PrestigeManager` | `Game.Prestige` | The Eclipse loop: run peak level, Void Crystal payout, and resetting the run-scoped managers. Built late because it reaches across all of them. |
+| 19 | `CardManager` | `Game.Cards` | Boss trophy cards: the rarity roll, the collection, and absorption into the active companion. Reads `PetManager`, read by nobody. |
+
+Two more are MonoBehaviours rather than plain objects, because fading, async
+loading and AudioSources need engine callbacks: `SceneFlow` (`Game.Flow`) and
+`AudioManager` (`Game.Audio`). Both are null outside play mode.
+
+### The two clocks
+
+Godot gave each autoload a `process_mode`. `PROCESS_MODE_ALWAYS` kept it
+running while the tree was paused; the default froze it. Unity has one Update,
+so `GameRuntime` — the single MonoBehaviour the locator creates — drives the
+managers on **two** deltas:
+
+* `Time.unscaledDeltaTime` for anything that must keep running while paused:
+  autosave, play time, the settings write debounce.
+* `Time.deltaTime` for anything that must freeze: `Scheduler.After`, and
+  through it the boss countdown. A notification can never drain that timer.
+
+`Scheduler` replaces two Godot idioms: `get_tree().create_timer(d).timeout` is
+`Scheduler.After(d, f)`, and `call_deferred()` is `Scheduler.EndOfFrame(f)`.
 
 ## Art is generated, not drawn
 
@@ -48,11 +68,10 @@ palette declared once in `tools/pixelart.py`:
 | Tool | Produces |
 |---|---|
 | `tools/pixelart.py` | The palette and a canvas that stores palette **names**, so a mistyped colour is a `KeyError` at generation time rather than wrong pixels. Writes PNGs by hand with `zlib`/`struct`. |
-| `tools/make_sprites.py` | All 52 sprites — creatures, pets, minigame pieces, UI icons. `--sheet` writes contact sheets for review. |
+| `tools/make_sprites.py` | All 57 sprites — creatures, pets, minigame pieces, UI icons. `--sheet` writes contact sheets for review. |
 | `tools/make_font.py` | `vanta_pixel` — a 5×7 monospace bitmap face, 106 glyphs, as BMFont `.fnt` + atlas. |
 | `tools/make_icons.py` | Launcher, adaptive, store icon and feature graphic. |
 | `tools/make_audio.py` | All 15 effects and the drone. |
-| `tools/snap_palette.py` | Moves any stray colour onto the nearest palette entry. Idempotent. |
 
 Three rules hold it together, and each exists because breaking it produced a
 visible bug:
@@ -60,38 +79,39 @@ visible bug:
 * **Nothing scales by a fraction.** Sprites, font sizes and icons are all
   integer multiples of what was authored. **Every** font size in the project
   is a multiple of 9 — the glyph box — because vanta_pixel is a bitmap face
-  that exists at 9px and nowhere else, so any other size is Godot resampling
-  the atlas. The icon grids are 32 and 27 because 512/192/432 divide by them.
-  The revamp converted the theme and left the scenes and scripts on their
-  Nunito-era values, so 135 of 145 sizes were resampling on a "finished"
-  restyle; `tools/snap_font_sizes.py` fixes them and `check_ui.py` fails the
-  sweep on any that come back.
+  that exists at 9px and nowhere else, so any other size is the engine
+  resampling the atlas. The icon grids are 32 and 27 because 512/192/432
+  divide by them. A restyle once converted the theme and left the screens on
+  their Nunito-era values, so 135 of 145 sizes were resampling on a "finished"
+  pass; `VantaTheme.SnapFontSize` rounds onto the grid and
+  `tools/check_unity.py` fails the sweep on a literal that is neither.
 * **Surfaces are flat.** No corner radii, no soft shadows, no gradients — each
   needs colours between the ones the palette gives it. A falloff is spelled as
   solid pixels at falling density (`ground_glow()`) or as hard steps
-  (`menu_divider()`). `check_ui.py` fails the sweep on all three.
+  (`menu_divider()`).
 * **`void` is the background, never a fill.** A void-filled body is not a dark
   shape, it is a hole.
-* **The palette is closed.** `check_ui.py` fails the sweep on any UI colour
-  that is not one of the sixteen, `check_pixels.py` fails it on any *pixel* of
-  any shipped PNG that is not one of the sixteen — 1.3M pixels across 59
-  images, which no source-file scan can see — and `check_glyphs.py` fails it
-  on any rendered character the font has no glyph for.
+* **The palette is closed.** `tools/check_unity.py` fails the sweep on a
+  `new Color(...)` anywhere outside `VantaTheme`, `check_pixels.py` fails it on
+  any *pixel* of any shipped PNG that is not one of the sixteen — 1.69M pixels
+  across 66 images, which no source-file scan can see — and `check_glyphs.py`
+  fails it on any rendered character the font has no glyph for.
 
 ## Communication rules
 
-1. **UI → manager**: direct calls (`SettingsManager.music_volume = 0.5`).
-2. **Manager → anyone**: signals on `EventBus`, never direct references to
-   scenes. Managers must work even when no UI exists.
-3. **System → system**: prefer `EventBus` signals. For direct calls the rule is
+1. **UI → manager**: direct calls (`Game.Settings.MusicVolume = 0.5f`).
+2. **Manager → anyone**: events on `EventBus`, never direct references to
+   screens. Managers must work even when no UI exists.
+3. **System → system**: prefer `EventBus` events. For direct calls the rule is
    about *when*, not merely direction:
-   * **Inside `_ready()`** an autoload may only touch autoloads above it — the
-     ones below do not exist yet. `tools/check_scripts.py` enforces this.
-   * **At runtime** every autoload exists, so a call in either direction is
+   * **Inside a constructor** a manager may only touch managers above it in
+     `Game.Boot()` — the ones below are still null. The C# compiler cannot
+     catch this; a `NullReferenceException` on first launch can.
+   * **At runtime** every manager exists, so a call in either direction is
      safe. Upward calls are still the exception and should earn their place:
-     today only `SaveManager` → `GameManager.GAME_VERSION` (a `const`, read
+     today only `SaveManager` → `GameManager.GameVersion` (a `const`, read
      while building the save document) and `QuestManager` →
-     `PrestigeManager.lifetime_peak_level` (a goal-metric snapshot).
+     `PrestigeManager.LifetimePeakLevel` (a goal-metric snapshot).
 
 This is what keeps the codebase scalable: a new system can be added by creating
 a manager, registering a save section, and emitting/listening on the EventBus —
@@ -99,7 +119,8 @@ without editing existing systems.
 
 ## Save system
 
-The save file (`user://savegame.json`) is one versioned JSON document:
+The save file (`Application.persistentDataPath/savegame.json`) is one
+versioned JSON document:
 
 ```json
 {
@@ -115,8 +136,9 @@ The save file (`user://savegame.json`) is one versioned JSON document:
 }
 ```
 
-Fourteen sections are registered, one per owning manager. The set is verified
-against the code by `tools/check_architecture.py`:
+Fourteen sections are registered, one per owning manager. A manager declares
+its own section by implementing `ISaveable`; `Game.Saveables()` is the list
+`SaveManager` walks.
 
 | Section | Owner | Section | Owner |
 | --- | --- | --- | --- |
@@ -129,47 +151,68 @@ against the code by `tools/check_architecture.py`:
 | `idle` | `IdleManager` | `prestige` | `PrestigeManager` |
 | `cards` | `CardManager` | | |
 
-* Any system with persistent data calls
-  `SaveManager.register_saveable("section_id", self)` in `_ready()` and
-  implements `get_save_data()` / `load_save_data(data)`.
+* Any system with persistent data implements `ISaveable`: a `SaveKey`
+  property naming its section, plus `GetSaveData()` / `LoadSaveData(data)`.
+  Godot needed an explicit `register_saveable()` call in `_ready()`; the
+  interface makes registration structural, so a manager cannot forget.
 * Saving is automatic (every 60 s, on app close, on Android background) plus a
   manual button in Settings.
 * Writes are **atomic**: temp file → backup current save → rename. A crash
   mid-save can never destroy progress; loading falls back to the backup.
-* Format changes bump `SAVE_VERSION` and add one numbered step in
-  `SaveManager._migrate()`. Old saves upgrade step by step to the newest format.
+* Format changes bump `SaveVersion` and add one numbered step in
+  `SaveManager.Migrate()`. Old saves upgrade step by step to the newest format.
 * Saves from a **newer** build are refused, never downgraded, and copied to
-  `user://savegame.from_vN.json` first. Loading one would hand new-format
+  `savegame.from_vN.json` first. Loading one would hand new-format
   sections to old code and relabel them as old-format, so the next update would
   migrate already-migrated data and destroy the run — and refusing without
   keeping a copy would be just as bad, because the 60 s autosave overwrites the
   file we declined to read.
 * `saved_at_unix` is the anchor for offline progression (Milestone 4).
-* Cloud saves (Milestone 15) will upload `SaveManager.get_full_save_text()`.
 
-Settings are deliberately **not** part of the save file so they survive
-prestige resets and save deletion.
+Settings are deliberately **not** part of the save file — they live in
+`PlayerPrefs` — so they survive prestige resets and save deletion. Losing a
+save must never also reset the audio to full.
 
 ## Adding a new screen
 
-1. Create `scenes/<screen_name>/<screen_name>.tscn` with a `Control` root and
-   the shared theme `ui/theme/main_theme.tres`.
-2. Create its script in `scripts/ui/` — display logic only.
-3. Add a `SCENE_<NAME>` constant in `scene_manager.gd`.
-4. Navigate with `SceneManager.change_scene(SceneManager.SCENE_<NAME>)`.
+1. Create `Assets/Scenes/<ScreenName>.unity`. Its root under the Canvas
+   carries a `SafeAreaFitter`; everything else hangs off that.
+2. Create its behaviour in `Assets/Scripts/UI/`, deriving from `UIScreen` —
+   display logic only. Reach nodes with `Find<T>("NodeName")`, never with a
+   serialized inspector reference.
+3. Add a constant in `Assets/Scripts/Core/Scenes.cs`.
+4. Register the scene in Build Settings — `ChangeScene` to an unregistered
+   scene fails only in a player build, never in the editor.
+5. Navigate with `Game.Flow.ChangeScene(Scenes.<Name>)`.
+
+`tools/check_unity.py` fails the sweep if any of steps 3, 4 or the file itself
+disagree with each other.
+
+**A component is a prefab, not a scene.** Anything a screen spawns — a banner,
+a toast, a modal, an arcade board — lives in `Assets/Resources/Prefabs/` and is
+instantiated with `UIPrefabs.Spawn<T>()`. Godot drew no distinction and
+`preload().instantiate()` worked on any `.tscn`; Unity splits loading a scene
+from instantiating a prefab, and building a component as a scene puts an entry
+in Build Settings that nothing can navigate to.
 
 ## Content as data
 
-Game content lives in Resource files (`.tres`), not code. Enemies are
-`EnemyDefinition` resources in `data/enemies/` — adding an enemy means adding
-one `.tres` file and one sprite, zero code changes. Shop upgrades are
-`UpgradeDefinition` resources in `data/upgrades/` and the shop UI builds
-itself from them. Equipment, relics, and pets will follow the same pattern.
+Game content lives in `ScriptableObject` assets, not code. Enemies are
+`EnemyDefinition` assets in `Assets/Resources/Content/EnemyDefinition/` —
+adding an enemy means adding one `.asset` and one sprite, zero code changes.
+Upgrades, equipment, relics, pets, skills, quests, worlds, minigames and shop
+products all follow the same pattern; `DefinitionRegistry` loads each type with
+one `Resources.LoadAll` and the screens build themselves from what it finds.
+
+Each definition class is `partial` and split in two: the generated half holds
+the serialized fields, and a hand-written half under `Data/Methods/` holds the
+behaviour. That split is what let the fields be regenerated from the content
+without overwriting logic.
 
 ## Balancing
 
 Combat/economy curves are tuned by simulation, not gut feeling — see the
-constants in `combat_manager.gd`. Current tuning (active tapping, greedy
+constants in `CombatManager`. Current tuning (active tapping, greedy
 upgrade buying): level 30 in ~1.5 min, level 50 at ~8 min, level 60 at
 ~19 min, soft wall near level 70 that idle mechanics (Milestone 4) relieve.
 Enemy health grows 15%/level while essence rewards grow 9%/level — that
@@ -201,12 +244,16 @@ beatable on arrival with escalating tension; the level-50 world boss is a
 The style is **pixel-art roguelike**: hard edges, a closed palette, and nothing
 that scales by a fraction.
 
-* Backdrop: `scenes/common/void_background.tscn`, a single flat `ColorRect`.
+* Backdrop: the `VoidBackground` prefab, a single flat fill.
   It used to be a nebula shader with drifting dust; that was removed, and its
   removal is what finally exposed a violet gradient divider that had survived
   an entire palette pass by blending into the animation behind it.
-* Type: **`vanta_pixel`** (`fonts/`), a 5×7 monospace bitmap face generated by
-  `tools/make_font.py`. Monospace because a roguelike is a grid and because
+* Type: **`vanta_pixel`** (`Assets/Resources/Fonts/`), a 5×7 monospace bitmap
+  face generated by `tools/make_font.py` and turned into a Unity Font asset by
+  `Assets/Editor/PixelFontImporter.cs`.  Unity has no BMFont importer, so the
+  106 glyphs are transcribed into `CharacterInfo` entries from the `.fnt` the
+  generator writes — the generator stays the single source of truth for the
+  face and nothing is typed in by hand. Monospace because a roguelike is a grid and because
   numbers that change every frame must not jitter as their digits change
   width. It replaced Nunito, a rounded humanist sans — the last thing in the
   project that read as a modern mobile app.
@@ -234,33 +281,40 @@ body → title) and nine hues do meaning (element, rarity, currency, danger).
   ramp onto sixteen colours put Rare and Epic on the *same* neutral, because
   the palette carries seven neutrals and four are darker than any text. Tier
   is still carried by pip **count**, so it stays colour-blind safe.
-* `tools/snap_palette.py` moves any stray colour to its nearest palette entry,
-  and `check_ui.py` fails the sweep on anything that is not an exact match.
-  That check replaced a hue-arc rule which was both too loose (any red, not
-  *the* red) and structurally blind to the failure that matters most — two
-  greys one step apart have no chroma, so an arc skips them entirely.
+* `tools/check_unity.py` fails the sweep on any colour literal outside
+  `VantaTheme`. That check replaced a hue-arc rule which was both too loose
+  (any red, not *the* red) and structurally blind to the failure that matters
+  most — two greys one step apart have no chroma, so an arc skips them
+  entirely.
 * Note that `design/ux/milestone-*.md` predate this restyle and describe the
   Cinzel-era treatment. They are kept as the design record of each
-  milestone; `main_theme.tres` is the authority on what actually ships.
-* All widget styling comes from `ui/theme/main_theme.tres`. Theme
-  *variations* (`PrimaryButton`, `TitleLabel`, `HeaderLabel`) give screens a
-  consistent look — set `theme_type_variation` on a node instead of
-  hand-overriding fonts and colors.
+  milestone; `Assets/Scripts/UI/VantaTheme.cs` is the authority on what
+  actually ships.
+* All colour and type comes from `VantaTheme`. Godot had a Theme resource with
+  named *variations* (`PrimaryButton`, `TitleLabel`, `HeaderLabel`); Unity's UI
+  has no global theme, so those twelve variations are transcribed into
+  `VantaTheme.Styles`, entry by entry from the original resource rather than
+  inferred from their names. An earlier pass guessed and guessed wrong on six
+  of the twelve.
+* Screens that build rows and tiles in code go through `UIBuild`. A "panel with
+  a 3px border and 12px of padding" was one StyleBoxFlat in Godot and is three
+  GameObjects in Unity; without that helper every list screen would restate the
+  construction twenty times.
 * Every full screen names itself with a `TitleLabel` node carrying the
   `TitleLabel` variation. Six screens had drifted onto `HeaderLabel` — the
   muted *secondary text* role — so half the game announced itself in dim grey
   body text. Each scene looked deliberate on its own; only side by side was it
-  obviously an accident. `tools/check_ui.py` now fails the sweep on it.
+  obviously an accident.
 * Sliding overlays (Forge, Relics, Upgrade shop) take the `OverlayPanel`
   variation, not the default `PanelContainer`. They cover the screen behind
   them rather than floating over a scrim, so they must be fully opaque; at the
   shared 0.92 alpha the Gear inventory showed straight through the Forge's own
   header and read as a rendering fault.
-* A StyleBox that Godot sizes from its own minimum size — `HSlider`'s track and
-  fill — **needs explicit `content_margin_top`/`bottom`**, or it draws at zero
-  height. Without them the three Settings volume sliders rendered as a single
-  4px dot: the styles *were* assigned, so the theme looked complete while the
-  screen was empty. Also checked by `check_ui.py`.
+* A progress bar or slider whose fill has no explicit height draws at zero.
+  Under Godot the three Settings volume sliders rendered as a single 4px dot
+  for exactly this reason: the styles *were* assigned, so the theme looked
+  complete while the screen was empty. `SceneBuilder` gives every converted
+  slider a real fill rect; anything built by hand must too.
 * **One accent, spent not sprayed.** The scheme is red on true-neutral black.
   Red marks the primary action, the active state and danger, and nothing else;
   everything the player is not currently being asked to do is neutral. That
@@ -277,15 +331,24 @@ body → title) and nine hues do meaning (element, rarity, currency, danger).
 * Colour in the game world follows the same rule: ordinary enemies glow pale,
   and only bosses burn red. Nebula backdrops are near-black, separated by
   temperature and value rather than hue.
-* Every screen is a full-bleed background plus a root `MarginContainer` holding
-  all the UI. Keep that shape: `SceneManager` insets **that node** by the
-  display safe area, so a notch or gesture bar pushes the controls in while the
-  nebula still reaches the display edge. A screen that puts UI outside the
-  MarginContainer will sit under the system chrome on most current phones.
+* Every screen is a full-bleed background plus one content root holding all
+  the UI. Keep that shape: `SafeAreaFitter` sits on **that root** and insets it
+  by the display safe area, so a notch or gesture bar pushes the controls in
+  while the background still reaches the display edge. A screen that puts UI
+  outside the content root will sit under the system chrome on most current
+  phones.
+
+  The width cap lives in the same component as a second inset term, not in a
+  separate one. Godot had them split — a per-scene script writing margins on
+  the same signal as the safe area — and the scene script connected later, so
+  it replaced the safe area rather than composing with it, silently dropping
+  the cutout inset on exactly the notched phones it exists for.
 * Layout is tuned against 1080x1920 because `stretch/aspect="expand"` only ever
   *grows* the viewport — that base is both the narrowest and the shortest case
   any Android device produces, so what fits there fits everywhere.
-  `tools/aspect_matrix.sh` proves it across seven device shapes.
+  Under Godot `tools/aspect_matrix.sh` proved this across ten device shapes.
+  **That harness has no Unity replacement**, so the claim is currently
+  unverified on this build — see HANDOFF.md.
 
 ### Where the shading lives
 
@@ -296,7 +359,7 @@ the inversion from the previous style and it is the whole architecture of this
 layer.
 
 Before the revamp the sprites were SVGs — smooth shapes with no shading of
-their own — and **dimensional_sprite.gdshader** (deleted) supplied all of it,
+their own — and **dimensional_sprite** (deleted) supplied all of it,
 deriving a fake surface normal from the alpha gradient and running Lambert
 diffuse, a rim term and a Blinn-Phong highlight over it. That shader was correct for 512px
 vector art and actively destructive here: on a 64px sprite scaled 8× it
@@ -304,37 +367,47 @@ averaged a seven-texel bevel across pixels that were the image, then
 desaturated the result against a 0.42 grey ambient. The first pixel-art render
 came out a blurred grey smudge, and the sprites were not the reason.
 
-`effects/pixel_sprite.gdshader` replaced it and does one thing: a hard
-**one-texel outline** in the creature's own colour, so the silhouette stays off
-the background. It measures that texel with `TEXTURE_PIXEL_SIZE`, which is in
-UV units of the *source* image, so the halo is one source pixel thick at any
-scale and never drifts off the art's own grid. Adoption is still free — assign
-`effects/pixel_sprite_material.tres` — and the material is still
-`resource_local_to_scene`, so `enemy_view.gd` retints `rim_color` per enemy
-from `EnemyDefinition.glow_color`. The uniform kept its old name precisely so
-that call site did not have to change.
+`Assets/Resources/Shaders/PixelRim.shader` replaced it and does one thing: a
+hard **one-texel outline** in the creature's own colour, so the silhouette
+stays off the background. It measures that texel with `_MainTex_TexelSize`,
+which is in UV units of the *source* image, so the halo is one source pixel
+thick at any scale and never drifts off the art's own grid.
+
+It is written against the **UI** pipeline, not the sprite one: the enemy is an
+`Image` inside the screen's canvas, so the shader carries the stencil,
+clip-rect and vertex-colour plumbing every Canvas material needs. Dropping any
+of it would make the creature ignore masks and CanvasGroup alpha.
+
+`EnemyView` creates one material instance per view and retints `_RimColor` per
+enemy from `EnemyDefinition.glowColor`. Godot got that isolation from
+`resource_local_to_scene`; here it is an explicit `new Material(shader)` and a
+matching `Destroy` in `OnDestroy`, because a material created with `new` is not
+owned by the AssetDatabase and is not collected with the GameObject.
 
 Two rules for anything that adopts it:
 
-1. **Modify `COLOR` in place; never rebuild it from `TEXTURE`.** Whatever Godot
-   put in `COLOR` already carries the node's modulate, so hit flashes, fades,
-   and every `modulate` tween keep working. The shader relies on this.
+1. **Multiply by the incoming vertex colour; never ignore it.** That colour
+   already carries the graphic's tint and its CanvasGroup alpha, so hit
+   flashes, fades and every alpha animation keep working. The shader relies on
+   this.
 2. **A creature needs ground.** A sprite with nothing under it reads as a
-   sticker. Pair it with `sprites/ui/ground_glow.png` — a dithered pool, not a
+   sticker. Pair it with `Assets/Resources/Art/ui/ground_glow.png` — a dithered pool, not a
    blurred ellipse — and counter-animate it against any hover; see
-   `enemy_view.gd`, where the pool tightens and fades on the same curve as the
+   `EnemyView`, where the pool tightens and fades on the same curve as the
    bob.
 
 Budget: 5 texture taps, one branch, no loops, one pass — sized for the `mobile`
-renderer and low-end Android. `tools/check_shaders.py` guards the parts that
-fail silently: a `shader_parameter` or `set_shader_parameter()` naming a
-uniform that does not exist is discarded without an error anywhere.
+renderer and low-end Android. Note that `Material.SetColor` naming a property
+the shader does not declare is discarded without an error anywhere — Godot had
+the same hazard and a checker for it; nothing guards it now.
 
 ## Conventions
 
-* Files and folders: `snake_case` (Godot style guide). Node names: `PascalCase`.
-* GDScript is fully typed (`var health: int = 10`, `-> void`).
+* Files and types: `PascalCase`. Scene and prefab node names: `PascalCase`,
+  and they are load-bearing — screens look their nodes up by name.
+* Serialized definition fields stay `camelCase`, matching the content they were
+  generated from; everything else follows normal C# casing.
 * Every future save-format change needs a migration step — never break old saves.
-* Mobile first: portrait 1080×1920 base resolution, `canvas_items` stretch with
-  `expand` aspect, touch targets at least ~100 px tall.
+* Mobile first: portrait 1080×1920 reference resolution, `CanvasScaler` set to
+  `ScaleWithScreenSize` matching HEIGHT, touch targets at least ~100 px tall.
 * `TODO(Milestone N):` comments mark planned work and are searchable.

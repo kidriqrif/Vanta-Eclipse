@@ -29,6 +29,8 @@ import make_font
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 ICONS = ROOT / "production" / "icons"
+# The build copy PlayerSettings reads. check_generated overrides both.
+LAUNCHER = ROOT / "Assets" / "Icons"
 
 
 def eclipse_mark(grid: int, with_corona: bool = True) -> Canvas:
@@ -147,21 +149,35 @@ def main() -> int:
     # foreground during parallax and any hole shows through to nothing.
     #
     # The adaptive FOREGROUND keeps its alpha: that layer is supposed to be
-    # mostly transparent. So does launcher_192 (legacy icon, masked by the
-    # launcher) and icon.png (the in-engine window icon).
+    # mostly transparent. So does launcher_192, the legacy icon the launcher
+    # masks for itself.
+    #
+    # The three the app actually SHIPS are written twice: once under
+    # production/icons for the store listing, and once under Assets/Icons where
+    # PlayerSettings reads them. Godot took its launcher icons from the export
+    # preset, which could point anywhere; Unity only reads assets inside the
+    # project, so the build copy has to live in the project.
+    LAUNCHER.mkdir(parents=True, exist_ok=True)
     jobs = [
         (ICONS / "store_icon_512.png", store_icon(32).scaled(16), False),
         (ICONS / "launcher_192.png", store_icon(32).scaled(6), True),
         (ICONS / "adaptive_foreground_432.png", adaptive_foreground(27).scaled(16), True),
         (ICONS / "adaptive_background_432.png", adaptive_background(27).scaled(16), False),
         (ICONS / "feature_graphic_1024x500.png", feature_graphic().scaled(4), False),
-        (ROOT / "icon.png", store_icon(32).scaled(4), True),
+        (LAUNCHER / "launcher_192.png", store_icon(32).scaled(6), True),
+        (LAUNCHER / "adaptive_foreground_432.png", adaptive_foreground(27).scaled(16), True),
+        (LAUNCHER / "adaptive_background_432.png", adaptive_background(27).scaled(16), False),
     ]
     for path, canvas, alpha in jobs:
         size = write_png(path, canvas, alpha=alpha)
-        print("  %-38s %4dx%-4d %7d B  %s"
-              % (path.relative_to(ROOT).as_posix(), canvas.width, canvas.height,
-                 size, "RGBA" if alpha else "RGB"))
+        # Named against whichever output root it landed in, so the log still
+        # reads correctly when check_generated regenerates into a sandbox.
+        try:
+            shown = path.relative_to(ROOT).as_posix()
+        except ValueError:
+            shown = path.name
+        print("  %-46s %4dx%-4d %7d B  %s"
+              % (shown, canvas.width, canvas.height, size, "RGBA" if alpha else "RGB"))
     return 0
 
 

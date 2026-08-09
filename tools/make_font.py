@@ -47,12 +47,13 @@ Run: python3 tools/make_font.py
 Out: fonts/vanta_pixel.png + fonts/vanta_pixel.fnt
 """
 
+import os
 import pathlib
 import struct
 import zlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-OUT = ROOT / "fonts"
+OUT = ROOT / os.environ.get("VANTA_FONT_OUT", "Assets/Resources/Fonts")
 
 GLYPH_W, GLYPH_H = 6, 9
 BASELINE = 7

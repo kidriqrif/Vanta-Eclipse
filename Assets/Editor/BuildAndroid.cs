@@ -79,9 +79,92 @@ namespace VantaEclipse.EditorTools
             // to the fade colour so launch reads as one continuous black.
             PlayerSettings.Android.startInFullscreen = true;
 
+            ConfigureIcons();
+
             AssetDatabase.SaveAssets();
             Debug.Log($"Android configured: {PackageName} v{VersionName} ({VersionCode}), " +
                       $"minSdk {(int)MinSdk}, targetSdk {(int)TargetSdk}, IL2CPP/ARM64");
+        }
+
+        /// <summary>
+        /// Point the launcher at the generated icons.
+        ///
+        /// Godot read these out of export_presets.cfg; Unity reads them from
+        /// PlayerSettings, and a project that never sets them ships the default
+        /// Unity logo — which is not a cosmetic gap, because Play rejects a
+        /// listing whose launcher icon does not match the store icon.
+        ///
+        /// The adaptive pair is the one Android actually draws on API 26+; the
+        /// legacy 192 is the fallback for older launchers and is what Unity uses
+        /// for the round variant.
+        /// </summary>
+        static void ConfigureIcons()
+        {
+            var launcher = LoadIcon("Assets/Icons/launcher_192.png");
+            var foreground = LoadIcon("Assets/Icons/adaptive_foreground_432.png");
+            var background = LoadIcon("Assets/Icons/adaptive_background_432.png");
+            if (launcher == null) return;
+
+            // The kinds are discovered rather than named. The concrete enum
+            // lives in the Android editor extension, which is only referenced
+            // when that module is installed — naming it directly makes this
+            // file fail to COMPILE on a machine without Android Build Support,
+            // taking every other editor tool down with it.
+            foreach (var kind in PlayerSettings.GetSupportedIconKinds(NamedBuildTarget.Android))
+            {
+                var icons = PlayerSettings.GetPlatformIcons(NamedBuildTarget.Android, kind);
+                if (icons == null || icons.Length == 0) continue;
+
+                foreach (var icon in icons)
+                {
+                    switch (kind.ToString())
+                    {
+                        // Adaptive is a two-layer icon: layer 0 is the
+                        // background, layer 1 the foreground. Android slides
+                        // them against each other during parallax, which is why
+                        // the background must be fully opaque.
+                        case "Adaptive":
+                            if (background != null) icon.SetTexture(background, 0);
+                            if (foreground != null) icon.SetTexture(foreground, 1);
+                            break;
+                        // Round and Legacy are single-layer fallbacks for
+                        // launchers older than API 26.
+                        case "Round":
+                        case "Legacy":
+                            icon.SetTexture(launcher, 0);
+                            break;
+                    }
+                }
+                PlayerSettings.SetPlatformIcons(NamedBuildTarget.Android, kind, icons);
+            }
+        }
+
+        /// <summary>An icon must import as an uncompressed, point-filtered,
+        /// full-alpha texture: the pixel art is authored at 32px and scaled, and
+        /// a compressed mip chain turns the silhouette to mush at launcher
+        /// size.</summary>
+        static Texture2D LoadIcon(string path)
+        {
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            if (texture == null)
+            {
+                Debug.LogWarning($"BuildAndroid: no icon at {path} — " +
+                                 "run `python tools/make_icons.py`.");
+                return null;
+            }
+            if (AssetImporter.GetAtPath(path) is TextureImporter importer
+                && (importer.textureCompression != TextureImporterCompression.Uncompressed
+                    || importer.filterMode != FilterMode.Point))
+            {
+                importer.textureType = TextureImporterType.Default;
+                importer.filterMode = FilterMode.Point;
+                importer.mipmapEnabled = false;
+                importer.alphaIsTransparency = true;
+                importer.textureCompression = TextureImporterCompression.Uncompressed;
+                importer.SaveAndReimport();
+                texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            }
+            return texture;
         }
 
         [MenuItem("Vanta Eclipse/Build Android APK")]
@@ -103,7 +186,7 @@ namespace VantaEclipse.EditorTools
             if (scenes == null || scenes.Length == 0)
             {
                 Debug.LogError("BuildAndroid: no scenes in Build Settings. " +
-                               "Run Vanta Eclipse > Create Bootstrap Scene first.");
+                               "Run Vanta Eclipse > Build Screens From Ported Layouts first.");
                 EditorApplication.Exit(1);
                 return;
             }

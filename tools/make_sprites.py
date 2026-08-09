@@ -41,7 +41,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 # sprites/ — the generator is the shared source, so it grew a destination
 # rather than a fork. Set VANTA_SPRITE_OUT to a path relative to the repo
 # root. When the Godot tree goes, the default moves and this stays.
-OUT = ROOT / os.environ.get("VANTA_SPRITE_OUT", "sprites")
+OUT = ROOT / os.environ.get("VANTA_SPRITE_OUT", "Assets/Resources/Art")
 
 ENEMY = 64
 PET = 48

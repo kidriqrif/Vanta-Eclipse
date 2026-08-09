@@ -21,7 +21,7 @@ namespace VantaEclipse.EditorTools
     /// </summary>
     public sealed class PixelArtImporter : AssetPostprocessor
     {
-        const string ArtRoot = "Assets/Art/";
+        const string ArtRoot = "Assets/Resources/Art/";
 
         /// <summary>The sprites are authored at 1 art pixel = 1 texel, and the
         /// UI scales them in whole multiples. 32 keeps a 32x32 icon exactly one

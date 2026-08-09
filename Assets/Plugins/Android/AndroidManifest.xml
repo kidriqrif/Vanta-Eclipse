@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The only manifest change this game needs.
+
+  AndroidHaptics goes through the Android Vibrator service directly, because
+  Unity's Handheld.Vibrate() ignores its duration argument and fires the ~500ms
+  system buzz — far too long for a game built around tapping. Unity injects
+  android.permission.VIBRATE automatically when it SEES Handheld.Vibrate() in
+  the assemblies; it cannot see an AndroidJavaObject call, so without this file
+  every haptic silently no-ops on device and nothing in the build reports it.
+
+  Nothing else is declared here on purpose. INTERNET in particular is left OFF
+  (PlayerSettings.Android.forceInternetPermission = false), which is what makes
+  the privacy policy's "this app makes no network requests" claim true rather
+  than aspirational.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <application android:extractNativeLibs="false" />
+</manifest>

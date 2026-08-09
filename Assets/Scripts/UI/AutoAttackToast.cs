@@ -24,6 +24,12 @@ namespace VantaEclipse.UI
         /// spec's pop-in.</summary>
         public const float Overshoot = 1.05f;
 
+        protected override void Awake()
+        {
+            base.Awake();
+            UILayers.Apply(gameObject, UILayers.Toast);
+        }
+
         void Start()
         {
             var panel = FindObject("ToastPanel");
