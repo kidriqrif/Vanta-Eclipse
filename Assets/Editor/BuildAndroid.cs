@@ -30,7 +30,16 @@ namespace VantaEclipse.EditorTools
         public const string CompanyName = "Vantrexa Games";
         public const string VersionName = "0.1.0";
         public const int VersionCode = 1;
-        public const AndroidSdkVersions MinSdk = AndroidSdkVersions.AndroidApiLevel24;
+        /// <summary>
+        /// 26, not the 24 carried over from the Godot preset. GameActivity —
+        /// which androidApplicationEntry selects and which libgame.so exists
+        /// for — has an API 26 floor, so Unity raised it silently: every APK
+        /// built since the port declares minSdkVersion 26 while this constant,
+        /// ProjectSettings and the release checklist all said 24. Stating 26
+        /// here makes the file agree with the artifact. The cost is Android 7.x
+        /// and below, which the build had already dropped without saying so.
+        /// </summary>
+        public const AndroidSdkVersions MinSdk = AndroidSdkVersions.AndroidApiLevel26;
         public const AndroidSdkVersions TargetSdk = (AndroidSdkVersions)36;
 
         const string OutputDir = "build";
@@ -173,6 +182,91 @@ namespace VantaEclipse.EditorTools
         [MenuItem("Vanta Eclipse/Build Android AAB")]
         public static void BuildAab() => Build(aab: true);
 
+        /// <summary>
+        /// Point the build at the upload keystore.
+        ///
+        /// UNITY DOES NOT PARSE THESE ARGUMENTS. tools/build_android.sh has
+        /// passed -keystorePath/-keystorePass/-keyaliasName/-keyaliasPass since
+        /// the port, and a comment there claimed Unity read them "through the
+        /// documented CLI arguments". It does not: the literals do not appear
+        /// anywhere in Unity.exe, UnityEditor.dll or the Android extension in
+        /// 6000.5.7f1. They were accepted, ignored, and every "release" AAB
+        /// would have gone out signed with Unity's DEBUG key — which Play
+        /// rejects outright. This method is what makes them real.
+        ///
+        /// The password is preferred as a FILE PATH (-keystorePassFile), not a
+        /// value: an argument is visible in the process list to every other
+        /// process on the machine for the whole 10-minute IL2CPP build.
+        /// </summary>
+        static void ApplySigning()
+        {
+            string keystore = Arg("-keystorePath");
+            if (string.IsNullOrEmpty(keystore))
+            {
+                PlayerSettings.Android.useCustomKeystore = false;
+                Debug.LogWarning(
+                    "BuildAndroid: no -keystorePath. This artifact will be signed with " +
+                    "Unity's DEBUG key and Play will reject it. Fine for a device test, " +
+                    "never for an upload.");
+                return;
+            }
+
+            string pass = ReadSecret("-keystorePassFile", "-keystorePass");
+            string alias = Arg("-keyaliasName") ?? "upload";
+            string aliasPass = ReadSecret("-keyaliasPassFile", "-keyaliasPass") ?? pass;
+
+            if (!File.Exists(keystore))
+                throw new BuildFailedException($"BuildAndroid: no keystore at {keystore}");
+            if (string.IsNullOrEmpty(pass))
+                throw new BuildFailedException(
+                    "BuildAndroid: -keystorePath given without a password. Pass " +
+                    "-keystorePassFile <path> (preferred) or -keystorePass <value>.");
+
+            PlayerSettings.Android.useCustomKeystore = true;
+            PlayerSettings.Android.keystoreName = keystore;
+            PlayerSettings.Android.keystorePass = pass;
+            PlayerSettings.Android.keyaliasName = alias;
+            PlayerSettings.Android.keyaliasPass = aliasPass;
+            Debug.Log($"BuildAndroid: signing with {Path.GetFileName(keystore)}, alias '{alias}'.");
+        }
+
+        /// <summary>
+        /// Put the signing fields back to empty.
+        ///
+        /// ProjectSettings.asset is TRACKED and the Stop hook pushes to a public
+        /// remote every turn. Unity persists PlayerSettings when the editor
+        /// exits, so a password left in these fields is a password committed.
+        /// This runs in a finally for that reason and no other.
+        /// </summary>
+        static void ClearSigning()
+        {
+            PlayerSettings.Android.useCustomKeystore = false;
+            PlayerSettings.Android.keystoreName = "";
+            PlayerSettings.Android.keystorePass = "";
+            PlayerSettings.Android.keyaliasName = "";
+            PlayerSettings.Android.keyaliasPass = "";
+        }
+
+        static string Arg(string name)
+        {
+            var args = Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length - 1; i++)
+                if (args[i] == name) return args[i + 1];
+            return null;
+        }
+
+        static string ReadSecret(string fileArg, string valueArg)
+        {
+            string path = Arg(fileArg);
+            if (!string.IsNullOrEmpty(path))
+            {
+                if (!File.Exists(path))
+                    throw new BuildFailedException($"BuildAndroid: no password file at {path}");
+                return File.ReadAllText(path).Trim();
+            }
+            return Arg(valueArg);
+        }
+
         static void Build(bool aab)
         {
             Configure();
@@ -203,7 +297,16 @@ namespace VantaEclipse.EditorTools
                 options = BuildOptions.None,
             };
 
-            var report = BuildPipeline.BuildPlayer(options);
+            BuildReport report;
+            try
+            {
+                ApplySigning();
+                report = BuildPipeline.BuildPlayer(options);
+            }
+            finally
+            {
+                ClearSigning();
+            }
             var summary = report.summary;
 
             if (summary.result == BuildResult.Succeeded)

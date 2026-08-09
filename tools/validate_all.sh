@@ -21,10 +21,12 @@
 # in stage 7 replaces the logic harness with 49 assertions run against the real
 # managers.
 #
-# The screenshot harness has NO replacement yet. It rendered every screen at
-# three aspect ratios and checked layout, glyph box and device pixels, and
-# nothing in this sweep does that now. That is a real gap, stated here rather
-# than quietly dropped.
+# The screenshot harness is stage 8, and it is the only stage that looks at
+# PIXELS. Everything above it compares files to other files. It renders all 11
+# screens at 10 Android shapes in play mode and measures layout, glyph box and
+# device pixels — the same three things the Godot one measured, against the
+# same reason for measuring them: every piece of art and text this project got
+# wrong looked correct in source.
 
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -100,6 +102,20 @@ else
     fail
   fi
   rm -f "$log" 2>/dev/null || true
+fi
+
+echo "8. every screen rendered at 10 Android shapes (layout, glyph box, pixels)"
+if [ ! -x "$UNITY" ] && [ ! -f "$UNITY" ]; then
+  echo "   SKIPPED (no Unity at \$UNITY: $UNITY)"
+else
+  # Not run through run_unity(): this stage needs a graphics device, so it must
+  # NOT get -nographics, and it enters play mode, so it must NOT get -quit.
+  if out="$(bash tools/screenshots.sh 2>&1)"; then
+    echo "$out" | sed 's/^/   /'
+  else
+    echo "$out" | sed 's/^/   /'
+    fail
+  fi
 fi
 
 echo

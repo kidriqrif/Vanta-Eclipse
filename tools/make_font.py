@@ -43,6 +43,17 @@ The atlas is written as WHITE with an alpha mask, not as a palette colour:
 Godot multiplies a font atlas by the theme's font_color, so any tint baked in
 here would multiply against every colour the UI ever asks for.
 
+EVERY CELL CARRIES A 1px TRANSPARENT GUTTER. Godot did not need one — it drew
+the .fnt rects exactly as written. Unity's TextGenerator does not: it inflates
+every glyph quad by HALF A TEXEL on all four sides, in both UV and vertex
+space, and that is not adjustable. Measured on the real build, a 6x9 rect came
+back as 7x10 spanning u=35.5..42.5, v=44.5..54.5. Packed edge to edge, that
+half-texel skirt samples the NEIGHBOURING GLYPH, which is why the title
+rendered as overlapping letters with a row of stray marks under the baseline.
+With the gutter the skirt samples transparency and the face is pixel-exact
+again. This costs one column and one row of atlas per cell and nothing else:
+the rects the .fnt declares are still exactly GLYPH_W x GLYPH_H.
+
 Run: python3 tools/make_font.py
 Out: fonts/vanta_pixel.png + fonts/vanta_pixel.fnt
 """
@@ -60,6 +71,14 @@ BASELINE = 7
 ADVANCE = 7
 LINE_HEIGHT = 11
 COLUMNS = 16
+
+# Transparent gutter around every cell, in pixels. See "EVERY CELL CARRIES A
+# 1px TRANSPARENT GUTTER" above — this is what stops Unity's half-texel quad
+# inflation from sampling the next glyph. One on every side, so the cells on
+# the atlas edge are padded too and no glyph relies on clamp behaviour.
+PAD = 1
+CELL_W = GLYPH_W + 2 * PAD
+CELL_H = GLYPH_H + 2 * PAD
 
 # Each glyph is 7 rows (cap height) or 9 rows (with descender), '#' set.
 # Authored as text so a wrong pixel is visible in the source, which is the only
@@ -188,13 +207,16 @@ def build() -> tuple[bytes, int, int, dict[str, tuple[int, int]]]:
     glyphs = list(G)
     columns = COLUMNS
     rows = (len(glyphs) + columns - 1) // columns
-    width = columns * GLYPH_W
-    height = rows * GLYPH_H
+    width = columns * CELL_W
+    height = rows * CELL_H
     pixels = [0] * (width * height)          # alpha only; colour is always white
     placement: dict[str, tuple[int, int]] = {}
     for index, char in enumerate(glyphs):
-        ox = (index % columns) * GLYPH_W
-        oy = (index // columns) * GLYPH_H
+        # The cell is CELL_W x CELL_H; the glyph sits PAD in from its corner, so
+        # the gutter is on all four sides and the .fnt rect below is still the
+        # bare GLYPH_W x GLYPH_H.
+        ox = (index % columns) * CELL_W + PAD
+        oy = (index // columns) * CELL_H + PAD
         placement[char] = (ox, oy)
         for y, row in enumerate(rows_of(G[char])):
             for x, cell in enumerate(row):
@@ -218,8 +240,12 @@ def main() -> int:
     (OUT / "vanta_pixel.png").write_bytes(png)
 
     lines = [
+        # padding stays 0: the gutter is around the rect, not inside it, so the
+        # declared width/height are the glyph and nothing else. spacing reports
+        # the gap a consumer will find between two adjacent rects.
         'info face="VantaPixel" size=%d bold=0 italic=0 charset="" unicode=1 '
-        "stretchH=100 smooth=0 aa=1 padding=0,0,0,0 spacing=0,0" % GLYPH_H,
+        "stretchH=100 smooth=0 aa=1 padding=0,0,0,0 spacing=%d,%d"
+        % (GLYPH_H, 2 * PAD, 2 * PAD),
         "common lineHeight=%d base=%d scaleW=%d scaleH=%d pages=1 packed=0"
         % (LINE_HEIGHT, BASELINE, width, height),
         'page id=0 file="vanta_pixel.png"',

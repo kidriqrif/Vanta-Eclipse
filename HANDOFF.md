@@ -35,11 +35,12 @@ Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) first.
 
 | Gate | Command | Result |
 |---|---|---|
-| Full sweep, 7 stages | `bash tools/validate_all.sh` | exit 0 |
+| Full sweep, 8 stages | `bash tools/validate_all.sh` | **FAILS at stage 8** |
+| Screens rendered | `bash tools/screenshots.sh` | 110 captures, 9/11 screens broken |
 | C# compile | (sweep stage 1) | clean |
 | Project invariants | `python tools/check_unity.py` | 6/6 OK |
 | Font coverage | `python tools/check_glyphs.py` | 95 characters, 106 glyphs |
-| Palette closure | `python tools/check_pixels.py` | 66 images, 1,687,008 pixels |
+| Palette closure | `python tools/check_pixels.py` | 66 images, 1,690,816 pixels |
 | Generated assets | `python tools/check_generated.py` | 83 files byte-identical |
 | Runtime logic | (sweep stage 7) | 49/49 |
 
@@ -48,23 +49,61 @@ of them existed because GDScript resolves names at runtime — gdparse, gdlint,
 a scene/resource structure pass, an autoload-member check, a semantic pass, a
 shader-parameter pass, a logic harness and a screenshot harness. In C# the
 first five are compile errors, and stage 1 is a real `Unity -batchmode` compile,
-which is stricter than any of them. **The screenshot harness has no
-replacement.** It rendered every screen at ten aspect ratios and measured
-layout, glyph box and device pixels; nothing does that now. That is the single
-largest hole in the current sweep.
+which is stricter than any of them.
+
+**The screenshot harness now has a replacement**, and it changed the picture
+completely. `Assets/Editor/ScreenshotHarness.cs` renders all 11 screens at 10
+Android shapes in play mode and measures four things — blank frame, overflow,
+collapsed layout rows, and glyph box / device pixels. Run it with
+`bash tools/screenshots.sh`; it is stage 8 of the sweep. Two flags are
+deliberately absent from the invocation and both get "helpfully" added back:
+`-nographics` gives a null graphics device and every capture comes back empty,
+and `-quit` closes the editor before play mode has even started.
+
+**It fails, and it is right to.** 9 of the 11 screens have `VerticalLayoutGroup`
+rows that collapse to zero height, so their contents draw on top of each other;
+only MainMenu and Gameplay are clean. That is the single largest known defect in
+the project and it was invisible to every other stage, all of which were green
+while it was true.
 
 ---
 
-## NOT ready for Google Play — two blockers
+## NOT ready for Google Play
 
-1. **The Shop shows a development banner** — "Development build — purchases are
+**Three build blockers were found and fixed** (all three had been passing every
+stage of the sweep, which is why stage 8 now exists):
+
+- The APK/AAB had **no launcher activity at all** — it installed and could not
+  be started. `Assets/Plugins/Android/AndroidManifest.xml` REPLACES Unity's
+  `UnityManifest.xml` rather than merging into it, so declaring a permission
+  and an empty `<application>` deleted both Unity activity blocks. The build
+  log has said `warning: Unable to find Unity activity in manifest` since
+  the port; nothing read it.
+- **A release AAB would have been debug-signed.** `tools/build_android.sh`
+  passed `-keystorePath`/`-keystorePass`/`-keyaliasName`/`-keyaliasPass` and
+  Unity 6000.5.7f1 defines none of those arguments — the literals are not in
+  `Unity.exe`, `UnityEditor.dll` or the Android extension. `BuildAndroid.ApplySigning`
+  reads them now, and the script compares the bundle's signer
+  fingerprint to the keystore's rather than trusting `jar verified`.
+- **The pixel font rendered as overlapping glyphs** with stray marks under every
+  baseline. Unity's TextGenerator inflates each glyph quad by half a texel on
+  all four sides; the atlas was packed edge to edge, so that skirt sampled the
+  neighbouring glyph. `tools/make_font.py` now leaves a 1px transparent gutter.
+
+What remains:
+
+1. **9 of 11 screens have collapsed layout rows.** See stage 8 above and "Open"
+   below. This is the biggest one, and it is not a Play-policy problem — it is
+   a the-game-looks-broken problem.
+
+2. **The Shop shows a development banner** — "Development build — purchases are
    simulated and nothing is charged". `MonetizationManager.UseStubProviders =
    true` hides all paid surfaces, which is correct (there is no ad SDK and no
    Play Billing in the bundle), and the banner is now gated on
    `Debug.isDebugBuild` as well, so a release build does not show it. Verify
    that on the real artifact before trusting it.
 
-2. **Play Console forms not done**: Data Safety, IARC content rating, App
+3. **Play Console forms not done**: Data Safety, IARC content rating, App
    access.
 
 The privacy policy blocker is **cleared**: GitHub Pages is on, the page is
@@ -203,9 +242,10 @@ nothing because the anchor string did not exist in the file.
 ## Device shapes — what is known and what is not
 
 The Godot sweep rendered the game at ten Android shapes and measured each. That
-harness is gone and **nothing has replaced it**, so the layout claim is
-currently unverified on the Unity build. The mechanism that made it pass is
-still here and is still the right one:
+harness has been replaced (see stage 8 above) and the shapes are measured again
+on the Unity build — the answer is that 9 of 11 screens are broken at every
+shape, for a reason that has nothing to do with shape. The mechanism below is
+still here and is still the right one, and none of it is what is failing:
 
 `SafeAreaFitter` insets a screen's content root for the display cutout and the
 gesture bar, and caps it to the 1080 width the layout was drawn for. Both are
@@ -225,7 +265,9 @@ cropped — content strands instead, and the width cap is what stops it.
 memory limits, install, or performance.** The game **has still never run on a
 physical device**.
 
-The bundle's own gates: `minSdkVersion` 24, and **arm64-v8a only** — which
+The bundle's own gates: `minSdkVersion` **26** — not the 24 this file, the code
+and the checklist all used to claim; GameActivity has a 26 floor and Unity had
+been raising it silently on every build — and **arm64-v8a only**, which
 excludes every x86_64 target, so the AAB installs on neither ChromeOS nor a
 standard emulator. Adding `x86_64` would make emulator testing possible at no
 cost to end users, since Play splits an AAB per ABI.
@@ -252,9 +294,16 @@ Three ways out, none taken — this is a design decision:
 
 ## Open, needing a human decision
 
-- **Replace the screenshot harness.** Ten aspect ratios, layout + glyph box +
-  device pixels. Unity can do this in batchmode with a render texture; nobody
-  has written it. This is the biggest gap in the sweep.
+- **Fix the collapsed layout rows.** Stage 8 reports them on 9 of 11 screens:
+  every `VerticalLayoutGroup` child that has no height source ends up 0 tall and
+  its rows draw on top of each other (`SettingsMenu`'s AUDIO / GAME / ABOUT
+  panels are the clearest case; `Shop`, `Arcade`, `Journal`, `Gear`, `Pets`,
+  `CardCollection`, `Eclipse` and `MinigameHost` all have it). This is a
+  conversion defect, not a Unity one — the same screens were correct in Godot,
+  which is what `production/screenshots/` still shows. Whoever picks this up
+  should decide once, in `SceneBuilder`, how a Godot `VBoxContainer` maps to a
+  layout group + `ContentSizeFitter`/`LayoutElement`, then regenerate, rather
+  than nudging 9 scenes by hand.
 - **Nothing enforces documentation accuracy any more.** `check_architecture.py`
   parsed GDScript and went with the tree; `check_docs.py` still verifies the
   generated fact blocks, but no check fails on a backticked path in this file

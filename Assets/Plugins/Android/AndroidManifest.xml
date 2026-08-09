@@ -1,21 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  The only manifest change this game needs.
+  THIS FILE REPLACES UnityManifest.xml. It does not merge into it.
 
-  AndroidHaptics goes through the Android Vibrator service directly, because
-  Unity's Handheld.Vibrate() ignores its duration argument and fires the ~500ms
-  system buzz — far too long for a game built around tapping. Unity injects
-  android.permission.VIBRATE automatically when it SEES Handheld.Vibrate() in
-  the assemblies; it cannot see an AndroidJavaObject call, so without this file
+  That is the whole reason it needs an <activity> block. Unity uses this path
+  as the unityLibrary module's manifest, so whatever is here is the ONLY thing
+  that module contributes — and the previous version of this file declared a
+  permission and an empty <application>, which silently deleted both of Unity's
+  activity declarations. The build said so and nobody read it:
+
+      warning: Unable to find Unity activity in manifest.
+               Some attributes may not be set properly and need to be set
+               manually.
+
+  The artifact agreed: `aapt2 dump badging` printed no launchable-activity and
+  the merged manifest contained zero <activity> elements. The APK installed and
+  could not be started — no launcher icon, nothing to tap. Play would have
+  accepted that upload.
+
+  The activity below is Unity's own, copied from
+  <unity>/PlaybackEngines/AndroidPlayer/Apk/UnityManifest.xml. It is the
+  GameActivity variant because androidApplicationEntry is GameActivity, which
+  is also why libgame.so is in the bundle and why android.app.lib_name must
+  say "game". Switching Application Entry in Player Settings means switching
+  this block to UnityPlayerActivity + @style/UnityThemeSelector.
+
+  android:exported is stated rather than left to Unity's post-processing: it is
+  mandatory for a component with an intent-filter from API 31, and this file is
+  the reason that post-processing could not find the activity in the first
+  place.
+
+  VIBRATE is here because AndroidHaptics goes through the Android Vibrator
+  service directly — Unity's Handheld.Vibrate() ignores its duration argument
+  and fires the ~500ms system buzz, far too long for a game built on tapping.
+  Unity injects the permission when it SEES Handheld.Vibrate() in the
+  assemblies; it cannot see an AndroidJavaObject call, so without this line
   every haptic silently no-ops on device and nothing in the build reports it.
 
-  Nothing else is declared here on purpose. INTERNET in particular is left OFF
-  (PlayerSettings.Android.forceInternetPermission = false), which is what makes
-  the privacy policy's "this app makes no network requests" claim true rather
-  than aspirational.
+  INTERNET is deliberately absent (PlayerSettings.Android.forceInternetPermission
+  = false), which is what makes the privacy policy's "this app makes no network
+  requests" claim true rather than aspirational.
+
+  Nothing here sets android:extractNativeLibs. An earlier version did, and it
+  had no effect: Unity writes that attribute onto <application> itself and the
+  shipped manifest read "true" regardless. An attribute that loses every merge
+  is worse than absent, because it reads as a decision that was made.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.VIBRATE" />
 
-    <application android:extractNativeLibs="false" />
+    <application>
+        <activity android:name="com.unity3d.player.UnityPlayerGameActivity"
+                  android:theme="@style/BaseUnityGameActivityTheme"
+                  android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="unityplayer.UnityActivity" android:value="true" />
+            <meta-data android:name="android.app.lib_name" android:value="game" />
+        </activity>
+    </application>
 </manifest>
