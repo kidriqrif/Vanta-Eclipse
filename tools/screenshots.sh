@@ -4,6 +4,14 @@
 #   bash tools/screenshots.sh                     all 11 screens x 10 shapes
 #   bash tools/screenshots.sh MainMenu,Gameplay   named screens only
 #   SHAPES=1080x1920_9-16 bash tools/screenshots.sh MainMenu
+#   VISIBLE=1 bash tools/screenshots.sh           watch it happen on screen
+#
+# VISIBLE=1 drops -batchmode, which is the ONLY thing making this headless.
+# Unity opens for real, enters play mode, and walks the screens in front of
+# you; the harness still writes the same PNGs and the same report, and still
+# closes the editor when it is done. It is slower, it takes over the display,
+# and it cannot run while the project is already open in another editor —
+# which is why headless is the default, not because the run cannot be seen.
 #
 # Output: build/screenshots/<Scene>__<shape>.png plus report.csv.
 # Exit code is the gate; the PNGs are for looking at, which is the point —
@@ -33,8 +41,14 @@ if [ ! -f "$UNITY" ]; then
 	exit 1
 fi
 
-ARGS=(-batchmode
-	-projectPath "$PROJECT"
+ARGS=()
+if [ -z "${VISIBLE:-}" ]; then
+	ARGS+=(-batchmode)
+else
+	echo "VISIBLE=1 — opening the Unity editor; do not touch it until it exits."
+fi
+
+ARGS+=(-projectPath "$PROJECT"
 	-executeMethod VantaEclipse.EditorTools.ScreenshotHarness.Run
 	-harnessOut "$OUT"
 	-logFile "$PROJECT/$LOG")
