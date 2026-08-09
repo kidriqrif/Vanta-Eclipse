@@ -1,4 +1,3 @@
-// Ported from scripts/ui/relic_collection_panel.gd
 using UnityEngine;
 using UnityEngine.UI;
 using VantaEclipse.Core;

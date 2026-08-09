@@ -13,10 +13,9 @@ namespace VantaEclipse.UI
     /// Screen.safeArea. Qualifying every use site would have worked and would
     /// have kept the trap loaded for the next file.
     ///
-    /// Replaces Godot's `%UniqueName` node lookup, which the UI scripts use
-    /// everywhere. Godot resolved those at load through the scene's owner;
-    /// Unity has no equivalent, so this walks the hierarchy once and caches by
-    /// name. The cost is one traversal per screen at Awake, against 20-odd
+    /// Screens address their nodes by NAME rather than by inspector reference.
+    /// This walks the hierarchy once and caches by name; the cost is one
+    /// traversal per screen at Awake, against 20-odd
     /// serialized field references per screen that would otherwise have to be
     /// wired by hand in the inspector for all 32 screens — and silently break
     /// whenever SceneBuilder regenerates one.

@@ -1,4 +1,3 @@
-// Ported from scripts/managers/game_manager.gd
 using System;
 using System.Collections.Generic;
 using VantaEclipse.Core;
@@ -35,8 +34,7 @@ namespace VantaEclipse.Managers
         public GameManager() => Game.Events.GameLoaded += OnGameLoaded;
 
         /// <summary>Driven by GameRuntime on unscaled time, so a paused game
-        /// still accrues play time — what process_mode ALWAYS bought in
-        /// Godot.</summary>
+        /// still accrues play time.</summary>
         public void Tick(float unscaledDeltaTime)
         {
             TotalPlayTime += unscaledDeltaTime;

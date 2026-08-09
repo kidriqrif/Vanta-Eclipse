@@ -1,4 +1,3 @@
-// Ported from scripts/managers/player_stats.gd
 using UnityEngine;
 using VantaEclipse.Core;
 

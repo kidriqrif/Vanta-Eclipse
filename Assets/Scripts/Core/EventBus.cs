@@ -1,4 +1,3 @@
-// Ported from scripts/managers/event_bus.gd
 using System;
 using System.Collections.Generic;
 using VantaEclipse.Data;
@@ -18,8 +17,8 @@ namespace VantaEclipse.Core
     /// Listen with:    Game.Events.GameSaved += OnGameSaved;
     ///
     /// The Raise* methods exist because C# only lets the declaring type invoke
-    /// an event. In Godot any script could call `.emit()`; here the managers
-    /// that own each signal call the matching Raise* instead. They are grouped
+    /// an event, so the managers that own each signal call the matching Raise*
+    /// instead of emitting directly. They are grouped
     /// with their events rather than in a block at the bottom so a new signal
     /// is one edit in one place.
     /// </summary>

@@ -133,7 +133,7 @@ width. The one glowing element in farm mode by design (UX §3B).
 ### 2G. Global adjustment required by the Frozen Ruins sky
 The gameplay footer color `Color(0.45, 0.41, 0.56)` measures 3.4:1 over
 the FR sky's bottom-edge patch (vignette-dimmed) — fail. The footer
-(`SessionLabel`, `PlayTimeLabel` in `gameplay.tscn`) brightens one step
+(`SessionLabel`, `PlayTimeLabel` in `Assets/Scenes/Gameplay.unity`) brightens one step
 to **`Color(0.55, 0.51, 0.68)`**: 4.9:1 over the FR worst case, improves
 Dark Forest too, and stays visibly the dimmest text tier. No other
 existing color is touched.

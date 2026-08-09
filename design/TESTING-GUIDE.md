@@ -1,301 +1,149 @@
-# Vanta Eclipse — Testing Guide
+# Testing Guide — Vanta Eclipse
 
-How to get from "validated statically" to "safe to submit". Read
-`RELEASE-CHECKLIST.md` alongside this: that file lists *what must exist*, this
-one lists *what must be proven*.
+What must be **proven**, staged from "does it compile at all" to "a stranger
+played it". `RELEASE-CHECKLIST.md` lists what must *exist*; this lists what must
+be *shown to work*. Start here.
 
-**Start here.** The project has never been opened in the Godot editor — there
-is no `.godot/` import cache. Every line of it is unexecuted. The static sweep
-(`bash tools/validate_all.sh`) is deliberately broad and it is green, but it
-only compares what the files say to each other. It cannot catch a shader that
-fails to compile, an `_ready()` that dereferences null, or a screen that lays
-out wrong. Budget real time for Stage 0 turning up problems; that is what it
-is for, and finding them there is much cheaper than finding them in review.
+**Where the project actually stands:** stages 0 and 1 pass. Stage 2 has never
+been run — the game has never executed on Android hardware. Everything below
+stage 2 is therefore unverified, and no amount of stage 1 substitutes for it.
 
 ---
 
-## Stage 0 — Does it run at all?
+## Stage 0 — the sweep
 
-Nothing downstream matters until this passes.
-
-1. **Install Godot 4.7 (standard build, not .NET).** `project.godot` declares
-   `config/features = ("4.7", "Mobile")`. An older 4.x will refuse the config
-   version; a newer one will offer to upgrade the project — let it, then re-run
-   `bash tools/validate_all.sh` before trusting anything.
-2. **Open the project.** First import builds `.godot/` from 53 sprite PNGs and
-   the bitmap font. This takes a while and is one-time.
-3. **Watch the Output and Errors panels during import, not just after.** This is
-   the first time `effects/pixel_sprite.gdshader` is ever compiled. Expect the
-   first pass to report errors against the theme and to need a **second**
-   `--import`: the theme resolves its font and textures before those assets
-   have sidecars, so pass one fails on assets pass one is still creating.
-4. **Press F5.**
-
-### What is most likely to break, in order
-
-| Risk | Why it is the risk | What you would see |
-| --- | --- | --- |
-| `pixel_sprite.gdshader` fails to compile | Written without a compiler available — `check_shaders.py` is static and cannot prove a shader compiles | Enemy renders black, white, or untextured; shader error in Output |
-| A sprite renders soft instead of blocky | `textures/canvas_textures/default_texture_filter=0` (nearest) is a project setting, so anything overriding the filter per-node undoes it | Creatures look like the pre-revamp vector art, blurred rather than pixelated |
-| An autoload `_ready()` throws | 21 autoloads all run at boot, in order, before any screen | Black screen, or a stack trace naming a manager |
-| A `%UniqueName` misses at runtime | Statically checked, but scene-tree timing is not the same thing | `Node not found` on entering a screen |
-| A `.tres` fails to load into its typed property | Property names are checked, runtime coercion is not | Null texture, or a definition silently defaulting |
-
-If the enemy sprite looks wrong, **first test**: select `EnemySprite` in
-`scenes/gameplay/enemy_view.tscn` and clear its `material`. If the sprite then
-renders correctly, the shader is the fault and the Output panel has the compile
-error. Send me that text.
-
-### Automating Stage 0
-
-```bash
-GODOT=/path/to/godot bash tools/screenshot_run.sh [output_dir]
-VANTA_SHOT_ONLY=gear bash tools/screenshot_run.sh   # one screen, fast loop
+```
+bash tools/validate_all.sh
 ```
 
-Runs the game windowed on the real renderer and walks **every** screen, panel,
-minigame and transient in it — 27 PNGs, in two passes. The first is the cold
-save a new player boots into, where the empty states are the thing being
-checked; the second seeds a late-game save and re-shoots the screens whose job
-is rendering content, plus the doors a cold save hides. It registers
-`tools/screenshot_harness.gd` as the last autoload and restores `project.godot`
-afterwards, including on crash or Ctrl-C. Output defaults to `.godot-shots/`,
-which is gitignored.
+Eight stages, every one a hard gate, and it runs all of them even after a
+failure so one break cannot hide the next five. Stages 1 and 7 need Unity and
+skip cleanly if `$UNITY` does not resolve; the rest are Python and always run.
 
-Coverage is the whole game rather than a sample because a defect confined to
-one screen is exactly what static checks pass and nobody notices: Gear can be
-broken for a week while gameplay looks perfect.
+| | |
+|---|---|
+| 1 | C# compiles — a real `Unity -batchmode` compile, not a parser |
+| 2 | project invariants: palette closure, 9px glyph grid, scene/prefab/sprite names |
+| 3 | font coverage — every character the UI renders exists in the face |
+| 4 | generated art is on the 16-colour palette, every pixel of every PNG |
+| 5 | shipped assets are byte-identical to what their generators produce |
+| 6 | README and the published site match the code |
+| 7 | runtime logic — 49 assertions against the real managers |
+| 8 | **every screen rendered at 10 Android shapes** |
 
-**The window cannot be bigger than your desktop.** Asking for the project's
-native 1080x1920 on a 1080p monitor silently gives a ~1080x1050 window, and
-`stretch/aspect="expand"` then renders a near-*square* viewport — in one
-measured case 2468x1920, well over twice the intended width. The screenshots
-still look entirely plausible, which is what makes it dangerous: every
-judgement about layout is quietly wrong and nothing says so. `SHOT_RES`
-therefore defaults to **540x960** — exact 9:16, half scale, identical layout —
-and the harness prints the viewport aspect on every run and shouts if it does
-not match the phone. It found a real bug the moment it was fixed: the Gear
-badge covering its own button label, invisible at the stretched aspect because
-the bottom row was twice as wide as a phone ever gives it.
+Stage 8 is the only one that looks at pixels. Everything above it compares
+files to other files.
 
-The script also runs `--headless --import` first. A newly added `.png` has no
-import sidecar, so every reference to it fails — and because the theme is one
-resource, **one** unimported sprite takes the whole theme down and the game
-boots unstyled, while the static sweep stays green because the file is on disk
-and the path resolves. `.godot/` is gitignored, so a fresh clone is always in
-exactly that state.
+## Stage 1 — screens, headless
 
-### Every Android shape at once
-
-```bash
-GODOT=/path/to/godot bash tools/aspect_matrix.sh
+```
+bash tools/screenshots.sh                     all 11 screens x 10 shapes
+bash tools/screenshots.sh MainMenu,Gameplay   named screens only
+SHAPES=1080x1920_9-16 bash tools/screenshots.sh Gear
 ```
 
-Android portrait is not one shape. It runs from 9:16 on older budget phones,
-through the 9:19.5 and 9:20 most current phones use, to 9:21 on an Xperia, to
-3:4 and 16:10 tablets, to nearly square on an unfolded foldable — a 1.85x
-spread. This runs the whole walk once per shape and reports what does not fit.
+Renders each screen in **play mode** — so `Awake`/`Start` run, the managers
+boot, and the screens populate themselves — into a RenderTexture at each shape,
+then measures four things: a blank frame, content outside the frame, layout rows
+collapsed to zero height or overlapping, and glyph box / device pixels. PNGs and
+`report.csv` land in `build/screenshots/`.
 
-Two facts about `stretch/mode="canvas_items"` + `aspect="expand"` decide what
-can actually break. Expand scales by `min(win.x/base.x, win.y/base.y)` and then
-divides the window through by it, so the logical viewport is **never smaller**
-than the 1080x1920 base in either axis — it only grows:
+**Open the images.** The exit code is a gate, not a verdict: every piece of art
+and text this project got wrong looked correct in source, and three separate
+checks once passed a main-menu tagline that had silently lost both its periods.
 
-* **Nothing is ever cropped.** A taller phone gets extra height, a tablet extra
-  width. So the base 1080x1920 is simultaneously the narrowest *and* the
-  shortest case, which is why it is the one to tune against, and why a layout
-  that fits there fits everywhere.
-* **What does break is anchoring** — a bottom bar drifting away from the
-  content above it, a centred column stranded in a wide tablet field. That is
-  judged from the screenshots in `.godot-shots/<device>/`, not from the audit.
+Two flags are deliberately absent from the Unity invocation inside that script
+and both get "helpfully" added back — `-nographics` gives a null graphics device
+and every capture comes back empty, and `-quit` closes the editor before play
+mode has started.
 
-The harness audits layout on every shot: `OVERFLOW` for a control past the
-viewport edge, `OVERHANG` for a Label wider than the thing containing it.
-`OVERHANG` rather than "clipped" is deliberate — Godot clamps a Control's size
-up to its own minimum, so a Label is never *smaller* than its text; it grows
-and hangs over its parent instead, which is exactly what the Gear slot tiles
-did. `VANTA_LAYOUT_PROBE=1` plants one of each fault and both must be caught,
-because an audit that visits nothing prints the same "OK" as a clean layout.
+**What it cannot see:** a real GPU driver, touch, audio hardware, memory
+pressure, frame pacing, or install. `Screen.safeArea` on desktop is the whole
+screen, so the display-cutout inset that `SafeAreaFitter` exists for is not
+exercised.
 
-### The display safe area
+## Stage 2 — first run on hardware  ⟵ **never done**
 
-Android hands the app the whole screen, including behind a notch or punch-hole
-and under the gesture bar. `SceneManager` insets each screen's root
-`MarginContainer` by `DisplayServer.get_display_safe_area()`, leaving the
-background full-bleed so only the controls move in.
-
-This only executes on hardware, so it would otherwise ship having never been
-watched working. `VANTA_FAKE_SAFE_AREA="left,top,right,bottom"` injects an
-inset on a desktop run:
-
-```bash
-VANTA_FAKE_SAFE_AREA="0,130,0,90" GODOT=... bash tools/screenshot_run.sh
+```
+bash tools/build_android.sh debug
+adb install -r build/vanta-eclipse.apk
+adb logcat -c && adb logcat -s Unity
 ```
 
-Three more things this covers that nothing else does:
+The build script verifies the artifact rather than trusting the exit code:
+`apksigner` confirms the signature scheme, `aapt2 dump badging` prints the
+package, SDK levels, permissions and native code, and the run **fails** if there
+is no launchable activity. That last check exists because an APK once shipped
+with no launcher activity at all — it installed and could not be started.
 
-* **Shaders actually compile.** `--headless` uses the dummy rasterizer and
-  never compiles one, so a clean headless boot says nothing about `effects/`.
-* **The result is visible.** A screenshot is the only artifact that shows
-  whether the screen looks like anything. The first real run of this project
-  proved the point: every static check was green, yet the enemy's contact
-  shadow was invisible — a near-black shadow on a near-black backdrop. It is
-  now a tinted ground glow.
-* **It is cheap to repeat.** Re-run it after any visual change.
+What to establish, in order:
 
-Expect a handful of `ObjectDB instances were leaked at exit`. That is the
-harness quitting mid-`await`, not the game — a plain `--headless --quit-after
-300` boot exits clean, which is the check to run if you want to be sure.
+1. It launches, and the main menu draws.
+2. Every screen opens and comes back. Eleven screens, one tap each.
+3. Text is legible at arm's length on a real panel, not a monitor.
+4. Taps land where they look like they land. The tap targets are 72px on the
+   9px grid for a reason (`accessibility-requirements.md` §4B).
+5. Haptics fire. `AndroidHaptics` goes through the Vibrator service directly,
+   which is why `VIBRATE` is declared by hand in
+   `Assets/Plugins/Android/AndroidManifest.xml` — Unity cannot see an
+   `AndroidJavaObject` call and will not inject the permission for one.
+6. Audio plays, and does not clip or pop on a phone speaker.
+7. A shader that compiles on desktop can still fail on a mobile GPU. Look at
+   the enemy rim light and the ground glow specifically.
+8. Frame pacing and battery over a ten-minute session.
 
----
+**Save file on device:** `/sdcard/Android/data/com.kidriqrif.vantaeclipse/files/`
+— `savegame.json` and `savegame.backup.json`.
 
-## Stage 1 — Desktop playthrough
+> **Resetting a save means deleting BOTH files.** `SaveManager` writes
+> atomically through the backup slot and falls back to it when the main file is
+> missing, so removing only `savegame.json` restores the backup on next launch —
+> a "reset" that comes back at level 60 with 20 boss cards.
 
-Run from the editor so you can see errors as they happen. Play with the Output
-panel visible; an idle game hides errors well because it keeps running.
+## Stage 3 — the run that matters
 
-### Getting to late game without playing for hours
+One uninterrupted session from a fresh save, on the device, without touching
+the editor:
 
-The save is **plain JSON at a known path**, which makes state-jumping easy:
+- Reach level 15 and unlock the auto-attacker.
+- Lose a boss fight on the timer, farm the gate, win it.
+- Equip something, salvage something, forge something.
+- Play all four arcade boards to a win and a loss.
+- Trigger an Eclipse and spend Void Crystals.
+- Close the app for an hour. Come back. Check the offline reward against what
+  the idle rate says it should be.
 
-* Windows: `%APPDATA%\Godot\app_userdata\Vanta Eclipse\savegame.json`
+Then kill the app mid-write (`adb shell am force-stop`) during an autosave and
+confirm the next launch loads rather than starting over.
 
-Quit the game, edit `sections.combat.enemy_level`, relaunch. This is the only
-practical way to test gates 50/100/110, prestige, and the deep-world walls.
-Keep a copy of a fresh save and a late save; you will want both repeatedly.
+## Stage 4 — internal testing
 
-### Regression paths for the ten defects fixed in `4d92de9`
+Upload the AAB to Play's Internal Testing track and install it **from Play**,
+not from `adb`. That is the first time the artifact is exercised as Play
+delivers it: split by ABI, re-signed with the app signing key, and installed by
+the store rather than sideloaded.
 
-Each was a real bug with a specific reproduction. Walk them deliberately —
-these are the paths most likely to have been disturbed.
+Check that the store listing's screenshots match what the app actually looks
+like on the device it was installed on.
 
-1. **Swift Hunt** — with auto-attack unlocked, buy a Swift Hunt level. The
-   live attack must speed up *immediately*, without leaving the screen.
-2. **Tap trail** — buy and equip any "… Trail" cosmetic, then tap. Particles in
-   the cosmetic's colour must appear under your finger. (No trail on
-   auto-attacks; that is deliberate.)
-3. **Boss loot latch** — start a boss fight, tap ECLIPSE *during* it, complete
-   the prestige. Equipment must still drop in the new run.
-4. **Windows sweep** — already proven: `bash tools/validate_all.sh` is green on
-   a `cp1252` machine.
-5. **Past level 100** — set `enemy_level` to 108, climb through gate 110. The
-   final world boss must repeat, with no `push_error` spam on CHALLENGE BOSS.
-6. **Banner queue** — kill a Frozen Ruins gate boss that drops a relic and a
-   mythic. All banners must play in sequence, none skipped.
-7. **Scene-load failure** — hard to trigger honestly. To force it, temporarily
-   point a `SCENE_*` constant in `scene_manager.gd` at a nonexistent path,
-   navigate there, then confirm combat still spawns enemies afterwards. Revert.
-8. **Crystal shortfall** — with 39 Void Crystals against a 40-cost node, the
-   button must read "NEED 1 MORE", not "NEED 40 MORE".
-9. **Journal label** — fill the Arcade token meter, then claim a reward from the
-   ACHIEVEMENTS tab. The refusal message must appear and then hand the label
-   back; no stray "Resets in 7h" left on that tab.
-10. **Daily rollover** — leave the app running across UTC midnight (or set the
-    system clock forward). Dailies must reroll within ~60s without a restart.
+## Stage 5 — closed testing
 
-### Integrity checks
-
-- [ ] **Save/load round trip.** Play, quit, relaunch. Currencies, level,
-      inventory, equipped items, relics, pets, skills, quests all restore.
-- [ ] **Kill mid-save.** Force-quit during an autosave. Progress survives via
-      the backup slot (`SaveManager` writes atomically — verify it actually does).
-- [ ] **Fresh install.** Delete `savegame.json`. First-run flow works and the
-      tutorial chain is not skipped.
-- [ ] **Offline progression.** Quit, set the system clock forward 2 hours,
-      relaunch. Reward is granted, capped at 8 hours, and enemy level has *not*
-      advanced. Then set the clock *backwards* and confirm nothing is granted
-      and nothing goes negative.
-- [ ] **Prestige.** Eclipse resets run state and preserves Ascendant Powers.
+If the developer account is a personal one created after 2023-11-13, Play
+requires **12 testers for 14 continuous days** before production access is
+granted. That is a two-week gate rather than a form, and it belongs on the
+calendar before a launch date is chosen.
 
 ---
 
-## Stage 2 — Real Android device
+## What has no test yet
 
-The single highest-value stage, and the one nothing in this repo can substitute
-for. Mobile GPUs and mobile GLSL are stricter than desktop: **a shader that
-compiles on desktop can still fail on a device.**
-
-1. Install the Godot **export templates** for 4.7 (Editor → Manage Export
-   Templates).
-2. Install the **Android build template** into the project (Project → Install
-   Android Build Template) — creates `android/`, which is gitignored.
-3. Set up the Android SDK path and a debug keystore in Editor Settings.
-4. Export a **debug APK** and install it. Do not go near an AAB yet.
-
-- [ ] **The shader on real hardware.** Look at the enemy on the device
-      specifically. This is a different compiler than desktop.
-- [ ] **A genuinely low-end device.** The renderer is `mobile` and the art
-      budget assumes weak GPUs. Test the oldest phone you can find, not your
-      newest.
-- [ ] **Frame pacing** during the busiest moment: a boss kill firing four
-      banners, particles, damage numbers and the nebula backdrop at once.
-- [ ] **Touch targets.** The spec says ~100px minimum. Verify with a thumb, not
-      a mouse.
-- [ ] **Battery and thermal** over a 20-minute session. Idle games get left open.
-- [ ] **App lifecycle.** Background the app, return after 10 minutes. Offline
-      rewards, autosave-on-background, and audio focus all behave.
-- [ ] **Rotation lock.** Portrait only, as configured.
-- [ ] **Back button** does something sane on every screen.
-- [ ] **Resolutions.** A tall 20:9 phone and a 16:9 tablet — `expand` aspect
-      means layouts can stretch unexpectedly.
-
-Use `adb logcat -s godot` to see runtime errors on device; they are invisible
-otherwise.
-
----
-
-## Stage 3 — Play Console internal testing
-
-Do **not** reach this stage before the Blockers in `RELEASE-CHECKLIST.md` are
-closed. Two are absolute:
-
-* `package/unique_name` is still `com.example.vantaeclipse` — Play rejects it,
-  and **the package name is permanent once published**.
-* `USE_STUB_PROVIDERS = true` means every purchase is free and local and every
-  ad is a timer. Shipping that is shipping a free IAP exploit.
-
-1. Create the app in Play Console; upload a signed **AAB** to the **Internal
-   testing** track.
-2. **Read the pre-launch report.** Google runs your build on real physical
-   devices automatically and reports crashes, ANRs, and rendering issues. For a
-   project that has never run on hardware this is the single most valuable free
-   signal available.
-3. Test **billing in the sandbox** with a licence-tester account: every SKU
-   purchases, `restore_purchases()` restores, and a cancelled purchase grants
-   nothing.
-4. Verify **server-side receipt validation** rejects a replayed or forged
-   receipt. A client-only "purchase succeeded" is trivially spoofable.
-5. Confirm real ads load, and that failure to load degrades gracefully rather
-   than blocking a reward.
-
-- [ ] Install from the store listing on a device that has never had the app.
-- [ ] **Upgrade path:** install the previous build, play, then update in place.
-      Saves must survive. This is what `SAVE_VERSION` and `_migrate()` exist
-      for, and it has never been exercised — there is only one version so far.
-
----
-
-## Stage 4 — Closed testing, then production
-
-Google requires a period of closed testing with real testers before a personal
-developer account can promote to production; check the current requirement in
-Console, as it has changed over time.
-
-- [ ] Data Safety form matches what the ad SDK actually collects.
-- [ ] Privacy policy URL is live and reachable.
-- [ ] Content rating questionnaire completed.
-- [ ] Staged rollout (start at a small percentage), with crash monitoring.
-
----
-
-## What this project cannot tell you
-
-Honest limits, so they are not mistaken for covered ground:
-
-* **Balance.** Every economy number was tuned by simulation against a *model*
-  of a player. Whether the level-70 wall feels earned or punishing is unknown
-  until real people play. Instrument it before trusting it.
-* **Audio.** There is none. Buses and volume settings exist; no assets were
-  authored.
-* **Feel.** Animation timings, juice, and pacing were specified in `design/ux/`
-  and implemented to spec, but never watched in motion.
+- **Localisation.** Every string is inline English.
+- **Analytics.** Every economy number was tuned by simulation against a *model*
+  of a player, never against a real one.
+- **Cloud saves.** `SaveManager.GetFullSaveText()` already returns exactly the
+  document a provider would upload; nothing uploads it.
+- **Landscape.** The app is portrait-locked with no landscape layout, and
+  Android 16 ignores `screenOrientation` on displays 600dp and wider. A tablet,
+  an unfolded foldable, or any phone in split-screen will show it in landscape
+  regardless. Nothing is cropped — content strands, and the width cap in
+  `SafeAreaFitter` is what stops it.

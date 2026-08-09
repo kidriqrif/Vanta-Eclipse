@@ -6,10 +6,9 @@ namespace VantaEclipse.UI
     /// <summary>
     /// Sizes a GridLayoutGroup's cells to fill the row.
     ///
-    /// Godot's GridContainer took its column width from the widest child and
-    /// grew to fit. Unity's GridLayoutGroup does the opposite: cellSize is a
+    /// A GridLayoutGroup does not size itself to its children: cellSize is a
     /// FIXED number it imposes on every child, it ignores what the children
-    /// would prefer, and the default is 100x100. Nothing in the port set it, so
+    /// would prefer, and the default is 100x100. Nothing set it, so
     /// Gear's seven equipment slots rendered as 100px stamps crammed into the
     /// top-left corner with their labels overlapping — four columns of tiles
     /// that should have spanned the screen.

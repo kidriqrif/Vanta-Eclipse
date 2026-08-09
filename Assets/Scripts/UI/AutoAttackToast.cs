@@ -1,4 +1,3 @@
-// Ported from scripts/ui/auto_attack_toast.gd
 using System.Collections;
 using UnityEngine;
 
@@ -20,7 +19,7 @@ namespace VantaEclipse.UI
         public const float PopSeconds = 0.3f;
         public const float HoldSeconds = 1.4f;
         public const float FadeSeconds = 0.3f;
-        /// <summary>TRANS_BACK in Godot overshoots by about this much — the
+        /// <summary>A Back ease-out overshoots by about this much — the
         /// spec's pop-in.</summary>
         public const float Overshoot = 1.05f;
 
@@ -80,7 +79,7 @@ namespace VantaEclipse.UI
             Destroy(gameObject);
         }
 
-        /// <summary>Godot's TRANS_BACK/EASE_OUT: overshoots the target and
+        /// <summary>A Back ease-out: overshoots the target and
         /// settles back.</summary>
         static float BackOut(float t)
         {

@@ -1,4 +1,3 @@
-// Ported from scripts/minigames/sequence_echo.gd
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;

@@ -9,7 +9,7 @@ namespace VantaEclipse.Data
         /// <summary>
         /// The prefab MinigameHost instantiates for this game.
         ///
-        /// The stored field is the .tscn path the content came across with;
+        /// The stored field is the layout path the content came across with;
         /// SceneBuilder named every minigame prefab after the PascalCase of that
         /// same stem, so the two cannot drift as long as this is the one place
         /// that converts between them.

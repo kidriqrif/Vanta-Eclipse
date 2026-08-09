@@ -6,10 +6,9 @@ namespace VantaEclipse.UI
     /// <summary>
     /// Named access to the sprites the UI scripts reference from code.
     ///
-    /// Godot's `preload("res://sprites/ui/boss_skull_icon.png")` resolved at
-    /// parse time and produced a hard reference the exporter followed. Unity
-    /// has no equivalent for a plain static field on a non-MonoBehaviour: a
-    /// Sprite reachable only from code must either be serialized on an object
+    /// There is no way to hold a hard asset reference in a plain static field
+    /// on a non-MonoBehaviour: a Sprite reachable only from code must either be
+    /// serialized on an object
     /// somebody wired by hand, or live under a Resources folder and be loaded
     /// by path. The art tree moved under Assets/Resources/Art for exactly this
     /// reason — the alternative was 20 inspector slots per screen that
@@ -66,8 +65,8 @@ namespace VantaEclipse.UI
         public static Sprite ShotMiss => Get("minigames/shot_miss");
         public static Sprite ShotSunk => Get("minigames/shot_sunk");
 
-        /// <summary>The six memory-match faces, in the order memory_match.gd
-        /// declared them — the pairing logic indexes this array, so the order is
+        /// <summary>The six memory-match faces. The pairing logic indexes this
+        /// array, so the order is
         /// load-bearing rather than cosmetic.</summary>
         public static readonly string[] FaceNames =
         {

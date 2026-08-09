@@ -5,13 +5,12 @@ system must follow. It is the first thing to read before adding code.
 
 ## The manager pattern
 
-Godot let us register scripts as **autoloads**: created once at launch, alive
-for the whole session, reachable by name from anywhere. Unity has no such
-construct, so `Assets/Scripts/Core/Game.cs` is a static service locator built
-from a `[RuntimeInitializeOnLoadMethod]` that runs **before the first scene
-loads**. That is the closest Unity gets: it fires whichever scene the editor
-starts in, so entering play mode on any screen works exactly the way it did in
-Godot.
+The game needs objects created once at launch, alive for the whole session and
+reachable from anywhere. Unity has no built-in construct for that, so
+`Assets/Scripts/Core/Game.cs` is a static service locator built from a
+`[RuntimeInitializeOnLoadMethod]` that runs **before the first scene loads**.
+It fires whichever scene the editor starts in, so entering play mode on any
+screen boots the full set of managers rather than half of them.
 
 All long-lived game logic lives in managers under `Assets/Scripts/Managers/`.
 Screens never own game state; they read managers and listen to `EventBus`.
@@ -47,18 +46,18 @@ loading and AudioSources need engine callbacks: `SceneFlow` (`Game.Flow`) and
 
 ### The two clocks
 
-Godot gave each autoload a `process_mode`. `PROCESS_MODE_ALWAYS` kept it
-running while the tree was paused; the default froze it. Unity has one Update,
-so `GameRuntime` — the single MonoBehaviour the locator creates — drives the
-managers on **two** deltas:
+Some managers must keep running while the game is paused and others must
+freeze with it. Unity has one Update, so `GameRuntime` — the single
+MonoBehaviour the locator creates — drives the managers on **two** deltas:
 
 * `Time.unscaledDeltaTime` for anything that must keep running while paused:
   autosave, play time, the settings write debounce.
 * `Time.deltaTime` for anything that must freeze: `Scheduler.After`, and
   through it the boss countdown. A notification can never drain that timer.
 
-`Scheduler` replaces two Godot idioms: `get_tree().create_timer(d).timeout` is
-`Scheduler.After(d, f)`, and `call_deferred()` is `Scheduler.EndOfFrame(f)`.
+`Scheduler` owns both delays: `Scheduler.After(d, f)` runs `f` after `d`
+scaled seconds, and `Scheduler.EndOfFrame(f)` defers `f` past the current
+frame's mutation.
 
 ## Art is generated, not drawn
 
@@ -69,7 +68,7 @@ palette declared once in `tools/pixelart.py`:
 |---|---|
 | `tools/pixelart.py` | The palette and a canvas that stores palette **names**, so a mistyped colour is a `KeyError` at generation time rather than wrong pixels. Writes PNGs by hand with `zlib`/`struct`. |
 | `tools/make_sprites.py` | All 57 sprites — creatures, pets, minigame pieces, UI icons. `--sheet` writes contact sheets for review. |
-| `tools/make_font.py` | `vanta_pixel` — a 5×7 monospace bitmap face, 106 glyphs, as BMFont `.fnt` + atlas. |
+| `tools/make_font.py` | `vanta_pixel` — a 6×9 monospace bitmap face, 106 glyphs, as BMFont `.fnt` + atlas. |
 | `tools/make_icons.py` | Launcher, adaptive, store icon and feature graphic. |
 | `tools/make_audio.py` | All 15 effects and the drone. |
 
@@ -153,8 +152,8 @@ its own section by implementing `ISaveable`; `Game.Saveables()` is the list
 
 * Any system with persistent data implements `ISaveable`: a `SaveKey`
   property naming its section, plus `GetSaveData()` / `LoadSaveData(data)`.
-  Godot needed an explicit `register_saveable()` call in `_ready()`; the
-  interface makes registration structural, so a manager cannot forget.
+  The interface makes registration structural rather than a call someone has
+  to remember, so a manager cannot silently stop being saved.
 * Saving is automatic (every 60 s, on app close, on Android background) plus a
   manual button in Settings.
 * Writes are **atomic**: temp file → backup current save → rename. A crash
@@ -190,10 +189,11 @@ disagree with each other.
 
 **A component is a prefab, not a scene.** Anything a screen spawns — a banner,
 a toast, a modal, an arcade board — lives in `Assets/Resources/Prefabs/` and is
-instantiated with `UIPrefabs.Spawn<T>()`. Godot drew no distinction and
-`preload().instantiate()` worked on any `.tscn`; Unity splits loading a scene
-from instantiating a prefab, and building a component as a scene puts an entry
-in Build Settings that nothing can navigate to.
+instantiated with `UIPrefabs.Spawn<T>()`. Unity splits loading a scene from
+instantiating a prefab: a scene is loaded one at a time and replaces what was
+there, a prefab is instantiated many at a time into whatever is open. Building
+a component as a scene puts an entry in Build Settings that nothing can
+navigate to, and leaves the screen that embeds it holding a placeholder.
 
 ## Content as data
 
@@ -248,7 +248,7 @@ that scales by a fraction.
   It used to be a nebula shader with drifting dust; that was removed, and its
   removal is what finally exposed a violet gradient divider that had survived
   an entire palette pass by blending into the animation behind it.
-* Type: **`vanta_pixel`** (`Assets/Resources/Fonts/`), a 5×7 monospace bitmap
+* Type: **`vanta_pixel`** (`Assets/Resources/Fonts/`), a 6×9 monospace bitmap
   face generated by `tools/make_font.py` and turned into a Unity Font asset by
   `Assets/Editor/PixelFontImporter.cs`.  Unity has no BMFont importer, so the
   106 glyphs are transcribed into `CharacterInfo` entries from the `.fnt` the
@@ -290,16 +290,16 @@ body → title) and nine hues do meaning (element, rarity, currency, danger).
   Cinzel-era treatment. They are kept as the design record of each
   milestone; `Assets/Scripts/UI/VantaTheme.cs` is the authority on what
   actually ships.
-* All colour and type comes from `VantaTheme`. Godot had a Theme resource with
-  named *variations* (`PrimaryButton`, `TitleLabel`, `HeaderLabel`); Unity's UI
-  has no global theme, so those twelve variations are transcribed into
-  `VantaTheme.Styles`, entry by entry from the original resource rather than
-  inferred from their names. An earlier pass guessed and guessed wrong on six
-  of the twelve.
+* All colour and type comes from `VantaTheme`. Unity's UI has no global theme,
+  so the twelve named styles (`PrimaryButton`, `TitleLabel`, `HeaderLabel` and
+  the rest) live in `VantaTheme.Styles` and are the only place a widget may
+  read them from. They were transcribed entry by entry rather than inferred
+  from their names: an earlier pass guessed, and guessed wrong on six of the
+  twelve.
 * Screens that build rows and tiles in code go through `UIBuild`. A "panel with
-  a 3px border and 12px of padding" was one StyleBoxFlat in Godot and is three
-  GameObjects in Unity; without that helper every list screen would restate the
-  construction twenty times.
+  a 3px border and 12px of padding" is three GameObjects in Unity — an Image
+  has a colour and nothing else — so without that helper every list screen
+  would restate the construction twenty times.
 * Every full screen names itself with a `TitleLabel` node carrying the
   `TitleLabel` variation. Six screens had drifted onto `HeaderLabel` — the
   muted *secondary text* role — so half the game announced itself in dim grey
@@ -311,10 +311,10 @@ body → title) and nine hues do meaning (element, rarity, currency, danger).
   shared 0.92 alpha the Gear inventory showed straight through the Forge's own
   header and read as a rendering fault.
 * A progress bar or slider whose fill has no explicit height draws at zero.
-  Under Godot the three Settings volume sliders rendered as a single 4px dot
-  for exactly this reason: the styles *were* assigned, so the theme looked
-  complete while the screen was empty. `SceneBuilder` gives every converted
-  slider a real fill rect; anything built by hand must too.
+  The three Settings volume sliders once rendered as a single 4px dot for
+  exactly this reason: the styles *were* assigned, so the theme looked complete
+  while the screen was empty. `SceneBuilder` gives every converted slider a
+  real fill rect; anything built by hand must too.
 * **One accent, spent not sprayed.** The scheme is red on true-neutral black.
   Red marks the primary action, the active state and danger, and nothing else;
   everything the player is not currently being asked to do is neutral. That
@@ -338,17 +338,16 @@ body → title) and nine hues do meaning (element, rarity, currency, danger).
   outside the content root will sit under the system chrome on most current
   phones.
 
-  The width cap lives in the same component as a second inset term, not in a
-  separate one. Godot had them split — a per-scene script writing margins on
-  the same signal as the safe area — and the scene script connected later, so
-  it replaced the safe area rather than composing with it, silently dropping
-  the cutout inset on exactly the notched phones it exists for.
+  The width cap lives in the same component as the safe-area inset, not in a
+  separate one. Split across two components they compose by luck: whichever
+  writes the margins last wins, and the loser's inset — the display cutout, on
+  exactly the notched phones it exists for — disappears with no symptom.
 * Layout is tuned against 1080x1920 because `stretch/aspect="expand"` only ever
   *grows* the viewport — that base is both the narrowest and the shortest case
   any Android device produces, so what fits there fits everywhere.
-  Under Godot `tools/aspect_matrix.sh` proved this across ten device shapes.
-  **That harness has no Unity replacement**, so the claim is currently
-  unverified on this build — see HANDOFF.md.
+  `bash tools/screenshots.sh` proves this across ten device shapes: it renders
+  every screen in play mode at each of them and measures overflow, collapsed
+  and overlapping rows, and blank frames. It is stage 8 of the sweep.
 
 ### Where the shading lives
 
@@ -379,9 +378,10 @@ clip-rect and vertex-colour plumbing every Canvas material needs. Dropping any
 of it would make the creature ignore masks and CanvasGroup alpha.
 
 `EnemyView` creates one material instance per view and retints `_RimColor` per
-enemy from `EnemyDefinition.glowColor`. Godot got that isolation from
-`resource_local_to_scene`; here it is an explicit `new Material(shader)` and a
-matching `Destroy` in `OnDestroy`, because a material created with `new` is not
+enemy from `EnemyDefinition.glowColor`. That isolation is an explicit
+`new Material(shader)` and a matching `Destroy` in `OnDestroy`, because
+without the instance every enemy on screen shares one material and the last
+retint wins — and because a material created with `new` is not
 owned by the AssetDatabase and is not collected with the GameObject.
 
 Two rules for anything that adopts it:
@@ -396,10 +396,10 @@ Two rules for anything that adopts it:
    `EnemyView`, where the pool tightens and fades on the same curve as the
    bob.
 
-Budget: 5 texture taps, one branch, no loops, one pass — sized for the `mobile`
-renderer and low-end Android. Note that `Material.SetColor` naming a property
-the shader does not declare is discarded without an error anywhere — Godot had
-the same hazard and a checker for it; nothing guards it now.
+Budget: 5 texture taps, one branch, no loops, one pass — sized for low-end
+Android. Note that `Material.SetColor` naming a property the shader does not
+declare is discarded without an error anywhere: the tuning knob simply does
+nothing, and nothing in the sweep guards it.
 
 ## Conventions
 

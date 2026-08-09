@@ -9,16 +9,14 @@ namespace VantaEclipse.UI
     /// screen underneath stays visible and — on the gameplay screen — stays
     /// tappable.
     ///
-    /// Three panels used this shape in Godot and each carried its own copy of
-    /// the four offsets, the tween, and the open/close/toggle triple: the
+    /// Three panels use this shape and each carried its own copy of the four
+    /// offsets, the animation, and the open/close/toggle triple: the
     /// upgrade shop, the Forge, and the Relic Collection. They agreed on every
     /// number, which is the tell that it was one behaviour written three times
     /// rather than three behaviours that happen to look alike.
     ///
     /// The offsets are measured from the parent's BOTTOM edge in Unity's Y-up
-    /// convention. Godot's originals were -1010/0 open and 40/1050 closed
-    /// against a Y-down axis measured from the same edge; the sign flip is the
-    /// whole of the conversion.
+    /// convention: 0/1010 open and -1050/-40 closed.
     /// </summary>
     public abstract class SlidePanel : UIScreen
     {
@@ -138,7 +136,7 @@ namespace VantaEclipse.UI
             _rect.offsetMin = new Vector2(_rect.offsetMin.x, bottom);
         }
 
-        /// <summary>Godot's TRANS_CUBIC/EASE_OUT.</summary>
+        /// <summary>A Cubic ease-out.</summary>
         static float CubicOut(float t)
         {
             float inv = 1f - t;

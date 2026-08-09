@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Static invariants of the Unity project that the C# compiler cannot catch.
 
-This replaces four GDScript parsers — check_scripts, check_autoload_calls,
-check_architecture and check_wiring — that existed because GDScript resolves
+This replaces four parsers — check_scripts, check_autoload_calls,
+check_architecture and check_wiring — that existed because the previous
+language resolved
 names at runtime. A misspelled autoload member, a signal connected with the
 wrong arity, a manager calling a method that no longer existed: all of those
-were silent in Godot until the line ran, so they had to be found by reading the
+were silent until the line ran, so they had to be found by reading the
 source. In C# every one of them is a compile error, and `Unity -batchmode`
 is a stricter and more honest version of those four checks than any parser
 written here could be.

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Generate the game's bitmap pixel font.
 
-Replaces Nunito — a rounded humanist sans, the single most "modern mobile app"
-thing left in the project — with a hand-authored 5x7 pixel face.
+A hand-authored 6x9 monospace pixel face, 106 glyphs, written as a BMFont
+.fnt plus an alpha-mask atlas. Assets/Editor/PixelFontImporter.cs turns that
+pair into the Unity Font asset the UI actually binds to.
 
 MONOSPACE, on purpose. A roguelike is a grid, every glyph advances 6px, and
 numbers that change every frame (essence, DPS, HP) do not jitter as their
@@ -18,14 +19,15 @@ WIDENED FROM 5 TO 6 for small-text legibility. Five columns is the absolute
 floor for Latin lowercase and it showed: 'm' could not carry three stems, so it
 was drawn with a middle stem that stopped halfway and read as 'rn'. The sixth
 column buys a correct 'm', real counters in a/e/g/s, and diagonals in K/X/N
-that resolve instead of colliding. The cost is 17% wider text, which the
-layout audit in stage 16 is there to catch.
+that resolve instead of colliding. The cost is 17% wider text, which stage 8
+of the sweep — every screen rendered at ten Android shapes — is there to
+catch.
 
 The BOX HEIGHT deliberately did not change. GLYPH_H = 9 is load-bearing far
-outside this file: the theme's sizes are 9x{2,3,4,5,6}, tools/snap_font_sizes.py
-snaps to it, check_ui.py fails a size that is not a whole multiple of it, and
-the FONTDEVICE audit reasons about it. Widening costs one atlas column;
-heightening would have cost all of that.
+outside this file: the theme's sizes are 9x{2,3,6}, VantaTheme.SnapFontSize
+rounds onto it, and tools/check_unity.py fails a literal that is neither a
+whole multiple nor snapped. Widening costs one atlas column; heightening would
+have cost all of that.
 
 Punctuation that is one pixel is punctuation that vanishes. The period, comma,
 colon, semicolon and middot are 2x2 rather than 1x1, because a single pixel is
@@ -35,16 +37,16 @@ it ate both periods in the main menu tagline.
 INTEGER SCALING IS THE WHOLE GAME. A bitmap font asked for a size that is not a
 whole multiple of its authored size gets resampled, and resampling is exactly
 what pixel art exists to avoid. The face is authored at 9 and the theme is
-snapped to 24 / 32 / 80 so every on-screen size is a clean multiple. The old
-theme asked for 26, 32, 34 and 78 — three of those four would have produced
-fractional scaling and a smeared, uneven baseline.
+snapped to 18 / 27 / 54 so every on-screen size is a clean multiple. An
+earlier theme asked for 26, 32, 34 and 78 — three of those four would have
+produced fractional scaling and a smeared, uneven baseline.
 
 The atlas is written as WHITE with an alpha mask, not as a palette colour:
-Godot multiplies a font atlas by the theme's font_color, so any tint baked in
+UI.Text multiplies a font atlas by the label's colour, so any tint baked in
 here would multiply against every colour the UI ever asks for.
 
-EVERY CELL CARRIES A 1px TRANSPARENT GUTTER. Godot did not need one — it drew
-the .fnt rects exactly as written. Unity's TextGenerator does not: it inflates
+EVERY CELL CARRIES A 1px TRANSPARENT GUTTER. An engine that draws the .fnt
+rects exactly as written does not need one. Unity's TextGenerator inflates
 every glyph quad by HALF A TEXEL on all four sides, in both UV and vertex
 space, and that is not adjustable. Measured on the real build, a 6x9 rect came
 back as 7x10 spanning u=35.5..42.5, v=44.5..54.5. Packed edge to edge, that
@@ -54,8 +56,8 @@ With the gutter the skirt samples transparency and the face is pixel-exact
 again. This costs one column and one row of atlas per cell and nothing else:
 the rects the .fnt declares are still exactly GLYPH_W x GLYPH_H.
 
-Run: python3 tools/make_font.py
-Out: fonts/vanta_pixel.png + fonts/vanta_pixel.fnt
+Run: python tools/make_font.py
+Out: Assets/Resources/Fonts/vanta_pixel.png + vanta_pixel.fnt
 """
 
 import os

@@ -10,8 +10,8 @@ namespace VantaEclipse.EditorTools
     /// <summary>
     /// Android build configuration and entry point.
     ///
-    /// Every value here is carried across from the Godot export preset rather
-    /// than chosen fresh, because these are the settings a store listing, an
+    /// Every value here is pinned rather than left to the inspector, because
+    /// these are the settings a store listing, an
     /// installed app's upgrade path, and the save-file location all depend on.
     /// Changing the package name after release orphans every install; changing
     /// minSdk silently drops devices. They are set in code so a fresh clone or
@@ -31,7 +31,7 @@ namespace VantaEclipse.EditorTools
         public const string VersionName = "0.1.0";
         public const int VersionCode = 1;
         /// <summary>
-        /// 26, not the 24 carried over from the Godot preset. GameActivity —
+        /// 26, not the 24 this constant asks for. GameActivity —
         /// which androidApplicationEntry selects and which libgame.so exists
         /// for — has an API 26 floor, so Unity raised it silently: every APK
         /// built since the port declares minSdkVersion 26 while this constant,
@@ -59,8 +59,8 @@ namespace VantaEclipse.EditorTools
 
             // arm64 only, and IL2CPP because Play requires a 64-bit binary and
             // Mono cannot produce one. This pairing is also what makes the
-            // 16 KB page-size requirement satisfiable — the Godot build already
-            // met it and the Unity one must not regress.
+            // 16 KB page-size requirement satisfiable, which every shipped
+            // artifact is checked against in tools/build_android.sh.
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
 
@@ -98,8 +98,8 @@ namespace VantaEclipse.EditorTools
         /// <summary>
         /// Point the launcher at the generated icons.
         ///
-        /// Godot read these out of export_presets.cfg; Unity reads them from
-        /// PlayerSettings, and a project that never sets them ships the default
+        /// Unity reads launcher icons from PlayerSettings, and a project that
+        /// never sets them ships the default
         /// Unity logo — which is not a cosmetic gap, because Play rejects a
         /// listing whose launcher icon does not match the store icon.
         ///

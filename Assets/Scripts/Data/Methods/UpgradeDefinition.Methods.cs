@@ -1,6 +1,5 @@
-// Hand-written half of the generated UpgradeDefinition. Ported from the
-// methods on scripts/data/upgrade_definition.gd, which the field generator
-// cannot derive. Safe from regeneration.
+// Hand-written half of the generated UpgradeDefinition: the methods a field
+// generator cannot derive. Safe from regeneration.
 using UnityEngine;
 using VantaEclipse.Core;
 

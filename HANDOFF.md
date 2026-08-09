@@ -5,9 +5,10 @@
 re-run the sweep to get current ones. Everything under "Conventions" and
 "Traps" is durable; everything under "State" decays.
 
-The Godot-era version of this file was kept honest by `check_architecture.py`,
+An earlier version of this file was kept honest by **check_architecture.py**,
 which failed the sweep if it backticked a source path that did not exist. That
-checker parsed GDScript and went with it. **The rule it enforced still stands
+checker read the previous language and retired with it. **The rule it enforced
+still stands
 by convention: backticks mean a live path**, and a file being described
 historically goes in bold instead. Nothing enforces it right now — that is a
 real regression from the previous sweep, listed under "Open" below.
@@ -21,11 +22,11 @@ A portrait, offline, idle RPG for Android. **Unity 6000.5.7f1, C#**, 11 screens,
 `.asset` definitions. Pixel art on a closed 16-colour palette. No monetisation
 active.
 
-It was Godot 4.7 and GDScript until 2026-08-09. The whole tree — `scripts/`,
-`scenes/`, `ui/`, `data/`, `sprites/`, `fonts/`, `audio/`, `effects/`,
-`project.godot` — is gone. The last commit that contains it is tagged
-**`godot-final`**, on the remote as well as locally; `git show godot-final:<path>`
-is the way back to anything.
+It was written in another engine until 2026-08-09 and none of that tree
+survives. The last commit containing it is tagged **`godot-final`**, on the
+remote as well as locally; `git show godot-final:<path>` is the way back to
+anything — including the seven per-milestone implementation-notes files and the
+other engine-specific documents deleted on 2026-08-09.
 
 Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) first.
 
@@ -44,9 +45,10 @@ Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) first.
 | Generated assets | `python tools/check_generated.py` | 83 files byte-identical |
 | Runtime logic | (sweep stage 7) | 49/49 |
 
-**What the sweep no longer does.** The Godot version had sixteen stages. Eight
-of them existed because GDScript resolves names at runtime — gdparse, gdlint,
-a scene/resource structure pass, an autoload-member check, a semantic pass, a
+**What the sweep no longer does.** It had sixteen stages once. Eight of them
+existed because the previous language resolved names at runtime — a parser, a
+linter, a scene/resource structure pass, a member-existence check, a semantic
+pass, a
 shader-parameter pass, a logic harness and a screenshot harness. In C# the
 first five are compile errors, and stage 1 is a real `Unity -batchmode` compile,
 which is stricter than any of them.
@@ -63,8 +65,8 @@ and `-quit` closes the editor before play mode has even started.
 **It found nine broken screens on its first run**, all of one defect: Unity
 propagates no minimum size up a UI tree, so every container that derived its
 height from its children reported ZERO and its rows drew on top of each other.
-Godot did that propagation for free and the port reproduced the hierarchy
-without it. Fixed at the two places that build UI — `SceneBuilder` for the
+The layouts were authored where that propagation was free, and the port
+reproduced the hierarchy without it. Fixed at the two places that build UI — `SceneBuilder` for the
 converted scenes and `UIBuild.Frame` for the screens that build themselves in
 code — after which 9 of the 11 screens are clean at all ten shapes.
 
@@ -158,14 +160,13 @@ onto the grid; `check_unity.py` fails a literal that is neither a multiple nor
 snapped.
 
 **There are two clocks.** `GameRuntime` drives managers on
-`Time.unscaledDeltaTime` where Godot used `PROCESS_MODE_ALWAYS`, and on
-`Time.deltaTime` where it used the default. `Scheduler.After` runs on the
-SCALED clock on purpose: a boss countdown must freeze with a paused game, the
-way it did in Godot. Autosave and play time run unscaled.
+`Time.unscaledDeltaTime` for anything that must survive a pause, and on
+`Time.deltaTime` for anything that must freeze with it. `Scheduler.After` runs
+on the SCALED clock on purpose: a boss countdown must freeze with a paused
+game, so a notification can never drain it. Autosave and play time run
+unscaled.
 
-**Screens are scenes, components are prefabs.** Godot drew no distinction — a
-`.tscn` was a `.tscn`, and `preload().instantiate()` worked on any of them.
-Unity splits them: a Scene is loaded one at a time, a Prefab is instantiated
+**Screens are scenes, components are prefabs.** Unity splits them: a Scene is loaded one at a time, a Prefab is instantiated
 many at a time. `Assets/Scenes/` holds the 11 navigable screens;
 `Assets/Resources/Prefabs/` holds the 21 things screens spawn.
 `UIPrefabs.Spawn<T>()` is the `preload().instantiate()` replacement.
@@ -200,7 +201,7 @@ verifies**. Found repeatedly; assume more exist.
   check confirmed every pixel was *on-palette*. Nothing compared the rasterised
   glyph to the authored one. See "Text and device pixels" below.
 - **A tooling autoload got COMMITTED AND PUSHED.** A screenshot harness
-  injected itself into `project.godot` for the length of a run and removed
+  injected itself into a TRACKED project file for the length of a run and removed
   itself on exit — safe until the auto-commit Stop hook fired mid-run. Commit
   `3e764aa` shipped an autoload that walks every screen and calls `quit()`, in
   place of the game. The engine is gone but **the hook is not**: never leave a
@@ -257,7 +258,7 @@ nothing because the anchor string did not exist in the file.
 
 ## Device shapes — what is known and what is not
 
-The Godot sweep rendered the game at ten Android shapes and measured each. That
+An earlier sweep rendered the game at ten Android shapes and measured each. That
 harness has been replaced (see stage 8 above) and the shapes are measured again
 on the Unity build — the answer is that 9 of 11 screens are broken at every
 shape, for a reason that has nothing to do with shape. The mechanism below is
@@ -265,11 +266,10 @@ still here and is still the right one, and none of it is what is failing:
 
 `SafeAreaFitter` insets a screen's content root for the display cutout and the
 gesture bar, and caps it to the 1080 width the layout was drawn for. Both are
-terms of ONE inset in ONE component on purpose. Godot had them split — a
-per-scene script writing margins on the same signal as the safe area — and the
-scene script connected later, so it replaced the safe area rather than
-composing with it and silently dropped the cutout inset on exactly the notched
-phones it exists for.
+terms of ONE inset in ONE component on purpose. Split across two, they compose
+by luck: whichever writes the margins last wins, and the loser's inset — the
+cutout, on exactly the notched phones it exists for — disappears with no
+symptom. That has happened here.
 
 Landscape matters because the build targets SDK 36 and **Android 16 ignores
 `android:screenOrientation` on displays 600dp and wider**. The app is
@@ -297,7 +297,7 @@ every tier to land on whole glyph boxes at once, that factor must be a whole
 number — and only the integers satisfy all of them.
 
 So the game renders text pixel-exact at 1920 high and nowhere else. This is
-what ate the tagline's periods under Godot's equivalent scaling: a glyph whose
+what ate the tagline's periods once already: a glyph whose
 entire ink is one pixel does not survive a half-pixel offset, while still being
 charged its full 6px advance — which is why the gap stayed and the dot did not.
 
@@ -318,14 +318,15 @@ Three ways out, none taken — this is a design decision:
 
 - **`SceneBuilder` is now load-bearing again.** It was written as a one-shot
   migration tool and its own header still says the JSON and the exporter go
-  away with the Godot tree. They have not: fixing the layout collapse meant
+  away once the port was done. They have not: fixing the layout collapse meant
   fixing the GENERATOR and regenerating all 32 layouts, which is the only
   reason the fix is one change rather than nine. If anyone hand-edits a scene
   now, the next regeneration silently eats it. Either keep editing the
   generator, or retire it deliberately and say so here.
-- **Nothing enforces documentation accuracy any more.** `check_architecture.py`
-  parsed GDScript and went with the tree; `check_docs.py` still verifies the
-  generated fact blocks, but no check fails on a backticked path in this file
+- **Nothing enforces documentation accuracy any more.** **check_architecture.py**
+  read the previous language and retired with it; `check_docs.py` still
+  verifies the generated fact blocks, but no check fails on a backticked path
+  in this file
   or in `docs/ARCHITECTURE.md` that does not exist.
 - Confirm the package name `com.kidriqrif.vantaeclipse` before first upload —
   it is permanent.

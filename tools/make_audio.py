@@ -49,11 +49,10 @@ import wave
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
-# Where the WAVs land. Overridable for the same reason make_sprites.py grew the
-# same knob: the Unity port needs these files under Assets/Resources/Audio/
-# while the Godot tree still needs them under audio/, and one generator feeding
-# two destinations beats a fork. Set VANTA_AUDIO_OUT to a path relative to the
-# repo root. When the Godot tree goes, the default moves and this stays.
+# Where the WAVs land. Overridable for the same reason make_sprites.py has the
+# same knob: a run can be pointed at a scratch directory and diffed against
+# what ships, which is what tools/check_generated.py does. Set VANTA_AUDIO_OUT
+# to a path relative to the repo root.
 _AUDIO_ROOT = ROOT / os.environ.get("VANTA_AUDIO_OUT", "Assets/Resources/Audio")
 SFX_DIR = _AUDIO_ROOT / "sfx"
 MUSIC_DIR = _AUDIO_ROOT / "music"

@@ -1,4 +1,3 @@
-// Ported from scripts/managers/scene_manager.gd
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -107,7 +106,7 @@ namespace VantaEclipse.Core
             while (elapsed < FadeDuration)
             {
                 // Unscaled: a transition must work even while the game is
-                // paused, which is what PROCESS_MODE_ALWAYS bought in Godot.
+                // paused, or a pause menu can never be left.
                 elapsed += Time.unscaledDeltaTime;
                 _fadeGroup.alpha = Mathf.Lerp(from, to, elapsed / FadeDuration);
                 yield return null;

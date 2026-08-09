@@ -1,4 +1,3 @@
-// Ported from scripts/managers/idle_manager.gd
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -59,16 +58,15 @@ namespace VantaEclipse.Managers
         /// <summary>
         /// Driven by GameRuntime on SCALED time.
         ///
-        /// Auto-attack is live gameplay, not an offline system: the Godot node
-        /// was left on PROCESS_MODE_PAUSABLE so a future pause menu genuinely
-        /// stops it (absence is compensated by offline pay). A scaled clock is
-        /// the Unity equivalent.
+        /// Auto-attack is live gameplay, not an offline system: a future pause
+        /// menu must genuinely stop it, and absence is compensated by offline
+        /// pay instead. That is what the scaled clock buys.
         ///
         /// The accumulator re-reads the interval every tick rather than caching
-        /// it. The Godot version had to explicitly rewrite a running Timer's
-        /// wait_time whenever Twin Fang or Swift Hunt changed the cadence,
-        /// because a Timer keeps its old period until something writes it —
-        /// that was two extra event subscriptions and a live bug when either
+        /// it. A timer object would have to be rewritten whenever Twin Fang or
+        /// Swift Hunt changed the cadence, because it keeps its old period
+        /// until something writes it — that is two extra event subscriptions
+        /// and a live bug when either
         /// was missed. Reading the value at use removes the whole category.
         /// </summary>
         public void Tick(float deltaTime)

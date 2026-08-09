@@ -1,4 +1,3 @@
-// Ported from scripts/ui/pets.gd
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;

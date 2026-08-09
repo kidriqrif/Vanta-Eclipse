@@ -1,4 +1,3 @@
-// Ported from scripts/ui/arcade.gd
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;

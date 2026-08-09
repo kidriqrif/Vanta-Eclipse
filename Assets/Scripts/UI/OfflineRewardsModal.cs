@@ -1,4 +1,3 @@
-// Ported from scripts/ui/offline_rewards_modal.gd
 using UnityEngine;
 using UnityEngine.UI;
 using VantaEclipse.Core;

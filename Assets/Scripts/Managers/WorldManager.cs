@@ -1,4 +1,3 @@
-// Ported from scripts/managers/world_manager.gd
 using System.Collections.Generic;
 using UnityEngine;
 using VantaEclipse.Core;

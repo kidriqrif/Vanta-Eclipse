@@ -36,16 +36,14 @@ namespace VantaEclipse.UI
 
         // --- Semantic names ---------------------------------------------------
         //
-        // Ported from scripts/ui/ui_palette.gd, which existed because sixteen
-        // screens each kept their own `const IVORY` copy of the same literal.
+        // These exist because sixteen screens each used to keep their own
+        // `const IVORY` copy of the same literal.
         // That was invisible duplication right up until the palette changed, at
         // which point every copy silently kept the old colour and the restyle
         // half-applied.
         //
-        // In Godot these read the Theme resource at runtime so a stylebox could
-        // never drift from the value a script used. There is no Theme resource
-        // here — Unity's UI has no equivalent global — so instead they are
-        // aliases onto the sixteen above, which is the same single source of
+        // Unity's UI has no global theme resource to read them from, so they
+        // are aliases onto the sixteen above — the same single source of
         // truth reached one step earlier. The values were lifted from
         // ui/theme/main_theme.tres entry by entry.
 
@@ -106,8 +104,7 @@ namespace VantaEclipse.UI
 
         public sealed class Style
         {
-            /// <summary>Godot's default_font_size and Label/colors/font_color:
-            /// what a control with no theme_type_variation gets.</summary>
+            /// <summary>What a control with no named style gets.</summary>
             public Color Text = Ivory;
             public int FontSize = 27;
             public Color? Background;
@@ -115,7 +112,7 @@ namespace VantaEclipse.UI
         }
 
         /// <summary>
-        /// The theme_type_variation names the .tscn files use, mapped to what
+        /// The style names the layouts use, mapped to what
         /// they mean. Anything unnamed falls back to body text.
         ///
         /// Transcribed entry by entry from ui/theme/main_theme.tres rather than

@@ -5,13 +5,12 @@ using VantaEclipse.Managers;
 namespace VantaEclipse.Core
 {
     /// <summary>
-    /// The service locator that replaces Godot's autoload block.
+    /// The service locator that owns the 21 long-lived managers.
     ///
-    /// In Godot, project.godot's [autoload] section named 21 singletons and the
-    /// engine guaranteed their construction order. Unity has no equivalent, so
-    /// that order is written out explicitly in Boot() — and it is the same
-    /// order, because the Godot list was already a correct topological sort of
-    /// the dependencies.
+    /// Nothing in Unity guarantees the construction order of a set of
+    /// singletons, so that order is written out explicitly in Boot(). It is a
+    /// topological sort of the dependencies and it is load-bearing: a manager
+    /// built before something it reads gets a half-initialised one.
     ///
     /// The managers are plain C# objects, not MonoBehaviours. Only the engine
     /// callbacks they actually need (a tick, the autosave interval, app pause)
@@ -57,7 +56,7 @@ namespace VantaEclipse.Core
         /// [RuntimeInitializeOnLoadMethod] before the first scene loads, which
         /// is the closest Unity gets to an autoload — it runs whichever scene
         /// the editor starts in, so entering play mode on any screen works the
-        /// way it did in Godot.
+        /// way starting from the main menu does.
         /// </summary>
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         public static void Boot()
@@ -91,8 +90,7 @@ namespace VantaEclipse.Core
             IsBooted = true;
 
             // Read the save only once every manager exists and has subscribed.
-            // The Godot version deferred _initial_load a frame for exactly this
-            // reason; here the ordering is just... the order.
+            // Nothing is deferred here: the ordering above is the guarantee.
             Save.InitialLoad();
 
             if (Application.isPlaying)

@@ -8,10 +8,7 @@ namespace VantaEclipse.UI
     /// <summary>
     /// A region that reports taps and where they landed.
     ///
-    /// Replaces Godot's `Control.gui_input` filtered to a left mouse-button
-    /// press. That filter existed because touch arrives as an emulated mouse
-    /// event too, and handling both gave two attacks per tap; Unity's
-    /// EventSystem already collapses touch and mouse into one PointerDown, so
+    /// Unity's EventSystem collapses touch and mouse into one PointerDown, so
     /// the guard is no longer needed and its absence is not an oversight.
     ///
     /// The reported position is in the surface's own rect, bottom-left origin —

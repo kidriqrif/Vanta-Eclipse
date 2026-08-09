@@ -154,7 +154,7 @@ def main() -> int:
     #
     # The three the app actually SHIPS are written twice: once under
     # production/icons for the store listing, and once under Assets/Icons where
-    # PlayerSettings reads them. Godot took its launcher icons from the export
+    # PlayerSettings reads them, and BuildAndroid.ConfigureIcons assigns
     # preset, which could point anywhere; Unity only reads assets inside the
     # project, so the build copy has to live in the project.
     LAUNCHER.mkdir(parents=True, exist_ok=True)

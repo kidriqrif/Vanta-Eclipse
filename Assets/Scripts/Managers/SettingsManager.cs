@@ -1,4 +1,3 @@
-// Ported from scripts/managers/settings_manager.gd
 using UnityEngine;
 using UnityEngine.Audio;
 // AndroidHaptics is referenced only inside a UNITY_ANDROID && !UNITY_EDITOR
@@ -13,9 +12,8 @@ namespace VantaEclipse.Managers
     ///
     /// Settings live in PlayerPrefs, deliberately separate from the gameplay
     /// save file: volume preferences must survive prestige resets, save
-    /// deletion, and save-format migrations. That was the reason the Godot
-    /// version used its own ConfigFile, and PlayerPrefs is the Unity construct
-    /// with the same property.
+    /// deletion, and save-format migrations. PlayerPrefs is the Unity
+    /// construct with that property; the gameplay save is not.
     ///
     /// Every property applies on write, so setting MusicVolume immediately
     /// updates the mixer and schedules a disk write.

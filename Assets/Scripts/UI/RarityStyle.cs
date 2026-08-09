@@ -1,4 +1,3 @@
-// Ported from scripts/ui/rarity_style.gd
 using UnityEngine;
 using UnityEngine.UI;
 using VantaEclipse.Core;
@@ -70,7 +69,7 @@ namespace VantaEclipse.UI
             layout.childForceExpandHeight = false;
             layout.childAlignment = TextAnchor.MiddleLeft;
             // A pip row is decoration on top of something tappable; it must not
-            // eat the tap. Godot said MOUSE_FILTER_IGNORE on every node here.
+            // eat the tap — hence blocksRaycasts false on the whole row.
             row.AddComponent<CanvasGroup>().blocksRaycasts = false;
 
             var fitter = row.AddComponent<ContentSizeFitter>();
@@ -106,9 +105,8 @@ namespace VantaEclipse.UI
                 outline.color = PipOutline;
                 outline.raycastTarget = false;
 
-                // The 1px border in Godot was a stylebox property. Here it is a
-                // slightly smaller fill inside a slightly larger outline quad,
-                // which is the same two rectangles without a second material.
+                // The 1px border is a slightly smaller fill inside a slightly
+                // larger outline quad — two rectangles, one material.
                 var fill = new GameObject("Fill", typeof(RectTransform));
                 fill.transform.SetParent(pip.transform, false);
                 var fillRect = fill.GetComponent<RectTransform>();

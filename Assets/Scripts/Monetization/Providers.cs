@@ -1,4 +1,3 @@
-// Ported from scripts/monetization/{ad,billing,stub_ad,stub_billing}_provider.gd
 using System;
 using System.Collections;
 using System.Collections.Generic;

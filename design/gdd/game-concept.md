@@ -7,7 +7,7 @@ and minigame mechanics. Dark fantasy tone, mobile-first, built for years of
 content updates.
 
 - **Platform priority:** Android (Google Play) first, then Steam and iOS.
-- **Engine:** Godot 4.7 Stable, GDScript.
+- **Engine:** Unity 6000.5.7f1, C#.
 - **Orientation:** Portrait, 1080×1920 reference canvas, responsive.
 - **Audience:** Incremental/idle-game players (Cookie Clicker, AdVenture
   Capitalist, Melvor Idle fans) who also want light RPG progression —

@@ -1,4 +1,3 @@
-// Ported from scripts/ui/enemy_view.gd
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -67,8 +66,9 @@ namespace VantaEclipse.UI
         Color _glowColor = Color.white;
 
         /// <summary>One material instance per view, so retinting the rim for
-        /// this enemy cannot leak into any other user of the shader. Godot got
-        /// this from resource_local_to_scene.</summary>
+        /// this enemy cannot leak into any other user of the shader. Without
+        /// the instance, every enemy on screen shares one material and the last
+        /// retint wins.</summary>
         Material _rimMaterial;
 
         void Start()
@@ -365,7 +365,7 @@ namespace VantaEclipse.UI
 
         float GlowCurrentAlpha() => _groundGlowImage != null ? _groundGlowImage.color.a : 0f;
 
-        /// <summary>Godot's TRANS_BACK/EASE_OUT.</summary>
+        /// <summary>A Back ease-out.</summary>
         static float BackOut(float t)
         {
             const float c1 = 1.70158f;

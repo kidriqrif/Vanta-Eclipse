@@ -1,4 +1,3 @@
-// Ported from scripts/ui/forge_panel.gd
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -75,8 +74,8 @@ namespace VantaEclipse.UI
             }
         }
 
-        /// <summary>Godot used a toggle-mode button group for this. Unity's
-        /// Toggle needs a ToggleGroup and a graphic per state; recolouring the
+        /// <summary>Not a Toggle: that needs a ToggleGroup and a graphic per
+        /// state, and recolouring the
         /// border the tile already has says the same thing with nothing
         /// added.</summary>
         void OnSlotSelected(string slot)

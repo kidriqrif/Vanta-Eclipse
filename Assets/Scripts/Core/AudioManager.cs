@@ -1,4 +1,3 @@
-// Ported from scripts/managers/audio_manager.gd
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -158,8 +157,8 @@ namespace VantaEclipse.Core
             }
             _music = gameObject.AddComponent<AudioSource>();
             _music.clip = clip;
-            // Unity loops the whole clip natively, so the loop-point surgery
-            // the Godot version needed is gone. That code existed because an
+            // Unity loops the whole clip natively, so no loop-point surgery is
+            // needed here. Where it IS needed, the hazard is that an
             // imported .wav defaults to a one-shot and a loop_end left at 0 is
             // a ZERO-LENGTH loop, not "play to the end" — the track started and
             // stopped in the same frame, and the only symptom was silence,
@@ -228,9 +227,8 @@ namespace VantaEclipse.Core
         /// This keeps the property the rest of this file has: AudioManager
         /// listens, nothing announces.
         ///
-        /// Godot could hook the tree's node_added and catch every button ever
-        /// created, including ones written next year. Unity has no such signal,
-        /// so this runs per scene load and UI that builds rows at runtime must
+        /// There is no engine signal for "an object was added anywhere", so
+        /// this runs per scene load and UI that builds rows at runtime must
         /// call Adopt() on what it spawned. That is a real regression from the
         /// original and the reason this method is public rather than private.
         /// </summary>

@@ -215,7 +215,7 @@ FARM MODE:
 
 ## 3. Wireframes
 
-Reference canvas 1080×1920, matching `scenes/gameplay/gameplay.tscn`'s
+Reference canvas 1080×1920, matching `Assets/Scenes/Gameplay.unity`'s
 `MarginContainer` (margins 40/40/40/28) and `GameplayVBox` (separation
 18). Y-values are derived from the scene's real node sizes, accurate to
 roughly ±25px. The first boss (level 10) happens *before* the Auto-Attack
@@ -693,7 +693,7 @@ a named manager owner:
   level* (gate−1 whenever the player is at a wall) instead of raw
   `enemy_level` (§6), with the world essence multiplier flowing through
   `get_essence_reward()` automatically.
-- **UI (`gameplay.gd`, BossPlate, TimerBar, ChallengeBossButton, the
+- **UI (`Assets/Scripts/UI/Gameplay.cs`, BossPlate, TimerBar, ChallengeBossButton, the
   banners, the World Unlock modal, `VoidBackground`)** owns nothing: it
   renders manager state and EventBus signals, polls the timer read-only,
   and reports exactly two *actions* — the CHALLENGE BOSS tap
@@ -887,8 +887,8 @@ remaining: accent shift + 0.6s opacity pulse + the numerals — three
 simultaneous signals, numerals sufficient alone. Non-interactive
 (`mouse_filter = IGNORE`, stated explicitly on bar and label). Appears/
 disappears with a 0.25s slide+fade, never persists outside its mechanic.
-**Implementation:** proposed as `scenes/common/countdown_timer_bar.tscn`
-+ `scripts/ui/countdown_timer_bar.gd`; owner system exposes
+**Implementation:** proposed as `Assets/Resources/Prefabs/CountdownTimerBar.prefab`
++ `Assets/Scripts/UI/CountdownTimerBar.cs`; owner system exposes
 `get_time_remaining()` and the UI polls in `_process()` (the
 PlayTimeLabel precedent) — the bar never owns the countdown.
 
@@ -909,8 +909,8 @@ pending banner queues (depth 1) instead of stacking. The Unlock
 Celebration Toast remains in the library unchanged as the once-per-save
 special case; implementation may unify them behind one scene later —
 that is an engineering choice, not a pattern merge.
-**Implementation:** proposed as `scenes/common/result_banner.tscn` +
-`scripts/ui/result_banner.gd` with a `setup()` contract, instanced by
+**Implementation:** proposed as `Assets/Resources/Prefabs/ResultBanner.prefab` +
+`Assets/Scripts/UI/ResultBanner.cs` with a `setup()` contract, instanced by
 the gameplay scene on `boss_fight_won` / `boss_fight_failed`.
 
 *(Considered and NOT proposed as patterns: the BossPlate — a one-slot
@@ -958,5 +958,5 @@ consumer in sight.)*
   `CombatManager` state, flagged so it isn't lost; (b) `WorldLabel` and
   the enemy-roster constant in `CombatManager` become
   `WorldManager`-driven (the `TODO(Milestone 5)` already in
-  `combat_manager.gd`); (c) the `EnemyView` withdraw micro-state (§4B)
+  `Assets/Scripts/Managers/CombatManager.cs`); (c) the `EnemyView` withdraw micro-state (§4B)
   is the only view-layer code ask in this spec.

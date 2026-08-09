@@ -1,4 +1,3 @@
-// Ported from scripts/ui/centered_modal_dialog.gd
 using System;
 using System.Collections;
 using UnityEngine;
@@ -24,8 +23,7 @@ namespace VantaEclipse.UI
         public event Action Confirmed;
 
         /// <summary>Raised once the scrim is truly gone and the object is about
-        /// to be destroyed. Gameplay's modal queue advances on this — Godot used
-        /// tree_exited for the same purpose.</summary>
+        /// to be destroyed. Gameplay's modal queue advances on this.</summary>
         public event Action Closed;
 
         public const float ScrimFadeIn = 0.2f;
@@ -56,8 +54,7 @@ namespace VantaEclipse.UI
             }
 
             // The scrim is what makes this blocking: a full-bleed graphic that
-            // takes every raycast, so nothing behind it can be tapped. In Godot
-            // the CanvasLayer did that for free.
+            // takes every raycast, so nothing behind it can be tapped.
             var scrimImage = scrim.GetComponent<Image>() ?? scrim.AddComponent<Image>();
             scrimImage.raycastTarget = true;
 
@@ -127,7 +124,7 @@ namespace VantaEclipse.UI
             Destroy(gameObject);
         }
 
-        /// <summary>Godot's TRANS_BACK/EASE_OUT.</summary>
+        /// <summary>A Back ease-out.</summary>
         protected static float BackOut(float t)
         {
             const float c1 = 1.70158f;

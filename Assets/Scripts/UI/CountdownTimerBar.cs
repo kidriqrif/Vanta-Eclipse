@@ -1,4 +1,3 @@
-// Ported from scripts/ui/countdown_timer_bar.gd
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;

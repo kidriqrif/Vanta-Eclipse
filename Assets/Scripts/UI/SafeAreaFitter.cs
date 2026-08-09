@@ -1,4 +1,3 @@
-// Ported from the safe-area half of scripts/managers/scene_manager.gd
 using UnityEngine;
 
 namespace VantaEclipse.UI
@@ -18,10 +17,11 @@ namespace VantaEclipse.UI
     /// background should still fill the display edge to edge, and only the
     /// controls move in.
     ///
-    /// In Godot this lived in the SceneManager autoload, because a per-scene
-    /// script writing the same margins did not compose with it — it replaced
-    /// it, and silently dropped the cutout inset on the phones that need it.
-    /// Unity has no such conflict: anchors are per-RectTransform, so the logic
+    /// The inset and the width cap are terms of ONE calculation in ONE
+    /// component on purpose. Split across two, they compose by luck: whichever
+    /// writes the margins last wins, and the loser's inset — the display
+    /// cutout, on exactly the phones that need it — disappears with no symptom.
+    /// Anchors are per-RectTransform, so the logic
     /// belongs on the object it insets. The width cap stays fused to the safe
     /// area for the original reason though — they are two terms of one inset,
     /// and splitting them into two components reintroduces exactly the

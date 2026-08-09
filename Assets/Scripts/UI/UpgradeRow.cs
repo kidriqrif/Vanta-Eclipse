@@ -1,4 +1,3 @@
-// Ported from scripts/ui/upgrade_row.gd
 using UnityEngine.UI;
 using VantaEclipse.Core;
 using VantaEclipse.Data;

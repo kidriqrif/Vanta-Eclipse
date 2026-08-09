@@ -1,4 +1,3 @@
-// Ported from scripts/ui/world_unlock_modal.gd
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -65,7 +64,7 @@ namespace VantaEclipse.UI
             {
                 elapsed += Time.unscaledDeltaTime;
                 float t = Mathf.Clamp01(elapsed / RevealSeconds);
-                // The fade is quicker than the scale, as it was in Godot: the
+                // The fade is quicker than the scale on purpose: the
                 // words arrive first and the pop settles under them.
                 group.alpha = Mathf.Clamp01(elapsed / 0.12f);
                 rect.localScale = Vector3.one * Mathf.Lerp(0.6f, 1f, BackOut(t));

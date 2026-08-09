@@ -1,4 +1,3 @@
-// Ported from scripts/minigames/minigame.gd
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -87,9 +86,9 @@ namespace VantaEclipse.UI
         /// Start a coroutine the framework can stop.
         ///
         /// Use this instead of StartCoroutine directly. It is the Unity spelling
-        /// of the child-Timer idiom the Godot version required: a
-        /// SceneTree-owned timer could not be reached by teardown, and a
-        /// forfeited run kept firing under the result banner.
+        /// A timer owned by anything but this object cannot be reached by
+        /// teardown, and a forfeited run then keeps firing under the result
+        /// banner. That has happened.
         /// </summary>
         protected Coroutine Run(IEnumerator routine)
         {
@@ -101,9 +100,9 @@ namespace VantaEclipse.UI
         /// <summary>
         /// Paint a board cell flat in one fill and one border.
         ///
-        /// Setting only the normal state is the trap Godot's version called out:
-        /// a cell repainted on tap reverted to the theme's look the moment a
-        /// finger rested on it. Unity's ColorTint transition multiplies the
+        /// Setting only the normal state is the trap: a cell repainted on tap
+        /// reverts to its base look the moment a finger rests on it, because
+        /// the ColorTint transition multiplies the
         /// target graphic instead of replacing it, so the fix here is to keep
         /// every state's tint at white and let the graphic colours be the truth.
         /// </summary>
@@ -129,8 +128,8 @@ namespace VantaEclipse.UI
         /// One board cell: a square button with a fill, a ring, an optional
         /// glyph and an optional caption.
         ///
-        /// Every board builds a grid of these, and in Godot each of the seven
-        /// wrote out the same Button-plus-StyleBoxFlat construction. Holding the
+        /// Every board builds a grid of these, and each of the seven used to
+        /// write out the same construction. Holding the
         /// parts together is what lets <see cref="Paint"/> be a one-liner at the
         /// call sites.
         /// </summary>

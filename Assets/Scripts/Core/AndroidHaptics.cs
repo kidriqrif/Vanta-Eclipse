@@ -5,11 +5,10 @@ namespace VantaEclipse.Core
     /// <summary>
     /// Duration-accurate vibration on Android.
     ///
-    /// Godot's Input.vibrate_handheld(ms) honours the duration. Unity's
-    /// Handheld.Vibrate() does not — it ignores its argument entirely and
+    /// Unity's Handheld.Vibrate() ignores its duration argument entirely and
     /// fires the ~500ms system buzz, which is far too long for a tap in a game
     /// built around tapping. So the port goes through the Android Vibrator
-    /// service directly, which is what Godot does under the hood.
+    /// service directly, which is what any engine wrapper does underneath.
     /// </summary>
     public static class AndroidHaptics
     {

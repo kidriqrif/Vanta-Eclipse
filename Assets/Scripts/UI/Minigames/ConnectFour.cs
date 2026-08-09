@@ -1,4 +1,3 @@
-// Ported from scripts/minigames/connect_four.gd
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -218,7 +217,7 @@ namespace VantaEclipse.UI
             rect.localScale = Vector3.one;
         }
 
-        /// <summary>Godot's TRANS_BOUNCE/EASE_OUT.</summary>
+        /// <summary>A Bounce ease-out.</summary>
         static float BounceOut(float t)
         {
             const float n1 = 7.5625f;

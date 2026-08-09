@@ -14,8 +14,7 @@ namespace VantaEclipse.EditorTools
     /// <summary>
     /// Renders every screen at every Android shape and measures what it drew.
     ///
-    /// This is the replacement for the Godot screenshot harness that the port
-    /// dropped, and it is the only stage in the sweep that looks at PIXELS.
+    /// It is the only stage in the sweep that looks at PIXELS.
     /// Everything else compares files to other files: the compile checks types,
     /// check_unity.py checks literals, check_pixels.py checks the palette of
     /// source art. None of them can see a label that renders as a smear, a

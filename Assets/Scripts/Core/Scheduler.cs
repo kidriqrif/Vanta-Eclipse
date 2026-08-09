@@ -6,14 +6,13 @@ namespace VantaEclipse.Core
     /// <summary>
     /// Delayed and end-of-frame callbacks, driven by GameRuntime.
     ///
-    /// Replaces two Godot idioms the managers lean on heavily:
-    ///   get_tree().create_timer(d).timeout.connect(f)  ->  Scheduler.After(d, f)
-    ///   f.call_deferred()                              ->  Scheduler.EndOfFrame(f)
+    /// Two things the managers lean on heavily:
+    ///   After(d, f)        run f after d SCALED seconds
+    ///   EndOfFrame(f)      run f once the current frame's mutation is done
     ///
-    /// After() runs on SCALED time on purpose. The Godot managers left
-    /// CombatManager on the default PAUSABLE process mode so a boss countdown
-    /// freezes with a paused tree and with Android suspension — a notification
-    /// can never drain the timer. Unity's equivalent of that pause is
+    /// After() runs on SCALED time on purpose: a boss countdown must freeze
+    /// with a paused game and with Android suspension — a notification can
+    /// never drain the timer. The pause is
     /// timeScale = 0, so a scaled clock reproduces the behaviour exactly.
     /// Anything that must keep running while paused (autosave, play time) is
     /// driven from GameRuntime's unscaled path instead, never from here.
@@ -40,9 +39,9 @@ namespace VantaEclipse.Core
         }
 
         /// <summary>Run <paramref name="callback"/> at the end of this frame —
-        /// Godot's call_deferred. The managers use it where a signal chain is
-        /// still unwinding and the final state is only correct once every
-        /// handler in the current emission has run.</summary>
+        /// The managers use it where a signal chain is still unwinding and the
+        /// final state is only correct once every handler in the current
+        /// emission has run.</summary>
         public static void EndOfFrame(Action callback)
         {
             if (callback != null) EndOfFrameQueue.Add(callback);

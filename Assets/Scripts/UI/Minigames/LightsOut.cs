@@ -1,4 +1,3 @@
-// Ported from scripts/minigames/lights_out.gd
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;

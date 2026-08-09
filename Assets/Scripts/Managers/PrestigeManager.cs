@@ -1,4 +1,3 @@
-// Ported from scripts/managers/prestige_manager.gd
 using System.Collections.Generic;
 using UnityEngine;
 using VantaEclipse.Core;

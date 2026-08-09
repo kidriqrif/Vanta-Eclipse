@@ -1,4 +1,3 @@
-// Ported from scripts/minigames/void_reflex.gd
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -121,7 +120,7 @@ namespace VantaEclipse.UI
             if (_sigilRing != null) _sigilRing.SetActive(true);
             SetState("TAP!", VantaTheme.Ink);
 
-            // Pop to 1.25 with Godot's TRANS_BACK/EASE_OUT, then hold open for
+            // Pop to 1.25 with a Back ease-out, then hold open for
             // the rest of the window.
             float elapsed = 0f;
             while (elapsed < FlareTween && _flared)

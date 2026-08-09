@@ -1,4 +1,3 @@
-// Ported from scripts/ui/main_menu.gd
 using UnityEngine;
 using VantaEclipse.Core;
 using VantaEclipse.Managers;

@@ -1,4 +1,3 @@
-// Ported from scripts/minigames/memory_match.gd
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;

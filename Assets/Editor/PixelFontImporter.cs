@@ -10,8 +10,8 @@ namespace VantaEclipse.EditorTools
     /// Turns the BMFont pair tools/make_font.py generates into a Unity Font
     /// asset.
     ///
-    /// Godot read the .fnt directly. Unity has no BMFont importer: a bitmap face
-    /// has to become a "custom font" — a Font asset carrying a CharacterInfo per
+    /// Unity has no BMFont importer, so a bitmap face has to become a
+    /// "custom font" — a Font asset carrying a CharacterInfo per
     /// glyph and a material pointing at the atlas. This builds that, so the
     /// generator stays the single source of truth for the face and nothing is
     /// transcribed by hand.

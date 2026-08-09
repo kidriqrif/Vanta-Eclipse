@@ -1,4 +1,3 @@
-// Ported from scripts/ui/settings_menu.gd
 using System;
 using UnityEngine;
 using UnityEngine.UI;

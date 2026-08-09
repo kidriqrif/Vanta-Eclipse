@@ -288,7 +288,7 @@ y≈1844 └──────────────────────�
   screen entry. Hidden at zero — presence means "unseen loot exists,"
   matching the Status Badge philosophy of state-by-presence-and-words.
 
-### 3B. Gear screen (new scene: `scenes/gear/gear.tscn`)
+### 3B. Gear screen (new scene: `Assets/Scenes/Gear.unity`)
 
 ```
 x=40                                                          x=1040
@@ -531,9 +531,9 @@ y430–610, existing geometry/queue):
   a scene slots into M5's machinery with zero new signals (§6).
   Cost accepted: ~0.25s fade each way at a minutes-scale cadence —
   cheap; the threaded loader keeps it hitch-free.
-- **Engineering hooks:** `SCENE_GEAR` constant in `scene_manager.gd`
+- **Engineering hooks:** `SCENE_GEAR` constant in `Assets/Scripts/Core/SceneFlow.cs`
   (the architecture's "adding a new screen" checklist, step 3);
-  `scenes/gear/gear.tscn` + `scripts/ui/gear_screen.gd`.
+  `Assets/Scenes/Gear.unity` + `Assets/Scripts/UI/Gear.cs`.
 - **Combat continues headless.** Autoloads run sceneless: auto-attack
   ticks, kills pay essence, drops roll, farm mode farms. The Gear
   screen is a second window into the same managers — its list connects
@@ -831,7 +831,7 @@ has a named manager owner.
   stored in acquisition order (append newest); the UI renders it
   reversed. Absent section = empty inventory (pre-M6 saves migrate
   silently, §6). Affix `id`s are save-stable forever, like upgrade ids.
-- **UI owns nothing:** `gear_screen.gd`, the Inspector Card, the Forge
+- **UI owns nothing:** `Assets/Scripts/UI/Gear.cs`, the Inspector Card, the Forge
   panel, Loot Toast, and the GEAR pill render manager state and EventBus
   signals, and report exactly these actions: `equip(uid)`,
   `unequip(slot)`, `salvage(uid)`, `salvage_all_commons()`, `forge(slot)`,
@@ -1026,8 +1026,8 @@ like every blocking overlay. Distinct from Centered Modal Dialog by
 exactly three contract clauses (initiation, action count, exit paths);
 that pattern's one-dismiss announcement contract is untouched and keeps
 its two consumers.
-**Implementation:** proposed as `scripts/ui/inspector_card.gd` +
-`scenes/gear/item_card.tscn` (`%Scrim`, `%Card`, `%CloseButton`,
+**Implementation:** proposed as `Assets/Scripts/UI/InspectorCard.cs` +
+`Assets/Resources/Prefabs/InspectorCard.prefab` (`Scrim`, `Card`, `CloseButton`,
 content-driven action row; may share scrim/tween code with
 `CenteredModalDialog` by composition — engineering's call, not a
 pattern merge).
@@ -1047,8 +1047,8 @@ must never accumulate debt. Distinct from the Result Banner (event-
 scale announcements, queued, mid-screen) and the Unlock Celebration
 Toast (once-per-save); the three form a volume ladder: toast < banner
 < blocking modal.
-**Implementation:** proposed as `scenes/common/loot_toast.tscn` +
-`scripts/ui/loot_toast.gd`, instanced by the gameplay scene on
+**Implementation:** proposed as `Assets/Resources/Prefabs/LootToast.prefab` +
+`Assets/Scripts/UI/LootToast.cs`, instanced by the gameplay scene on
 `item_dropped`.
 
 ### 7.3 Two-Tap Arm (in-place destructive confirm)
@@ -1063,8 +1063,8 @@ SCRAPS"`) and the border weight doubles (words + weight, never color
 alone, never ember). Second activation within 3s executes; timeout or
 any other input disarms silently. Single motor target, zero new
 containers, consequence stated before commitment.
-**Implementation:** a small reusable script
-(`scripts/ui/two_tap_arm_button.gd`) wrapping a Button's label/style
+**Implementation:** a small reusable component
+(`Assets/Scripts/UI/PressHold.cs`) wrapping a Button's label/style
 swap and disarm timer.
 
 *(Considered and NOT proposed as patterns: the GEAR count pill — a

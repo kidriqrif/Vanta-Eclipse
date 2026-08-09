@@ -1,5 +1,5 @@
-// Hand-written half of the generated QuestDefinition. Ported from
-// format_reward() on scripts/data/quest_definition.gd.
+// Hand-written half of the generated QuestDefinition: FormatReward(), which a
+// field generator cannot derive.
 using UnityEngine;
 
 namespace VantaEclipse.Data

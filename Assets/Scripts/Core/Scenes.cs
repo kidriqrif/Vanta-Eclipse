@@ -3,9 +3,9 @@ namespace VantaEclipse.Core
     /// <summary>
     /// Every screen, by Unity scene name.
     ///
-    /// The Godot originals were `res://` paths; Unity's SceneManager addresses
-    /// scenes by name (as listed in Build Settings), so these are the bare
-    /// names. Managers compare against these constants rather than string
+    /// Unity's SceneManager addresses scenes by name, as listed in Build
+    /// Settings, so these are the bare names. Managers compare against these
+    /// constants rather than string
     /// literals — CombatManager and IdleManager both gate behaviour on "is the
     /// gameplay screen current", and a typo there fails silently.
     /// </summary>

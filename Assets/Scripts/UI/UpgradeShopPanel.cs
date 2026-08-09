@@ -1,4 +1,3 @@
-// Ported from scripts/ui/upgrade_shop_panel.gd
 using VantaEclipse.Core;
 
 namespace VantaEclipse.UI

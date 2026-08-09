@@ -5,10 +5,9 @@ namespace VantaEclipse.Core
     /// <summary>
     /// The save contract every stateful manager implements.
     ///
-    /// In Godot this was duck-typed: SaveManager.register_saveable(key, node)
-    /// and a call to get_save_data()/load_save_data() by name. C# makes the
-    /// contract explicit, which is a straight gain — a manager that forgets
-    /// half the pair now fails to compile instead of silently saving nothing.
+    /// The contract is an interface rather than a name-based registration on
+    /// purpose: a manager that forgets half the pair fails to compile instead
+    /// of silently saving nothing.
     /// </summary>
     public interface ISaveable
     {

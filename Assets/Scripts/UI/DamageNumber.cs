@@ -1,4 +1,3 @@
-// Ported from scripts/ui/damage_number.gd
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -128,7 +127,7 @@ namespace VantaEclipse.UI
             Destroy(gameObject);
         }
 
-        /// <summary>Godot's TRANS_BACK/EASE_OUT.</summary>
+        /// <summary>A Back ease-out.</summary>
         static float BackOut(float t)
         {
             const float c1 = 1.70158f;

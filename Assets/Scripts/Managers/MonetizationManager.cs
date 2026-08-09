@@ -1,4 +1,3 @@
-// Ported from scripts/managers/monetization_manager.gd
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -206,8 +205,8 @@ namespace VantaEclipse.Managers
         /// The caller must already have granted the base reward: an offer is
         /// always a bonus on top, never a gate on receiving it.
         ///
-        /// A coroutine rather than GDScript's `await`, so the caller drives it
-        /// from a MonoBehaviour: StartCoroutine(Game.Shop.RunOffer(id, 0, granted => ...)).
+        /// A coroutine, so the caller drives it from a MonoBehaviour:
+        /// StartCoroutine(Game.Shop.RunOffer(id, 0, granted => ...)).
         /// </summary>
         public IEnumerator RunOffer(string id, float pendingAmount, Action<float> onComplete)
         {

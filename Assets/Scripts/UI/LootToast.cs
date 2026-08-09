@@ -1,4 +1,3 @@
-// Ported from scripts/ui/loot_toast.gd
 using System;
 using System.Collections;
 using UnityEngine;
@@ -24,7 +23,7 @@ namespace VantaEclipse.UI
         public const float FadeSeconds = 0.25f;
 
         /// <summary>Raised as the toast leaves, so the screen holding it can
-        /// drop its reference. Godot used tree_exited.</summary>
+        /// drop its reference.</summary>
         public event Action Finished;
 
         int _rarity;
@@ -118,10 +117,9 @@ namespace VantaEclipse.UI
         }
 
         /// <summary>
-        /// Godot's PanelContainer carried a StyleBoxFlat with a border colour a
-        /// script could override. Unity's Image has no border, so the ring is a
-        /// sibling image sitting one layer behind the panel fill and two pixels
-        /// wider on every side.
+        /// An Image has no border, so the ring is a sibling image sitting one
+        /// layer behind the panel fill and two pixels wider on every side —
+        /// which is also what makes the border colour scriptable.
         /// </summary>
         static Image EnsureBorder(GameObject panel)
         {

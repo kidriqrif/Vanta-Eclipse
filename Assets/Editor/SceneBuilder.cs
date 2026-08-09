@@ -10,13 +10,15 @@ using VantaEclipse.UI;
 namespace VantaEclipse.EditorTools
 {
     /// <summary>
-    /// Builds the 32 Unity screens from the layout trees export_scenes.py
-    /// lifted out of the .tscn files.
+    /// Builds the 32 screens and components from the layout trees in
+    /// Assets/Editor/PortedScenes.
     ///
-    /// This is a migration tool, not a runtime: it runs once, writes real
-    /// .unity scenes, and then the JSON and the exporter both go away with the
-    /// Godot tree. What it produces is ordinary Unity UI that a person edits
-    /// normally afterwards — nothing here stays in the loop.
+    /// THIS IS LOAD-BEARING, despite having been written as a one-shot
+    /// migration tool. The layout collapse that broke nine screens was fixed
+    /// HERE and the whole tree regenerated, which is the only reason that fix
+    /// was one change rather than nine. A scene edited by hand is silently
+    /// eaten by the next regeneration. Either keep editing this, or retire it
+    /// deliberately and say so in HANDOFF.md.
     ///
     /// It does not attempt pixel-perfection. It reproduces the hierarchy, the
     /// anchoring, the layout groups and their spacing, the text and its style,
@@ -36,10 +38,9 @@ namespace VantaEclipse.EditorTools
         /// <summary>
         /// Layouts that are components, not screens.
         ///
-        /// Godot drew no distinction: a .tscn was a .tscn, and `preload(...)
-        /// .instantiate()` worked on any of them. Unity splits the two — a
-        /// Scene is loaded (one at a time, replacing what was there) and a
-        /// Prefab is instantiated (many at once, into whatever is open). Every
+        /// Unity splits the two: a Scene is loaded (one at a time, replacing
+        /// what was there) and a Prefab is instantiated (many at once, into
+        /// whatever is open). Every
         /// one of these is spawned by a script or embedded in a screen, so
         /// building them as scenes produced 21 entries in Build Settings that
         /// nothing could ever navigate to, and left the screens that embed them
@@ -63,7 +64,7 @@ namespace VantaEclipse.EditorTools
         {
             if (!Directory.Exists(JsonDir))
             {
-                Debug.LogError($"No layouts at {JsonDir}. Run: python tools/port/export_scenes.py");
+                Debug.LogError($"No layouts at {JsonDir} — the tree cannot be rebuilt without them.");
                 return;
             }
 
@@ -121,7 +122,7 @@ namespace VantaEclipse.EditorTools
         /// <summary>
         /// Build one component layout and save it as a prefab.
         ///
-        /// Unlike a screen this keeps the layout's own root: damage_number's
+        /// Unlike a screen this keeps the layout's own root: DamageNumber's
         /// root IS the Label, and replacing it with a bare Control (which is
         /// what a screen root gets, so it can carry the safe-area inset) would
         /// throw away the thing the prefab exists to be.
@@ -205,7 +206,7 @@ namespace VantaEclipse.EditorTools
             // SafeAreaFitter's width cap then absorbs on tablets.
             scaler.matchWidthOrHeight = 1f;
 
-            // Godot path ("MarginContainer/SettingsVBox") -> the built object.
+            // Layout path ("MarginContainer/SettingsVBox") -> the built object.
             var byPath = new Dictionary<string, GameObject>();
             GameObject root = null;
             int count = 0;
@@ -257,10 +258,9 @@ namespace VantaEclipse.EditorTools
         static GameObject Make(string kind, string name, JObject node, GameObject parent)
         {
             // An instanced sub-scene resolves to the prefab pass 1 built from
-            // the same layout. Godot's .tscn recorded which scene was embedded;
-            // export_scenes.py carried that through, so this is a lookup rather
-            // than a guess. A miss falls through to an empty Control, which is
-            // what every one of these used to be.
+            // the same layout. The layout records which component was
+            // embedded, so this is a lookup rather than a guess. A miss falls
+            // through to an empty Control rather than losing the node.
             if (kind == "Instance")
             {
                 var instanced = MakeInstance(name, node, parent);
@@ -341,9 +341,8 @@ namespace VantaEclipse.EditorTools
 
                 case "Margin":
                 {
-                    // Godot's MarginContainer is a container whose only job is
-                    // padding, so it becomes a layout group carrying nothing
-                    // but padding.
+                    // A margin node's only job is padding, so it becomes a
+                    // layout group carrying nothing but padding.
                     var group = go.AddComponent<VerticalLayoutGroup>();
                     ConfigureGroup(group, node);
                     group.childForceExpandHeight = true;
@@ -376,10 +375,10 @@ namespace VantaEclipse.EditorTools
                     scroll.horizontal = false;
                     scroll.movementType = ScrollRect.MovementType.Elastic;
 
-                    // A ScrollRect needs a content child; Godot's
-                    // ScrollContainer has its children directly. The real
-                    // children are parented to this content object by path
-                    // lookup, so it must carry the same name as the node.
+                    // A ScrollRect needs a content child, but the layout puts
+                    // the scroll node's children directly under it. They are
+                    // parented to this content object by path lookup, so it
+                    // must carry the same name as the node.
                     var content = new GameObject("Content", typeof(RectTransform));
                     content.transform.SetParent(go.transform, false);
                     var contentRect = content.GetComponent<RectTransform>();
@@ -466,9 +465,10 @@ namespace VantaEclipse.EditorTools
         /// <summary>
         /// Make a bare container report the height of its contents.
         ///
-        /// Godot propagated a combined minimum size up every Control, so a
-        /// Panel wrapping a VBox was as tall as the VBox and nobody wrote that
-        /// down. Unity propagates nothing: an Image reports no preferred size,
+        /// The layouts were authored where a container propagated a combined
+        /// minimum size up the tree, so a Panel wrapping a VBox was as tall as
+        /// the VBox and nobody wrote that down. Unity propagates nothing: an
+        /// Image reports no preferred size,
         /// so `SettingsVBox` (childControlHeight = true) gave AudioPanel a
         /// height of ZERO and the AUDIO, GAME and ABOUT rows all drew on top of
         /// each other. Nine of the eleven screens had a version of this.
@@ -502,10 +502,10 @@ namespace VantaEclipse.EditorTools
                 // A container holding a COMPONENT does not get a layout group.
                 // gameplay's CombatArea is the only one: its child is the
                 // EnemyView prefab, which positions itself inside its own 500px
-                // box the way Godot let it. Laying it out instead stretches that
-                // box to the container's width and the enemy — anchored to the
-                // box's top-left — slides to the left edge and half off-screen.
-                // The node still needs to report a height, and its Godot
+                // box, as it was authored to. Laying it out instead stretches
+                // that box to the container's width and the enemy — anchored to
+                // the box's top-left — slides to the left edge and half
+                // off-screen. The node still needs to report a height, and its
                 // EXPAND flag already gave it one through ApplyLayoutElement.
                 bool holdsComponent = false;
                 foreach (Transform child in go.transform)
@@ -535,10 +535,10 @@ namespace VantaEclipse.EditorTools
 
             if (node["offset"] is JObject offset)
             {
-                // GODOT'S DEFAULT ANCHOR IS THE TOP-LEFT POINT — all four anchor
-                // values 0 — and export_scenes.py only recorded anchors where
-                // the scene overrode them. So a node with offsets and no
-                // recorded anchors is a top-left-anchored box, and leaving it on
+                // THE LAYOUT'S DEFAULT ANCHOR IS THE TOP-LEFT POINT — all four
+                // anchor values 0 — and only anchors the scene overrode were
+                // recorded. So a node with offsets and no recorded anchors is a
+                // top-left-anchored box, and leaving it on
                 // this builder's full-stretch default turns "500 wide" into
                 // "500 wider than the parent". That compounds down a chain:
                 // EnemyView 500 -> SpriteHolder 1000 -> EnemySprite 1500, which
@@ -550,8 +550,8 @@ namespace VantaEclipse.EditorTools
                     rect.anchorMin = new Vector2(0f, 1f);
                     rect.anchorMax = new Vector2(0f, 1f);
                 }
-                // Godot's Y grows downward, Unity's upward, so top and bottom
-                // swap sign as well as slot.
+                // The layout's Y grows downward and Unity's upward, so top and
+                // bottom swap sign as well as slot.
                 float left = (float)offset["left"];
                 float right = (float)offset["right"];
                 float top = (float)offset["top"];
@@ -610,7 +610,7 @@ namespace VantaEclipse.EditorTools
                 if (minSize.Value.x > 0f) element.minWidth = minSize.Value.x;
                 if (minSize.Value.y > 0f) element.minHeight = minSize.Value.y;
             }
-            // Godot's EXPAND size flag is Unity's flexible weight.
+            // The layout's EXPAND size flag is Unity's flexible weight.
             if (expandH) element.flexibleWidth = 1f;
             if (expandV) element.flexibleHeight = 1f;
         }
@@ -628,8 +628,8 @@ namespace VantaEclipse.EditorTools
                     padding["bottom"] != null ? (int)padding["bottom"] : 0);
             }
 
-            // Godot containers stretch their children across the cross axis by
-            // default; Unity's do not unless told.
+            // The authored containers stretch their children across the cross
+            // axis by default; Unity's do not unless told.
             group.childForceExpandWidth = true;
             group.childForceExpandHeight = false;
             group.childControlWidth = true;
@@ -637,7 +637,7 @@ namespace VantaEclipse.EditorTools
         }
 
         /// <summary>
-        /// Instantiate the prefab a Godot Instance node referred to.
+        /// Instantiate the prefab an Instance node referred to.
         /// Returns null when there is no prefab for it, so the caller can fall
         /// back to an empty Control rather than lose the node.
         /// </summary>
@@ -657,8 +657,8 @@ namespace VantaEclipse.EditorTools
             }
 
             var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent.transform);
-            // Godot lets an instance be renamed at its use site, and several are
-            // (gameplay's countdown_timer_bar is "TimerBar"). The screens look
+            // An instance can be renamed at its use site, and several are
+            // (gameplay's countdown timer bar is "TimerBar"). The screens look
             // their nodes up by name, so the use-site name wins.
             go.name = name;
 
@@ -669,9 +669,9 @@ namespace VantaEclipse.EditorTools
             // belongs in the MIDDLE of its container, not in the corner.
             //
             // The prefab root keeps the anchors it was authored with, which for
-            // enemy_view is a 500x500 box at the top-left — correct inside the
-            // component, meaningless at the use site. gameplay.tscn gives its
-            // EnemyView no anchors and no offset, so the box landed against
+            // EnemyView is a 500x500 box at the top-left — correct inside the
+            // component, meaningless at the use site. The gameplay layout gives
+            // its EnemyView no anchors and no offset, so the box landed against
             // CombatArea's top-left edge and the creature rendered half off the
             // side of the screen. `production/screenshots/02_gameplay_seeded.png`
             // is what it looked like when it worked: centred, with the ground
@@ -727,7 +727,7 @@ namespace VantaEclipse.EditorTools
             int size = node["fontSize"] != null ? (int)node["fontSize"] : style.FontSize;
             text.fontSize = VantaTheme.SnapFontSize(size);
 
-            // Godot: 0 left, 1 center, 2 right (h) and 0 top, 1 center, 2 bottom (v).
+            // Layout codes: 0 left, 1 center, 2 right (h); 0 top, 1 center, 2 bottom (v).
             int h = node["hAlign"] != null ? (int)node["hAlign"] : 0;
             int v = node["vAlign"] != null ? (int)node["vAlign"] : 1;
             text.alignment = (h, v) switch
@@ -747,7 +747,7 @@ namespace VantaEclipse.EditorTools
         }
 
         /// <summary>
-        /// Attach the ported C# behaviour matching the .gd script the node had.
+        /// Attach the C# behaviour matching the script the layout node names.
         ///
         /// Missing components are a warning, not an error: the screens are
         /// built before every UI script is ported, and a scene that refuses to

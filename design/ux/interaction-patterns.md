@@ -12,16 +12,17 @@ Implementation phase).
 **Behavior:** 0.25s fade to a near-black overlay, swap scene, fade back in.
 Input is blocked while covered.
 **Implementation:** `SceneManager.change_scene()`
-(`scripts/managers/scene_manager.gd`), a `CanvasLayer` at layer 100 with a
+(`Assets/Scripts/Core/SceneFlow.cs`), a `CanvasLayer` at layer 100 with a
 full-rect `ColorRect`.
 
 ## Tap-to-Attack Combat Area
 **Used in:** gameplay screen.
 **Behavior:** the enemy sprite region is one large touch target (not just
 the sprite bounds). One `InputEventMouseButton` press = one attack, works
-identically for touch (Godot emulates touch as mouse by default) and mouse.
-**Implementation:** `Control.gui_input` on `%CombatArea`
-(`scripts/ui/gameplay.gd`).
+identically for touch and mouse — Unity's EventSystem delivers both through
+the same pointer callbacks.
+**Implementation:** `Assets/Scripts/UI/TapSurface.cs` on `CombatArea`, driven
+by `Assets/Scripts/UI/Gameplay.cs`.
 
 ## Floating Damage Number
 **Used in:** every hit landed on an enemy.
@@ -29,8 +30,8 @@ identically for touch (Godot emulates touch as mouse by default) and mouse.
 sideways, fades out over ~0.75s, then frees itself. Crits are larger, gold,
 with a darker outline — color is never the *only* signal; size and motion
 differ too.
-**Implementation:** `DamageNumber` (`scripts/ui/damage_number.gd`),
-instantiated from `scenes/gameplay/damage_number.tscn`.
+**Implementation:** `DamageNumber` (`Assets/Scripts/UI/DamageNumber.cs`),
+instantiated from `Assets/Resources/Prefabs/DamageNumber.prefab`.
 
 ## Slide-Up Panel (bottom sheet)
 **Used in:** the upgrade shop.
@@ -38,14 +39,14 @@ instantiated from `scenes/gameplay/damage_number.tscn`.
 bottom half of the screen over 0.28s (cubic ease-out), with a CLOSE button;
 sliding back down hides it. The screen behind stays interactive-adjacent
 (player can keep tapping the enemy above the sheet).
-**Implementation:** `UpgradeShopPanel` (`scripts/ui/upgrade_shop_panel.gd`).
+**Implementation:** `UpgradeShopPanel` (`Assets/Scripts/UI/UpgradeShopPanel.cs`).
 
 ## Currency Pop/Bounce Feedback
 **Used in:** the Essence counter.
 **Behavior:** whenever a tracked currency's balance changes, its display
 scales up ~12% then eases back over 0.18s (back-ease). Cheap, readable
 "something changed" signal without a full animation queue.
-**Implementation:** `_pop_essence_display()` in `scripts/ui/gameplay.gd`,
+**Implementation:** `_pop_essence_display()` in `Assets/Scripts/UI/Gameplay.cs`,
 driven by `EventBus.currency_changed`.
 
 ## Button Styles — Primary vs. Default
@@ -64,7 +65,7 @@ everything else (SETTINGS, BACK, MENU, individual shop buy buttons).
 their value from the relevant manager on `_ready()` *before* connecting
 `value_changed`, so restoring a saved value never fires a spurious "changed
 by the player" side effect.
-**Implementation:** `scripts/ui/settings_menu.gd`.
+**Implementation:** `Assets/Scripts/UI/SettingsMenu.cs`.
 
 ## Enemy Animation States
 **Used in:** the enemy view during combat.
@@ -73,7 +74,7 @@ by the player" side effect.
 color flash, extra rotation wobble on crit), death (shrink + fade +
 particle burst in the enemy's own glow color). No external animation
 files — all `Tween`-driven.
-**Implementation:** `scripts/ui/enemy_view.gd`.
+**Implementation:** `Assets/Scripts/UI/EnemyView.cs`.
 
 ## Haptic Feedback on Impact Events
 **Used in:** crits (light buzz) and kills (stronger buzz).
@@ -92,10 +93,10 @@ exactly ONE dismiss action styled as `PrimaryButton`, live from the first
 frame — no tap-outside, no timeout, no second exit. Entrance 0.2s/0.25s
 back-ease pop; exit 0.18s/0.2s; the node frees itself.
 **Implementation:** the reusable artifact is the script contract
-`CenteredModalDialog` (`scripts/ui/centered_modal_dialog.gd`; expects
+`CenteredModalDialog` (`Assets/Scripts/UI/CenteredModalDialog.cs`; expects
 `%Scrim`, `%Card`, `%ConfirmButton`, emits `confirmed`). Each concrete
 dialog is its own scene extending it (first:
-`scenes/gameplay/offline_rewards_modal.tscn`). A shared base *scene* is
+`Assets/Resources/Prefabs/OfflineRewardsModal.prefab`). A shared base *scene* is
 deliberately deferred until a third consumer exists.
 
 ## Unlock Celebration Toast (non-blocking)
@@ -105,8 +106,8 @@ unlock worth celebrating without interrupting play.
 that ignores ALL input (taps pass through to combat), pops in with the
 project's back-ease bounce, holds ~1.4s, fades, frees itself. Plays at most
 once per save file per unlock — never replayed on load.
-**Implementation:** `scenes/gameplay/auto_attack_toast.tscn` +
-`scripts/ui/auto_attack_toast.gd`, instanced by the gameplay scene on the
+**Implementation:** `Assets/Resources/Prefabs/AutoAttackToast.prefab` +
+`Assets/Scripts/UI/AutoAttackToast.cs`, instanced by the gameplay scene on the
 relevant EventBus signal.
 
 ## Status Badge (pill)
@@ -117,8 +118,8 @@ touch-target minimums) with icon + text; state is carried by presence and
 words, never color alone. Appears with a one-time scale pop, then a purely
 decorative 1.2s opacity pulse (1.0↔0.75). Once shown, never hidden again.
 **Implementation:** `BadgePanel` theme variation in `main_theme.tres`;
-badge node lives in `gameplay.tscn`'s `WorldVBox`, pop/pulse tweens in
-`scripts/ui/gameplay.gd`.
+badge node lives in `Assets/Scenes/Gameplay.unity`'s `WorldVBox`, pop/pulse tweens in
+`Assets/Scripts/UI/Gameplay.cs`.
 
 ## Hold-to-Reveal Exact Number
 **Used in:** the offline modal's essence figure. Future: retrofit onto the
@@ -128,7 +129,7 @@ pressing and holding the figure swaps in the exact comma-grouped integer
 (`NumberFormat.format_exact()`) for as long as held. A caption advertises
 the affordance. Satisfies the Enhanced tier's "Readable numbers" rule.
 **Implementation:** label with `mouse_filter = STOP` + `gui_input`
-press/release handling — see `scripts/ui/offline_rewards_modal.gd`.
+press/release handling — see `Assets/Scripts/UI/OfflineRewardsModal.cs`.
 
 ## Countdown Timer Bar
 **Used in:** boss fights. Future: timed minigames, timed ad-bonus windows.
@@ -138,8 +139,8 @@ text over a moving two-tone fill is always outline-anchored). Urgency at
 `min(10s, duration/3)` remaining: ember fill + 0.6s decorative pulse; the
 numerals alone are sufficient. Non-interactive. The bar never owns the
 countdown — it polls its owner system per frame.
-**Implementation:** `scenes/common/countdown_timer_bar.tscn` +
-`scripts/ui/countdown_timer_bar.gd` (self-syncs via `sync_with_combat()`).
+**Implementation:** `Assets/Resources/Prefabs/CountdownTimerBar.prefab` +
+`Assets/Scripts/UI/CountdownTimerBar.cs` (self-syncs via `sync_with_combat()`).
 
 ## Transient Result Banner (repeatable, non-blocking)
 **Used in:** boss win/fail. Future: minigame results, drop announcements.
@@ -147,8 +148,8 @@ countdown — it polls its owner system per frame.
 transparency, but repeatable and parameterized (`setup(icon, headline,
 body, is_win)`); win variant celebrates in violet, fail stays neutral.
 A depth-1 queue (owned by the spawning scene) prevents layer-50 stacking.
-**Implementation:** `scenes/common/result_banner.tscn` +
-`scripts/ui/result_banner.gd`.
+**Implementation:** `Assets/Resources/Prefabs/ResultBanner.prefab` +
+`Assets/Scripts/UI/ResultBanner.cs`.
 
 ## Blocking-Modal Presentation Queue
 **Used in:** gameplay arrivals where multiple must-acknowledge moments
@@ -157,7 +158,7 @@ collide (offline rewards + world unlock).
 one at a time — chronological past (offline) before go-forward state
 (world unlock) — each next presentation on the previous one's exit.
 **Implementation:** `_enqueue_modal()` / `_present_next_modal()` in
-`scripts/ui/gameplay.gd`.
+`Assets/Scripts/UI/Gameplay.cs`.
 
 ## Inspector Card (dismissible, multi-action)
 **Used in:** the item detail card (equip/salvage/close). Future: any
@@ -169,8 +170,8 @@ CLOSE), and closes by CLOSE **or** scrim-tap. Rarity-bordered card on a
 lighter scrim (0.6, a browse surface not a hard stop). Buttons live from
 frame one. Supports an info-only mode (empty/sealed slots) that shows one
 message and CLOSE alone.
-**Implementation:** `scripts/ui/inspector_card.gd` +
-`scenes/gear/inspector_card.tscn`.
+**Implementation:** `Assets/Scripts/UI/InspectorCard.cs` +
+`Assets/Resources/Prefabs/InspectorCard.prefab`.
 
 ## Loot Toast (compact transient pickup)
 **Used in:** equipment drops. Future: any frequent, low-ceremony pickup.
@@ -180,8 +181,8 @@ IGNORE) that pops, holds ~1.3s, fades, self-frees. Quick successive drops
 hard MAX_LIFETIME ceiling stops a drop storm from keeping it alive
 forever. Rarity is carried by pip count + word, never color alone. Rare
 top-tier events (Mythic) escalate to the Result Banner instead.
-**Implementation:** `scripts/ui/loot_toast.gd` +
-`scenes/gear/loot_toast.tscn`.
+**Implementation:** `Assets/Scripts/UI/LootToast.cs` +
+`Assets/Resources/Prefabs/LootToast.prefab`.
 
 ## Two-Tap Arm (in-place destructive confirm)
 **Used in:** Epic+ single salvage and bulk salvage-commons. Future: any
@@ -192,8 +193,8 @@ also **discloses the outcome** ("TAP AGAIN: +N SCRAPS", "TAP AGAIN: N →
 commits; the yield is always on the button face before commitment.
 Common/Rare skip arming (cheap, plentiful). Never applies to equipped
 items.
-**Implementation:** `scripts/ui/inspector_card.gd` (single),
-`scripts/ui/gear.gd` (bulk).
+**Implementation:** `Assets/Scripts/UI/InspectorCard.cs` (single),
+`Assets/Scripts/UI/Gear.cs` (bulk).
 
 ## CanvasLayer Registry
 Overlay stacking is fixed project-wide: scene UI = 0, celebration toast =
@@ -206,7 +207,7 @@ slot below 100 so a scene change can always cover them.
 definitions and instances one row scene per entry. Adding content is a data
 file, not a code change.
 **Implementation:** `UpgradeShopPanel._ready()` +
-`scenes/gameplay/upgrade_row.tscn`.
+`Assets/Resources/Prefabs/UpgradeRow.prefab`.
 
 ## Diegetic Companion Entry & Durable Badges
 **Used in:** the active pet on the combat screen (`CompanionButton`,
@@ -224,8 +225,8 @@ mirror this on the GEAR side — `_update_count_pill()` sums unseen equipment
 **and** unseen relics, so the pill is the durable record for everything
 behind Gear.
 **Implementation:** `_update_companion()` / `_pop_control()` /
-`_update_count_pill()` in `scripts/ui/gameplay.gd`; nodes in
-`scenes/gameplay/gameplay.tscn`.
+`_update_count_pill()` in `Assets/Scripts/UI/Gameplay.cs`; nodes in
+`Assets/Scenes/Gameplay.unity`.
 
 ## Single-Class Accent Scope
 **Used in:** relics, pets, bosses — every family that carries a signature
@@ -241,8 +242,8 @@ per-species tint. Data labels stay standard ink `Color(0.906,0.886,0.973)`.
 Relic glow is a single sanctioned step (shadow_size 12), below the
 PrimaryButton hover glow; the empty relic slot dims its sigil
 (`modulate.a 0.30`, shadow 8) so it never reads as attuned.
-**Implementation:** `ALLY_VIOLET`/`STANDARD` in `scripts/ui/pets.gd`;
-`_make_relic_tile()` in `scripts/ui/gear.gd`.
+**Implementation:** `ALLY_VIOLET`/`STANDARD` in `Assets/Scripts/UI/Pets.cs`;
+`_make_relic_tile()` in `Assets/Scripts/UI/Gear.cs`.
 
 ## Segmented Panel Switch
 **Used in:** the Eclipse screen (ASCEND | POWERS). Future: any screen with
@@ -254,7 +255,7 @@ color, and a 4px underline bar in the family accent. The segment's own word
 is its label, so the active view is always named. Switching never reloads
 data; both panels are built once and toggled.
 **Implementation:** `_set_active_tab()` / `_style_tab()` in
-`scripts/ui/eclipse.gd`.
+`Assets/Scripts/UI/Eclipse.cs`.
 
 ## Reset/Kept Disclosure
 **Used in:** the Eclipse (prestige) commit. Future: any irreversible action
@@ -266,19 +267,19 @@ The commit itself then uses the **Two-Tap Arm** pattern, whose armed face
 discloses the yield ("TAP AGAIN · +N ◆ · RESETS RUN"). The player can never
 be surprised by what an irreversible act costs them.
 **Implementation:** `_make_summary_column()` / `_on_collapse_pressed()` in
-`scripts/ui/eclipse.gd`.
+`Assets/Scripts/UI/Eclipse.cs`.
 
 ## Scroll-Safe Built Content
 **Used in:** every list built in code inside a `ScrollContainer` (Eclipse
 powers/ascend, gear, pets).
-**Behavior:** nodes created in GDScript default to `MOUSE_FILTER_STOP`, and
-a STOP child **swallows a touch-drag that begins on it** — so a card body or
+**Behavior:** every `Graphic` defaults to `raycastTarget = true`, and a
+raycast target **swallows a touch-drag that begins on it** — so a card body or
 label silently kills drag-scrolling from that point. Every non-interactive
-node built in code therefore sets `mouse_filter = MOUSE_FILTER_IGNORE`
-explicitly (including the list's own VBox in the scene). Only real controls
-(Buttons) stay STOP. Setting a parent to IGNORE never blocks its children:
-picking checks children first.
-**Implementation:** `scripts/ui/eclipse.gd` (all builders).
+Image and Text built in code therefore sets `raycastTarget = false`; only real
+controls keep it. `Assets/Scripts/UI/UIBuild.cs` does this in every
+constructor for exactly this reason, and a stray transparent Image left over a
+tile eats the tap that tile exists to receive.
+**Implementation:** `Assets/Scripts/UI/Eclipse.cs` (all builders).
 
 ## Font-Safe Glyphs
 **Applies to:** every string that reaches a Button or a `HeaderLabel` /
@@ -290,12 +291,13 @@ verified against `fonts/cinzel-latin-700-normal.woff2`. Only `·` (U+00B7)
 and `—` (U+2014) among the punctuation we use are Cinzel-safe.
 Therefore: **buttons and headers spell it out** ("PLAY · 1 TOKEN",
 "NEED 12 MORE", "TAP AGAIN: 12 FOR +24"), while decorative glyphs live only
-in plain Labels, which fall back to Godot's built-in face because the theme
-sets no `default_font`. Where a glyph would be identity rather than
-decoration (a currency mark), prefer the actual **icon** beside the number —
-it is a stronger cue than a character and cannot go missing.
-**Check:** `grep -rE '(button|Button)\.text\s*=.*[◈◆★●→]' scripts/` must
-come back empty.
+in plain labels. **A bitmap font has no fallback**: a character outside the
+face does not render as a substitute or a .notdef box, it renders as nothing
+at all, and a label silently loses a word. Where a glyph would be identity
+rather than decoration (a currency mark), prefer the actual **icon** beside
+the number — it is a stronger cue than a character and cannot go missing.
+**Check:** `python tools/check_glyphs.py` reads the codepoints the face
+actually contains and fails on any the UI renders.
 
 ## Minigame Teardown
 **Used in:** the Arcade host/minigame contract. Future: any embedded,
@@ -328,72 +330,71 @@ never runs that routine, so a hand-rolled snap silently misses the QUIT path —
 which is exactly how all three games shipped frozen mid-animation on forfeit
 until it was caught. A game whose resting scale is not `Vector2.ONE` overrides
 `teardown()` and calls `super()`.
-Two Godot behaviours this pattern exists to survive, both found in review:
-a **flat `Button` never draws its styleboxes**, so state applied that way is
-silently discarded; and a **disabled `Button` dims its icon to 40%**, so a
-"locked in" state fades out unless `icon_disabled_color` is overridden.
+Two engine behaviours this pattern exists to survive: a `Selectable` on
+`Transition.ColorTint` multiplies **only its `targetGraphic`**, so state
+applied to any other graphic on the tile is silently discarded; and
+`colors.disabledColor` tints that whole target including its icon, so a
+"locked in" state fades out unless the icon is lifted out of the tinted
+graphic.
 **Records are for completed runs only** — a loss or forfeit is not comparable
 to a run that met the objective, and in a `lower_is_better` game a loss scores
 the worst possible value, which would otherwise be written in as the first
 "best".
 **Implementation:** `Minigame.teardown()` / `create_managed_tween()` in
-`scripts/minigames/minigame.gd`; called from `_on_game_finished` in
-`scripts/ui/minigame_host.gd`; child Timers in
-`scripts/minigames/void_reflex.gd` and `memory_match.gd` as the reference.
+`Assets/Scripts/UI/Minigame.cs`; called from `_on_game_finished` in
+`Assets/Scripts/UI/MinigameHost.cs`; child Timers in
+`Assets/Scripts/UI/Minigames/VoidReflex.cs` and `Assets/Scripts/UI/Minigames/MemoryMatch.cs` as the reference.
 
-## Static Checks Beyond gdparse/gdlint
-**Why:** `gdparse` and `gdlint` validate syntax and style. They do **not**
-resolve calls, so two classes of runtime error pass both cleanly, and both have
-shipped at least once:
-- **Autoload member does not exist** — `RelicManager.get_owned_ids()` when the
-  method is `get_owned()`. It throws on every call site and aborts whatever
-  loop it sits in.
-- **Call-site arity mismatch** — changing `func _reveal_sunk(ship)` to take two
-  parameters without updating its caller.
-**The sweep therefore runs, on every milestone:** `gdparse` (syntax), `gdlint`
-(style), the `.tscn`/`.tres` structural validator (load_steps, resource paths,
-node parents), an **autoload member-existence check** built from
-`project.godot`'s autoload map, and a **call-site arity check** per script.
-Both extra checks have positive controls — reintroduce the original bug and
-confirm the checker trips.
+## Static Checks Beyond the Compiler
+**Why:** a compiler resolves names, types and arity, so the two classes of
+runtime error this section was originally written about — an autoload member
+that does not exist, and a call-site arity mismatch — are now build failures
+rather than things a checker has to hunt. Five retired checkers existed only
+because the previous language resolved names at runtime; stage 1 of the sweep
+is a real `Unity -batchmode` compile and is stricter than all five.
 
-**Extended by the debug pass** into three grouped checkers, `tools/check_scripts.py`
-(unique names, EventBus signal arity, connected-handler existence, `res://`
-literals, autoload load order), `tools/check_data.py` (`.tres` property names,
-enum ranges, id uniqueness, cross-references, definition reachability), and
-`tools/check_wiring.py` (granted stats consumed, goal metrics fed, enum values
-dispatched). The three wiring checks are the ones worth their weight: each
-describes a feature that loads, renders, charges the player and does nothing —
-a relic granting a stat key nothing reads, a goal whose metric is never fed, a
-`reward_kind` with no branch. None of it raises; nothing else in the toolchain
-sees it.
+**What a compiler still cannot see**, and what the sweep therefore runs:
 
-**Extended again by the architecture pass** with two more, on the same
-principle — find what fails silently. `tools/check_architecture.py` compares
-`docs/ARCHITECTURE.md` against the code (the autoload table against
-`project.godot`, the save-section table against `register_saveable()` calls),
-because the document asserting itself to be "the first thing to read" had gone
-stale on the one thing it specified most precisely. `tools/check_shaders.py`
-covers the corner nothing read at all: `gdparse` and `gdlint` read GDScript and
-`check_data` reads `.tres`, so a `.gdshader` was unverified, and a
-`shader_parameter` or `set_shader_parameter()` naming a uniform that does not
-exist is discarded with no error anywhere — the tuning knob simply does
-nothing.
+| stage | what it proves |
+|---|---|
+| 2 | palette closure, the 9px glyph grid, scene/prefab/sprite names |
+| 3 | every character the UI renders exists in the font |
+| 4 | every pixel of every shipped PNG is one of the 16 palette colours |
+| 5 | shipped assets are byte-identical to what their generators produce |
+| 6 | README and the published site match the code |
+| 7 | 49 runtime assertions against the real managers |
+| 8 | every screen rendered at 10 Android shapes and measured |
 
-**Three traps found while writing those checkers, all of which make a check
-silently vacuous rather than wrong:**
-- A GDScript string regex that does not exclude `\n` lets one apostrophe in
-  prose (`# doesn't`) open a fake string that swallows every following line of
-  real code. Coverage dropped ~18% with no symptom.
-- Matching a parameter list with `.*?` misses every signature wrapped across
-  lines — which is most long handlers here — so the arity check quietly passed
-  whatever it could not see. Use `[^)]*`, which spans newlines.
-- `.tres` has **no comment syntax**. A mutation that leaves a trailing
-  `# original` makes the value unparseable, so the checker skips the field
-  instead of rejecting it: the positive control passes for the wrong reason.
-**Therefore `tools/selftest_checks.py`** injects one real defect per check into
-a throwaway copy of the project and requires every one to be rejected. A check
-that cannot fail is worse than no check, because it is believed.
+Stage 8 is the only one that looks at pixels, and it is the one that found nine
+screens whose layout rows had collapsed to zero height while every other stage
+was green.
+
+**What has NO replacement, and is a real gap:** the wiring checks. Three of
+them existed and each described a feature that loads, renders, charges the
+player and does nothing — a relic granting a stat key nothing reads, a goal
+whose metric is never fed, a reward kind with no branch. A compiler sees none
+of that: every one of those is well-typed. Gone with them is
+**selftest_checks.py**, which injected one real defect per check into a
+throwaway copy of the project and required every one to be rejected.
+
+**Three traps found while writing the original checkers, all of which make a
+check silently vacuous rather than wrong.** The mechanics were language
+specific; the failure mode is not, and it has recurred since:
+- A string regex that does not exclude `
+` let one apostrophe in prose open a
+  fake string that swallowed every following line of real code. Coverage
+  dropped ~18% with no symptom.
+- Matching a parameter list with `.*?` missed every signature wrapped across
+  lines — most long handlers — so the check quietly passed whatever it could
+  not see.
+- A data format with **no comment syntax** made a mutated field unparseable, so
+  the checker skipped it instead of rejecting it: the positive control passed
+  for the wrong reason.
+
+**A check that cannot fail is worse than no check, because it is believed.**
+Assert the injection applied before trusting that the check caught it — three
+positive controls in this project's history silently did nothing because the
+anchor string they patched did not exist in the file.
 
 **One harness bug of the same family:** a stage written `check | sed 's/^/   /'`
 reports **sed's** exit status, so `|| status=1` never fired and two stages of

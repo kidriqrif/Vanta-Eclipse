@@ -1,4 +1,3 @@
-// Ported from scripts/managers/save_manager.gd
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,9 +14,9 @@ namespace VantaEclipse.Managers
     /// Design (built for years of updates):
     ///   * Any system that owns persistent data implements ISaveable and is
     ///     listed in Game.Saveables(). New systems plug in without touching
-    ///     this file. (The Godot version had each manager call
-    ///     register_saveable() from _ready(); the list moved to Game because
-    ///     C# managers have no _ready and the order should be explicit.)
+    ///     this file. The list lives in Game rather than being self-registered
+    ///     by each manager, because the order should be explicit and readable
+    ///     in one place.
     ///   * The whole save is one versioned JSON document, so old saves can be
     ///     migrated forward in Migrate() when the format changes.
     ///   * Writes are atomic (temp file, keep a backup, then swap), so a crash
@@ -87,8 +86,7 @@ namespace VantaEclipse.Managers
         }
 
         /// <summary>Read the save and distribute it. Called once at boot, after
-        /// every manager exists — the Godot version deferred this a frame for
-        /// the same reason.</summary>
+        /// every manager exists and has subscribed.</summary>
         public void InitialLoad()
         {
             bool loaded = TryLoadFrom(SavePath);

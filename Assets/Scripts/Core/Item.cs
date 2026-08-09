@@ -5,12 +5,12 @@ namespace VantaEclipse.Core
     /// <summary>
     /// One piece of gear.
     ///
-    /// The Godot version kept items as plain Dictionaries so they serialised
-    /// straight into the save. That cost a normalisation pass on every load —
-    /// JSON downgrades StringName to String and Godot treats &amp;"x" and "x"
-    /// as different dictionary keys, so slot and affix ids had to be rebuilt
-    /// or the stat sums silently missed. A typed class removes the whole class
-    /// of bug: there are no string keys left to disagree about, and the
+    /// A typed class rather than the dictionary it used to be. A dictionary
+    /// serialised straight into the save, but cost a normalisation pass on
+    /// every load: JSON flattens string-like key types onto one another, so
+    /// slot and affix ids had to be rebuilt or the stat sums silently missed.
+    /// A typed class removes the whole class of bug — there are no string keys
+    /// left to disagree about, and the
     /// compiler checks the field names.
     /// </summary>
     public sealed class Item

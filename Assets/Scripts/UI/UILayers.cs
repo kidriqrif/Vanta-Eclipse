@@ -6,8 +6,7 @@ namespace VantaEclipse.UI
     /// <summary>
     /// The sorting registry the UX spec fixed and every transient obeys.
     ///
-    /// Godot spelled this as a CanvasLayer's `layer` property, set in the .tscn.
-    /// Unity's equivalent is a nested Canvas with overrideSorting — but only a
+    /// A sorting order is a nested Canvas with overrideSorting — but only a
     /// Canvas gets a sorting order at all, so a spawned object that is merely
     /// parented to the screen draws in hierarchy order and a toast can end up
     /// behind the thing it is announcing.

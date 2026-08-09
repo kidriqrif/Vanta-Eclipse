@@ -1,5 +1,5 @@
-// Hand-written half of the generated SkillNodeDefinition. Ported from the
-// methods on scripts/data/skill_node_definition.gd.
+// Hand-written half of the generated SkillNodeDefinition: the methods a field
+// generator cannot derive.
 using UnityEngine;
 using VantaEclipse.Core;
 

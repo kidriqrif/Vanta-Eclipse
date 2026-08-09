@@ -1,4 +1,3 @@
-// Ported from scripts/ui/shop.gd
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;

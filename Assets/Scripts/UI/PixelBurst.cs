@@ -54,8 +54,7 @@ namespace VantaEclipse.UI
             public float Lifetime = 0.45f;
             public float SpeedMin = 90f;
             public float SpeedMax = 240f;
-            /// <summary>Godot's gravity ran positive down a Y-down axis; Unity's
-            /// UI axis points up, so the same fall is negative here.</summary>
+            /// <summary>Unity's UI axis points up, so a fall is negative.</summary>
             public float Gravity = -320f;
             /// <summary>A mote is a few source pixels across. The art is drawn at
             /// 64px and shown at 8x, so a 2px mote would be invisible — these are
@@ -117,7 +116,7 @@ namespace VantaEclipse.UI
                 image.color = _color;
                 image.raycastTarget = false;
 
-                // Godot's spread of 180 degrees around UP is the whole circle.
+                // A spread of 180 degrees either side of up is the whole circle.
                 float angle = Random.Range(0f, Mathf.PI * 2f);
                 float speed = Random.Range(_settings.SpeedMin, _settings.SpeedMax);
                 _motes[i] = new Mote

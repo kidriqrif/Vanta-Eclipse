@@ -5,16 +5,14 @@ namespace VantaEclipse.Core
     /// <summary>
     /// The one MonoBehaviour the manager layer needs.
     ///
-    /// Godot autoloads are Nodes, so any of them could take _process() and
-    /// _notification() straight from the engine. The C# managers are plain
-    /// objects, so the three things that genuinely require engine callbacks —
+    /// The managers are plain C# objects, not MonoBehaviours, so the three
+    /// things that genuinely require engine callbacks —
     /// a per-frame tick, the autosave interval, and the app-pause/quit moment —
     /// are funnelled through here and pushed into the managers.
     ///
-    /// PROCESS_MODE_ALWAYS in the Godot originals has no equivalent to port:
-    /// Unity's Time.unscaledDeltaTime is read directly below, so a paused
-    /// game (timeScale 0) still accrues play time and still autosaves, which
-    /// is what those managers set process_mode for.
+    /// Time.unscaledDeltaTime is read directly below, so a paused game
+    /// (timeScale 0) still accrues play time and still autosaves. A pause menu
+    /// must never stall a save or freeze the session counter.
     /// </summary>
     [DefaultExecutionOrder(-1000)]
     public sealed class GameRuntime : MonoBehaviour
@@ -31,9 +29,8 @@ namespace VantaEclipse.Core
 
         void Update()
         {
-            // Two clocks, and which one a system gets is a design decision the
-            // Godot originals expressed as process_mode:
-            //   ALWAYS   -> unscaled: play time and autosave keep running while
+            // Two clocks, and which one a system gets is a design decision:
+            //   unscaled -> play time and autosave keep running while
             //               the game is paused, so a pause menu cannot stall a
             //               save or freeze the session counter.
             //   PAUSABLE -> scaled: the boss countdown and auto-attack are live

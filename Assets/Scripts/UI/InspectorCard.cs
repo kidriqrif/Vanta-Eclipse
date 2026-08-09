@@ -1,4 +1,3 @@
-// Ported from scripts/ui/inspector_card.gd
 using System;
 using System.Collections;
 using System.Collections.Generic;

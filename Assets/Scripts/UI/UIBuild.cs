@@ -8,15 +8,11 @@ namespace VantaEclipse.UI
     ///
     /// Most of this game's UI is not laid out in a scene file: Gear builds a
     /// tile per slot and a row per inventory item, the Journal builds a card per
-    /// goal, the Shop builds a row per product. In Godot that was terse because
-    /// a StyleBoxFlat carries background, border, and padding as three
-    /// properties of one object, and `add_theme_stylebox_override` applied it in
-    /// a line. Unity's Image has a colour and nothing else.
-    ///
-    /// So a "panel with a 3px border and 12px of padding" is three GameObjects
-    /// here, and without a helper every screen would restate that construction
-    /// twenty times. These functions are that helper — they are what keeps the
-    /// ported screens the same length as the originals instead of triple.
+    /// goal, the Shop builds a row per product. An Image has a colour and
+    /// nothing else — no border, no padding — so a "panel with a 3px border and
+    /// 12px of padding" is three GameObjects, and without a helper every screen
+    /// would restate that construction twenty times. These functions are that
+    /// helper, and they are what keeps a list screen readable.
     ///
     /// Nothing here is decorative-only by accident: every constructor turns
     /// raycastTarget OFF except on the things meant to be pressed, because a
@@ -26,7 +22,7 @@ namespace VantaEclipse.UI
     public static class UIBuild
     {
         /// <summary>A framed box: border ring, fill, and an inset content area
-        /// for children. Godot got all three from one StyleBoxFlat.</summary>
+        /// for children.</summary>
         public readonly struct Panel
         {
             public readonly GameObject Root;
@@ -152,8 +148,8 @@ namespace VantaEclipse.UI
             return group;
         }
 
-        /// <summary>The child that should absorb the leftover width in a Row —
-        /// Godot's SIZE_EXPAND_FILL.</summary>
+        /// <summary>The child that should absorb the leftover width in a
+        /// Row.</summary>
         public static T Expand<T>(T component) where T : Component
         {
             var element = component.gameObject.GetComponent<LayoutElement>()
@@ -210,17 +206,18 @@ namespace VantaEclipse.UI
             }
 
             // THE FRAME MUST HUG ITS CONTENT, and a stretched Content child
-            // cannot make it. In Godot every Control propagated a combined
-            // minimum size up the tree for free, so a Panel wrapping a VBox was
-            // as tall as the VBox without anyone saying so. Unity propagates
-            // nothing: an Image reports no preferred size, so a frame dropped
+            // cannot make it. These layouts were authored where a container
+            // propagated a combined minimum size up the tree for free, so a
+            // Panel wrapping a VBox was as tall as the VBox without anyone
+            // saying so. Unity propagates nothing: an Image reports no
+            // preferred size, so a frame dropped
             // into a VerticalLayoutGroup with childControlHeight came out ZERO
             // pixels tall and every row inside it drew on top of the next. That
             // was 9 of the 11 screens.
             //
             // A VerticalLayoutGroup on the root fixes it because a layout group
             // IS an ILayoutElement: it reports its children's preferred height
-            // as its own, so the size flows up the way Godot's did. The padding
+            // as its own, so the size flows up again. The padding
             // reproduces exactly the inset the Stretch call used to apply.
             int inset = Mathf.RoundToInt(borderWidth + padding);
             var hug = root.AddComponent<VerticalLayoutGroup>();

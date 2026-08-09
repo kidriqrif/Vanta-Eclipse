@@ -1,245 +1,164 @@
 # Vanta Eclipse — Release Checklist
 
-**The game is feature-complete and internally consistent, but it is NOT ready
-to submit to Google Play.** Everything under "Blockers" must be done first.
+**What must EXIST before submission.** `TESTING-GUIDE.md` lists what must be
+*proven*; start there instead if you want the order of operations.
 
-What is left genuinely cannot be done from inside this repository: each
-remaining item needs a Google account, a licence accepted by a human, a
-credential, or a physical device. Everything that *could* be produced here —
-the export presets, the icons, the store graphics, the listing copy, the
-privacy-policy draft — now exists.
-
-This file lists *what must exist*. `TESTING-GUIDE.md` lists *what must be
-proven*, staged from "does it launch at all" through to production rollout —
-start there. The project now boots headless on desktop and every screen has
-been rendered and inspected, but it has **never run on Android hardware**.
+Everything that can be produced from inside this repository now exists and is
+verified against a real artifact rather than asserted. What remains needs a
+Google account, a human accepting a licence, or a physical device.
 
 ---
 
-## BLOCKERS — must be done before any store submission
+## Build and signing — done, and checked on the artifact
 
-### 0. There is no export pipeline yet — nothing can be built at all
-
-This section used to be missing, and the items below it were listed as
-"verified in-repo" when no file backed them. Until all three exist, every
-later item is untestable, because no artifact can be produced.
-
-- [x] **Godot 4.7 export templates installed.** 35 files in
-      `%APPDATA%/Godot/export_templates/4.7.stable/`, including the
-      `android_source.zip` the export error named.
-- [x] **`export_presets.cfg` created and committed.** Two presets: `Android`
-      (Gradle build, AAB, arm64-v8a, min SDK 24, target SDK 35, signed) and
-      `Android Debug APK` (prebuilt template, for the first device test).
-      Verified by running `--export-release "Android"`: Godot now parses and
-      selects the preset and fails only on the SDK below, which is what
-      proves the file is valid rather than merely present.
-      It is **tracked on purpose** — keeping it untracked is exactly why this
-      checklist drifted. Credentials go in `export_credentials.cfg`, which is
-      gitignored.
-- [x] **JDK 17 and the Android SDK installed**, licences accepted, and Godot's
-      Editor Settings pointed at both. Locations (all outside the repo):
+- [x] **Toolchain**, all outside the repo, all stated in
+      `tools/build_android.sh` so none of it lives in someone's shell history:
 
       | | |
       |---|---|
+      | Unity | 6000.5.7f1 |
       | JDK 17 | `C:/Users/kidri/dev-tools/jdk-17` (Temurin 17.0.13) |
       | Android SDK | `C:/Users/kidri/Android/Sdk` |
-      | packages | platform-tools, build-tools 35.0.0 + 36.0.0, platforms 35 + 36 |
-      | debug keystore | `C:/Users/kidri/.android/debug.keystore` |
+      | packages | platform-tools, build-tools 35.0.0 / 36.0.0 / 36.1.0, platforms 35 + 36 |
 
-- [x] **Android build template installed** to `android/build/`, with the
-      `android/.build_version` marker Gradle export refuses to run without.
-      `android/` is gitignored — it is 160 files of generated Gradle scaffold.
-- [x] **A debug APK actually builds** — 29.9 MB, and verified rather than
-      merely produced: `apksigner` confirms APK Signature Scheme v2 and v3,
-      and `aapt2 dump badging` reports package
-      `com.kidriqrif.vantaeclipse`, versionCode 1, arm64-v8a only, adaptive
-      icon layers packaged, and exactly three permissions (INTERNET,
-      ACCESS_NETWORK_STATE, VIBRATE).
-- [x] **The signed release AAB builds** — `build/vanta-eclipse.aab`, 28.0 MB,
-      Gradle custom build. Verified as a real Play bundle, not just a file:
-      correct `base/manifest` + `base/dex` + `base/lib` layout, `BundleConfig.pb`
-      present, `jarsigner -verify` reports "jar verified", arm64-v8a only, and
-      the signer's SHA-256 matches the upload keystore exactly.
-- [x] `tools/build_android.sh debug|release` captures the whole invocation —
-      toolchain paths, signing environment variables, and the post-build
-      verification — so none of it lives only in someone's shell history.
-      Both paths were re-run from the script from a clean `build/` to confirm
-      they reproduce.
+- [x] **Debug APK** — `bash tools/build_android.sh debug`. Verified rather than
+      merely produced: `apksigner` confirms APK Signature Scheme v2, and
+      `aapt2 dump badging` reports package `com.kidriqrif.vantaeclipse`,
+      versionCode 1, **minSdk 26 / targetSdk 36**, arm64-v8a, exactly one real
+      permission (`VIBRATE`), and a **launchable activity**.
 
-**This is uploadable.** What stops it being *releasable* is §1: the build
-still contains stub ads and stub billing, so every purchase in it is free.
-Do not push it past Internal Testing until that is real.
+      > The launcher-activity check is a hard failure in the script because an
+      > APK once shipped without one. `Assets/Plugins/Android/AndroidManifest.xml`
+      > REPLACES Unity's `UnityManifest.xml` rather than merging into it, so
+      > declaring a permission and an empty `<application>` deleted both Unity
+      > activity blocks. It installed and could not be started.
 
-**Confirm the package name before the first upload.** It is currently
-`com.kidriqrif.vantaeclipse`, which I chose from the GitHub account. It is
-**permanent once published** — Play will never let it change — so if you own
-a domain, use it instead.
+- [x] **Signed release AAB** — `bash tools/build_android.sh release`, 27.6 MB.
+      The script compares the bundle's signer fingerprint to the keystore's;
+      `jar verified` alone is true of a debug-signed bundle too.
 
-**Check the target SDK against current policy.** It is set to 35. Play raises
-the minimum target API every August, so verify the requirement for the month
-you actually submit in.
+      > Unity 6000.5.7f1 **does not parse** `-keystorePath` / `-keystorePass` /
+      > `-keyaliasName` / `-keyaliasPass`; those literals appear nowhere in
+      > `Unity.exe`, `UnityEditor.dll` or the Android extension.
+      > `BuildAndroid.ApplySigning` reads them, and `ClearSigning` scrubs the
+      > fields in a `finally` so an editor exit cannot persist a password into
+      > `ProjectSettings.asset`, which is tracked and pushed to a public remote.
 
-### 1. Real ads and billing (Milestone 14 shipped stubs)
-- [ ] Add the Godot Android **AdMob** plugin (or chosen network) to the build.
-- [ ] Implement `AdMobProvider extends AdProvider` in
-      `scripts/monetization/`. The contract is one method.
-- [ ] Add the **Google Play Billing** plugin.
-- [ ] Implement `PlayBillingProvider extends BillingProvider`, including
-      `restore_purchases()` — the Shop already calls it.
-- [ ] **Server-side receipt validation.** A client-only "purchase succeeded"
-      is trivially spoofable. Nothing that costs real money may be granted on
-      the client's word alone.
-- [ ] Decide where entitlements *live*. Today they are plain strings in
-      `user://savegame.json`, so adding `"remove_ads"` to the `entitlements`
-      array by hand grants it. `load_save_data()` deliberately does not filter
-      that array — an unrecognised entitlement is preserved rather than
-      erased, so a product `.tres` that fails to load can never destroy
-      something a player paid for. That is the right call for a local save and
-      the wrong one for an authority: once billing is real, the store's
-      response (not the save file) must be what grants an entitlement, with
-      the save acting only as an offline cache.
-- [ ] Create the SKUs in Play Console matching `store_id` in
-      `data/products/*.tres` (`vanta_remove_ads`, `vanta_starter_pack`,
-      `vanta_shards_small`).
-- [ ] Set `MonetizationManager.USE_STUB_PROVIDERS = false`.
-- [ ] Verify the Shop's development banner disappears once it is false.
+- [x] **16 KB page size** — all six `.so` in the bundle carry `PT_LOAD
+      p_align = 0x4000`. Read the ELF headers, not the zip entry offsets: an
+      entry offset says nothing about the alignment of a compressed library.
 
-**Until this is done every purchase in the build is free and local, and every
-"ad" is a 3-second timer.**
-
-### 2. Identity and signing
-- [x] `package/unique_name` set to `com.kidriqrif.vantaeclipse` (no longer
-      Godot's rejected `com.example.*` default) — but see the confirmation
-      note in §0 before the first upload, because it can never be changed.
-- [x] `version/code=1` and `version/name="0.1.0"`, matching `project.godot`.
-      Bump `version/code` on every upload; Play rejects a repeat.
-- [x] **Upload keystore generated**, RSA 2048, valid to 2053:
+- [x] **Upload keystore**, RSA 2048, valid to 2053:
       `C:/Users/kidri/keystores/vanta-eclipse-upload.jks`, alias `upload`,
-      password in `vanta-eclipse-upload.password.txt` beside it. Both are
-      outside the repo, and `.gitignore` covers the extensions anyway — which
-      matters here because the Stop hook auto-pushes to a **public** repo.
-      SHA-256 fingerprint:
+      password in `vanta-eclipse-upload.password.txt` beside it. Both outside
+      the repo. SHA-256:
       `3A:5B:8A:01:C8:37:06:8B:CB:F1:06:B3:2A:45:3B:6C:8D:9E:EE:3A:9B:8D:9C:EA:EB:9C:DB:A0:AB:D2:62:13`
 
-      > **Back this file up somewhere you control, today.** If you lose it you
-      > cannot ship an update to an app signed with it. (Play App Signing can
-      > reset an *upload* key on request, which is a strong reason to enrol in
-      > it when you create the app — but do not rely on that.)
+      > **Back this up somewhere you control, today.** Lose it and you cannot
+      > ship an update to an app signed with it. Play App Signing can reset an
+      > *upload* key on request, which is a strong reason to enrol when you
+      > create the app — but do not rely on it.
 
-      Godot reads the password from `GODOT_ANDROID_KEYSTORE_RELEASE_*`
-      environment variables, which `tools/build_android.sh` sets from the
-      password file — so it never enters `export_presets.cfg`, which is
-      tracked.
+- [x] **Identity.** `com.kidriqrif.vantaeclipse`, versionName `0.1.0`,
+      versionCode `1`. Bump the code on every upload; Play rejects a repeat.
 
-### 3. Store assets
+- [ ] **Confirm the package name before the first upload.** It was chosen from
+      the GitHub account and is **permanent once published**. If you own a
+      domain, use it instead.
+
+- [ ] **Check the target SDK against current policy.** It is 36, which meets
+      the requirement as of August 2026. Play raises the floor every August.
+
+## Store assets — done
 
 All generated from the theme's own values, so the listing and the game agree.
-`tools/make_icons.py` rebuilds them all (pixel art, integer-scaled).
+`python tools/make_icons.py` rebuilds them.
 
-- [x] **`icon.png` redrawn** — a 128×128 pixel-art eclipse mark in the
-      palette's `crimson`/`blood` on `void`, replacing the SVG that the
-      revamp made the last vector asset in the project.
 - [x] Launcher icon 192×192 and both 432×432 adaptive layers. Foreground art
-      sits inside the 264px safe circle; background is fully opaque; the
-      occluded disc is punched to transparent, not to black, so launcher
-      parallax cannot reveal a seam.
-- [x] 512×512 store icon, alpha channel stripped (Play rejects one that has
-      an alpha channel even when every pixel is opaque).
-- [x] Feature graphic 1024×500, composed in Godot with the project font.
-- [x] 6 phone screenshots in `production/screenshots/`, 540×960 — exact 9:16
-      and inside Play's 320–3840 range. **Not** 1080×1920: this display is
-      1920×1080, so a taller window gets silently clamped and the aspect
-      guard rejects the run. Recapture on the device during Stage 2 testing
-      if you want them sharper.
-- [x] Short and full description, categorisation, and Data Safety notes:
+      inside the 264px safe circle; background fully opaque; the occluded disc
+      punched to transparent rather than black, so launcher parallax cannot
+      reveal a seam.
+- [x] 512×512 store icon, alpha stripped — Play rejects an alpha channel even
+      when every pixel is opaque.
+- [x] Feature graphic 1024×500.
+- [x] Listing copy, categorisation and Data Safety notes:
       `production/store-listing.md`.
-- [ ] **Host the privacy policy.** Text drafted in
-      `production/privacy-policy.md`, but it has placeholders to fill and
-      needs a public URL before it counts.
+- [x] **Privacy policy is live** at
+      `https://kidriqrif.github.io/Vanta-Eclipse/privacy-policy.html`, and
+      `SettingsMenu` opens that exact URL. Generated from
+      `docs/privacy-policy.html`; `tools/check_docs.py` keeps it honest.
+- [ ] **Re-capture the phone screenshots.** The six in
+      `production/screenshots/` are 540×960 renders from the previous engine and
+      no longer represent the app. `bash tools/screenshots.sh` produces 110 from
+      the real build at ten shapes — pick six.
 
-### 4. Legal / policy
-- [ ] Privacy policy covering ad SDK data collection (required once an ad SDK
-      is present).
-- [ ] Play **Data Safety** form.
-- [ ] Ads declaration; families-policy review if targeting under-13.
-- [ ] `AD_ID` permission declaration for Android 13+ if the ad SDK needs it.
+## Blocking, outside this repository
 
----
+### Play Console
+- [ ] Developer account and the $25 fee.
+- [ ] Enrol in Play App Signing.
+- [ ] **Data safety** form. The app collects nothing: no account, no analytics,
+      no network calls anywhere in the codebase, and the manifest does not even
+      declare `INTERNET`. All progress is a local JSON file in private storage.
+- [ ] **IARC content rating.** Combat is a health bar and a particle burst
+      against stylised creatures — no gore, no human targets, no blood, which
+      is normally Everyone 10+ / PEGI 7. Answer the questionnaire honestly
+      rather than copying that; a wrong answer is a policy strike.
+- [ ] Target audience and content. 13+; targeting under-13 pulls the app into
+      the Families policy.
+- [ ] Ads declaration: **No**.
+- [ ] App access: no login required, nothing gated.
+- [ ] Privacy policy URL field.
+- [ ] The news / financial / health / government declarations (all No).
 
-## Verified in-repo
+### Calendar, not a form
+- [ ] **Closed testing: 12 testers for 14 continuous days**, if the developer
+      account is a personal one created after 2023-11-13. Production access is
+      not granted until it completes.
 
-Everything in this section is backed by a file in the repository, and the file
-is named so the claim can be checked.
+### Hardware
+- [ ] **Run the game on a physical device.** It never has. See
+      `TESTING-GUIDE.md` stage 2.
 
-Three entries used to sit here — "arm64-v8a only, min SDK 24, target SDK 34,
-AAB output", "`design/`, `tools/` and scratch excluded from the export", and
-"permissions limited to internet, network state, and vibrate" — while
-`export_presets.cfg` did not exist at all. They were checked-off claims with
-nothing behind them. All three are now genuinely true, because the preset was
-written (§0); they are listed there rather than here, next to the settings
-they describe.
+## Not blocking, but decide before launch
 
-- [x] Portrait 1080×1920, `canvas_items` stretch, `expand` aspect
-      (`project.godot`), confirmed rendering on 7 Android aspect ratios from
-      9:16 to 5:6 via `tools/aspect_matrix.sh`.
-- [x] Mobile renderer; ETC2/ASTC VRAM compression enabled (`project.godot`).
-- [x] One accent on neutrals, enforced rather than asserted. The Milestone-15
-      overhaul reached the theme and the sprites but not per-scene
-      `theme_override_colors` or per-script colour constants: 58 saturated
-      non-red values were still live, including the violet boss countdown bar
-      and both "retired" door accents (Eclipse teal, Arcade lime). All are now
-      on the palette, moved onto theme variations (`AccentLabel`,
-      `AccentHeaderLabel`, `MutedLabel`) or `UIPalette` accessors rather than
-      restated as literals. `check_ui.py` now fails any UI colour with real
-      chroma outside the red family, so this cannot drift again silently.
-- [x] Atomic save with a backup slot and a versioned document
-      (`SaveManager`), so a crash mid-write cannot corrupt progress.
-- [x] Every manager's save section defaults cleanly when absent, so old saves
-      load without migration.
-- [x] Static sweep green: `bash tools/validate_all.sh` — eleven stages: `gdparse`,
-      `gdlint`, the scene/resource structural validator, autoload
-      member-existence, call-site arity, plus the debug-pass checkers
-      `check_scripts.py`, `check_data.py` and `check_wiring.py`,
-      `check_architecture.py` (docs/ARCHITECTURE.md against the code),
-      `check_shaders.py` (shader structure and material parameters), and the
-      font-safe glyph check.
-      Every one of those checkers has a positive control in
-      `tools/selftest_checks.py`, which injects 26 real defects into a copy of
-      the project and requires each to be rejected — so a green sweep means the
-      checks ran, not merely that they printed OK.
-
----
-
-## Recommended before launch (not blocking)
-
-- [ ] **Play on a real low-end device.** The project boots headless and all 28
-      screens render, but it has never run on Android and never been touched
-      by a finger. Frame pacing, touch accuracy, battery draw and the actual
-      feel of every screen are unverified. The static sweep is
-      deliberately broad, but it can only compare what the files say to each
-      other; no amount of it substitutes for one session on hardware.
-      `TESTING-GUIDE.md` Stage 2 covers this; note that a shader which compiles
-      on desktop can still fail on a mobile GPU.
-- [ ] Cloud saves via Play Games Services. `SaveManager.get_full_save_text()`
+- [ ] **Two layout defects on tall screens**, both reported by sweep stage 8:
+      the enemy sprite hangs 45–68px off the bottom above 18:9, and Gear's
+      relic tile label overlaps the row under it by 6–9px at 19.5:9 and taller.
+- [ ] **Text is pixel-exact at 1920 high and nowhere else.** The CanvasScaler
+      matches on height against a 1080×1920 reference, so only integer factors
+      land every 9px tier on whole glyph boxes. Three ways out, none taken:
+      accept it, switch to constant-pixel-size scaling with letterboxing, or
+      author the face at a second size.
+- [ ] **`x86_64` is not built.** arm64-v8a only, which excludes ChromeOS and
+      every standard emulator. Play splits an AAB per ABI, so adding it costs
+      end users nothing.
+- [ ] Cloud saves via Play Games Services. `SaveManager.GetFullSaveText()`
       already returns exactly the document a provider would upload.
-- [x] Audio. 15 SFX and one 24-second seamless music loop, all generated by
-      `tools/make_audio.py` and wired through `AudioManager` off `EventBus`.
-      Dry and mechanical to match the pixel art — square waves and relay
-      clacks, not sines.
-- [ ] Localisation. All strings are inline English.
-- [ ] Analytics for the balance assumptions — every economy number was tuned by
-      simulation against a *model* of a player, never against real ones.
-- [ ] Object-pool damage numbers if profiling shows pressure at high attack
-      speed (`scripts/ui/damage_number.gd` notes this).
+- [ ] Localisation. Every string is inline English.
+- [ ] Analytics for the balance assumptions.
 
----
+## Monetisation — deliberately absent
+
+`MonetizationManager.UseStubProviders` is `true`, so `PaidSurfacesAvailable` is
+`false` and every paid surface is hidden. There is no ad SDK and no Play Billing
+library in the bundle, the app shows no ads and takes no money, and
+`production/store-listing.md` declares exactly that. **This ships as-is.**
+
+Shipping monetised instead is a project, not a checkbox: a real ad SDK, Play
+Billing, **server-side receipt validation** (a client-only "purchase succeeded"
+is trivially spoofable), SKUs created in Play Console matching `store_id` in the
+product definitions, and a decision about where entitlements live — today they
+are plain strings in the save file, which is the right call for a local cache
+and the wrong one for an authority. Flip `UseStubProviders`, the two listing
+declarations, the Data Safety form and the `AD_ID` permission declaration in
+one change, never separately.
 
 ## Known deliberate gaps
 
-- **Two worlds ship** (Dark Forest 1–50, Frozen Ruins 51–100). The GDD sketches
-  five. World 3+ is pure data — a `WorldDefinition`, enemy `.tres` files and
-  boss definitions — and needs no code.
-- **`WorldManager._on_boss_fight_won`** returns without unlocking when the last
-  world's boss dies, so the level-100 boss currently leads nowhere. That is
-  correct until World 3 exists, and the TODO marks it.
-- **No audio assets**, per above.
+- **Two worlds ship** (Dark Forest 1–50, Frozen Ruins 51–100); the GDD sketches
+  five. World 3+ is pure data and needs no code.
+- **`WorldManager` does not unlock past the last world's boss**, so the
+  level-100 boss currently leads nowhere. Correct until World 3 exists.
+- **Astral Shards: ~420 earnable against 740 needed** for every cosmetic, so
+  the two most expensive trails are unreachable while monetisation is stubbed.

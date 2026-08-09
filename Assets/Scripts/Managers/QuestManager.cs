@@ -1,4 +1,3 @@
-// Ported from scripts/managers/quest_manager.gd
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -83,8 +82,8 @@ namespace VantaEclipse.Managers
         }
         List<QuestDefinition> _sorted;
 
-        /// <summary>Driven by GameRuntime. Replaces the Godot rollover
-        /// Timer.</summary>
+        /// <summary>Driven by GameRuntime; this is the daily rollover
+        /// clock.</summary>
         public void Tick(float deltaTime)
         {
             _rolloverTimer += deltaTime;

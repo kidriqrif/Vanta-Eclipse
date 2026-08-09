@@ -306,7 +306,7 @@ Attack/hit animation is a decorative scale-pop synced to
 `enemy_damaged`/`enemy_died` (the pet is a passive bonus, not a damage
 source).
 
-### 2.5 Pets scene (`scenes/pets/pets.tscn`, UX §3D)
+### 2.5 Pets scene (`Assets/Scenes/Pets.unity`, UX §3D)
 
 Full `SceneManager` scene. **Reuses `VoidBackground`** with the current
 world's palette (per engine notes / M6 §5) — stepping into Pets stays under

@@ -1,10 +1,9 @@
-// Builds the game's content library from the JSON that tools/port/port_data.py
-// lifted out of the Godot .tres files.
+// Builds the game's content library from the JSON in Assets/Editor/PortedData.
 //
 // Run once after opening the project: Vanta Eclipse > Import Ported Data.
 // It is idempotent — re-running updates the existing .asset files in place
-// rather than making duplicates, so the porter can be re-run whenever the
-// Godot tree changes and the import replayed on top.
+// rather than making duplicates, so the import can be replayed on top of an
+// existing library whenever the JSON changes.
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -21,8 +20,8 @@ namespace VantaEclipse.EditorTools
     {
         const string JsonDir = "Assets/Editor/PortedData";
         // Under Resources/ so DefinitionRegistry can load a whole type with
-        // Resources.LoadAll, which is the closest analogue to how the Godot
-        // managers did load("res://data/...") at _ready time.
+        // Resources.LoadAll, so a manager asks for a type rather than keeping
+        // its own hard-coded list of paths.
         const string ContentDir = "Assets/Resources/Content";
         const string ArtDir = "Assets/Resources/Art";
 
@@ -112,7 +111,7 @@ namespace VantaEclipse.EditorTools
 
         static object Convert(JToken token, Type target, string typeName, string fieldName)
         {
-            // A Godot Color came across as {r,g,b,a}.
+            // A colour comes across as {r,g,b,a}.
             if (target == typeof(Color))
             {
                 return new Color((float)token["r"], (float)token["g"],

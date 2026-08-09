@@ -5,15 +5,14 @@
 #
 # Run: bash tools/validate_all.sh
 #
-# WHAT HAPPENED TO STAGES 1-5, 9, 15 AND 16
+# WHY THERE ARE EIGHT STAGES AND NOT SIXTEEN
 #
-# The Godot sweep had sixteen stages, and eight of them existed because
-# GDScript resolves names at runtime: gdparse and gdlint, a scene/resource
-# structure pass, an autoload-member check, a semantic pass over every script,
-# a shader-parameter pass, a logic harness run inside the engine, and a
-# screenshot harness. A misspelled autoload member or a signal connected with
-# the wrong arity was silent until the line ran, so it had to be found by
-# reading the source.
+# It had sixteen once, and eight of them existed because the previous language
+# resolved names at runtime: a parser, a linter, a scene/resource structure
+# pass, a member-existence check, a semantic pass over every script, a
+# shader-parameter pass, a logic harness run inside the engine, and a
+# screenshot harness. A misspelled member or a signal connected with the wrong
+# arity was silent until the line ran, so it had to be found by reading source.
 #
 # In C# every one of those is a compile error. Stage 1 here — a real Unity
 # batchmode compile — is a stricter and more honest version of all five script
@@ -24,9 +23,8 @@
 # The screenshot harness is stage 8, and it is the only stage that looks at
 # PIXELS. Everything above it compares files to other files. It renders all 11
 # screens at 10 Android shapes in play mode and measures layout, glyph box and
-# device pixels — the same three things the Godot one measured, against the
-# same reason for measuring them: every piece of art and text this project got
-# wrong looked correct in source.
+# device pixels, for the reason every one of those measurements was written:
+# every piece of art and text this project got wrong looked correct in source.
 
 set -uo pipefail
 cd "$(dirname "$0")/.."

@@ -67,7 +67,7 @@ Plays in portrait, one-handed, offline.
 > is the design intent but not what installs today — and a listing that
 > promises "the option to skip the ads" for an app with no ads is a
 > misrepresentation. Restore the longer version alongside
-> `USE_STUB_PROVIDERS = false`.
+> `UseStubProviders = false`.
 
 ---
 
@@ -83,7 +83,7 @@ Plays in portrait, one-handed, offline.
 | Target audience | 13+ (see note) |
 
 > **These two answers describe the BUILD, not the design.**
-> `MonetizationManager.USE_STUB_PROVIDERS` is `true`, so
+> `MonetizationManager.UseStubProviders` is `true`, so
 > `PAID_SURFACES_AVAILABLE` is `false` and every paid surface is hidden: there
 > is no ad SDK in the bundle and no Play Billing library, so the app shows no
 > ads and takes no money. Declaring "Yes" would be a false declaration, and
@@ -93,7 +93,7 @@ Plays in portrait, one-handed, offline.
 > When real providers land, both answers become **Yes** (rewarded video only;
 > $0.99–$4.99), the Data Safety form has to be redone from the ad SDK's
 > disclosure, and the `AD_ID` permission declaration applies. Flip these back
-> in the same change that sets `USE_STUB_PROVIDERS = false`.
+> in the same change that sets `UseStubProviders = false`.
 
 **Note on age rating.** The IARC questionnaire will ask about violence.
 Combat here is a health bar and a particle burst against stylised creatures —
@@ -120,5 +120,5 @@ after integration — not before, and not from this file.
 | App icon | 512×512 32-bit PNG, no alpha | ✅ `production/icons/store_icon_512.png` |
 | Feature graphic | 1024×500 PNG/JPG, no alpha | ✅ `production/icons/feature_graphic_1024x500.png` |
 | Phone screenshots | ≥2, 16:9 or 9:16, 320–3840px | ✅ `production/screenshots/` |
-| Privacy policy URL | public, reachable | ⛔ `docs/privacy-policy.html` exists but GitHub Pages is **off** — the URL 404s, and the in-app Settings button opens it |
+| Privacy policy URL | public, reachable | ✅ live at `https://kidriqrif.github.io/Vanta-Eclipse/privacy-policy.html`, which is the exact URL `SettingsMenu` opens |
 | Signed AAB | targeting current API level | ✅ `build/vanta-eclipse.aab`, targetSdk 36, arm64-v8a, 16 KB-aligned |

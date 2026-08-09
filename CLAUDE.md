@@ -8,12 +8,9 @@ for anything under `Assets/`, for `tools/` (the validation sweep and the asset
 generators), and for the large `design/` and `docs/` corpus. The coverage claim
 is unconditional: there is no part of this repository the graph cannot see.
 
-This replaces a long-standing caveat that said the opposite. graphify has no
-tree-sitter grammar for GDScript, so for as long as the game was written in
-`.gd` the graph contained none of it and a query about the managers was a
-wasted step. The Godot→Unity port closed that gap by removing GDScript, and the
-last `.gd` file is gone — the qualifier that used to sit here, about `scripts/`
-and `scenes/` being invisible, retired with it.
+This replaces a long-standing caveat that said the opposite: the graph once
+missed the entire game because it had no grammar for the language the game was
+written in. Everything is C# now and everything is indexed.
 
 The PreToolUse hooks graphify installs were removed deliberately, back when the
 graph missed a third of the repository and the hooks asserted it should be
@@ -30,13 +27,19 @@ Rules:
 
 ## The design archive
 
-`design/` is history, not instructions. It holds the UX specs, the GDD and the
-per-milestone notes written while the game was being built, and the C# source
-cites its sections by number (§4B, §7.2, the accessibility tiers). Those rules
-are engine-independent and still binding.
+`design/` holds the UX specs, the GDD, the per-milestone notes and the two live
+process documents — `RELEASE-CHECKLIST.md` (what must exist before submission)
+and `TESTING-GUIDE.md` (what must be proven, and in what order). The C# source
+cites the specs by section number (§4B, §7.2, the accessibility tiers) and
+those rules are binding.
 
-Eight files there are named `milestone-*-godot-implementation-notes.md`. They
-describe how a decision was implemented in the PREVIOUS engine. They were left
-untouched on purpose when the Godot tree was deleted: rewriting them would
-falsify a record of what was actually decided and why. Read them as history —
-the reasoning transfers, the API calls do not.
+**Every path it names is a live one.** The seven per-milestone
+implementation-notes files that used to sit here described how a decision was
+carried out in the previous engine; they are deleted, along with every dead
+source pointer that was scattered through the remaining specs. Anything worth
+keeping — a trap, a constraint, a reason — was rewritten as a statement about
+the code that ships. `git show godot-final:<path>` recovers any of it.
+
+The convention that keeps this true: **backticks mean a live path**, and a
+file or tool being described historically goes in bold instead. Nothing
+enforces it, so it is on whoever edits.

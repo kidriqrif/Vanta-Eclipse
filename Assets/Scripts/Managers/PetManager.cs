@@ -1,4 +1,3 @@
-// Ported from scripts/managers/pet_manager.gd
 using System.Collections.Generic;
 using UnityEngine;
 using VantaEclipse.Core;
@@ -193,9 +192,9 @@ namespace VantaEclipse.Managers
             // sites take this index straight into stageSprites, so a pet given
             // a third name before its third sprite exists would break the
             // companion button — which is on screen the entire game.
-            // check_data.py rejects that content at build time; this is what
-            // keeps a build that slipped through merely wrong-looking instead
-            // of dead.
+            // Nothing rejects that content at build time any more, so this is
+            // what keeps a build that slipped through merely wrong-looking
+            // instead of dead.
             int stages = Mathf.Min(def.stageNames.Length, def.stageSprites.Length);
             return Mathf.Clamp(stage, 0, Mathf.Max(0, stages - 1));
         }

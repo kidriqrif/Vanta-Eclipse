@@ -1,4 +1,3 @@
-// Ported from scripts/managers/minigame_manager.gd
 using System;
 using System.Collections.Generic;
 using UnityEngine;

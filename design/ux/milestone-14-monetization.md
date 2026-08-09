@@ -4,7 +4,7 @@
 
 **This milestone ships the architecture, not a store-ready integration.**
 
-Real rewarded ads need the AdMob (or equivalent) Godot Android plugin, a
+Real rewarded ads need the AdMob (or equivalent) Unity SDK package, a
 publisher account, and a signed build. Real purchases need Google Play Billing,
 a Play Console with configured SKUs, and server-side receipt validation. None
 of that can exist in this repository yet.

@@ -1,4 +1,3 @@
-// Ported from scripts/ui/result_banner.gd
 using System;
 using System.Collections;
 using UnityEngine;
@@ -32,8 +31,7 @@ namespace VantaEclipse.UI
         public static readonly Color WinHeadlineOutline = new(0.69f, 0.071f, 0.157f, 0.55f);
 
         /// <summary>Raised when the banner has left the screen. Gameplay's queue
-        /// advances on this — the Unity equivalent of Godot's tree_exited, which
-        /// fired for the same purpose.</summary>
+        /// advances on this.</summary>
         public event Action Finished;
 
         Sprite _icon;
@@ -162,7 +160,7 @@ namespace VantaEclipse.UI
             Destroy(gameObject);
         }
 
-        /// <summary>Godot's TRANS_BACK/EASE_OUT: overshoots the target and
+        /// <summary>A Back ease-out: overshoots the target and
         /// settles back.</summary>
         static float BackOut(float t)
         {
@@ -173,10 +171,9 @@ namespace VantaEclipse.UI
         }
 
         /// <summary>Destroy a banner that was built but never shown. Gameplay's
-        /// queue drops overflow, and in Godot those were orphan nodes that leaked
-        /// for the process lifetime unless freed explicitly — the same hazard
-        /// exists here for a parked, inactive object nothing else
-        /// references.</summary>
+        /// queue drops overflow, and a parked, inactive object nothing else
+        /// references leaks for the process lifetime unless it is destroyed
+        /// explicitly.</summary>
         public void DiscardUnshown() => Destroy(gameObject);
     }
 }

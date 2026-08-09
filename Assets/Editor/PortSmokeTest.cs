@@ -14,8 +14,8 @@ namespace VantaEclipse.EditorTools
     /// Deliberately a plain -executeMethod entry point rather than a Unity Test
     /// Framework suite: the port needs an answer to "did the logic survive the
     /// translation" before the test package, the assembly definitions, and the
-    /// CI wiring exist. The 90 runtime checks in the retired GDScript sweep
-    /// become real play-mode tests later; this covers the arithmetic and the
+    /// CI wiring exist. These become real play-mode tests later; this covers
+    /// the arithmetic and the
     /// guards that a compiler cannot check, today.
     ///
     ///   Unity.exe -batchmode -nographics -quit \

@@ -7,8 +7,8 @@ namespace VantaEclipse.Core
     /// <summary>
     /// Tolerant readers for save-document fields.
     ///
-    /// GDScript's `int(data.get("x", 0))` did three things at once: missing-key
-    /// default, type coercion, and never throwing. C# does none of them, and a
+    /// Reading a save field wants three things at once: a missing-key default,
+    /// type coercion, and never throwing. C# gives none of them for free, and a
     /// save file is the one input that is guaranteed to eventually be wrong —
     /// written by an older build, hand-edited, or truncated by a battery death
     /// mid-write. A manager that throws while loading takes the whole boot with
@@ -47,7 +47,7 @@ namespace VantaEclipse.Core
             if (!TryRaw(data, key, out var raw)) return fallback;
             try
             {
-                // Truncate rather than round, matching GDScript's int().
+                // Truncate rather than round, matching how these were written.
                 double value = Convert.ToDouble(raw);
                 if (double.IsNaN(value) || double.IsInfinity(value)
                     || value > int.MaxValue || value < int.MinValue)

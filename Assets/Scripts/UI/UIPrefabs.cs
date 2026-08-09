@@ -7,13 +7,12 @@ namespace VantaEclipse.UI
     /// Spawns the transient UI the screens build at runtime — damage numbers,
     /// result banners, loot toasts, the two blocking modals, the arcade boards.
     ///
-    /// This is Godot's `preload("res://…/x.tscn").instantiate()` pair, split in
-    /// two the way Unity splits it. `preload` resolved at parse time and made
-    /// the dependency visible to the exporter; Unity's nearest equivalent that
-    /// works from a plain static context is Resources, so SceneBuilder writes
+    /// A prefab reachable from a plain static context has to come from
+    /// Resources — there is no serialized field to hang it on — so SceneBuilder
+    /// writes
     /// these to Assets/Resources/Prefabs and this loads them by name.
     ///
-    /// The names are the PascalCase of the .tscn stem, which is also the name of
+    /// The names are the PascalCase of the layout stem, which is also the name of
     /// the C# behaviour on the prefab root — so <see cref="Spawn{T}"/> can take
     /// the type and infer the name, and a rename cannot leave the two disagreeing.
     /// </summary>

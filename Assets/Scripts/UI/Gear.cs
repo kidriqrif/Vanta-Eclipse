@@ -1,4 +1,3 @@
-// Ported from scripts/ui/gear.gd
 using UnityEngine;
 using UnityEngine.UI;
 using VantaEclipse.Core;

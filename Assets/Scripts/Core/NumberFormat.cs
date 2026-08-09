@@ -1,4 +1,3 @@
-// Ported from scripts/utils/number_format.gd
 using System;
 using System.Globalization;
 using UnityEngine;
@@ -19,8 +18,8 @@ namespace VantaEclipse.Core
             "", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc",
         };
 
-        // Every format here pins InvariantCulture. Godot's String.num was
-        // culture-independent; .NET's is not, and on a device set to a
+        // Every format here pins InvariantCulture. .NET's default is not
+        // culture-independent, and on a device set to a
         // comma-decimal locale the defaults would render "1,23K" and put a
         // decimal comma inside the comma-grouped exact figures.
         static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
@@ -62,8 +61,8 @@ namespace VantaEclipse.Core
             return negative ? "-" + text : text;
         }
 
-        /// <summary>Godot's String.num(): fixed decimals, trailing zeros kept,
-        /// invariant separator.</summary>
+        /// <summary>Fixed decimals, trailing zeros kept, invariant
+        /// separator.</summary>
         public static string Num(float value, int decimals)
             => value.ToString("F" + decimals, Inv);
     }

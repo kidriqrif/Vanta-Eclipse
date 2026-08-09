@@ -42,8 +42,8 @@ they're not tapping, without needing to read a wall of text.
 
 ## 5. Return Session (Milestone 4 — new)
 
-The player closed the app (or Godot re-launched after being backgrounded on
-Android) and comes back minutes, hours, or the next day later.
+The player closed the app (or Android killed it in the background and it
+re-launched) and comes back minutes, hours, or the next day later.
 
 **Needs:** immediately see what happened while they were away — a single
 clear number ("you earned X Essence while away"), not a wall of stats;

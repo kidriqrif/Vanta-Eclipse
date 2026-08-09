@@ -74,7 +74,7 @@ def facts() -> dict[str, object]:
         "unity": _one(r"m_EditorVersion:\s*(\S+)", version_txt),
         "target_sdk": _one(r"TargetSdk\s*=\s*(?:\(AndroidSdkVersions\))?(?:AndroidSdkVersions\.AndroidApiLevel)?(\d+)", build),
         "min_sdk": _one(r"MinSdk\s*=\s*(?:\(AndroidSdkVersions\))?(?:AndroidSdkVersions\.AndroidApiLevel)?(\d+)", build),
-        # What Godot called autoloads: the managers the service locator builds.
+        # The managers the service locator builds at launch.
         "managers": len(re.findall(r"public static \w+ \w+ \{ get; private set; \}", locator)),
         "sprites": len(list((ROOT / "Assets/Resources/Art").rglob("*.png"))),
         "sounds": len(list((ROOT / "Assets/Resources/Audio").rglob("*.wav"))),

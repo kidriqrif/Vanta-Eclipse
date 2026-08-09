@@ -8,7 +8,7 @@ modal). All values are stated in `ui/theme/main_theme.tres` vocabulary
 they can be transcribed directly. No code, scenes, or SVGs ship with this
 document — the asset manifest in §3 is the artist's work order.
 
-Reference canvas: 1080×1920, matching `scenes/gameplay/gameplay.tscn`.
+Reference canvas: 1080×1920, matching `Assets/Scenes/Gameplay.unity`.
 
 ---
 
@@ -48,7 +48,7 @@ what `Color(0.13, 0.09, 0.22, 0.9)` is to the violet button family):
 
 **Collision check.** Teal stays clear of every accent already in play: the
 violet UI family, the crit gold `Color(1.0, 0.8, 0.25)`
-(`damage_number.gd`), and the health-bar crimson `Color(0.73, 0.2, 0.34)`
+(`Assets/Scripts/UI/DamageNumber.cs`), and the health-bar crimson `Color(0.73, 0.2, 0.34)`
 (`StyleBoxFlat_pb_fill`). It also survives the two CVD cases the Enhanced
 tier names: under red-green deficiency teal vs violet separates on the
 blue axis; under blue-yellow deficiency they separate on lightness
@@ -163,7 +163,7 @@ Vertical budget: 16 + 56 + 6 + ~46 + 6 + ~34 + 16 ≈ 180px. ✓
 color = Color(0.016, 0.008, 0.031, 0.72)
 ```
 
-That is `SceneManager.FADE_COLOR` (`scene_manager.gd:18`) with alpha 0.72
+That is `SceneFlow.FadeColor` (`Assets/Scripts/Core/SceneFlow.cs`) with alpha 0.72
 — literally the same void the scene fade uses, so "the world dims" is one
 consistent color everywhere. 0.72 keeps the HUD faintly legible behind the
 card (context, not competition) while killing enough background luminance
@@ -290,7 +290,7 @@ Violet family, **not** teal: it decorates the Essence-centric modal.
 - **✦ as text glyphs (U+2726 BLACK FOUR-POINTED STAR) in "✦ WELCOME BACK ✦"**
   — replaced by `star_flourish.svg`. The font file is
   `cinzel-latin-700-normal.woff2` — a *latin-subset titling face*; U+2726
-  is not in it. Godot silently falls back to the default project font for
+  is not in it. An engine silently falls back to its default font for
   missing glyphs, which means a thin generic sans star butted against
   Cinzel's engraved capitals (or a .notdef box on a bad day) — an
   unacceptable seam in the game's most ceremonial headline. Rendering the

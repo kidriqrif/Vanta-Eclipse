@@ -1,4 +1,3 @@
-// Ported from scripts/ui/card_collection.gd
 using UnityEngine;
 using UnityEngine.UI;
 using VantaEclipse.Core;

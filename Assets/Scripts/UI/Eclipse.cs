@@ -1,4 +1,3 @@
-// Ported from scripts/ui/eclipse.gd
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;

@@ -98,7 +98,7 @@ right before this away-period started)
   No popup. No reward.          CurrencyManager.add(ESSENCE, reward)
   Game proceeds exactly         fires immediately (EventBus.essence_earned,
   as if nothing happened.       source &"offline" — signal already
-                                 anticipates this per event_bus.gd comment)
+                                 anticipates this per the EventBus comment)
                                         │
                                         ▼
                           Popup is marked "pending" until the gameplay
@@ -155,7 +155,7 @@ right before this away-period started)
 
 ## 3. Wireframe
 
-Reference canvas 1080×1920, matching `scenes/gameplay/gameplay.tscn`'s
+Reference canvas 1080×1920, matching `Assets/Scenes/Gameplay.unity`'s
 current `MarginContainer` (margins 40/40/40/28) and `GameplayVBox`
 (separation 18). All Y-values below are derived from that scene's actual
 node sizes and are accurate to roughly ±25px — enough to build against,
@@ -325,7 +325,7 @@ about the exact cap value.
 - **Badge appear animation:** an appear-from-nothing variant of the
   existing **Currency Pop/Bounce Feedback** pattern — scale 0 → 1.12 →
   1.0 over 0.24s, `TRANS_BACK`/`EASE_OUT` (same easing language as
-  `_pop_essence_display()` in `scripts/ui/gameplay.gd`, adapted for an
+  `_pop_essence_display()` in `Assets/Scripts/UI/Gameplay.cs`, adapted for an
   element becoming visible rather than an already-visible value ticking
   up).
 - **Toast animation:** container scale 0 → 1.05 → 1.0 + fade in over
@@ -357,7 +357,7 @@ about the exact cap value.
   (`enemy_damaged`, `enemy_died`) with zero UI-layer special-casing.
 - Each auto-attack hit must trigger the same **Floating Damage Number**
   and **Enemy Animation States** hit-reaction a manual tap does — this
-  is already half-built: `gameplay.gd`'s `_spawn_damage_number()`
+  is already half-built: `Assets/Scripts/UI/Gameplay.cs`'s `_spawn_damage_number()`
   already branches on `_has_tap_position` and spawns the number above
   the enemy's center when there's no tap point, specifically commented
   `# Auto attacks (Milestone 4) have no tap point`. No new visual
@@ -383,7 +383,7 @@ about the exact cap value.
 - **Reward granted immediately** on eligibility (not on COLLECT tap) via
   `CurrencyManager.add(CurrencyManager.ESSENCE, reward)`, emitting
   `EventBus.essence_earned` with `source = &"offline"` — the signal's
-  doc comment in `event_bus.gd` already names this exact source string
+  doc comment in `Assets/Scripts/Core/EventBus.cs` already names this exact source string
   as planned. If the gameplay screen is already alive when this fires
   (background-resume case), the existing **Currency Pop/Bounce Feedback**
   on the essence counter plays automatically, for free, with no new
@@ -455,7 +455,7 @@ milestone's state has a named manager owner:
   calls into the same damage path `player_tap_attack()` uses, so
   crits/essence/signals are inherited (§4B), and `CombatManager` remains
   the only system that touches enemy state.
-- **UI (`gameplay.gd`, the toast, the badge, the modal)** owns nothing:
+- **UI (`Assets/Scripts/UI/Gameplay.cs`, the toast, the badge, the modal)** owns nothing:
   it renders `IdleManager`/`CombatManager` state and EventBus signals,
   and reports exactly one input — the COLLECT tap — back as a dismiss.
 
@@ -620,12 +620,12 @@ player must actively acknowledge before continuing:
   can still visually cover it if one is ever triggered while it's open.
 
 **Implementation:** proposed as a new script, e.g.
-`scripts/ui/centered_modal_dialog.gd` + a base scene under
+`Assets/Scripts/UI/CenteredModalDialog.cs` + a base scene under
 `scenes/common/`, generic enough to host different body content per
 use (this milestone: essence figure + duration line + COLLECT; future:
-a confirmation question + CONFIRM/CANCEL). Left for the Godot UI
-specialist (Phase 3 pre-req) to structure as a reusable scene rather
-than a one-off.
+a confirmation question + CONFIRM/CANCEL). Left for the UI specialist
+(Phase 3 pre-req) to structure as a reusable prefab rather than a
+one-off.
 
 ---
 
@@ -639,7 +639,7 @@ than a one-off.
   capped reward exists (placeholder: 8 hours, used only for illustrative
   copy in §3E) but doesn't derive the rate or the cap — that's balancing
   work parallel to the existing `ENEMY_HP_GROWTH`/`ESSENCE_REWARD_GROWTH`
-  tuning in `combat_manager.gd`. Whatever the cap turns out to be, §6
+  tuning in `Assets/Scripts/Managers/CombatManager.cs`. Whatever the cap turns out to be, §6
   requires the popup to state it plainly when it applies.
 - **MIN_OFFLINE_SECONDS placeholder (60s).** Reasonable default to
   suppress rapid app-switching; confirm or adjust.

@@ -3,8 +3,8 @@
 
 WHY THIS IS NOT ALREADY COVERED
 
-tools/check_ui.py verifies colour LITERALS — the Color() calls in scenes,
-scripts and the theme. It reads source files and has never opened an image. So
+tools/check_unity.py verifies colour LITERALS — the new Color() calls in the
+C# sources. It reads source files and has never opened an image. So
 the half of the project's colour that lives inside PNGs — 52 sprites, the font
 atlas, the launcher and store icons — was unverified. A sprite regenerated from
 an edited palette, a hand-touched pixel, or an asset carried over from the
@@ -24,11 +24,11 @@ colour was computed rather than chosen, which is the thing a closed palette
 exists to prevent.
 
 Partial alpha is allowed and reported. The pixel tools use it for the ground
-glow's falloff, and Godot composites it against the void background.
+glow's falloff, and it is composited against the void background at runtime.
 
 THE FONT ATLAS IS THE ONE EXCEPTION
 
-fonts/vanta_pixel.png is written pure white with an alpha mask, because Godot
+fonts/vanta_pixel.png is written pure white with an alpha mask, because UI.Text
 MULTIPLIES a bitmap font's atlas by font_color at draw time. Baking a palette
 colour into it would tint every label in the game with that colour and make
 font_color a no-op. White is the identity element here, not an off-palette
@@ -153,8 +153,8 @@ def main() -> int:
     images = targets()
 
     # An empty sweep is a passing sweep, which is how a glob that stopped
-    # matching anything reports success. check_ui.py's sprite scan spent the
-    # whole revamp globbing *.svg after every sprite had become a *.png.
+    # matching anything reports success. A sprite scan here once spent a whole
+    # restyle globbing *.svg after every sprite had become a *.png.
     if len(images) < 50:
         print(f"pixels are on-palette: FAIL (only {len(images)} images matched "
               f"{len(SCOPES)} scopes — the project ships 58)")
@@ -193,7 +193,7 @@ def main() -> int:
         if stray:
             problems.append(
                 f"{FONT_ATLAS}: {len(stray)} non-white colour(s) baked into the "
-                "atlas — Godot multiplies it by font_color, so any colour here "
+                "atlas — the label's colour multiplies it, so any colour here "
                 "tints every label in the game"
             )
 

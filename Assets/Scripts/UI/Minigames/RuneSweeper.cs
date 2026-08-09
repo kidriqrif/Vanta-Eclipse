@@ -1,4 +1,3 @@
-// Ported from scripts/minigames/rune_sweeper.gd
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;

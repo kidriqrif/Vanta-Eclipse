@@ -1,4 +1,3 @@
-// Ported from scripts/managers/upgrade_manager.gd
 using System.Collections.Generic;
 using UnityEngine;
 using VantaEclipse.Core;
@@ -13,9 +12,9 @@ namespace VantaEclipse.Managers
     /// stats, so buying an upgrade changes combat instantly with no other
     /// system involved.
     ///
-    /// The Godot original kept a hard-coded UPGRADE_DEFINITION_PATHS array and
-    /// load()ed each entry. That list is gone: DefinitionRegistry finds every
-    /// UpgradeDefinition asset, so adding one is a data drop and nothing else.
+    /// There is no hard-coded list of definition paths: DefinitionRegistry
+    /// finds every UpgradeDefinition asset, so adding one is a data drop and
+    /// nothing else.
     /// </summary>
     public sealed class UpgradeManager : ISaveable
     {

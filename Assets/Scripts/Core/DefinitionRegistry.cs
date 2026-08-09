@@ -7,10 +7,10 @@ namespace VantaEclipse.Core
     /// <summary>
     /// Loads and indexes the ScriptableObject content library by id.
     ///
-    /// Replaces the per-manager `load("res://data/...")` lists the Godot
-    /// managers each kept. Those lists were a standing maintenance cost — a
-    /// new .tres had to be added to a const array or it silently did not
-    /// exist — so the port drops them: a definition is in the game because it
+    /// Replaces the per-manager list of content paths each manager used to
+    /// keep. Those lists were a standing maintenance cost — a new definition
+    /// had to be added to a const array or it silently did not exist — so they
+    /// are gone: a definition is in the game because it
     /// is in Assets/Resources/Content, not because a manager remembered it.
     /// </summary>
     public static class DefinitionRegistry
@@ -18,7 +18,7 @@ namespace VantaEclipse.Core
         static readonly Dictionary<System.Type, object> Cache = new();
 
         /// <summary>Every definition of a type, in sort_order then id order —
-        /// the same order the Godot managers sorted into for display.</summary>
+        /// which is the order the UI displays them in.</summary>
         public static IReadOnlyList<T> All<T>() where T : ScriptableObject
         {
             if (Cache.TryGetValue(typeof(T), out var cached))

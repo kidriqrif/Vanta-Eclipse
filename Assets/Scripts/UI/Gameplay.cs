@@ -1,4 +1,3 @@
-// Ported from scripts/ui/gameplay.gd
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -900,7 +899,7 @@ namespace VantaEclipse.UI
 
         /// <summary>Centre-pivot scale-pop used for every low-ceremony
         /// acknowledgment: start at <paramref name="from"/>, settle on 1 with
-        /// Godot's TRANS_BACK/EASE_OUT overshoot.</summary>
+        /// A Back ease-out overshoot.</summary>
         static IEnumerator PopTo(RectTransform rect, float from, float seconds)
         {
             if (rect == null) yield break;

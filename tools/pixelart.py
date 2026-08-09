@@ -13,7 +13,7 @@ runtime would be a poor trade.
 
 THE PALETTE IS CLOSED. Sixteen colours, no sixteen-and-a-halves. Every pixel of
 every sprite and every colour in the theme is an index into PALETTE, and
-tools/check_ui.py fails the sweep on any UI colour that is not one of them.
+tools/check_unity.py fails the sweep on any UI colour that is not one of them.
 That constraint is the whole reason a generated set can look coherent: it takes
 the one decision a program makes badly — which colour is *right* — and removes
 it from the program.
@@ -89,12 +89,6 @@ TRANSPARENT = "_"
 def rgb(name: str) -> tuple[int, int, int]:
     value = PALETTE[name]
     return int(value[1:3], 16), int(value[3:5], 16), int(value[5:7], 16)
-
-
-def godot(name: str, alpha: float = 1.0) -> str:
-    """The colour as a Godot `Color(r, g, b, a)` literal."""
-    red, green, blue = rgb(name)
-    return "Color(%.3f, %.3f, %.3f, %g)" % (red / 255, green / 255, blue / 255, alpha)
 
 
 # --- canvas -------------------------------------------------------------------
@@ -294,14 +288,12 @@ def write_png(path: pathlib.Path, canvas: Canvas, alpha: bool = True) -> int:
 
 # --- Import settings -----------------------------------------------------
 #
-# Pixel art MUST NOT be filtered. Every engine's default is linear, which
-# turns a 64x64 creature scaled to fill a phone screen into a blurred smear
-# — the single most common way a pixel-art game ships looking wrong.
+# Pixel art MUST NOT be filtered. Unity's default is linear, which turns a
+# 64x64 creature scaled to fill a phone screen into a blurred smear — the
+# single most common way a pixel-art game ships looking wrong.
 #
-# Godot needed a .import sidecar written beside every generated PNG to say
-# so, and this module wrote one. Unity has a real importer instead:
-# Assets/Editor/PixelArtImporter.cs forces Point filtering, no mipmaps and
-# no compression for everything under Assets/Resources/Art, and it runs on
-# import rather than on generation. The setting still travels with the
-# asset; it is just no longer this file's job to carry it.
+# Nothing here has to carry that setting. Assets/Editor/PixelArtImporter.cs
+# forces Point filtering, no mipmaps and no compression for everything under
+# Assets/Resources/Art, and it runs on import rather than on generation, so
+# the setting travels with the asset however the asset got there.
 

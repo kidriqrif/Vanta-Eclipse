@@ -36,11 +36,10 @@ from pixelart import Canvas, write_png
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
-# Where the PNGs land. Overridable because the Unity port needs the same
-# sprites under Assets/Art/ while the Godot tree still needs them under
-# sprites/ — the generator is the shared source, so it grew a destination
-# rather than a fork. Set VANTA_SPRITE_OUT to a path relative to the repo
-# root. When the Godot tree goes, the default moves and this stays.
+# Where the PNGs land. Overridable so a run can be pointed at a scratch
+# directory and diffed against what ships without touching the project — which
+# is what tools/check_generated.py does. Set VANTA_SPRITE_OUT to a path
+# relative to the repo root.
 OUT = ROOT / os.environ.get("VANTA_SPRITE_OUT", "Assets/Resources/Art")
 
 ENEMY = 64
@@ -634,7 +633,7 @@ def ground_glow() -> Canvas:
     texture has to be drawn at the shape it will be seen at, because the
     pattern IS the image.
 
-    Drawn in ivory and tinted at runtime — enemy_view.gd modulates it to the
+    Drawn in ivory and tinted at runtime — EnemyView modulates it to the
     creature's own glow_color.
     """
     width, height = 40, 8
@@ -661,8 +660,9 @@ def menu_divider() -> Canvas:
     Replaces a GradientTexture2D that faded crimson out to alpha 0 at both
     ends — the last GradientTexture2D in the project, and the last smooth thing
     on the main menu. It survived the palette pass because a gradient declares
-    its stops as a flat PackedColorArray rather than as Color() calls, so the
-    check walked straight past it; check_ui.py reads both spellings now.
+    its stops as a flat array rather than as separate colour literals, so the
+    check walked straight past it. check_pixels.py reads the rendered PNG and
+    cannot be dodged that way.
 
     Tapered in THREE HARD STEPS rather than by dithering, which is the opposite
     of what ground_glow() does and for the same underlying reason. This is 64px
@@ -1138,7 +1138,7 @@ def sheet() -> None:
             y = (index // columns) * cell + (cell - art.height) // 2
             board.paste(art, x, y)
         scale = 3 if group in ("enemies", "pets") else 4
-        path = ROOT / ".godot-shots" / f"sheet_{group}.png"
+        path = ROOT / "build" / "sprite-sheets" / f"sheet_{group}.png"
         write_png(path, board.scaled(scale))
         print(f"  sheet -> {path.name}")
 
