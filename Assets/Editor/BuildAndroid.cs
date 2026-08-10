@@ -31,13 +31,13 @@ namespace VantaEclipse.EditorTools
         public const string VersionName = "0.1.0";
         public const int VersionCode = 1;
         /// <summary>
-        /// 26, not the 24 this constant asks for. GameActivity —
-        /// which androidApplicationEntry selects and which libgame.so exists
-        /// for — has an API 26 floor, so Unity raised it silently: every APK
-        /// built since the port declares minSdkVersion 26 while this constant,
-        /// ProjectSettings and the release checklist all said 24. Stating 26
-        /// here makes the file agree with the artifact. The cost is Android 7.x
-        /// and below, which the build had already dropped without saying so.
+        /// 26, and it has to be. GameActivity — which androidApplicationEntry
+        /// selects and which libgame.so exists for — has an API 26 floor, so
+        /// Unity raises it silently: every APK built since the port declares
+        /// minSdkVersion 26 while this constant, ProjectSettings and the
+        /// release checklist all said 24. Saying 26 here makes the source agree
+        /// with the artifact. The cost is Android 7.x and below, which the build
+        /// had already dropped without telling anyone.
         /// </summary>
         public const AndroidSdkVersions MinSdk = AndroidSdkVersions.AndroidApiLevel26;
         public const AndroidSdkVersions TargetSdk = (AndroidSdkVersions)36;

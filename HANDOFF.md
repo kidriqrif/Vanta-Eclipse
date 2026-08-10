@@ -36,8 +36,8 @@ Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) first.
 
 | Gate | Command | Result |
 |---|---|---|
-| Full sweep, 8 stages | `bash tools/validate_all.sh` | **FAILS at stage 8** |
-| Screens rendered | `bash tools/screenshots.sh` | 110 captures, 8 problems on 2 screens |
+| Full sweep, 8 stages | `bash tools/validate_all.sh` | **exit 0** |
+| Screens rendered | `bash tools/screenshots.sh` | 110 captures, 0 problems |
 | C# compile | (sweep stage 1) | clean |
 | Project invariants | `python tools/check_unity.py` | 6/6 OK |
 | Font coverage | `python tools/check_glyphs.py` | 95 characters, 106 glyphs |
@@ -86,20 +86,31 @@ Stage 8 now has a check for exactly that: nothing inside a `RectMask2D` may be
 wider than the mask. It is the only check here that can see a defect made
 entirely of missing pixels.
 
-**It still fails, on 5 captures out of 110, and the remainder is real:**
+**Then it found the last one, which was neither a collapse nor a clip.** The
+enemy hung up to 68px off the side of the display on the four tallest shapes,
+and the cause was a contract mismatch rather than a size. `SpriteHolder` covers
+`EnemyView` exactly, so the layout wrote it as a TOP-LEFT box of matching
+dimensions — but the idle hover resets the bob with `anchoredPosition =
+Vector2.zero`, which under top-left anchors means "put my centre on the parent's
+corner", not "sit where you were placed". `SceneBuilder` now builds an offset
+box that covers its parent exactly as a FILL: same pixels, right contract.
+`ClampToParent` keeps a fixed-size component inside its container as well, by
+SCALE rather than by rect — resizing the root leaves every child at its own size
+and merely moves the overflow down one level.
 
-- `Gameplay` — the enemy sprite hangs 45-68px off the bottom on the four
-  tallest shapes. The taller the display, the narrower the canvas gets in
-  reference units, and the vertical stack above the combat area does not
-  shrink with it.
-That is the tall-screen consequence described under "Text and device pixels";
-neither is a collapse. MinigameHost's captures are informational: with no board
-chosen it fades straight back to Arcade, and the harness now says so rather
-than reporting the black quarter-second as a blank screen.
+**Stage 8 is green: 110 captures, 0 problems, and so is the whole sweep.**
+MinigameHost's captures are informational — with no board chosen it fades
+straight back to Arcade, and the harness says so rather than reporting the black
+quarter-second as a blank screen.
 
 ---
 
-## NOT ready for Google Play
+## Ready to upload; not yet ready to launch
+
+Everything that can be produced or proven inside this repository is done and the
+sweep exits 0. What is left needs a Google account, a human accepting a licence,
+or a physical device — see `design/RELEASE-CHECKLIST.md` for the full list and
+`design/TESTING-GUIDE.md` for the order.
 
 **Three build blockers were found and fixed** (all three had been passing every
 stage of the sweep, which is why stage 8 now exists):
@@ -133,12 +144,25 @@ What remains:
 2. **Play Console forms not done**: Data Safety, IARC content rating, App
    access.
 
-3. **Two tall-screen layout defects** remain, listed under stage 8. Cosmetic,
-   not blocking, and now measured rather than guessed at.
+3. **The game has never run on a physical device.** Everything above was
+   verified headless. That is stage 2 of `TESTING-GUIDE.md` and it is the
+   highest-value hour left in the project — the debug APK is launchable for the
+   first time, so it can finally be done.
 
-The privacy policy blocker is **cleared**: GitHub Pages is on, the page is
-live at `https://kidriqrif.github.io/Vanta-Eclipse/privacy-policy.html`, the
-DRAFT banner is gone and the contact address is filled in. `SettingsMenu`
+4. **If the developer account is personal and post-2023-11-13**, Play requires a
+   closed test with 12 testers for 14 continuous days before production access.
+   Two weeks of calendar, not a form.
+
+The privacy policy is **live and dated**, at
+`https://kidriqrif.github.io/Vanta-Eclipse/privacy-policy.html`. The
+advertising version — full AdMob disclosure, Play Billing, `AD_ID`, opt-out
+routes, EEA/UK consent — is written and staged at `docs/privacy-policy-ads.html`
+but deliberately unpublished: the live page has to describe the app that
+actually installs, and that one has no adverts and no `INTERNET` permission.
+`production/monetisation-switch.md` is the atomic commit that swaps the policy,
+the two listing declarations, the Data Safety form and `UseStubProviders`
+together, because any one of them out of step with the others is a policy
+violation. `SettingsMenu`
 opens that exact URL.
 
 **Also verify before planning a launch date:** if the developer account is a
@@ -197,6 +221,20 @@ was `BannerHeadline`.
 ---
 
 ## Traps this project has actually hit
+
+- **A `Mask` builds its stencil from its graphic's ALPHA.** An Image at alpha 0,
+  added so a scroll viewport would not paint, is a stencil that rejects
+  everywhere: ten lists were built, laid out, measured and then clipped to
+  nothing while every check passed them. `RectMask2D` clips to the rect and
+  needs no graphic.
+- **A new `RectTransform`'s `sizeDelta` is (100, 100), not zero.** Under
+  stretched anchors that is an OFFSET from the parent's edges, so a freshly
+  created content object is 100 units wider than its viewport with 50 clipped
+  off each side. Same family as the 1500px enemy: sizeDelta under stretch
+  anchors is never a size.
+- **`[ExecuteAlways]` on a component that writes a serialized value edits your
+  assets.** `ClampToParent` wrote `localScale`, ran during a scene build, and
+  baked a 480 into a 500-unit prefab. It no longer runs outside play mode.
 
 The recurring failure is **a check that reports something other than what it
 verifies**. Found repeatedly; assume more exist.

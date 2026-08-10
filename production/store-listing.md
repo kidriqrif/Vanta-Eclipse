@@ -119,6 +119,6 @@ after integration — not before, and not from this file.
 |---|---|---|
 | App icon | 512×512 32-bit PNG, no alpha | ✅ `production/icons/store_icon_512.png` |
 | Feature graphic | 1024×500 PNG/JPG, no alpha | ✅ `production/icons/feature_graphic_1024x500.png` |
-| Phone screenshots | ≥2, 16:9 or 9:16, 320–3840px | ✅ `production/screenshots/` |
+| Phone screenshots | ≥2, 16:9 or 9:16, 320–3840px | ✅ six at 1080×1920 in `production/screenshots/`, regenerated from the shipping build by `tools/make_store_screenshots.py` |
 | Privacy policy URL | public, reachable | ✅ live at `https://kidriqrif.github.io/Vanta-Eclipse/privacy-policy.html`, which is the exact URL `SettingsMenu` opens |
 | Signed AAB | targeting current API level | ✅ `build/vanta-eclipse.aab`, targetSdk 36, arm64-v8a, 16 KB-aligned |

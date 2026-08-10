@@ -57,12 +57,44 @@ namespace VantaEclipse.UI
         Coroutine _idle;
         Coroutine _hit;
 
-        /// <summary>Bosses render larger (EnemyDefinition.viewScale); every
-        /// transform animation works relative to this base.</summary>
-        float _baseScale = 1f;
-        /// <summary>The glow tracks viewScale too, so a boss pools a boss-sized
-        /// light.</summary>
-        float _glowScale = 1f;
+        /// <summary>What the definition asked for. Bosses render larger.</summary>
+        float _wantedScale = 1f;
+
+        /// <summary>
+        /// The scale actually used, recomputed on every read.
+        ///
+        /// It cannot be resolved once and stored: the rects are still zero when
+        /// the first enemy spawns, so a value computed then is the UNCAPPED one
+        /// and the cap silently never applies. Every animation already reads
+        /// this per frame, so a property costs nothing and is always current.
+        /// </summary>
+        float _baseScale => FitScale(_wantedScale);
+
+        /// <summary>
+        /// The largest multiple of the authored sprite box that still fits the
+        /// canvas, never above the requested one.
+        ///
+        /// Measured against the CANVAS and not this view's own rect, because
+        /// the sprite holder is free to scale past its parent — nothing clips
+        /// it — so the parent's size says nothing about what will be visible.
+        /// </summary>
+        float FitScale(float wanted)
+        {
+            if (wanted <= 0f) return 1f;
+            if (_spriteHolder == null) return wanted;
+
+            var canvas = GetComponentInParent<Canvas>();
+            if (canvas == null) return wanted;
+            var frame = ((RectTransform)canvas.rootCanvas.transform).rect.size;
+
+            var box = _spriteHolder.rect.size;
+            if (box.x <= 0f || box.y <= 0f) return wanted;
+
+            return Mathf.Min(wanted, frame.x / box.x, frame.y / box.y);
+        }
+        /// <summary>The glow tracks the same scale, so a boss pools a
+        /// boss-sized light.</summary>
+        float _glowScale => _baseScale;
         Color _glowColor = Color.white;
 
         /// <summary>One material instance per view, so retinting the rim for
@@ -285,8 +317,17 @@ namespace VantaEclipse.UI
             _spriteImage.sprite = definition.texture;
             _spriteImage.color = Color.white;
             _glowColor = definition.glowColor;
-            _baseScale = definition.viewScale;
-            _glowScale = definition.viewScale;
+            // viewScale is what the creature WANTS; the screen is what it gets.
+            //
+            // A boss at viewScale 2 is a 1000-unit sprite in a 500-unit view,
+            // and that is fine at the reference shape because the canvas is
+            // 1080 wide. It is not fine anywhere else: the CanvasScaler matches
+            // on HEIGHT, so a taller display makes the canvas NARROWER in
+            // reference units — 864 at 20:9 — and the same creature hung 68px
+            // off both sides of the display. Capping here rather than in the
+            // definitions keeps every enemy's authored size honest and lets the
+            // shape decide, which is the only thing that actually knows.
+            _wantedScale = definition.viewScale;
 
             _spriteHolder.localScale = Vector3.one * _baseScale;
             _spriteHolder.localRotation = Quaternion.identity;

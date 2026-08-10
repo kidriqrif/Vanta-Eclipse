@@ -600,6 +600,30 @@ namespace VantaEclipse.EditorTools
                 float right = (float)offset["right"];
                 float top = (float)offset["top"];
                 float bottom = (float)offset["bottom"];
+
+                // AN OFFSET BOX THAT COVERS THE PARENT EXACTLY IS A FILL, and
+                // has to be built as one. Written as a top-left box it is the
+                // same pixels but a different contract: `anchoredPosition =
+                // Vector2.zero` then means "put my centre on the parent's
+                // top-left corner" instead of "sit where I was placed". That is
+                // exactly what happened to EnemyView's SpriteHolder — the idle
+                // hover resets the bob to zero every loop, and the creature
+                // jumped a quarter-screen left and drew half off the display on
+                // any shape narrower than the reference.
+                if (rect.parent is RectTransform host && !explicitAnchors)
+                {
+                    var room = host.rect.size;
+                    if (Mathf.Approximately(left, 0f) && Mathf.Approximately(top, 0f)
+                        && Mathf.Approximately(right, room.x)
+                        && Mathf.Approximately(bottom, room.y))
+                    {
+                        rect.anchorMin = Vector2.zero;
+                        rect.anchorMax = Vector2.one;
+                        rect.offsetMin = Vector2.zero;
+                        rect.offsetMax = Vector2.zero;
+                        return;
+                    }
+                }
                 rect.offsetMin = new Vector2(left, -bottom);
                 rect.offsetMax = new Vector2(right, -top);
             }
@@ -731,6 +755,10 @@ namespace VantaEclipse.EditorTools
             {
                 rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
                 rect.anchoredPosition = Vector2.zero;
+                // Centred is not the same as contained. The authored size is
+                // fixed and the container is not, so it also has to be told to
+                // stay inside one.
+                go.AddComponent<VantaEclipse.UI.ClampToParent>();
             }
 
             // A prefab dropped into a layout group has to declare a size. Its

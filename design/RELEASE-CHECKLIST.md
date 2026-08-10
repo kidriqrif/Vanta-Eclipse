@@ -83,14 +83,23 @@ All generated from the theme's own values, so the listing and the game agree.
 - [x] Feature graphic 1024×500.
 - [x] Listing copy, categorisation and Data Safety notes:
       `production/store-listing.md`.
-- [x] **Privacy policy is live** at
+- [x] **Privacy policy is live and dated** at
       `https://kidriqrif.github.io/Vanta-Eclipse/privacy-policy.html`, and
-      `SettingsMenu` opens that exact URL. Generated from
-      `docs/privacy-policy.html`; `tools/check_docs.py` keeps it honest.
-- [ ] **Re-capture the phone screenshots.** The six in
-      `production/screenshots/` are 540×960 renders from the previous engine and
-      no longer represent the app. `bash tools/screenshots.sh` produces 110 from
-      the real build at ten shapes — pick six.
+      `SettingsMenu` opens that exact URL. Source is `docs/privacy-policy.html`;
+      `tools/check_docs.py` keeps it honest.
+- [x] **The advertising version of the policy is written and staged** at
+      `docs/privacy-policy-ads.html` — full AdMob disclosure, Play Billing, the
+      `AD_ID` permission, the opt-out routes and the EEA/UK consent note. It is
+      deliberately NOT published: the live page has to describe the app that
+      actually installs, and that app has no adverts and no `INTERNET`
+      permission. `production/monetisation-switch.md` is the single atomic
+      commit that swaps it in.
+- [x] **Phone screenshots re-captured from the shipping build.** Six 1080×1920
+      PNGs in `production/screenshots/`, published by
+      `python tools/make_store_screenshots.py` straight out of the same captures
+      stage 8 gates on, with alpha flattened and every one of Play's limits
+      (count, bit depth, side length, aspect) checked rather than assumed. They
+      cannot drift from the build again without the sweep noticing.
 
 ## Blocking, outside this repository
 
@@ -121,10 +130,6 @@ All generated from the theme's own values, so the listing and the game agree.
       `TESTING-GUIDE.md` stage 2.
 
 ## Not blocking, but decide before launch
-
-- [ ] **Two layout defects on tall screens**, both reported by sweep stage 8:
-      the enemy sprite hangs 45–68px off the bottom above 18:9, and Gear's
-      relic tile label overlaps the row under it by 6–9px at 19.5:9 and taller.
 - [ ] **Text is pixel-exact at 1920 high and nowhere else.** The CanvasScaler
       matches on height against a 1080×1920 reference, so only integer factors
       land every 9px tier on whole glyph boxes. Three ways out, none taken:
@@ -137,6 +142,10 @@ All generated from the theme's own values, so the listing and the game agree.
       already returns exactly the document a provider would upload.
 - [ ] Localisation. Every string is inline English.
 - [ ] Analytics for the balance assumptions.
+
+## Monetisation — deliberately absent, and ready to switch on
+
+`production/monetisation-switch.md` is the whole list, as one atomic commit.
 
 ## Monetisation — deliberately absent
 
