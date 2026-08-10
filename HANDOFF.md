@@ -70,17 +70,29 @@ reproduced the hierarchy without it. Fixed at the two places that build UI — `
 converted scenes and `UIBuild.Frame` for the screens that build themselves in
 code — after which 9 of the 11 screens are clean at all ten shapes.
 
-**It still fails, on 8 captures out of 110, and both remainders are real:**
+**Then it found the one the measurements could not see.** Nine screens were
+rendering as a header over an empty rectangle, and every check passed them: the
+rows were built, laid out, sized and measured correctly, and then clipped away.
+`SceneBuilder` gave each scroll viewport a `Mask` driven by an Image at alpha 0
+so the viewport would not paint — and Mask builds its stencil from that alpha,
+so alpha 0 everywhere is a stencil that rejects everywhere. It is `RectMask2D`
+now, which clips to the rect and needs no graphic. Under it sat a second one:
+the scroll content object kept a new RectTransform's default `sizeDelta` of
+(100, 100) under stretched anchors, where that is an OFFSET from the parent's
+edges — every row came out 100 units wider than its viewport, 50 clipped off
+each side, so the first and last characters of every line were eaten.
+
+Stage 8 now has a check for exactly that: nothing inside a `RectMask2D` may be
+wider than the mask. It is the only check here that can see a defect made
+entirely of missing pixels.
+
+**It still fails, on 5 captures out of 110, and the remainder is real:**
 
 - `Gameplay` — the enemy sprite hangs 45-68px off the bottom on the four
   tallest shapes. The taller the display, the narrower the canvas gets in
   reference units, and the vertical stack above the combat area does not
   shrink with it.
-- `Gear` — the relic tile's three-line label overlaps the row under it by 6-9px
-  at 19.5:9 and taller, where a quarter of the canvas width is 221 units rather
-  than 250.
-
-Both are the tall-screen consequence described under "Text and device pixels";
+That is the tall-screen consequence described under "Text and device pixels";
 neither is a collapse. MinigameHost's captures are informational: with no board
 chosen it fades straight back to Arcade, and the harness now says so rather
 than reporting the black quarter-second as a blank screen.

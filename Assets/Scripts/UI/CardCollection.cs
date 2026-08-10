@@ -116,7 +116,7 @@ namespace VantaEclipse.UI
             // The rarity spine. A card's tier is the first thing a player sorts
             // on, so it is carried by an edge that survives being skimmed, not
             // by the text.
-            var spine = UIBuild.Bar(panel.Root.transform, tint, width: 6f);
+            var spine = UIBuild.Overlay(UIBuild.Bar(panel.Root.transform, tint, width: 6f));
             var spineRect = (RectTransform)spine.transform;
             spineRect.anchorMin = Vector2.zero;
             spineRect.anchorMax = new Vector2(0f, 1f);

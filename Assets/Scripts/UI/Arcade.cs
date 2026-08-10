@@ -192,8 +192,8 @@ namespace VantaEclipse.UI
                 VantaTheme.Line, borderWidth: 0f, padding: 16f, name: $"Game_{definition.id}");
 
             // The arcade "one class" spine on every card.
-            var spine = UIBuild.Bar(card.Root.transform,
-                unlocked ? ArcadeAccent : VantaTheme.Line, width: 4f);
+            var spine = UIBuild.Overlay(UIBuild.Bar(card.Root.transform,
+                unlocked ? ArcadeAccent : VantaTheme.Line, width: 4f));
             var spineRect = (RectTransform)spine.transform;
             spineRect.anchorMin = Vector2.zero;
             spineRect.anchorMax = new Vector2(0f, 1f);

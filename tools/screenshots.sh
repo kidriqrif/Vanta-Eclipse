@@ -63,6 +63,15 @@ status=$?
 # identical to a clean pass if nothing checks that work actually happened.
 count=$(find "$OUT" -name '*.png' 2>/dev/null | wc -l | tr -d ' ')
 echo "$count capture(s) in $OUT"
+
+# One image with every screen on it. The report is the gate; this is the thing
+# a person actually looks at, and looking is what caught the two defects the
+# measurements could not see — a list clipped to nothing by its own viewport,
+# and every row 50px wider than the frame that contained it.
+if [ "$count" -gt 0 ]; then
+	python tools/contact_sheet.py "$OUT/_contact-sheet.png" 2>/dev/null \
+		|| echo "   (no contact sheet — needs Pillow)"
+fi
 grep -E "^  HARNESS-FAIL|Harness: " "$LOG" | sed 's/^/   /'
 
 if [ "$count" -eq 0 ]; then

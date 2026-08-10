@@ -196,7 +196,7 @@ namespace VantaEclipse.UI
             {
                 UIBuild.Label(column.transform, slot.sealedFlavor, 18, VantaTheme.Muted);
                 // A lock glyph bottom-right marks the slot sealed beyond the tint.
-                var lockIcon = UIBuild.Icon(panel.Root.transform, UISprites.LockGlyph, 40f);
+                var lockIcon = UIBuild.Overlay(UIBuild.Icon(panel.Root.transform, UISprites.LockGlyph, 40f));
                 var lockRect = (RectTransform)lockIcon.transform;
                 lockRect.anchorMin = new Vector2(1f, 0f);
                 lockRect.anchorMax = new Vector2(1f, 0f);

@@ -158,6 +158,30 @@ namespace VantaEclipse.UI
             return component;
         }
 
+        /// <summary>
+        /// Mark a child as decoration the surrounding layout must not touch.
+        ///
+        /// REQUIRED for anything parented to a <see cref="Panel.Root"/> other
+        /// than its Content: the root carries a VerticalLayoutGroup so the
+        /// frame can hug its contents, and that group treats every child as a
+        /// row. A rarity spine anchored to the left edge became a full-width
+        /// band stacked above the card, and the card grew 100px wider than the
+        /// scroll viewport that was meant to contain it.
+        /// </summary>
+        public static T Overlay<T>(T component) where T : Component
+        {
+            Overlay(component.gameObject);
+            return component;
+        }
+
+        /// <inheritdoc cref="Overlay{T}(T)"/>
+        public static GameObject Overlay(GameObject go)
+        {
+            var element = go.GetComponent<LayoutElement>() ?? go.AddComponent<LayoutElement>();
+            element.ignoreLayout = true;
+            return go;
+        }
+
         public static T MinHeight<T>(T component, float height) where T : Component
         {
             var element = component.gameObject.GetComponent<LayoutElement>()

@@ -36,6 +36,20 @@ namespace VantaEclipse.EditorTools
         static readonly Vector2 ReferenceResolution = new(1080f, 1920f);
 
         /// <summary>
+        /// Scroll node -> the content object its children belong inside.
+        ///
+        /// A ScrollRect is three rects (viewport, content, children) where the
+        /// layout had one, so the object a path resolves to is not the object
+        /// built for that path. Cleared per layout; see ChildHost.
+        /// </summary>
+        static readonly Dictionary<GameObject, GameObject> ScrollContent = new();
+
+        /// <summary>Where a node's children are parented, which is the node
+        /// itself for everything except a scroll.</summary>
+        static GameObject ChildHost(GameObject go)
+            => go != null && ScrollContent.TryGetValue(go, out var content) ? content : go;
+
+        /// <summary>
         /// Layouts that are components, not screens.
         ///
         /// Unity splits the two: a Scene is loaded (one at a time, replacing
@@ -136,6 +150,7 @@ namespace VantaEclipse.EditorTools
             GameObject root = null;
             int count = 0;
             var built = new List<(GameObject Go, string Kind)>();
+            ScrollContent.Clear();
 
             foreach (JObject node in nodes)
             {
@@ -163,7 +178,7 @@ namespace VantaEclipse.EditorTools
                 var go = Make(kind, name, node, parent);
                 if (go == null) continue;
 
-                byPath[key == "" ? name : $"{key}/{name}"] = go;
+                byPath[key == "" ? name : $"{key}/{name}"] = ChildHost(go);
                 built.Add((go, kind));
                 count++;
             }
@@ -211,6 +226,7 @@ namespace VantaEclipse.EditorTools
             GameObject root = null;
             int count = 0;
             var built = new List<(GameObject Go, string Kind)>();
+            ScrollContent.Clear();
 
             foreach (JObject node in nodes)
             {
@@ -244,7 +260,7 @@ namespace VantaEclipse.EditorTools
                 if (go == null) continue;
 
                 string ownPath = key == "" ? name : $"{key}/{name}";
-                byPath[ownPath] = go;
+                byPath[ownPath] = ChildHost(go);
                 built.Add((go, kind));
                 count++;
             }
@@ -370,26 +386,54 @@ namespace VantaEclipse.EditorTools
                 case "Scroll":
                 {
                     var scroll = go.AddComponent<ScrollRect>();
-                    go.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
-                    go.AddComponent<Mask>().showMaskGraphic = false;
                     scroll.horizontal = false;
                     scroll.movementType = ScrollRect.MovementType.Elastic;
 
-                    // A ScrollRect needs a content child, but the layout puts
-                    // the scroll node's children directly under it. They are
-                    // parented to this content object by path lookup, so it
-                    // must carry the same name as the node.
+                    // RectMask2D, NOT Mask.
+                    //
+                    // Mask builds its stencil from a Graphic's ALPHA, and this
+                    // carried an Image at alpha 0 so the viewport would not
+                    // paint. Alpha 0 everywhere is a stencil that rejects
+                    // everywhere: every list in the game — arcade cards, quests,
+                    // shop products, eclipse powers, gear inventory, pets,
+                    // relics, the forge — was built correctly, laid out
+                    // correctly, measured correctly, and then clipped to
+                    // nothing. Ten screens rendered as a header over an empty
+                    // rectangle. RectMask2D clips to the rect and needs no
+                    // graphic at all, which is also what a scroll viewport
+                    // wants.
+                    go.AddComponent<RectMask2D>();
+
+                    // The scrollable content. The layout parents the scroll
+                    // node's children straight to the scroll node, so this
+                    // object is registered as their host below — without that
+                    // they land on the VIEWPORT, which pins them to its size
+                    // and leaves ScrollRect.content empty, so a list longer
+                    // than the frame overflows instead of scrolling.
                     var content = new GameObject("Content", typeof(RectTransform));
                     content.transform.SetParent(go.transform, false);
                     var contentRect = content.GetComponent<RectTransform>();
                     contentRect.anchorMin = new Vector2(0f, 1f);
                     contentRect.anchorMax = new Vector2(1f, 1f);
                     contentRect.pivot = new Vector2(0.5f, 1f);
+                    // A NEW RectTransform's sizeDelta is (100, 100), and the X
+                    // anchors above are stretched — where sizeDelta is an offset
+                    // from the parent's edges, not a size. Left at the default
+                    // it makes the content 100 units WIDER than the viewport,
+                    // 50 of it off each side, and a RectMask2D then eats the
+                    // first and last characters of every row in the list. The
+                    // height stays whatever the ContentSizeFitter computes.
+                    contentRect.sizeDelta = new Vector2(0f, contentRect.sizeDelta.y);
                     var fitter = content.AddComponent<ContentSizeFitter>();
                     fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-                    content.AddComponent<VerticalLayoutGroup>();
+                    var contentGroup = content.AddComponent<VerticalLayoutGroup>();
+                    contentGroup.childForceExpandWidth = true;
+                    contentGroup.childForceExpandHeight = false;
+                    contentGroup.childControlWidth = true;
+                    contentGroup.childControlHeight = true;
                     scroll.content = contentRect;
                     scroll.viewport = rect;
+                    ScrollContent[go] = content;
                     break;
                 }
 

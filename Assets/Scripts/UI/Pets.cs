@@ -121,7 +121,7 @@ namespace VantaEclipse.UI
                 borderWidth: 0f, padding: 0f, name: "XpBar");
             UIBuild.MinHeight(track.Root.transform, 46f);
 
-            var fill = UIBuild.Node("Fill", track.Root.transform);
+            var fill = UIBuild.Overlay(UIBuild.Node("Fill", track.Root.transform));
             var rect = (RectTransform)fill.transform;
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = new Vector2(Mathf.Clamp01(fraction), 1f);
@@ -163,7 +163,7 @@ namespace VantaEclipse.UI
                 borderWidth: isActive ? 2f : 0f, padding: 16f, name: $"Pet_{id}");
             UIBuild.MinHeight(panel.Root.transform, RosterRowHeight);
 
-            var spine = UIBuild.Bar(panel.Root.transform, Accent, width: 6f);
+            var spine = UIBuild.Overlay(UIBuild.Bar(panel.Root.transform, Accent, width: 6f));
             var spineRect = (RectTransform)spine.transform;
             spineRect.anchorMin = Vector2.zero;
             spineRect.anchorMax = new Vector2(0f, 1f);

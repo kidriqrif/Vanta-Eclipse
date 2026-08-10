@@ -284,6 +284,7 @@ namespace VantaEclipse.EditorTools
                             {
                                 Measure(shape, problems, out texts, out scale);
                                 MeasureOverlap(problems);
+                                MeasureClipped(problems);
                             }
                         }
 
@@ -532,6 +533,48 @@ namespace VantaEclipse.EditorTools
                         break;
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Nothing inside a scroll viewport may be wider than the viewport.
+        ///
+        /// Added because every other check passed a screen whose entire list
+        /// was clipped away. A RectMask2D deletes pixels silently: the rows are
+        /// built, laid out, sized and measured correctly, and simply never
+        /// reach the frame. Measuring RectTransforms cannot see it — the rects
+        /// are all exactly where they should be — and the blank-frame check
+        /// cannot either, because the header and the buttons outside the
+        /// viewport still cover more than its threshold.
+        ///
+        /// Vertical overflow is the POINT of a scroll view and is not checked.
+        /// Horizontal overflow never is: the layout is one column wide.
+        /// </summary>
+        static void MeasureClipped(List<string> problems)
+        {
+            var corners = new Vector3[4];
+            foreach (var mask in UnityEngine.Object.FindObjectsByType<RectMask2D>(
+                         FindObjectsSortMode.None))
+            {
+                if (!mask.isActiveAndEnabled) continue;
+                var view = (RectTransform)mask.transform;
+                view.GetWorldCorners(corners);
+                float viewMin = corners[0].x, viewMax = corners[2].x;
+
+                float worst = 0f;
+                string culprit = null;
+                foreach (var child in mask.GetComponentsInChildren<Graphic>(false))
+                {
+                    if (child.transform == view) continue;
+                    child.rectTransform.GetWorldCorners(corners);
+                    float over = Mathf.Max(viewMin - corners[0].x, corners[2].x - viewMax);
+                    if (over > worst) { worst = over; culprit = Name(child); }
+                }
+
+                // A pixel or two is rounding. Anything more is content the
+                // player never sees.
+                if (worst > 2f)
+                    problems.Add($"'{Name(mask)}' clips '{culprit}' by {worst:F0}px horizontally");
             }
         }
 

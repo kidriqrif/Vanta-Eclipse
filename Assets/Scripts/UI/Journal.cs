@@ -212,8 +212,8 @@ namespace VantaEclipse.UI
             // The spine brightens when a goal is claimable, so a reward waiting
             // to be collected is scannable down the left edge before reading a
             // word.
-            var spine = UIBuild.Bar(card.Root.transform,
-                claimable ? VantaTheme.Ink : VantaTheme.Fade(VantaTheme.Ink, 0.35f), width: 4f);
+            var spine = UIBuild.Overlay(UIBuild.Bar(card.Root.transform,
+                claimable ? VantaTheme.Ink : VantaTheme.Fade(VantaTheme.Ink, 0.35f), width: 4f));
             var spineRect = (RectTransform)spine.transform;
             spineRect.anchorMin = Vector2.zero;
             spineRect.anchorMax = new Vector2(0f, 1f);
@@ -256,7 +256,7 @@ namespace VantaEclipse.UI
             UIBuild.Expand(track.Root.transform);
             UIBuild.MinHeight(track.Root.transform, 28f);
 
-            var fill = UIBuild.Node("Fill", track.Root.transform);
+            var fill = UIBuild.Overlay(UIBuild.Node("Fill", track.Root.transform));
             var rect = (RectTransform)fill.transform;
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = new Vector2(fraction, 1f);

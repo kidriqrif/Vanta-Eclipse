@@ -137,8 +137,8 @@ namespace VantaEclipse.UI
             var card = UIBuild.Frame(_itemList, VantaTheme.Surface, VantaTheme.Line,
                 borderWidth: 0f, padding: 16f, name: name);
 
-            var spine = UIBuild.Bar(card.Root.transform,
-                VantaTheme.Fade(VantaTheme.Ink, 0.35f), width: 4f);
+            var spine = UIBuild.Overlay(UIBuild.Bar(card.Root.transform,
+                VantaTheme.Fade(VantaTheme.Ink, 0.35f), width: 4f));
             var spineRect = (RectTransform)spine.transform;
             spineRect.anchorMin = Vector2.zero;
             spineRect.anchorMax = new Vector2(0f, 1f);
