@@ -63,11 +63,40 @@ Plays in portrait, one-handed, offline.
 `[1662]`
 
 > The FAIR BY DESIGN paragraph above is written for the **current, unmonetised
-> build**. The original copy described opt-in ads and cosmetic purchases, which
-> is the design intent but not what installs today — and a listing that
-> promises "the option to skip the ads" for an app with no ads is a
-> misrepresentation. Restore the longer version alongside
+> build**. A listing that promises "the option to skip the ads" for an app with
+> no ads is a misrepresentation, so it says what installs today. The monetised
+> replacement is written out below; swap the two in the same commit that sets
 > `UseStubProviders = false`.
+
+### FAIR BY DESIGN — the monetised replacement
+
+Paste this over the paragraph above when, and only when, the advert SDK and Play
+Billing are actually in the bundle. It describes what `MonetizationManager`
+enforces in code, not an aspiration: `PaidSurfacesAvailable` hides every paid
+surface, `RunOffer` grants the base reward before any offer is made, and
+`dailyCap` is checked twice before a watch is even offered.
+
+```
+FAIR BY DESIGN
+No mechanic in this game is behind a paywall. There is no energy meter, no
+timer blocking a door, and no way to buy power.
+
+Ads are offered, never forced. Every one is a bonus on top of something you
+have already earned — never a gate on receiving it — and there is a daily
+limit on each, so watching more is never the best way to play. Say no and
+nothing is taken away.
+
+Remove Ads makes every one of those bonuses free and instant, forever. It
+removes the chore, not the reward.
+
+Every cosmetic can be earned by playing.
+
+Plays in portrait, one-handed, offline.
+```
+`[~640 with the rest of the description]`
+
+> Note the last line moves inside the block — the current copy ends the
+> description with it, and the replacement paragraph is the new ending.
 
 ---
 

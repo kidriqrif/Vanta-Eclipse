@@ -30,14 +30,62 @@ rejected. **Serving ads you did not declare gets the app suspended.**
 
 ---
 
+## What only the account holder can supply
+
+None of this can be produced from inside the repository, and the code cannot be
+written blind against it — an ad unit ID is not guessable and a billing
+integration cannot be tested without a Play Console that has the SKUs in it.
+
+| Needed | Where it comes from | Blocks |
+|---|---|---|
+| AdMob account + app registered for Android | admob.google.com, free | everything advert |
+| **App ID** `ca-app-pub-…~…` | AdMob, per app | goes in `GoogleMobileAdsSettings`; a wrong one crashes on launch |
+| **Rewarded ad unit IDs** ×3 | AdMob, one per placement | `arcade_token`, `essence_boost`, `offline_double` |
+| A certified CMP configured for EEA/UK | AdMob → Privacy & messaging | lawful ads in Europe, and the promise the policy already makes |
+| Play Console app entry, package uploaded once | play.google.com/console | Billing cannot be tested until a build with the library is on a track |
+| **Three SKUs created and activated** | Play Console → Products | `vanta_remove_ads`, `vanta_starter_pack`, `vanta_shards_small` |
+| Prices confirmed per SKU | Play Console | $4.99 / $2.99 / $1.99 are the current placeholders |
+| A licence-tester account | Play Console → Setup → Licence testing | buying without being charged |
+| A decision on receipt validation | you | see below — it is the one item with a cost attached |
+
+**Receipt validation is the fork in the road.** Client-only "the purchase
+succeeded" is trivially spoofable on a rooted device. Validating properly means
+a server — Cloud Functions, a small VPS, anything — holding a Google Play
+service-account key and answering "does this token entitle this account". That
+is a running service with a bill, however small, attached to an app that
+currently has no backend at all and no `INTERNET` permission. The honest
+alternative for a $4.99 cosmetic-and-convenience SKU is to accept client-side
+grants and treat the save file as the record, which is what the code does
+today. It is a real trade-off and it is yours to make.
+
+---
+
 ## The list
 
 ### Code
-- [ ] Add the Google Mobile Ads Unity package and Play Billing.
+- [ ] Add the Google Mobile Ads Unity package and Play Billing. **Neither is in
+      `Packages/manifest.json` today** — the dependency list is ten Unity
+      modules and Newtonsoft, nothing else. That is why the bundle can honestly
+      declare no advert SDK.
 - [ ] Implement `UnityAdProvider : IAdProvider` and
       `UnityBillingProvider : IBillingProvider` in
       `Assets/Scripts/Monetization/Providers.cs`, including `RestorePurchases()`
-      — the Shop already calls it.
+      — the Shop already calls it. Both classes exist and both deliberately
+      **refuse**: they log an error and report failure rather than returning the
+      stub's silent success, so a half-finished switch cannot grant anything.
+- [ ] **The EEA/UK consent form (Google UMP) is a separate integration.**
+      `docs/privacy-policy-ads.html` already promises that "the advert SDK will
+      ask for your consent, or offer you a way to refuse". AdMob does not do
+      that on its own — it needs the User Messaging Platform SDK and a certified
+      CMP configured in the AdMob console, gathered *before* the first ad
+      request. Without it that sentence is a false statement to European users
+      and serving personalised ads there is a GDPR problem, not just a policy
+      one.
+- [ ] **Show the store's localised price, not `priceText`.** Every product asset
+      carries a hardcoded `"$4.99"`-style string and `Shop.MakeProductCard`
+      renders it directly. Play Billing returns the real, currency-correct price
+      per user; a British player must not be shown dollars. Query the SKU and
+      keep `priceText` only as the pre-connection fallback.
 - [ ] **Server-side receipt validation.** A client-only "purchase succeeded" is
       trivially spoofable. Nothing that costs real money may be granted on the
       client's word alone.
@@ -83,6 +131,45 @@ rejected. **Serving ads you did not declare gets the app suspended.**
       advert a bonus rather than a gate, nothing pay-gated — is what the
       replacement paragraph should say, because that is what the code enforces
       through `MonetizationManager`.
+
+---
+
+## What is already built, and does not need touching
+
+The whole surface exists and is wired; only the two providers are hollow.
+
+| | |
+|---|---|
+| Rewarded placements | `arcade_token` (1 token, 3/day), `essence_boost` (600s of essence at the live rate, 5/day), `offline_double` (doubles the collection, 3/day, contextual) |
+| Products | `remove_ads` $4.99, `starter_pack` $2.99, `shards_small` $1.99 — SKUs `vanta_remove_ads`, `vanta_starter_pack`, `vanta_shards_small` |
+| Surfaces | Shop offers tab, Arcade's out-of-tokens offer, the offline modal's doubler, Restore Purchases |
+| `remove_ads` behaviour | every offer becomes one-tap and instant; the daily caps still apply, so it removes the chore and never the balance |
+| Integrity | a use is burned only on a completed watch that actually paid; entitlements survive a definition that fails to load; a double-tap cannot run two |
+
+## What is NOT optimised, and is a decision rather than a bug
+
+- **Nothing upsells `remove_ads`.** It is one card on the Shop's offers tab and
+  appears nowhere else. The moment a remove-ads SKU converts is the moment a
+  player has just watched their third advert of the day and is told "none left
+  today" — and that string is rendered by `Shop.MakeOfferCard` with no route to
+  the product sitting two cards below it. Same for the Arcade offer and the
+  offline modal, both of which say *watch* without ever saying *or don't*.
+- **`essence_boost` is worth 10 minutes; `offline_double` is worth up to 8.**
+  The offline cap is `IdleManager.OfflineCapSeconds` = 8h before Long Slumber
+  extends it, so the contextual placement can pay ~48× what the standing one
+  does for the same 30-second advert. Players learn that ratio fast and the
+  Shop's offers go dead. Either raise `rewardAmount` or accept that the offline
+  doubler is the real placement and the other two are garnish.
+- **One shard pack against a 320-shard shortfall.** ~420 shards are earnable
+  and every cosmetic costs 740, so the gap is exactly 1.6 × `shards_small`.
+  A player who wants the last two trails must buy the same $1.99 pack twice
+  and overshoot. A second, larger tier would price the whole set in one go.
+- **`starter_pack` is permanent and unframed.** Starter packs convert on
+  first-session urgency; this one is card five in a list, forever.
+
+None of these block the switch. They are the difference between monetisation
+that exists and monetisation that earns, and each one is a design call rather
+than a defect — which is why they are listed here and not in the checklist.
 
 ---
 
