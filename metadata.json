@@ -1,0 +1,8 @@
+{
+  "name": "Vanta Eclipse",
+  "description": "An idle RPG in the dark featuring tap combat, auto-attackers, boss gates, equipment forge, relics, pets, eclipse prestige, 7 arcade minigames, quests, and offline rewards.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
