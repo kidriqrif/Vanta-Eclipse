@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { AdMob } from '@capacitor-community/admob';
 import { GameProvider } from './context/GameContext';
 import { Header } from './components/Header';
 import { CombatArena } from './components/CombatArena';
@@ -58,6 +59,20 @@ const GameApp: React.FC = () => {
 };
 
 export default function App() {
+  useEffect(() => {
+    const initAds = async () => {
+      try {
+        await AdMob.initialize({
+          // testingDevices: ['YOUR_TEST_DEVICE_ID'], // Uncomment and add your device ID for safe testing
+        });
+        console.log('AdMob initialized successfully');
+      } catch (err) {
+        console.warn('AdMob initialization failed (expected on web):', err);
+      }
+    };
+    initAds();
+  }, []);
+
   return (
     <GameProvider>
       <GameApp />

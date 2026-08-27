@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import { AdMob, RewardAdOptions, RewardAdPluginEvents } from '@capacitor-community/admob';
 import {
   CurrencyType,
   CombatState,
@@ -125,7 +126,7 @@ interface GameContextType {
   buyCosmetic: (id: string) => boolean;
   buyProduct: (productId: string) => boolean;
   adWatchCounts: Record<string, { date: string; count: number }>;
-  watchAd: (placementId: string) => boolean;
+  watchAd: (placementId: string) => Promise<boolean>;
   hasRemovedAds: boolean;
 
   // Settings
@@ -1184,7 +1185,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 
   const watchAd = useCallback(
-    (placementId: string): boolean => {
+    async (placementId: string): Promise<boolean> => {
       const adDef = ADS.find((a) => a.id === placementId);
       if (!adDef) return false;
 
@@ -1194,19 +1195,57 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (!hasRemovedAds && todayCount >= adDef.dailyCap) return false;
 
-      setAdWatchCounts((prev) => ({
-        ...prev,
-        [placementId]: { date: today, count: todayCount + 1 },
-      }));
+      const grantReward = () => {
+        setAdWatchCounts((prev) => ({
+          ...prev,
+          [placementId]: { date: today, count: todayCount + 1 },
+        }));
 
-      sound.play('claim');
-      if (adDef.rewardKind === 'TOKEN') {
-        setTokens((prev) => Math.min(TOKEN_CAP, prev + 1));
-      } else if (adDef.rewardKind === 'ESSENCE') {
-        const rate = liveEssenceRate > 0 ? liveEssenceRate : 5;
-        addCurrency('essence', Math.round(rate * adDef.rewardAmount));
+        sound.play('claim');
+        if (adDef.rewardKind === 'TOKEN') {
+          setTokens((prev) => Math.min(TOKEN_CAP, prev + 1));
+        } else if (adDef.rewardKind === 'ESSENCE') {
+          const rate = liveEssenceRate > 0 ? liveEssenceRate : 5;
+          addCurrency('essence', Math.round(rate * adDef.rewardAmount));
+        }
+      };
+
+      if (hasRemovedAds) {
+        grantReward();
+        return true;
+      } else {
+        try {
+          const options: RewardAdOptions = {
+            adId: 'ca-app-pub-3940256099942544/5224354917', // Test Ad Unit ID
+          };
+          
+          await AdMob.prepareRewardVideoAd(options);
+          
+          return new Promise<boolean>((resolve) => {
+            const rewardListener = AdMob.addListener(RewardAdPluginEvents.Rewarded, () => {
+              grantReward();
+              rewardListener.then(l => l.remove());
+              dismissListener.then(l => l.remove());
+              resolve(true);
+            });
+
+            const dismissListener = AdMob.addListener(RewardAdPluginEvents.Dismissed, () => {
+              rewardListener.then(l => l.remove());
+              dismissListener.then(l => l.remove());
+              resolve(false);
+            });
+
+            AdMob.showRewardVideoAd().catch(() => {
+              rewardListener.then(l => l.remove());
+              dismissListener.then(l => l.remove());
+              resolve(false);
+            });
+          });
+        } catch (error) {
+          console.error("Ad failed to load:", error);
+          return false;
+        }
       }
-      return true;
     },
     [adWatchCounts, addCurrency, hasRemovedAds, liveEssenceRate]
   );
