@@ -1,0 +1,8 @@
+{
+	"appId": "com.vantrexagames.vantaeclipse",
+	"appName": "Vanta Eclipse",
+	"webDir": "dist",
+	"server": {
+		"androidScheme": "https"
+	}
+}

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Vanta Eclipse</string>
+    <string name="title_activity_main">Vanta Eclipse</string>
+    <string name="package_name">com.vantrexagames.vantaeclipse</string>
+    <string name="custom_url_scheme">com.vantrexagames.vantaeclipse</string>
+</resources>

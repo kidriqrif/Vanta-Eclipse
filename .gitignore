@@ -113,3 +113,9 @@ build/
 # files of CMake caches and ninja graphs were committed and pushed to the
 # public remote before this line existed.
 .utmp/
+-e 
+# Node
+node_modules/
+
+# Build
+dist/
