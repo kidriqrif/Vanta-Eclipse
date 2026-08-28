@@ -216,6 +216,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                     <Trash2 size={13} /> WIPE SAVE DATA
                   </button>
                 )}
+          {/* Legal Links */}
+          {activeTab === 'SETTINGS' && (
+            <div className="flex justify-center pt-2 pb-1">
+              <a
+                href="/privacy-policy.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] text-[#8686A2] hover:text-[#3EDCFA] underline"
+              >
+                Privacy Policy
+              </a>
+            </div>
+          )}
               </div>
             </>
           ) : (
@@ -261,6 +274,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+          {/* Legal Links */}
+          {activeTab === 'SETTINGS' && (
+            <div className="flex justify-center pt-2 pb-1">
+              <a
+                href="/privacy-policy.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] text-[#8686A2] hover:text-[#3EDCFA] underline"
+              >
+                Privacy Policy
+              </a>
             </div>
           )}
         </div>
