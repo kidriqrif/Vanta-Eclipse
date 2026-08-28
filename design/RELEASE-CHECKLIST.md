@@ -24,7 +24,7 @@ Google account, a human accepting a licence, or a physical device.
 - [x] **Debug APK** — `bash tools/build_android.sh debug`. Verified rather than
       merely produced: `apksigner` confirms APK Signature Scheme v2, and
       `aapt2 dump badging` reports package `com.kidriqrif.vantaeclipse`,
-      versionCode 2, **minSdk 26 / targetSdk 36**, arm64-v8a, exactly one real
+      versionCode 3, **minSdk 26 / targetSdk 36**, arm64-v8a, exactly one real
       permission (`VIBRATE`), and a **launchable activity**.
 
       > The launcher-activity check is a hard failure in the script because an
