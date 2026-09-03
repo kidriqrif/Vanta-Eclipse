@@ -26,8 +26,11 @@ import {
   QUESTS,
   COSMETICS,
   ADS,
+  DAILY_ALL_CLEAR_REWARDS,
+  getDailyQuestIdsForDate,
 } from '../data/definitions';
 import { sound } from '../utils/audio';
+import { playGamesService } from '../services/playGamesService';
 
 const STORAGE_KEY = 'vanta_eclipse_save_v1';
 const AUTO_ATTACK_UNLOCK_LEVEL = 15;
@@ -94,6 +97,7 @@ interface GameContextType {
   eclipseCount: number;
   calculateEclipsePayout: () => number;
   performEclipse: () => boolean;
+  eclipsePhase: 'none' | 'fading' | 'flashing' | 'recovering';
 
   // Stats
   tapDamage: number;
@@ -114,10 +118,15 @@ interface GameContextType {
 
   // Journal / Quests
   questCounters: Record<string, number>;
+  dailyQuestCounters: Record<string, number>;
   completedQuests: string[];
   claimedQuests: string[];
+  dailyClaimedQuests: string[];
+  dailyAllClearClaimed: boolean;
   claimQuestReward: (questId: string) => boolean;
+  claimDailyAllClearReward: () => boolean;
   activeDailyIds: string[];
+  lastDailyDate: string;
 
   // Shop & Monetization
   purchasedProducts: string[];
@@ -154,6 +163,13 @@ interface GameContextType {
 
 const GameContext = createContext<GameContextType | null>(null);
 
+// Unique ID generator for equipment items and cards
+let globalEntityIdCounter = Math.floor(Math.random() * 1000);
+const generateUniqueId = (): number => {
+  globalEntityIdCounter += 1;
+  return Date.now() * 1000 + (globalEntityIdCounter % 1000);
+};
+
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Currencies
   const [currencies, setCurrencies] = useState<Record<CurrencyType, number>>({
@@ -176,6 +192,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [peakRunLevel, setPeakRunLevel] = useState<number>(1);
   const [lifetimePeakLevel, setLifetimePeakLevel] = useState<number>(1);
   const [eclipseCount, setEclipseCount] = useState<number>(0);
+  const [eclipsePhase, setEclipsePhase] = useState<'none' | 'fading' | 'flashing' | 'recovering'>('none');
   const [unlockedWorlds, setUnlockedWorlds] = useState<string[]>(['dark_forest']);
   const [newWorldUnlockedModal, setNewWorldUnlockedModal] = useState<string | null>(null);
 
@@ -214,11 +231,38 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     eclipses: 0,
     minigame_played: 0,
     minigame_wins: 0,
+    taps: 0,
+    salvage: 0,
+    forge: 0,
+    cards_absorbed: 0,
+    essence_earned: 0,
+  });
+  const [dailyQuestCounters, setDailyQuestCounters] = useState<Record<string, number>>({
+    daily_kills: 0,
+    daily_boss_wins: 0,
+    daily_taps: 0,
+    daily_upgrades_bought: 0,
+    daily_items_dropped: 0,
+    daily_minigame_played: 0,
+    daily_minigame_wins: 0,
+    daily_salvage: 0,
+    daily_forge: 0,
+    daily_cards_absorbed: 0,
+    daily_essence_earned: 0,
   });
   const [completedQuests, setCompletedQuests] = useState<string[]>([]);
   const [claimedQuests, setClaimedQuests] = useState<string[]>([]);
-  const [activeDailyIds, setActiveDailyIds] = useState<string[]>(['d_slayer', 'd_bosses', 'd_shopper']);
-  const [lastDailyDate, setLastDailyDate] = useState<string>('');
+  const [dailyClaimedQuests, setDailyClaimedQuests] = useState<string[]>([]);
+  const [dailyAllClearClaimed, setDailyAllClearClaimed] = useState<boolean>(false);
+  const [activeDailyIds, setActiveDailyIds] = useState<string[]>(() => {
+    const d = new Date();
+    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return getDailyQuestIdsForDate(today);
+  });
+  const [lastDailyDate, setLastDailyDate] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
 
   // Shop & Monetization
   const [purchasedProducts, setPurchasedProducts] = useState<string[]>([]);
@@ -254,8 +298,14 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // --- Helper to increment journal counters ---
   const bumpCounter = useCallback((metric: string, amount: number = 1) => {
     setQuestCounters((prev) => {
-      const current = prev[metric] || 0;
-      return { ...prev, [metric]: current + amount };
+      const baseKey = metric.replace(/^daily_/, '');
+      const current = prev[baseKey] || 0;
+      return { ...prev, [baseKey]: current + amount };
+    });
+    setDailyQuestCounters((prev) => {
+      const dailyKey = metric.startsWith('daily_') ? metric : `daily_${metric}`;
+      const current = prev[dailyKey] || 0;
+      return { ...prev, [dailyKey]: current + amount };
     });
   }, []);
 
@@ -458,7 +508,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const cardVigor = Math.round(10 * rarityDef.potency * (0.85 + Math.random() * 0.3));
 
       const newCard: Card = {
-        id: Date.now() + Math.floor(Math.random() * 1000),
+        id: generateUniqueId(),
         bossId: currentEnemyDef.id,
         bossName: currentEnemyDef.displayName,
         rarity,
@@ -522,14 +572,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       const droppedItem: Item = {
-        id: nextItemId,
+        id: generateUniqueId(),
         slot: chosenSlot,
         rarity: gearRarity,
         itemLevel: enemyLevel,
         affixes: itemAffixes,
         seen: false,
       };
-      setNextItemId((prev) => prev + 1);
       setInventory((prev) => [droppedItem, ...prev]);
       bumpCounter('items_dropped', 1);
 
@@ -588,14 +637,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         const droppedItem: Item = {
-          id: nextItemId,
+          id: generateUniqueId(),
           slot: chosenSlot,
           rarity: gearRarity,
           itemLevel: enemyLevel,
           affixes: itemAffixes,
           seen: false,
         };
-        setNextItemId((prev) => prev + 1);
         setInventory((prev) => [droppedItem, ...prev]);
         bumpCounter('items_dropped', 1);
       }
@@ -651,6 +699,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         sound.play('crit_hit');
       } else {
         sound.play('tap_hit');
+      }
+
+      if (!isAuto) {
+        bumpCounter('taps', 1);
       }
 
       setIsEnemyHit(true);
@@ -864,6 +916,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       setInventory((prev) => prev.filter((i) => i.id !== itemId));
       addCurrency('void_scraps', scraps);
+      bumpCounter('salvage', 1);
       sound.play('claim');
       return scraps;
     },
@@ -886,6 +939,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (total > 0) {
       addCurrency('void_scraps', total);
+      bumpCounter('salvage', Math.round(total / 2));
       sound.play('claim');
     }
     return total;
@@ -919,7 +973,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       const newItem: Item = {
-        id: nextItemId,
+        id: generateUniqueId(),
         slot,
         rarity: gearRarity,
         itemLevel: enemyLevel,
@@ -927,12 +981,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         seen: true,
       };
 
-      setNextItemId((prev) => prev + 1);
       setInventory((prev) => [newItem, ...prev]);
+      bumpCounter('forge', 1);
       sound.play('loot');
       return newItem;
     },
-    [enemyLevel, nextItemId, trySpendCurrency]
+    [enemyLevel, trySpendCurrency]
   );
 
   const unseenItemCount = inventory.filter((i) => !i.seen).length;
@@ -960,6 +1014,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       setCards((prev) => prev.filter((c) => c.id !== cardId));
+      bumpCounter('cards_absorbed', 1);
       sound.play('fanfare');
       return true;
     },
@@ -1034,21 +1089,42 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const payout = calculateEclipsePayout();
     if (payout <= 0) return false;
 
-    sound.play('eclipse');
-    addCurrency('void_crystals', payout);
-    setEclipseCount((prev) => prev + 1);
-    bumpCounter('eclipses', 1);
+    // Start transition animation (fade to black)
+    setEclipsePhase('fading');
+    sound.play('click'); // Click sound to acknowledge
 
-    // Reset Run-scoped items
-    setCurrencies((prev) => ({
-      ...prev,
-      essence: 0,
-    }));
-    setUpgradeLevels({});
-    setEnemyLevel(1);
-    setPeakRunLevel(1);
-    setCombatState('NORMAL');
-    spawnEnemy(1, 'NORMAL');
+    setTimeout(() => {
+      // Flash to gold
+      setEclipsePhase('flashing');
+      sound.play('eclipse');
+      
+      // Perform state resets under the cover of the flash
+      addCurrency('void_crystals', payout);
+      setEclipseCount((prev) => prev + 1);
+      bumpCounter('eclipses', 1);
+
+      // Reset Run-scoped items
+      setCurrencies((prev) => ({
+        ...prev,
+        essence: 0,
+      }));
+      setUpgradeLevels({});
+      setEnemyLevel(1);
+      setPeakRunLevel(1);
+      setCombatState('NORMAL');
+      spawnEnemy(1, 'NORMAL');
+
+      // Recover from flash
+      setTimeout(() => {
+        setEclipsePhase('recovering');
+        
+        // Final reset back to standard gameplay
+        setTimeout(() => {
+          setEclipsePhase('none');
+        }, 1500); // 1.5s recovery fade
+      }, 500); // 500ms flash hold
+    }, 2500); // 2.5s fade to black
+
     return true;
   }, [addCurrency, bumpCounter, calculateEclipsePayout, spawnEnemy]);
 
@@ -1101,49 +1177,145 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 
   // --- Quest Claims ---
-  // Evaluate completions automatically
-  useEffect(() => {
-    QUESTS.forEach((quest) => {
-      if (completedQuests.includes(quest.id)) return;
-      let val = 0;
-      if (quest.metric === 'enemy_level') val = enemyLevel;
-      else if (quest.metric === 'relics_owned') val = ownedRelics.length;
-      else if (quest.metric === 'pets_owned') val = Object.keys(ownedPets).length;
-      else if (quest.metric === 'skills_bought') {
-        val = Object.values(skillLevels).reduce((a, b) => a + b, 0);
-      } else {
-        val = questCounters[quest.metric] || 0;
+  // Check and apply daily reset if date rolled over
+  const checkDailyReset = useCallback(() => {
+    const d = new Date();
+    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    setLastDailyDate((prevDate) => {
+      if (prevDate !== today) {
+        const freshDailies = getDailyQuestIdsForDate(today);
+        setActiveDailyIds(freshDailies);
+        setDailyQuestCounters({
+          daily_kills: 0,
+          daily_boss_wins: 0,
+          daily_taps: 0,
+          daily_upgrades_bought: 0,
+          daily_items_dropped: 0,
+          daily_minigame_played: 0,
+          daily_minigame_wins: 0,
+          daily_salvage: 0,
+          daily_forge: 0,
+          daily_cards_absorbed: 0,
+          daily_essence_earned: 0,
+        });
+        setDailyClaimedQuests([]);
+        setDailyAllClearClaimed(false);
+        return today;
       }
+      return prevDate;
+    });
+  }, []);
 
-      if (val >= quest.targetValue) {
-        setCompletedQuests((prev) => [...prev, quest.id]);
+  // Evaluate quest completions automatically
+  useEffect(() => {
+    checkDailyReset();
+    QUESTS.forEach((quest) => {
+      if (quest.kind === 'DAILY') {
+        if (completedQuests.includes(quest.id)) return;
+        const val = dailyQuestCounters[quest.metric] || 0;
+        if (val >= quest.targetValue) {
+          setCompletedQuests((prev) => [...prev, quest.id]);
+        }
+      } else {
+        if (completedQuests.includes(quest.id)) return;
+        let val = 0;
+        if (quest.metric === 'enemy_level') val = enemyLevel;
+        else if (quest.metric === 'relics_owned') val = ownedRelics.length;
+        else if (quest.metric === 'pets_owned') val = Object.keys(ownedPets).length;
+        else if (quest.metric === 'skills_bought') {
+          val = Object.values(skillLevels).reduce((a, b) => a + b, 0);
+        } else {
+          val = questCounters[quest.metric] || 0;
+        }
+
+        if (val >= quest.targetValue) {
+          setCompletedQuests((prev) => [...prev, quest.id]);
+          if (quest.kind === 'ACHIEVEMENT') {
+            playGamesService.unlockAchievement(quest.id);
+          }
+        }
       }
     });
-  }, [completedQuests, enemyLevel, ownedPets, ownedRelics.length, questCounters, skillLevels]);
+  }, [
+    checkDailyReset,
+    completedQuests,
+    dailyQuestCounters,
+    enemyLevel,
+    ownedPets,
+    ownedRelics.length,
+    questCounters,
+    skillLevels,
+  ]);
 
   const claimQuestReward = useCallback(
     (questId: string): boolean => {
       const quest = QUESTS.find((q) => q.id === questId);
-      if (!quest || !completedQuests.includes(questId) || claimedQuests.includes(questId)) {
-        return false;
-      }
+      if (!quest) return false;
 
-      if (quest.rewardKind === 'ESSENCE') {
-        addCurrency('essence', quest.rewardAmount);
-      } else if (quest.rewardKind === 'TOKENS') {
-        setTokens((prev) => Math.min(TOKEN_CAP, prev + quest.rewardAmount));
-      } else if (quest.rewardKind === 'CRYSTALS') {
-        addCurrency('void_crystals', quest.rewardAmount);
-      } else if (quest.rewardKind === 'SHARDS') {
-        addCurrency('astral_shards', quest.rewardAmount);
-      }
+      if (quest.kind === 'DAILY') {
+        if (dailyClaimedQuests.includes(questId)) return false;
+        const curVal = dailyQuestCounters[quest.metric] || 0;
+        if (curVal < quest.targetValue && !completedQuests.includes(questId)) return false;
 
-      setClaimedQuests((prev) => [...prev, questId]);
-      sound.play('goal');
-      return true;
+        if (quest.rewardKind === 'ESSENCE') {
+          addCurrency('essence', quest.rewardAmount);
+        } else if (quest.rewardKind === 'TOKENS') {
+          setTokens((prev) => Math.min(TOKEN_CAP, prev + quest.rewardAmount));
+        } else if (quest.rewardKind === 'CRYSTALS') {
+          addCurrency('void_crystals', quest.rewardAmount);
+        } else if (quest.rewardKind === 'SHARDS') {
+          addCurrency('astral_shards', quest.rewardAmount);
+        }
+
+        setDailyClaimedQuests((prev) => [...prev, questId]);
+        sound.play('goal');
+        return true;
+      } else {
+        if (!completedQuests.includes(questId) || claimedQuests.includes(questId)) {
+          return false;
+        }
+
+        if (quest.rewardKind === 'ESSENCE') {
+          addCurrency('essence', quest.rewardAmount);
+        } else if (quest.rewardKind === 'TOKENS') {
+          setTokens((prev) => Math.min(TOKEN_CAP, prev + quest.rewardAmount));
+        } else if (quest.rewardKind === 'CRYSTALS') {
+          addCurrency('void_crystals', quest.rewardAmount);
+        } else if (quest.rewardKind === 'SHARDS') {
+          addCurrency('astral_shards', quest.rewardAmount);
+        }
+
+        setClaimedQuests((prev) => [...prev, questId]);
+        if (quest.kind === 'ACHIEVEMENT') {
+          playGamesService.unlockAchievement(questId);
+        }
+        sound.play('goal');
+        return true;
+      }
     },
-    [addCurrency, claimedQuests, completedQuests]
+    [addCurrency, claimedQuests, completedQuests, dailyClaimedQuests, dailyQuestCounters]
   );
+
+  const claimDailyAllClearReward = useCallback((): boolean => {
+    if (dailyAllClearClaimed) return false;
+    const activeDailies = QUESTS.filter((q) => activeDailyIds.includes(q.id));
+    if (activeDailies.length === 0) return false;
+
+    const allFinished = activeDailies.every((q) => {
+      const val = dailyQuestCounters[q.metric] || 0;
+      return val >= q.targetValue || completedQuests.includes(q.id);
+    });
+
+    if (!allFinished) return false;
+
+    addCurrency('void_crystals', DAILY_ALL_CLEAR_REWARDS.crystals);
+    addCurrency('astral_shards', DAILY_ALL_CLEAR_REWARDS.shards);
+    addCurrency('essence', DAILY_ALL_CLEAR_REWARDS.essence);
+    setTokens((prev) => Math.min(TOKEN_CAP, prev + DAILY_ALL_CLEAR_REWARDS.tokens));
+    setDailyAllClearClaimed(true);
+    sound.play('fanfare');
+    return true;
+  }, [activeDailyIds, addCurrency, completedQuests, dailyAllClearClaimed, dailyQuestCounters]);
 
   // --- Shop & Monetization ---
   const hasRemovedAds = purchasedProducts.includes('remove_ads');
@@ -1304,10 +1476,47 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (save.eclipseCount) setEclipseCount(save.eclipseCount);
         if (save.unlockedWorlds) setUnlockedWorlds(save.unlockedWorlds);
         if (save.upgradeLevels) setUpgradeLevels(save.upgradeLevels);
-        if (save.equipped) setEquipped(save.equipped);
-        if (save.inventory) setInventory(save.inventory);
+        if (save.equipped) {
+          const sanitizedEq: Record<string, Item> = {};
+          const seenEqIds = new Set<number>();
+          Object.entries(save.equipped).forEach(([slotKey, itm]) => {
+            if (itm && typeof itm === 'object') {
+              const itemObj = itm as Item;
+              let itmId = itemObj.id;
+              if (!itmId || seenEqIds.has(itmId)) {
+                itmId = generateUniqueId();
+              }
+              seenEqIds.add(itmId);
+              sanitizedEq[slotKey] = { ...itemObj, id: itmId };
+            }
+          });
+          setEquipped(sanitizedEq);
+        }
+        if (save.inventory && Array.isArray(save.inventory)) {
+          const seenInvIds = new Set<number>();
+          const sanitizedInv: Item[] = save.inventory.map((item: Item) => {
+            let itmId = item.id;
+            if (!itmId || seenInvIds.has(itmId)) {
+              itmId = generateUniqueId();
+            }
+            seenInvIds.add(itmId);
+            return { ...item, id: itmId };
+          });
+          setInventory(sanitizedInv);
+        }
         if (save.nextItemId) setNextItemId(save.nextItemId);
-        if (save.cards) setCards(save.cards);
+        if (save.cards && Array.isArray(save.cards)) {
+          const seenCardIds = new Set<number>();
+          const sanitizedCards: Card[] = save.cards.map((card: Card) => {
+            let cardId = card.id;
+            if (!cardId || seenCardIds.has(cardId)) {
+              cardId = generateUniqueId();
+            }
+            seenCardIds.add(cardId);
+            return { ...card, id: cardId };
+          });
+          setCards(sanitizedCards);
+        }
         if (save.ownedPets) setOwnedPets(save.ownedPets);
         if (save.activePetId) setActivePetId(save.activePetId);
         if (save.relicsAwakened) setRelicsAwakened(save.relicsAwakened);
@@ -1319,6 +1528,38 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (save.questCounters) setQuestCounters(save.questCounters);
         if (save.completedQuests) setCompletedQuests(save.completedQuests);
         if (save.claimedQuests) setClaimedQuests(save.claimedQuests);
+
+        // Daily Quest Save State
+        const d = new Date();
+        const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        if (save.lastDailyDate === todayStr) {
+          if (save.dailyQuestCounters) setDailyQuestCounters(save.dailyQuestCounters);
+          if (save.dailyClaimedQuests) setDailyClaimedQuests(save.dailyClaimedQuests);
+          if (save.dailyAllClearClaimed !== undefined) setDailyAllClearClaimed(save.dailyAllClearClaimed);
+          if (save.activeDailyIds) setActiveDailyIds(save.activeDailyIds);
+          setLastDailyDate(save.lastDailyDate);
+        } else {
+          // Fresh daily rollover
+          const freshDailies = getDailyQuestIdsForDate(todayStr);
+          setActiveDailyIds(freshDailies);
+          setLastDailyDate(todayStr);
+          setDailyQuestCounters({
+            daily_kills: 0,
+            daily_boss_wins: 0,
+            daily_taps: 0,
+            daily_upgrades_bought: 0,
+            daily_items_dropped: 0,
+            daily_minigame_played: 0,
+            daily_minigame_wins: 0,
+            daily_salvage: 0,
+            daily_forge: 0,
+            daily_cards_absorbed: 0,
+            daily_essence_earned: 0,
+          });
+          setDailyClaimedQuests([]);
+          setDailyAllClearClaimed(false);
+        }
+
         if (save.purchasedProducts) setPurchasedProducts(save.purchasedProducts);
         if (save.activeCosmeticId) setActiveCosmeticId(save.activeCosmeticId);
         if (save.settings) {
@@ -1354,6 +1595,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {
       // Save load parse failure
     }
+    playGamesService.flushPendingSync();
   }, []);
 
   // Autosave periodically
@@ -1381,8 +1623,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         tokens,
         minigameRecords,
         questCounters,
+        dailyQuestCounters,
         completedQuests,
         claimedQuests,
+        dailyClaimedQuests,
+        dailyAllClearClaimed,
+        activeDailyIds,
+        lastDailyDate,
         purchasedProducts,
         activeCosmeticId,
         settings,
@@ -1413,8 +1660,13 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     tokens,
     minigameRecords,
     questCounters,
+    dailyQuestCounters,
     completedQuests,
     claimedQuests,
+    dailyClaimedQuests,
+    dailyAllClearClaimed,
+    activeDailyIds,
+    lastDailyDate,
     purchasedProducts,
     activeCosmeticId,
     settings,
@@ -1508,6 +1760,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         eclipseCount,
         calculateEclipsePayout,
         performEclipse,
+        eclipsePhase,
 
         tapDamage,
         critChance,
@@ -1525,10 +1778,15 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         finishMinigame,
 
         questCounters,
+        dailyQuestCounters,
         completedQuests,
         claimedQuests,
+        dailyClaimedQuests,
+        dailyAllClearClaimed,
         claimQuestReward,
+        claimDailyAllClearReward,
         activeDailyIds,
+        lastDailyDate,
 
         purchasedProducts,
         activeCosmeticId,

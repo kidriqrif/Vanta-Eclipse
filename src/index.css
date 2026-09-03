@@ -2,32 +2,50 @@
 
 @layer base {
   :root {
-    --color-void: #08080C;
-    --color-abyss: #171722;
-    --color-slate: #2C2C3C;
-    --color-iron: #4E4E66;
-    --color-ash: #8686A2;
-    --color-bone: #C8C8DA;
-    --color-ivory: #F6F6FC;
-    --color-blood: #B01228;
-    --color-crimson: #FF3A46;
-    --color-ember: #FF8A28;
-    --color-gold: #FFD23C;
-    --color-moss: #6ADC3E;
-    --color-frost: #3EDCFA;
-    --color-azure: #3E82FF;
-    --color-violet: #A85CFF;
-    --color-rose: #FF6EC0;
+    --color-void: #080A12;
+    --color-abyss: #040509;
+    --color-surface: #101426;
+    --color-panel: #101426;
+    --color-panel-secondary: #171D35;
+    --color-border: #30395C;
+    --color-text: #E8EDF7;
+    --color-text-dim: #8993B2;
+    --color-neon: #36D9FF;
+    --color-neon-bright: #7CF2FF;
+    --color-neon-dim: rgba(54, 217, 255, 0.2);
+    --color-neon-glow: rgba(54, 217, 255, 0.12);
+    --color-gold: #FFC857;
+    --color-crimson: #FF4268;
+    --color-disabled: #414866;
+    --color-green: #39FF14;
+    --color-purple: #A78BFA;
   }
 
   body {
-    background-color: #08080C;
-    color: #C8C8DA;
-    font-family: 'Space Mono', monospace, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background-color: #080A12;
+    color: #E8EDF7;
+    font-family: 'JetBrains Mono', 'Share Tech Mono', 'Space Mono', monospace;
     user-select: none;
     -webkit-user-select: none;
     touch-action: manipulation;
   }
+}
+
+.font-display {
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 0.08em;
+}
+
+.font-tech {
+  font-family: 'Share Tech Mono', monospace;
+}
+
+.font-mono-code {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.font-cinzel {
+  font-family: 'Orbitron', sans-serif;
 }
 
 .pixelated {
@@ -35,113 +53,258 @@
   image-rendering: crisp-edges;
 }
 
-/* Custom scrollbars matching theme */
+/* Sharp Terminal & HUD Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 ::-webkit-scrollbar-track {
-  background: #08080C;
+  background: #080A12;
 }
 ::-webkit-scrollbar-thumb {
-  background: #2C2C3C;
-  border-radius: 0px;
-  border: 1px solid #4E4E66;
+  background: #30395C;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #4E4E66;
+  background: #36D9FF;
 }
 
+/* Tactical HUD Panels */
+.hud-panel {
+  background-color: #101426;
+  border: 1px solid #30395C;
+  position: relative;
+}
+
+.hud-panel-dim {
+  background-color: #171D35;
+  border: 1px solid rgba(48, 57, 92, 0.6);
+  position: relative;
+}
+
+.hud-panel-active {
+  background-color: #17283A;
+  border: 1px solid #36D9FF;
+  box-shadow: inset 0 0 10px rgba(54, 217, 255, 0.12);
+}
+
+/* Tactical Crosshairs & Corner Brackets */
+.hud-corner {
+  position: relative;
+}
+.hud-corner::before {
+  content: '+';
+  position: absolute;
+  top: -6px;
+  left: -4px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: #36D9FF;
+  pointer-events: none;
+}
+.hud-corner::after {
+  content: '+';
+  position: absolute;
+  bottom: -6px;
+  right: -4px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: #36D9FF;
+  pointer-events: none;
+}
+
+/* Blocky High-Response Tactical Buttons */
+.hud-btn {
+  background: #101426;
+  border: 1px solid #36D9FF;
+  color: #36D9FF;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  transition: all 0.08s ease;
+  border-radius: 0px !important;
+}
+.hud-btn:hover:not(:disabled) {
+  background: #17283A;
+  border-color: #7CF2FF;
+  color: #7CF2FF;
+  box-shadow: 0 0 12px rgba(54, 217, 255, 0.35);
+}
+.hud-btn:active:not(:disabled) {
+  background: #36D9FF;
+  color: #080A12;
+  transform: translateY(1px);
+}
+.hud-btn:disabled {
+  opacity: 0.45;
+  border-color: #30395C;
+  color: #414866;
+  background: #101426;
+  cursor: not-allowed;
+}
+
+.hud-btn-alert {
+  background: #101426;
+  border: 1px solid #FF4268;
+  color: #FF4268;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  transition: all 0.08s ease;
+  border-radius: 0px !important;
+}
+.hud-btn-alert:hover:not(:disabled) {
+  background: #FF4268;
+  color: #080A12;
+  box-shadow: 0 0 12px rgba(255, 66, 104, 0.5);
+}
+
+.hud-btn-gold {
+  background: #171D35;
+  border: 1px solid #FFC857;
+  color: #FFC857;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  transition: all 0.08s ease;
+  border-radius: 0px !important;
+}
+.hud-btn-gold:hover:not(:disabled) {
+  background: #FFC857;
+  color: #080A12;
+  box-shadow: 0 0 12px rgba(255, 200, 87, 0.5);
+}
+
+/* Animations */
 @keyframes floatUpFade {
   0% {
     opacity: 1;
-    transform: translate(-50%, 0) scale(1);
+    transform: translate(-50%, 0);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -48px) scale(1.15);
+    transform: translate(-50%, -42px);
   }
 }
 
-@keyframes critFlash {
-  0% {
-    transform: scale(0.9);
-    filter: brightness(2) drop-shadow(0 0 8px #FF3A46);
+@keyframes enemyIdleFloat {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+    filter: drop-shadow(0 0 12px rgba(54, 217, 255, 0.25));
   }
   50% {
-    transform: scale(1.08);
-  }
-  100% {
-    transform: scale(1);
-    filter: brightness(1);
+    transform: translateY(-4px) scale(1.02);
+    filter: drop-shadow(0 0 20px rgba(54, 217, 255, 0.45));
   }
 }
 
 @keyframes enemyHitShake {
-  0% { transform: translate(0, 0); filter: brightness(1.7); }
-  20% { transform: translate(-4px, 2px); }
-  40% { transform: translate(4px, -2px); }
-  60% { transform: translate(-3px, -1px); }
-  80% { transform: translate(2px, 2px); }
-  100% { transform: translate(0, 0); filter: brightness(1); }
-}
-
-@keyframes bossGlow {
-  0%, 100% {
-    filter: drop-shadow(0 0 6px rgba(255, 58, 70, 0.4));
+  0% {
+    transform: scale(0.9) translate(0, 0);
+    filter: brightness(2.6) contrast(1.4) drop-shadow(0 0 20px #36D9FF) drop-shadow(0 0 8px #7CF2FF);
+  }
+  25% {
+    transform: scale(0.93) translate(-4px, 2px);
+    filter: brightness(2.0) drop-shadow(0 0 16px #36D9FF);
   }
   50% {
-    filter: drop-shadow(0 0 16px rgba(255, 58, 70, 0.85));
+    transform: scale(0.97) translate(4px, -2px);
+    filter: brightness(1.5) drop-shadow(0 0 12px #36D9FF);
+  }
+  75% {
+    transform: scale(1.02) translate(-1px, 1px);
+    filter: brightness(1.2) drop-shadow(0 0 8px #36D9FF);
+  }
+  100% {
+    transform: scale(1) translate(0, 0);
+    filter: brightness(1) drop-shadow(0 0 12px rgba(54, 217, 255, 0.25));
   }
 }
 
-@keyframes pulseGlow {
-  0%, 100% { opacity: 0.8; }
-  50% { opacity: 1; }
+@keyframes enemyCritShake {
+  0% {
+    transform: scale(0.88) translate(0, 0);
+    filter: brightness(3.0) contrast(1.5) drop-shadow(0 0 24px #FFC857) drop-shadow(0 0 12px #FFFFFF);
+  }
+  25% {
+    transform: scale(0.92) translate(-5px, 3px);
+    filter: brightness(2.2) drop-shadow(0 0 18px #FFC857);
+  }
+  50% {
+    transform: scale(0.96) translate(5px, -3px);
+    filter: brightness(1.6) drop-shadow(0 0 14px #FFC857);
+  }
+  75% {
+    transform: scale(1.03) translate(-2px, 1px);
+    filter: brightness(1.3) drop-shadow(0 0 10px #FFC857);
+  }
+  100% {
+    transform: scale(1) translate(0, 0);
+    filter: brightness(1) drop-shadow(0 0 12px rgba(54, 217, 255, 0.25));
+  }
+}
+
+@keyframes bossIdleFloat {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+    filter: drop-shadow(0 0 16px rgba(255, 66, 104, 0.6)) drop-shadow(0 0 6px rgba(255, 200, 87, 0.4));
+  }
+  50% {
+    transform: translateY(-5px) scale(1.03);
+    filter: drop-shadow(0 0 26px rgba(255, 66, 104, 0.9)) drop-shadow(0 0 10px rgba(255, 200, 87, 0.8));
+  }
+}
+
+@keyframes bossHitShake {
+  0% {
+    transform: scale(0.88) translate(0, 0);
+    filter: brightness(3.2) contrast(1.5) drop-shadow(0 0 28px #FF4268) drop-shadow(0 0 14px #FFC857) drop-shadow(0 0 8px #FFFFFF);
+  }
+  25% {
+    transform: scale(0.92) translate(-5px, 3px);
+    filter: brightness(2.4) drop-shadow(0 0 22px #FF4268) drop-shadow(0 0 10px #FFC857);
+  }
+  50% {
+    transform: scale(0.96) translate(5px, -3px);
+    filter: brightness(1.8) drop-shadow(0 0 16px #FF4268);
+  }
+  75% {
+    transform: scale(1.03) translate(-2px, 1px);
+    filter: brightness(1.3) drop-shadow(0 0 12px #FF4268);
+  }
+  100% {
+    transform: scale(1) translate(0, 0);
+    filter: brightness(1) drop-shadow(0 0 16px rgba(255, 66, 104, 0.6)) drop-shadow(0 0 6px rgba(255, 200, 87, 0.4));
+  }
+}
+
+@keyframes crtScanline {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100%; }
 }
 
 .anim-damage {
-  animation: floatUpFade 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation: floatUpFade 0.65s cubic-bezier(0.1, 1, 0.2, 1) forwards;
+}
+
+.anim-enemy-idle {
+  animation: enemyIdleFloat 2.8s ease-in-out infinite;
 }
 
 .anim-enemy-hit {
-  animation: enemyHitShake 0.22s ease-out;
+  animation: enemyHitShake 0.18s ease-out;
 }
 
-.anim-boss-glow {
-  animation: bossGlow 2.5s ease-in-out infinite;
+.anim-enemy-crit {
+  animation: enemyCritShake 0.22s ease-out;
 }
 
-/* Hard-corner pixel borders */
-.pixel-box {
-  border: 1px solid #4E4E66;
-  background-color: #171722;
+.anim-boss-idle {
+  animation: bossIdleFloat 1.8s ease-in-out infinite;
 }
 
-.pixel-btn {
-  border: 1px solid #4E4E66;
-  background-color: #2C2C3C;
-  color: #F6F6FC;
-  transition: all 0.08s ease-in-out;
-}
-.pixel-btn:hover:not(:disabled) {
-  background-color: #4E4E66;
-  border-color: #8686A2;
-}
-.pixel-btn:active:not(:disabled) {
-  transform: translateY(1px);
-}
-.pixel-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+.anim-boss-hit {
+  animation: bossHitShake 0.2s ease-out;
 }
 
-.pixel-btn-crimson {
-  border: 1px solid #FF3A46;
-  background-color: #B01228;
-  color: #F6F6FC;
-}
-.pixel-btn-crimson:hover:not(:disabled) {
-  background-color: #FF3A46;
-  border-color: #F6F6FC;
-}
+
+

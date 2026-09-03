@@ -2,271 +2,396 @@ import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { SLOTS, AFFIXES } from '../data/definitions';
 import { Item, ItemRarity } from '../types/game';
-import { formatNumber, formatPercent } from '../utils/numberFormat';
-import { Shield, Hammer, Trash2, ArrowUpCircle } from 'lucide-react';
+import { formatNumber } from '../utils/numberFormat';
+import {
+  Shield,
+  Trash2,
+  Hammer,
+  Layers,
+  X,
+  Check,
+  Zap,
+} from 'lucide-react';
 
-const RARITY_NAMES = ['COMMON', 'RARE', 'EPIC', 'LEGENDARY', 'MYTHIC'];
-const RARITY_COLORS = ['#C8C8DA', '#3EDCFA', '#A85CFF', '#FFD23C', '#FF6EC0'];
-const RARITY_BORDERS = [
-  'border-[#4E4E66]',
-  'border-[#3EDCFA]',
-  'border-[#A85CFF]',
-  'border-[#FFD23C]',
-  'border-[#FF6EC0]',
-];
+import weaponImg from '../assets/images/gear_weapon_1788270086273.jpg';
+import helmetImg from '../assets/images/gear_helmet_1788270118067.jpg';
+import armorImg from '../assets/images/gear_armor_1788270133056.jpg';
+import bootsImg from '../assets/images/gear_boots_1788270145701.jpg';
+import glovesImg from '../assets/images/gear_gloves_1788270173273.jpg';
+import ringImg from '../assets/images/gear_ring_1788270193874.jpg';
+
+const GEAR_IMAGES: Record<string, string> = {
+  weapon: weaponImg,
+  helmet: helmetImg,
+  armor: armorImg,
+  boots: bootsImg,
+  gloves: glovesImg,
+  ring: ringImg,
+};
+
+const RARITY_NAMES: Record<ItemRarity, string> = {
+  0: 'COMMON',
+  1: 'ENHANCED',
+  2: 'OVERCHARGED',
+  3: 'LEGENDARY',
+  4: 'MYTHIC',
+};
+
+const RARITY_COLORS: Record<ItemRarity, { text: string; bg: string; border: string }> = {
+  0: { text: '#D0D4DC', bg: 'bg-[#171D35]', border: 'border-white/20' },
+  1: { text: '#36D9FF', bg: 'bg-[#171D35]', border: 'border-[#36D9FF]' },
+  2: { text: '#36D9FF', bg: 'bg-[#171D35]', border: 'border-[#36D9FF]' },
+  3: { text: '#FFC857', bg: 'bg-[#171D35]', border: 'border-[#FFC857]' },
+  4: { text: '#FF4268', bg: 'bg-[#171D35]', border: 'border-[#FF4268]' },
+};
 
 export const GearPanel: React.FC = () => {
   const {
-    currencies,
     equipped,
     inventory,
+    currencies,
     equipItem,
     unequipItem,
     salvageItem,
     salvageAllCommons,
     forgeItem,
-    enemyLevel,
-    markAllItemsSeen,
   } = useGame();
 
-  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
-  const [selectedSlotForForge, setSelectedSlotForForge] = useState<string>('weapon');
+  const [selectedSlotFilter, setSelectedSlotFilter] = useState<string>('ALL');
+  const [inspectingItem, setInspectingItem] = useState<Item | null>(null);
+  const [isForgingSlot, setIsForgingSlot] = useState<string>('weapon');
 
-  // Mark unseen items as seen on viewing
-  React.useEffect(() => {
-    markAllItemsSeen();
-  }, [markAllItemsSeen]);
+  const forgeCost = 50;
+  const canForge = (currencies.void_scraps || 0) >= forgeCost;
 
-  const openSlots = SLOTS.filter((s) => !s.sealed);
+  const filteredInventory = inventory.filter((item) => {
+    if (selectedSlotFilter === 'ALL') return true;
+    return item.slot === selectedSlotFilter;
+  });
 
-  const formatAffixLine = (affixId: string, val: number) => {
-    const def = AFFIXES.find((a) => a.id === affixId);
-    if (!def) return `${affixId} +${val}`;
-    const displayVal = def.isPercent ? formatPercent(val) : `+${formatNumber(val)}`;
-    return def.displayTemplate.replace('{value}', displayVal);
+  const getSlotDef = (slotId: string) => SLOTS.find((s) => s.id === slotId);
+
+  const getAffixText = (affixKey: string, value: number) => {
+    const def = AFFIXES.find((a) => a.id === affixKey || a.stat === affixKey);
+    if (!def) return `${affixKey}: +${value}`;
+    if (def.isPercent) {
+      return def.displayTemplate.replace('{value}', `${(value * 100).toFixed(1)}%`);
+    }
+    return def.displayTemplate.replace('{value}', `${value.toFixed(1)}`);
   };
 
-  const commonsCount = inventory.filter((i) => i.rarity === 0).length;
+  const handleForge = () => {
+    const created = forgeItem(isForgingSlot);
+    if (created) {
+      setInspectingItem(created);
+    }
+  };
 
   return (
-    <div className="flex-1 flex flex-col p-3 overflow-y-auto bg-[#08080C] gap-3">
-      {/* Top Equipped Slots Matrix */}
-      <div className="bg-[#171722] border border-[#4E4E66] p-2.5 flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-[#F6F6FC] flex items-center gap-1.5">
-            <Shield size={14} className="text-[#3EDCFA]" /> EQUIPPED GEAR
-          </span>
-          <span className="text-[10px] text-[#8686A2]">TAP SLOT TO INSPECT</span>
-        </div>
-
-        <div className="grid grid-cols-6 gap-1.5">
-          {openSlots.map((slot) => {
-            const item = equipped[slot.id];
-            const isSelected = selectedItem?.id === item?.id;
-            return (
-              <div
-                key={slot.id}
-                onClick={() => item && setSelectedItem(item)}
-                className={`relative aspect-square bg-[#08080C] border p-1 flex flex-col items-center justify-between cursor-pointer transition-all ${
-                  item
-                    ? `${RARITY_BORDERS[item.rarity]} ${isSelected ? 'ring-2 ring-[#F6F6FC]' : ''}`
-                    : 'border-[#4E4E66] border-dashed opacity-70 hover:opacity-100'
-                }`}
-              >
-                <span className="text-[8px] text-[#8686A2] uppercase tracking-tighter truncate">
-                  {slot.displayName}
+    <div className="flex-1 flex flex-col p-2.5 overflow-y-auto bg-[#171D35] gap-2 select-none ">
+      {/* Item Inspection Modal */}
+      {inspectingItem && (
+        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
+          <div className="bg-[#101426] border-2 border-[#36D9FF] max-w-xs w-full rounded-none flex flex-col overflow-hidden shadow-[0_0_20px_rgba(155,81,111,0.2)]">
+            {/* Modal Header */}
+            <div
+              className="p-2.5 border-b flex items-center justify-between bg-[#171D35]"
+              style={{ borderColor: RARITY_COLORS[inspectingItem.rarity].border }}
+            >
+              <div className="flex flex-col">
+                <span
+                  className="text-xs font-display font-black uppercase tracking-wider"
+                  style={{ color: RARITY_COLORS[inspectingItem.rarity].text }}
+                >
+                  {RARITY_NAMES[inspectingItem.rarity]} {getSlotDef(inspectingItem.slot)?.displayName || inspectingItem.slot}
                 </span>
-
-                {item ? (
-                  <>
-                    <div
-                      className="w-2.5 h-2.5 rounded-full"
-                      style={{ backgroundColor: RARITY_COLORS[item.rarity] }}
-                    />
-                    <span className="text-[9px] font-bold text-[#F6F6FC]">
-                      L.{item.itemLevel}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-[10px] text-[#4E4E66] my-auto">EMPTY</span>
-                )}
+                <span className="text-[9px] font-mono-code text-[#8993B2]">
+                  POWER TIER {inspectingItem.itemLevel}
+                </span>
               </div>
-            );
-          })}
-        </div>
-      </div>
 
-      {/* Forge Bar */}
-      <div className="bg-[#171722] border border-[#4E4E66] p-2.5 flex items-center justify-between gap-2">
+              <button
+                onClick={() => setInspectingItem(null)}
+                className="w-5 h-5 bg-[#171D35] hover:bg-[#FF4268] hover:text-black text-[#8993B2] border border-white/20 flex items-center justify-center rounded-none"
+              >
+                <X size={12} />
+              </button>
+            </div>
+
+            {/* Item Image */}
+            {GEAR_IMAGES[inspectingItem.slot] && (
+              <div className="w-full aspect-square border-b border-white/10 relative">
+                <img src={GEAR_IMAGES[inspectingItem.slot]} alt={inspectingItem.slot} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.8)] mix-blend-overlay"></div>
+              </div>
+            )}
+
+            {/* Affixes Body */}
+            <div className="p-2.5 flex flex-col gap-1.5 bg-[#101426]">
+              <span className="text-[9px] font-tech text-[#8993B2] uppercase">
+                ENCHANTMENT ATTRIBUTES
+              </span>
+              <div className="flex flex-col gap-1 bg-[#171D35] border border-white/15 p-2 rounded-none">
+                {Object.entries(inspectingItem.affixes).map(([key, val]) => (
+                  <div
+                    key={key}
+                    className="text-xs font-mono-code font-bold text-[#36D9FF] flex items-center gap-1.5"
+                  >
+                    <Zap size={11} className="text-[#36D9FF] shrink-0" />
+                    <span>{getAffixText(key, val)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="p-2 bg-[#171D35] border-t border-white/15 flex gap-1.5">
+              {equipped[inspectingItem.slot]?.id === inspectingItem.id ? (
+                <button
+                  onClick={() => {
+                    unequipItem(inspectingItem.slot);
+                    setInspectingItem(null);
+                  }}
+                  className="flex-1 py-1 bg-[#101426] hover:bg-[#36D9FF] hover:text-black border border-white/20 text-xs font-display font-bold text-[#FFFFFF] rounded-none"
+                >
+                  UNEQUIP
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    equipItem(inspectingItem.id);
+                    setInspectingItem(null);
+                  }}
+                  className="flex-1 py-1 hud-btn text-xs font-display font-bold flex items-center justify-center gap-1"
+                >
+                  <Check size={13} /> EQUIP
+                </button>
+              )}
+
+              <button
+                onClick={() => {
+                  salvageItem(inspectingItem.id);
+                  setInspectingItem(null);
+                }}
+                className="px-3 py-1 bg-[#101426] hover:bg-[#FF4268] hover:text-black border border-[#FF4268]/40 text-xs font-display font-bold text-[#FF4268] rounded-none flex items-center gap-1"
+              >
+                <Trash2 size={12} /> SALVAGE
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Header Info & Forge Header */}
+      <div className="bg-[#101426] border border-[#36D9FF]/40 p-2 rounded-none flex items-center justify-between hud-corner">
         <div className="flex items-center gap-2">
-          <Hammer size={16} className="text-[#FF8A28]" />
+          <div className="w-6 h-6 bg-[#36D9FF]/10 border border-[#36D9FF] flex items-center justify-center">
+            <Shield size={13} className="text-[#36D9FF]" />
+          </div>
           <div className="flex flex-col">
-            <span className="text-xs font-bold text-[#F6F6FC]">THE FORGE</span>
-            <span className="text-[10px] text-[#8686A2]">Craft Lv.{enemyLevel} gear</span>
+            <span className="text-xs font-display font-bold text-[#FFFFFF] uppercase tracking-wider">
+              SYS://ARMORY_FORGE
+            </span>
+            <span className="text-[9px] font-tech text-[#8993B2]">
+              SCRAPS AVAILABLE: <span className="text-[#FFC857] font-bold">{currencies.void_scraps || 0}</span>
+            </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        {/* Forge Controls */}
+        <div className="flex items-center gap-1">
           <select
-            value={selectedSlotForForge}
-            onChange={(e) => setSelectedSlotForForge(e.target.value)}
-            className="bg-[#08080C] border border-[#4E4E66] text-[#F6F6FC] text-xs px-2 py-1 outline-none"
+            value={isForgingSlot}
+            onChange={(e) => setIsForgingSlot(e.target.value)}
+            className="bg-[#171D35] border border-white/20 text-[9px] font-mono-code font-bold text-[#FFFFFF] px-1 py-1 rounded-none outline-none"
           >
-            {openSlots.map((s) => (
+            {SLOTS.filter((s) => !s.sealed).map((s) => (
               <option key={s.id} value={s.id}>
-                {s.displayName}
+                {s.displayName.toUpperCase()}
               </option>
             ))}
           </select>
 
           <button
-            onClick={() => forgeItem(selectedSlotForForge)}
-            disabled={currencies.void_scraps < 20}
-            className={`px-3 py-1 text-xs font-bold border transition-colors ${
-              currencies.void_scraps >= 20
-                ? 'bg-[#B01228] border-[#FF3A46] text-[#F6F6FC] hover:bg-[#FF3A46]'
-                : 'bg-[#2C2C3C] border-[#4E4E66] text-[#8686A2] cursor-not-allowed opacity-50'
+            onClick={handleForge}
+            disabled={!canForge}
+            className={`px-2.5 py-1 text-xs hud-btn flex items-center gap-1 ${
+              canForge ? 'border-[#36D9FF]' : ''
             }`}
           >
-            FORGE (20 SCRAP)
+            <Hammer size={11} />
+            <span>FORGE ({forgeCost})</span>
           </button>
         </div>
       </div>
 
-      {/* Selected Item Inspection Card */}
-      {selectedItem && (
-        <div
-          className={`bg-[#171722] border-2 p-3 flex flex-col gap-2 relative ${
-            RARITY_BORDERS[selectedItem.rarity]
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span
-                className="text-xs font-bold px-1.5 py-0.5"
-                style={{
-                  backgroundColor: RARITY_COLORS[selectedItem.rarity],
-                  color: '#08080C',
-                }}
-              >
-                {RARITY_NAMES[selectedItem.rarity]}
-              </span>
-              <span className="text-xs font-bold text-[#F6F6FC] uppercase">
-                {selectedItem.slot} (Lv.{selectedItem.itemLevel})
-              </span>
-            </div>
-            <button
-              onClick={() => setSelectedItem(null)}
-              className="text-xs text-[#8686A2] hover:text-[#F6F6FC]"
-            >
-              ✕
-            </button>
-          </div>
-
-          {/* Affixes list */}
-          <div className="bg-[#08080C] border border-[#4E4E66] p-2 flex flex-col gap-1">
-            {Object.entries(selectedItem.affixes).map(([stat, val]) => (
-              <div key={stat} className="text-xs text-[#6ADC3E] font-mono flex items-center gap-1">
-                <span>•</span> {formatAffixLine(stat, val)}
-              </div>
-            ))}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-2 mt-1">
-            {equipped[selectedItem.slot]?.id === selectedItem.id ? (
-              <button
-                onClick={() => {
-                  unequipItem(selectedItem.slot);
-                  setSelectedItem(null);
-                }}
-                className="px-3 py-1 bg-[#2C2C3C] border border-[#4E4E66] text-xs font-bold text-[#F6F6FC] hover:bg-[#4E4E66]"
-              >
-                UNEQUIP
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  equipItem(selectedItem.id);
-                  setSelectedItem(null);
-                }}
-                className="px-3 py-1 bg-[#B01228] border border-[#FF3A46] text-xs font-bold text-[#F6F6FC] hover:bg-[#FF3A46] flex items-center gap-1"
-              >
-                <ArrowUpCircle size={14} /> EQUIP
-              </button>
-            )}
-
-            {equipped[selectedItem.slot]?.id !== selectedItem.id && (
-              <button
-                onClick={() => {
-                  salvageItem(selectedItem.id);
-                  setSelectedItem(null);
-                }}
-                className="px-3 py-1 bg-[#2C2C3C] border border-[#4E4E66] text-xs font-bold text-[#FF8A28] hover:bg-[#B01228] hover:text-[#F6F6FC] flex items-center gap-1"
-              >
-                <Trash2 size={13} /> SALVAGE
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Inventory Header with Salvage All Commons */}
-      <div className="flex items-center justify-between bg-[#171722] border border-[#4E4E66] p-2 shrink-0">
-        <span className="text-xs font-bold text-[#F6F6FC]">
-          INVENTORY ({inventory.length} ITEMS)
+      {/* Equipped Loadout Matrix */}
+      <div className="bg-[#101426] border border-white/15 p-2 rounded-none flex flex-col gap-1.5">
+        <span className="text-[9px] font-tech text-[#8993B2] uppercase tracking-wider">
+          ACTIVE EQUIPMENT LOADOUT
         </span>
-        {commonsCount > 0 && (
-          <button
-            onClick={salvageAllCommons}
-            className="px-2 py-0.5 text-[11px] font-bold bg-[#2C2C3C] border border-[#FF8A28] text-[#FF8A28] hover:bg-[#FF8A28] hover:text-[#08080C] transition-colors flex items-center gap-1"
-          >
-            <Trash2 size={11} /> SALVAGE {commonsCount} COMMONS
-          </button>
-        )}
-      </div>
 
-      {/* Inventory Grid */}
-      {inventory.length === 0 ? (
-        <div className="bg-[#171722] border border-[#4E4E66] p-6 text-center text-xs text-[#8686A2]">
-          No gear in inventory. Defeat enemies & bosses or visit the Forge to craft equipment!
-        </div>
-      ) : (
-        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-          {inventory.map((item) => {
-            const isSelected = selectedItem?.id === item.id;
+        <div className="grid grid-cols-3 gap-1.5">
+          {SLOTS.filter((s) => !s.sealed).map((slot) => {
+            const equippedItem = equipped[slot.id];
+            const rarityConf = equippedItem ? RARITY_COLORS[equippedItem.rarity] : null;
+
             return (
               <div
-                key={item.id}
-                onClick={() => setSelectedItem(item)}
-                className={`aspect-square bg-[#171722] border p-1.5 flex flex-col justify-between cursor-pointer transition-all hover:scale-105 ${
-                  RARITY_BORDERS[item.rarity]
-                } ${isSelected ? 'ring-2 ring-[#F6F6FC]' : ''}`}
+                key={slot.id}
+                onClick={() => equippedItem && setInspectingItem(equippedItem)}
+                className={`border rounded-none transition-all flex flex-col justify-between min-h-[58px] cursor-pointer overflow-hidden relative ${
+                  equippedItem
+                    ? `${rarityConf?.bg} ${rarityConf?.border} hover:border-white shadow-sm`
+                    : 'bg-[#171D35] border-white/10 border-dashed hover:border-white/30'
+                }`}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-[8px] text-[#8686A2] uppercase tracking-tighter truncate">
-                    {item.slot}
-                  </span>
-                  <div
-                    className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: RARITY_COLORS[item.rarity] }}
-                  />
-                </div>
+                {GEAR_IMAGES[slot.id] && (
+                  <div className={`w-full h-full object-cover absolute top-0 left-0 pointer-events-none mix-blend-overlay ${equippedItem ? 'opacity-40' : 'opacity-10 grayscale'}`}>
+                    <img src={GEAR_IMAGES[slot.id]} alt={slot.id} className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <div className="p-1.5 relative z-10 flex flex-col h-full justify-between">
+                  <div className="flex items-center justify-between drop-shadow-md">
+                    <span className={`text-[8px] font-display font-bold uppercase ${equippedItem ? 'text-[#FFFFFF]' : 'text-[#8993B2]'}`}>
+                      {slot.displayName}
+                    </span>
+                    {equippedItem && (
+                      <span
+                        className="text-[8px] font-mono-code font-bold drop-shadow-md"
+                        style={{ color: rarityConf?.text }}
+                      >
+                        T{equippedItem.itemLevel}
+                      </span>
+                    )}
+                  </div>
 
-                <div className="text-center">
-                  <span
-                    className="text-[10px] font-bold block truncate"
-                    style={{ color: RARITY_COLORS[item.rarity] }}
-                  >
-                    {RARITY_NAMES[item.rarity]}
+                  {equippedItem ? (
+                    <div className="flex flex-col mt-0.5">
+                      <span
+                        className="text-[10px] font-display font-bold truncate drop-shadow-md"
+                        style={{ color: rarityConf?.text }}
+                      >
+                        {RARITY_NAMES[equippedItem.rarity]}
+                      </span>
+                    <span className="text-[8px] text-[#8993B2] truncate font-mono-code">
+                      {Object.keys(equippedItem.affixes).length} PERKS
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-[9px] text-[#8993B2]/40 font-mono-code mt-1 drop-shadow-md">
+                    [EMPTY]
                   </span>
-                  <span className="text-[9px] text-[#C8C8DA]">Lv.{item.itemLevel}</span>
+                )}
                 </div>
               </div>
             );
           })}
         </div>
-      )}
+      </div>
+
+      {/* Storage Repository */}
+      <div className="bg-[#101426] border border-white/15 p-2 rounded-none flex flex-col gap-1.5 flex-1">
+        <div className="flex items-center justify-between">
+          <span className="text-[9px] font-tech text-[#8993B2] uppercase tracking-wider">
+            STORAGE REPOSITORY [{inventory.length}]
+          </span>
+
+          <button
+            onClick={() => salvageAllCommons()}
+            disabled={!inventory.some((i) => i.rarity === 0)}
+            className="px-2 py-0.5 bg-[#171D35] hover:bg-[#FF4268] hover:text-black border border-[#FF4268]/40 text-[9px] font-display font-bold text-[#FF4268] rounded-none transition-all disabled:opacity-30"
+          >
+            SALVAGE COMMONS
+          </button>
+        </div>
+
+        {/* Filter Chips */}
+        <div className="flex items-center gap-1 overflow-x-auto pb-0.5">
+          <button
+            onClick={() => setSelectedSlotFilter('ALL')}
+            className={`px-1.5 py-0.5 text-[8px] font-mono-code font-bold rounded-none ${
+              selectedSlotFilter === 'ALL'
+                ? 'bg-[#36D9FF] text-[#171D35]'
+                : 'bg-[#171D35] text-[#8993B2] border border-white/10 hover:text-[#FFFFFF]'
+            }`}
+          >
+            ALL
+          </button>
+          {SLOTS.filter((s) => !s.sealed).map((s) => (
+            <button
+              key={s.id}
+              onClick={() => setSelectedSlotFilter(s.id)}
+              className={`px-1.5 py-0.5 text-[8px] font-mono-code font-bold rounded-none ${
+                selectedSlotFilter === s.id
+                  ? 'bg-[#36D9FF] text-[#171D35]'
+                  : 'bg-[#171D35] text-[#8993B2] border border-white/10 hover:text-[#FFFFFF]'
+              }`}
+            >
+              {s.displayName.toUpperCase()}
+            </button>
+          ))}
+        </div>
+
+        {/* Inventory Grid */}
+        {filteredInventory.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-[#8993B2]">
+            <Layers size={20} className="opacity-30 mb-1" />
+            <span className="text-xs font-display">NO HARDWARE IN STORAGE</span>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 overflow-y-auto max-h-56">
+            {filteredInventory.map((item, index) => {
+              const rarityConf = RARITY_COLORS[item.rarity];
+              const slotDef = getSlotDef(item.slot);
+              const isEquipped = equipped[item.slot]?.id === item.id;
+
+              return (
+                <div
+                  key={`gear_item_${item.id}_${index}`}
+                  onClick={() => setInspectingItem(item)}
+                  className={`border cursor-pointer transition-all flex flex-col justify-between rounded-none overflow-hidden ${rarityConf.bg} ${rarityConf.border} hover:border-white relative`}
+                >
+                  {GEAR_IMAGES[item.slot] && (
+                    <div className="w-full h-16 opacity-30 object-cover absolute top-0 left-0 pointer-events-none mix-blend-overlay">
+                      <img src={GEAR_IMAGES[item.slot]} alt={item.slot} className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <div className="p-1.5 relative z-10 flex flex-col h-full justify-between">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[8px] font-mono-code text-[#FFFFFF] uppercase drop-shadow-md">
+                        {slotDef?.displayName || item.slot}
+                      </span>
+                      <span
+                        className="text-[8px] font-mono-code font-bold drop-shadow-md"
+                        style={{ color: rarityConf.text }}
+                      >
+                        T{item.itemLevel}
+                      </span>
+                    </div>
+
+                    <span
+                      className="text-[10px] font-display font-bold truncate mt-0.5 drop-shadow-md"
+                      style={{ color: rarityConf.text }}
+                    >
+                      {RARITY_NAMES[item.rarity]}
+                    </span>
+
+                    <div className="flex items-center justify-between mt-0.5 text-[8px] drop-shadow-md">
+                      <span className="text-[#FFFFFF] font-mono-code">
+                        {Object.keys(item.affixes).length} AFFIXES
+                      </span>
+                      {isEquipped && (
+                        <span className="text-[#36D9FF] font-bold">EQUIPPED</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

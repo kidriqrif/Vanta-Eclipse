@@ -158,6 +158,7 @@ export interface QuestDefinition {
   rewardAmount: number;
   sortOrder: number;
   prereqId?: string;
+  category?: 'COMBAT' | 'BOSS' | 'STRIKE' | 'RESOURCE' | 'ARCADE' | 'FORGE';
 }
 
 export interface ShopProductDefinition {

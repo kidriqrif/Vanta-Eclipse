@@ -2,90 +2,91 @@ import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { CARD_RARITIES, PETS } from '../data/definitions';
 import { formatNumber, formatPercent } from '../utils/numberFormat';
-import { Sparkles, Flame, Shield, HelpCircle } from 'lucide-react';
+import { Layers, Flame, Shield, HelpCircle, Zap } from 'lucide-react';
 import { Card } from '../types/game';
 
 export const CardsCollection: React.FC = () => {
-  const { cards, absorbCard, activePetId, ownedPets } = useGame();
+  const { cards, absorbCard, activePetId } = useGame();
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
 
   const activePetDef = PETS.find((p) => p.id === activePetId);
-  const activePetData = activePetId ? ownedPets[activePetId] : null;
 
   return (
-    <div className="flex-1 flex flex-col p-3 overflow-y-auto bg-[#08080C] gap-3">
+    <div className="flex-1 flex flex-col p-2.5 overflow-y-auto bg-[#171D35] gap-2 select-none ">
       {/* Header Info */}
-      <div className="bg-[#171722] border border-[#4E4E66] p-2.5 flex items-center justify-between">
+      <div className="bg-[#101426] border border-[#36D9FF]/40 p-2 rounded-none flex items-center justify-between hud-corner">
         <div className="flex items-center gap-2">
-          <Sparkles size={16} className="text-[#A85CFF]" />
+          <div className="w-6 h-6 bg-[#36D9FF]/10 border border-[#36D9FF] flex items-center justify-center">
+            <Layers size={13} className="text-[#36D9FF]" />
+          </div>
           <div className="flex flex-col">
-            <span className="text-xs font-bold text-[#F6F6FC]">
-              BOSS TROPHY CARDS ({cards.length}/200)
+            <span className="text-xs font-display font-bold text-[#FFFFFF] uppercase tracking-wider">
+              SYS://HOLO_CARDS [{cards.length}/200]
             </span>
-            <span className="text-[10px] text-[#8686A2]">
-              Absorb cards to empower your active companion
+            <span className="text-[9px] font-tech text-[#8993B2]">
+              ABSORB MEMORY CORES INTO ACTIVE BEAST
             </span>
           </div>
         </div>
 
         {activePetDef ? (
-          <div className="flex items-center gap-1.5 bg-[#08080C] border border-[#4E4E66] px-2 py-1">
-            <span className="text-[10px] text-[#8686A2]">TARGET:</span>
-            <span className="text-xs font-bold text-[#FF8A28]">
-              {activePetDef.stageNames[0]}
+          <div className="flex items-center gap-1 bg-[#171D35] border border-[#36D9FF]/40 px-1.5 py-0.5 rounded-none">
+            <span className="text-[8px] font-tech text-[#8993B2]">TARGET:</span>
+            <span className="text-[9px] font-display font-bold text-[#36D9FF]">
+              {activePetDef.stageNames[0].toUpperCase()}
             </span>
           </div>
         ) : (
-          <div className="text-[10px] text-[#FF3A46] border border-[#FF3A46] px-2 py-0.5">
-            NO ACTIVE PET
+          <div className="text-[8px] font-display font-bold text-[#FF4268] bg-[#171D35] border border-[#FF4268] px-1.5 py-0.5 rounded-none">
+            NO ACTIVE BEAST
           </div>
         )}
       </div>
 
       {/* Selected Card Inspector */}
       {selectedCard && (
-        <div className="bg-[#171722] border-2 border-[#A85CFF] p-3 flex flex-col gap-2">
+        <div className="bg-[#101426] border border-[#36D9FF] p-2.5 rounded-none flex flex-col gap-2 shadow-[0_0_12px_rgba(155,81,111,0.2)]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span
-                className="text-xs font-bold px-1.5 py-0.5"
+                className="text-[8px] font-mono-code font-bold px-1 py-0.2 rounded-none"
                 style={{
                   backgroundColor:
                     CARD_RARITIES.find((r) => r.id === selectedCard.rarity)?.tierColor ||
-                    '#C8C8DA',
-                  color: '#08080C',
+                    '#36D9FF',
+                  color: '#171D35',
                 }}
               >
                 {selectedCard.rarity.toUpperCase()}
               </span>
-              <span className="text-xs font-bold text-[#F6F6FC]">
-                {selectedCard.bossName} (Lv.{selectedCard.level})
+              <span className="text-xs font-display font-bold text-[#FFFFFF]">
+                {selectedCard.bossName} [LV.{selectedCard.level}]
               </span>
             </div>
             <button
               onClick={() => setSelectedCard(null)}
-              className="text-xs text-[#8686A2] hover:text-[#F6F6FC]"
+              className="text-xs font-mono-code text-[#8993B2] hover:text-[#FFFFFF] px-1"
             >
               ✕
             </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 my-1">
-            <div className="bg-[#08080C] border border-[#4E4E66] p-2 flex items-center gap-2">
-              <Flame size={16} className="text-[#FF8A28]" />
+          <div className="grid grid-cols-2 gap-1.5">
+            <div className="bg-[#171D35] border border-white/15 p-1.5 rounded-none flex items-center gap-2">
+              <Flame size={13} className="text-[#FFC857]" />
               <div className="flex flex-col">
-                <span className="text-[9px] text-[#8686A2]">POWER (PET XP)</span>
-                <span className="text-xs font-bold text-[#FF8A28]">
+                <span className="text-[8px] text-[#8993B2] font-tech">COMPANION XP</span>
+                <span className="text-xs font-mono-code font-bold text-[#FFC857]">
                   +{formatNumber(selectedCard.power)} XP
                 </span>
               </div>
             </div>
 
-            <div className="bg-[#08080C] border border-[#4E4E66] p-2 flex items-center gap-2">
-              <Shield size={16} className="text-[#6ADC3E]" />
+            <div className="bg-[#171D35] border border-white/15 p-1.5 rounded-none flex items-center gap-2">
+              <Shield size={13} className="text-[#36D9FF]" />
               <div className="flex flex-col">
-                <span className="text-[9px] text-[#8686A2]">VIGOR (PASSIVE)</span>
-                <span className="text-xs font-bold text-[#6ADC3E]">
+                <span className="text-[8px] text-[#8993B2] font-tech">VIGOR RESONANCE</span>
+                <span className="text-xs font-mono-code font-bold text-[#36D9FF]">
                   +{formatPercent(selectedCard.vigor * 0.002, 2)}
                 </span>
               </div>
@@ -98,60 +99,59 @@ export const CardsCollection: React.FC = () => {
               setSelectedCard(null);
             }}
             disabled={!activePetId}
-            className={`w-full py-1.5 text-xs font-bold border transition-colors flex items-center justify-center gap-1.5 ${
-              activePetId
-                ? 'bg-[#B01228] border-[#FF3A46] text-[#F6F6FC] hover:bg-[#FF3A46]'
-                : 'bg-[#2C2C3C] border-[#4E4E66] text-[#8686A2] cursor-not-allowed opacity-50'
+            className={`w-full py-1 text-xs hud-btn flex items-center justify-center gap-1 ${
+              activePetId ? 'border-[#36D9FF]' : ''
             }`}
           >
-            <Sparkles size={14} /> ABSORB INTO {activePetDef?.stageNames[0].toUpperCase() || 'COMPANION'}
+            <Zap size={12} />
+            <span>ABSORB MEMORY INTO {activePetDef?.stageNames[0].toUpperCase() || 'BEAST'}</span>
           </button>
         </div>
       )}
 
       {/* Cards Grid */}
       {cards.length === 0 ? (
-        <div className="bg-[#171722] border border-[#4E4E66] p-6 text-center text-xs text-[#8686A2] flex flex-col items-center gap-2">
-          <HelpCircle size={24} className="text-[#4E4E66]" />
-          <span>No trophy cards collected yet. Defeat Boss Gates to earn rare boss trophy cards!</span>
+        <div className="bg-[#101426] border border-white/15 p-6 rounded-none text-center text-xs text-[#8993B2] flex flex-col items-center gap-2">
+          <HelpCircle size={20} className="text-[#8993B2]/40" />
+          <span className="font-tech uppercase">NO HOLOGRAPHIC TROPHIES RECORDED. VANQUISH BOSS GATES.</span>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {cards.map((card) => {
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+          {cards.map((card, idx) => {
             const rarityDef = CARD_RARITIES.find((r) => r.id === card.rarity);
             const isSelected = selectedCard?.id === card.id;
 
             return (
               <div
-                key={card.id}
+                key={`holo_card_${card.id}_${idx}`}
                 onClick={() => setSelectedCard(card)}
-                className={`bg-[#171722] border p-2 flex flex-col justify-between cursor-pointer transition-all hover:scale-102 ${
-                  isSelected ? 'ring-2 ring-[#F6F6FC]' : ''
+                className={`bg-[#101426] border p-2 rounded-none flex flex-col justify-between cursor-pointer transition-all ${
+                  isSelected ? 'border-white bg-[#473263]' : 'hover:border-[#36D9FF]'
                 }`}
-                style={{ borderColor: rarityDef?.tierColor || '#4E4E66' }}
+                style={{ borderColor: isSelected ? '#FFFFFF' : rarityDef?.tierColor || 'rgba(155, 81, 111, 0.3)' }}
               >
                 <div className="flex items-center justify-between">
                   <span
-                    className="text-[9px] font-bold px-1 py-0.2"
+                    className="text-[7px] font-mono-code font-bold px-1 rounded-none"
                     style={{
-                      backgroundColor: rarityDef?.tierColor || '#C8C8DA',
-                      color: '#08080C',
+                      backgroundColor: rarityDef?.tierColor || '#36D9FF',
+                      color: '#171D35',
                     }}
                   >
                     {card.rarity.toUpperCase()}
                   </span>
-                  <span className="text-[9px] text-[#8686A2]">Lv.{card.level}</span>
+                  <span className="text-[8px] font-mono-code text-[#8993B2]">LV.{card.level}</span>
                 </div>
 
-                <div className="my-1.5">
-                  <span className="text-xs font-bold text-[#F6F6FC] block truncate">
+                <div className="my-1">
+                  <span className="text-[11px] font-display font-bold text-[#FFFFFF] block truncate">
                     {card.bossName}
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between text-[10px] bg-[#08080C] p-1 border border-[#4E4E66]">
-                  <span className="text-[#FF8A28] font-bold">+{card.power} XP</span>
-                  <span className="text-[#6ADC3E] font-bold">+{card.vigor} VIG</span>
+                <div className="flex items-center justify-between text-[8px] font-mono-code bg-[#171D35] p-1 border border-white/10">
+                  <span className="text-[#FFC857] font-bold">+{card.power} XP</span>
+                  <span className="text-[#36D9FF] font-bold">+{card.vigor} VIG</span>
                 </div>
               </div>
             );

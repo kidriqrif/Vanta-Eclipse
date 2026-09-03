@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { MINIGAMES } from '../data/definitions';
 import { formatNumber } from '../utils/numberFormat';
-import { Sparkles, Gamepad2, Play, Trophy, Clock } from 'lucide-react';
+import { Gamepad2, Play, Trophy, Clock } from 'lucide-react';
 import { VoidReflexGame } from './minigames/VoidReflexGame';
 import { MemoryMatchGame } from './minigames/MemoryMatchGame';
 import { ConnectFourGame } from './minigames/ConnectFourGame';
@@ -18,7 +18,6 @@ export const ArcadeHub: React.FC = () => {
     minigameRecords,
     spendToken,
     finishMinigame,
-    liveEssenceRate,
   } = useGame();
 
   const [activeMinigameId, setActiveMinigameId] = useState<string | null>(null);
@@ -48,10 +47,10 @@ export const ArcadeHub: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col p-3 overflow-y-auto bg-[#08080C] gap-3">
+    <div className="flex-1 flex flex-col p-2.5 overflow-y-auto bg-[#171D35] gap-2 select-none ">
       {/* Active Minigame Full Overlay */}
       {activeMinigameId && (
-        <div className="fixed inset-0 z-50 bg-[#08080C] flex flex-col">
+        <div className="fixed inset-0 z-50 bg-[#171D35] flex flex-col">
           {activeMinigameId === 'void_reflex' && (
             <VoidReflexGame
               onFinish={handleFinishGame}
@@ -99,30 +98,30 @@ export const ArcadeHub: React.FC = () => {
 
       {/* Outcome Modal */}
       {outcomeModal && (
-        <div className="fixed inset-0 z-50 bg-[#08080C]/80 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
           <div
-            className={`bg-[#171722] border-2 p-4 max-w-xs w-full flex flex-col items-center text-center gap-3 ${
-              outcomeModal.won ? 'border-[#6ADC3E]' : 'border-[#FF3A46]'
+            className={`bg-[#101426] border-2 p-3.5 max-w-xs w-full rounded-none flex flex-col items-center text-center gap-2.5 shadow-2xl ${
+              outcomeModal.won ? 'border-[#36D9FF]' : 'border-[#FF4268]'
             }`}
           >
             <span
-              className={`text-base font-bold ${
-                outcomeModal.won ? 'text-[#6ADC3E]' : 'text-[#FF3A46]'
+              className={`text-sm font-display font-black tracking-wider uppercase ${
+                outcomeModal.won ? 'text-[#36D9FF]' : 'text-[#FF4268]'
               }`}
             >
-              {outcomeModal.won ? 'VICTORY ACHIEVED!' : 'TRIAL CONCLUDED'}
+              {outcomeModal.won ? 'TRIAL CONQUERED!' : 'TRIAL CONCLUDED'}
             </span>
 
-            <div className="bg-[#08080C] border border-[#4E4E66] p-2.5 w-full flex flex-col gap-1">
-              <span className="text-xs text-[#8686A2]">ESSENCE REWARD</span>
-              <span className="text-sm font-bold text-[#A85CFF]">
+            <div className="bg-[#171D35] border border-white/15 p-2 w-full flex flex-col gap-0.5">
+              <span className="text-[9px] text-[#8993B2] font-tech uppercase">ESSENCE BURST YIELD</span>
+              <span className="text-xs font-mono-code font-bold text-[#36D9FF]">
                 +{formatNumber(outcomeModal.reward)} ESSENCE
               </span>
             </div>
 
             <button
               onClick={() => setOutcomeModal(null)}
-              className="w-full py-1.5 bg-[#B01228] border border-[#FF3A46] text-xs font-bold text-[#F6F6FC] hover:bg-[#FF3A46]"
+              className="w-full py-1.5 hud-btn text-xs font-display font-bold"
             >
               COLLECT & RETURN
             </button>
@@ -131,31 +130,33 @@ export const ArcadeHub: React.FC = () => {
       )}
 
       {/* Header Info */}
-      <div className="bg-[#171722] border border-[#4E4E66] p-2.5 flex items-center justify-between">
+      <div className="bg-[#101426] border border-[#36D9FF]/40 p-2 rounded-none flex items-center justify-between hud-corner">
         <div className="flex items-center gap-2">
-          <Gamepad2 size={18} className="text-[#FFD23C]" />
+          <div className="w-6 h-6 bg-[#36D9FF]/10 border border-[#36D9FF] flex items-center justify-center">
+            <Gamepad2 size={13} className="text-[#36D9FF]" />
+          </div>
           <div className="flex flex-col">
-            <span className="text-xs font-bold text-[#F6F6FC]">THE VOID ARCADE</span>
-            <span className="text-[10px] text-[#8686A2]">
-              Play mini-trials to earn burst essence rewards
+            <span className="text-xs font-display font-bold text-[#FFFFFF] uppercase tracking-wider">
+              SYS://ARCADE_SUITE
+            </span>
+            <span className="text-[9px] font-tech text-[#8993B2]">
+              TACTICAL MINI-TRIALS FOR INSTANT ESSENCE INJECTION
             </span>
           </div>
         </div>
 
         <div className="flex flex-col items-end">
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs font-bold text-[#FFD23C]">{tokens} / 5 TOKENS</span>
-          </div>
+          <span className="text-xs font-mono-code font-bold text-[#FFC857]">{tokens} / 5 TOKENS</span>
           {tokens < 5 && (
-            <span className="text-[9px] text-[#8686A2] flex items-center gap-1">
-              <Clock size={10} /> +1 in {formatRegenTime(tokenRegenSecondsLeft)}
+            <span className="text-[8px] font-mono-code text-[#8993B2] flex items-center gap-0.5">
+              <Clock size={8} /> +1 in {formatRegenTime(tokenRegenSecondsLeft)}
             </span>
           )}
         </div>
       </div>
 
       {/* Minigames Grid */}
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-1.5">
         {MINIGAMES.map((game) => {
           const record = minigameRecords[game.id];
           const hasRecord = record !== undefined;
@@ -163,25 +164,25 @@ export const ArcadeHub: React.FC = () => {
           return (
             <div
               key={game.id}
-              className="bg-[#171722] border border-[#4E4E66] p-3 flex items-center justify-between gap-3"
+              className="bg-[#101426] hover:bg-[#080812] border border-white/15 hover:border-[#36D9FF]/50 p-2 rounded-none flex items-center justify-between gap-2.5 transition-all"
             >
-              <div className="flex flex-col min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-[#F6F6FC]">
+              <div className="flex flex-col min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-xs font-display font-bold text-[#FFFFFF] uppercase">
                     {game.displayName}
                   </span>
-                  <span className="text-[10px] text-[#FFD23C] font-mono">
-                    {game.rewardSeconds}s Payout
+                  <span className="text-[8px] font-mono-code text-[#FFC857] bg-[#171D35] border border-[#FFC857]/40 px-1">
+                    {game.rewardSeconds}s PAYOUT
                   </span>
                 </div>
 
-                <span className="text-[11px] text-[#C8C8DA] mt-0.5">
+                <span className="text-[10px] font-tech text-[#8993B2] mt-0.5">
                   {game.description}
                 </span>
 
                 {hasRecord && (
-                  <span className="text-[10px] text-[#6ADC3E] flex items-center gap-1 mt-0.5">
-                    <Trophy size={11} /> Best: {typeof record === 'number' ? record.toFixed(0) : record}
+                  <span className="text-[9px] font-mono-code text-[#36D9FF] flex items-center gap-1 mt-0.5">
+                    <Trophy size={10} /> HIGH SCORE: {typeof record === 'number' ? record.toFixed(0) : record}
                   </span>
                 )}
               </div>
@@ -191,13 +192,12 @@ export const ArcadeHub: React.FC = () => {
                 <button
                   onClick={() => handleStartGame(game.id)}
                   disabled={tokens < 1}
-                  className={`px-3 py-1.5 text-xs font-bold border transition-colors flex items-center gap-1.5 ${
-                    tokens >= 1
-                      ? 'bg-[#B01228] border-[#FF3A46] text-[#F6F6FC] hover:bg-[#FF3A46]'
-                      : 'bg-[#2C2C3C] border-[#4E4E66] text-[#8686A2] cursor-not-allowed opacity-50'
+                  className={`px-3 py-1 text-xs hud-btn flex items-center gap-1 ${
+                    tokens >= 1 ? 'border-[#36D9FF]' : ''
                   }`}
                 >
-                  <Play size={12} /> PLAY (1T)
+                  <Play size={10} />
+                  <span>PLAY (1T)</span>
                 </button>
               </div>
             </div>

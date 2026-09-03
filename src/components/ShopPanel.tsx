@@ -1,8 +1,7 @@
 import React from 'react';
 import { useGame } from '../context/GameContext';
 import { COSMETICS, ADS } from '../data/definitions';
-import { formatNumber } from '../utils/numberFormat';
-import { ShoppingBag, Sparkles, Check, Play, Zap, ShieldCheck } from 'lucide-react';
+import { ShoppingBag, Check, Play, Zap, ShieldCheck } from 'lucide-react';
 
 export const ShopPanel: React.FC = () => {
   const {
@@ -20,34 +19,38 @@ export const ShopPanel: React.FC = () => {
   const today = new Date().toISOString().slice(0, 10);
 
   return (
-    <div className="flex-1 flex flex-col p-3 overflow-y-auto bg-[#08080C] gap-3">
+    <div className="flex-1 flex flex-col p-2.5 overflow-y-auto bg-[#171D35] gap-2 select-none ">
       {/* Header Info */}
-      <div className="bg-[#171722] border border-[#4E4E66] p-2.5 flex items-center justify-between">
+      <div className="bg-[#101426] border border-[#36D9FF]/40 p-2 rounded-none flex items-center justify-between hud-corner">
         <div className="flex items-center gap-2">
-          <ShoppingBag size={16} className="text-[#FFD23C]" />
+          <div className="w-6 h-6 bg-[#36D9FF]/10 border border-[#36D9FF] flex items-center justify-center">
+            <ShoppingBag size={13} className="text-[#36D9FF]" />
+          </div>
           <div className="flex flex-col">
-            <span className="text-xs font-bold text-[#F6F6FC]">THE ASTRAL BAZAAR</span>
-            <span className="text-[10px] text-[#8686A2]">
-              Permanent conveniences, cosmetics & daily bonuses
+            <span className="text-xs font-display font-bold text-[#FFFFFF] uppercase tracking-wider">
+              SYS://ASTRAL_BAZAAR
+            </span>
+            <span className="text-[9px] font-tech text-[#8993B2]">
+              TACTICAL POWER SURGES, COSMETIC SIGNATURES & EXPANSIONS
             </span>
           </div>
         </div>
       </div>
 
-      {/* Daily Free Ad Bonuses */}
-      <div className="bg-[#171722] border border-[#4E4E66] p-2.5 flex flex-col gap-2">
+      {/* Daily Free Power Surges */}
+      <div className="bg-[#101426] border border-white/15 p-2 rounded-none flex flex-col gap-1.5">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-[#F6F6FC] flex items-center gap-1.5">
-            <Zap size={14} className="text-[#FFD23C]" /> DAILY ENERGY SURGES
+          <span className="text-xs font-display font-bold text-[#FFFFFF] uppercase flex items-center gap-1">
+            <Zap size={12} className="text-[#36D9FF]" /> DAILY POWER SURGES
           </span>
           {hasRemovedAds && (
-            <span className="text-[10px] text-[#6ADC3E] font-bold flex items-center gap-1">
-              <ShieldCheck size={12} /> INSTANT (ADS REMOVED)
+            <span className="text-[8px] font-mono-code text-[#36D9FF] font-bold flex items-center gap-1">
+              <ShieldCheck size={10} /> INSTANT (OVERRIDE ACTIVE)
             </span>
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
           {ADS.map((ad) => {
             const current = adWatchCounts[ad.id] || { date: today, count: 0 };
             const todayCount = current.date === today ? current.count : 0;
@@ -56,27 +59,26 @@ export const ShopPanel: React.FC = () => {
             return (
               <div
                 key={ad.id}
-                className="bg-[#08080C] border border-[#4E4E66] p-2 flex items-center justify-between"
+                className="bg-[#171D35] border border-white/15 p-1.5 rounded-none flex items-center justify-between"
               >
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-[#F6F6FC]">
+                <div className="flex flex-col min-w-0 flex-1 pr-2">
+                  <span className="text-[11px] font-display font-bold text-[#FFFFFF] uppercase truncate">
                     {ad.displayName}
                   </span>
-                  <span className="text-[10px] text-[#8686A2]">
-                    {ad.description} ({todayCount}/{hasRemovedAds ? '∞' : ad.dailyCap})
+                  <span className="text-[9px] font-tech text-[#8993B2] truncate">
+                    {ad.description} [{todayCount}/{hasRemovedAds ? '∞' : ad.dailyCap}]
                   </span>
                 </div>
 
                 <button
                   onClick={() => watchAd(ad.id)}
                   disabled={isCapped}
-                  className={`px-3 py-1 text-xs font-bold border transition-colors flex items-center gap-1 ${
-                    !isCapped
-                      ? 'bg-[#B01228] border-[#FF3A46] text-[#F6F6FC] hover:bg-[#FF3A46]'
-                      : 'bg-[#2C2C3C] border-[#4E4E66] text-[#8686A2] cursor-not-allowed opacity-50'
+                  className={`px-2.5 py-1 text-xs hud-btn flex items-center gap-1 shrink-0 ${
+                    !isCapped ? 'border-[#36D9FF]' : ''
                   }`}
                 >
-                  <Play size={11} /> CLAIM
+                  <Play size={10} />
+                  <span>CLAIM</span>
                 </button>
               </div>
             );
@@ -85,27 +87,31 @@ export const ShopPanel: React.FC = () => {
       </div>
 
       {/* Permanent Bundles */}
-      <div className="bg-[#171722] border border-[#4E4E66] p-2.5 flex flex-col gap-2">
-        <span className="text-xs font-bold text-[#F6F6FC]">PERMANENT ENHANCEMENTS</span>
+      <div className="bg-[#101426] border border-white/15 p-2 rounded-none flex flex-col gap-1.5">
+        <span className="text-xs font-display font-bold text-[#FFFFFF] uppercase">
+          PERMANENT PROTOCOL ENHANCEMENTS
+        </span>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5">
           {/* Remove Ads */}
-          <div className="bg-[#08080C] border border-[#4E4E66] p-2.5 flex items-center justify-between">
+          <div className="bg-[#171D35] border border-white/15 p-2 rounded-none flex items-center justify-between">
             <div className="flex flex-col">
-              <span className="text-xs font-bold text-[#F6F6FC]">REMOVE ALL ADS</span>
-              <span className="text-[10px] text-[#8686A2]">
-                Instant claims for all daily surges, no cooldowns forever.
+              <span className="text-xs font-display font-bold text-[#FFFFFF] uppercase">
+                REMOVE ALL AD RESTRICTIONS
+              </span>
+              <span className="text-[9px] font-tech text-[#8993B2]">
+                Instant surge claim execution, no delays forever.
               </span>
             </div>
 
             {hasRemovedAds ? (
-              <div className="px-3 py-1 bg-[#2C2C3C] text-xs font-bold text-[#6ADC3E] flex items-center gap-1">
-                <Check size={14} /> ACTIVE
+              <div className="px-2.5 py-1 bg-[#171D35] border border-[#36D9FF] text-[9px] font-display font-bold text-[#36D9FF] flex items-center gap-1">
+                <Check size={11} /> ACTIVE
               </div>
             ) : (
               <button
                 onClick={() => buyProduct('remove_ads')}
-                className="px-3 py-1 bg-[#B01228] border border-[#FF3A46] text-xs font-bold text-[#F6F6FC] hover:bg-[#FF3A46]"
+                className="px-3 py-1 hud-btn text-xs font-display font-bold"
               >
                 $2.99
               </button>
@@ -113,24 +119,24 @@ export const ShopPanel: React.FC = () => {
           </div>
 
           {/* Starter Pack */}
-          <div className="bg-[#08080C] border border-[#FFD23C] p-2.5 flex items-center justify-between">
+          <div className="bg-[#171D35] border border-[#FFC857]/40 p-2 rounded-none flex items-center justify-between">
             <div className="flex flex-col">
-              <span className="text-xs font-bold text-[#FFD23C]">
+              <span className="text-xs font-display font-bold text-[#FFC857] uppercase">
                 ECLIPSE STARTER PACK
               </span>
-              <span className="text-[10px] text-[#C8C8DA]">
-                25 Void Crystals + 5 Arcade Tokens + Ember Trail Cosmetic
+              <span className="text-[9px] font-tech text-[#8993B2]">
+                25 Void Crystals + 5 Arcade Tokens + Ember Trail Signature
               </span>
             </div>
 
             {purchasedProducts.includes('starter_pack') ? (
-              <div className="px-3 py-1 bg-[#2C2C3C] text-xs font-bold text-[#8686A2] flex items-center gap-1">
-                <Check size={14} /> OWNED
+              <div className="px-2.5 py-1 bg-[#171D35] border border-white/20 text-[9px] font-display font-bold text-[#8993B2] flex items-center gap-1">
+                <Check size={11} /> OWNED
               </div>
             ) : (
               <button
                 onClick={() => buyProduct('starter_pack')}
-                className="px-3 py-1 bg-[#FFD23C] text-[#08080C] text-xs font-bold hover:bg-[#F6F6FC]"
+                className="px-3 py-1 hud-btn-gold text-xs font-display font-bold"
               >
                 $4.99
               </button>
@@ -138,19 +144,19 @@ export const ShopPanel: React.FC = () => {
           </div>
 
           {/* Shards Pack */}
-          <div className="bg-[#08080C] border border-[#4E4E66] p-2.5 flex items-center justify-between">
+          <div className="bg-[#171D35] border border-white/15 p-2 rounded-none flex items-center justify-between">
             <div className="flex flex-col">
-              <span className="text-xs font-bold text-[#3EDCFA]">
+              <span className="text-xs font-display font-bold text-[#36D9FF] uppercase">
                 200 ASTRAL SHARDS
               </span>
-              <span className="text-[10px] text-[#8686A2]">
-                Unlock any cosmetic tap trail of your choice.
+              <span className="text-[9px] font-tech text-[#8993B2]">
+                Acquire custom laser cosmetic signatures.
               </span>
             </div>
 
             <button
               onClick={() => buyProduct('shards_small')}
-              className="px-3 py-1 bg-[#2C2C3C] border border-[#3EDCFA] text-xs font-bold text-[#3EDCFA] hover:bg-[#3EDCFA] hover:text-[#08080C]"
+              className="px-3 py-1 hud-btn text-xs font-display font-bold"
             >
               $0.99
             </button>
@@ -159,17 +165,17 @@ export const ShopPanel: React.FC = () => {
       </div>
 
       {/* Cosmetic Tap Trails */}
-      <div className="bg-[#171722] border border-[#4E4E66] p-2.5 flex flex-col gap-2">
+      <div className="bg-[#101426] border border-white/15 p-2 rounded-none flex flex-col gap-1.5">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-[#F6F6FC] flex items-center gap-1.5">
-            <Sparkles size={14} className="text-[#FF6EC0]" /> COSMETIC TAP TRAILS
+          <span className="text-xs font-display font-bold text-[#FFFFFF] uppercase flex items-center gap-1">
+            <Zap size={12} className="text-[#36D9FF]" /> LASER SIGNATURES
           </span>
-          <span className="text-[10px] text-[#FFD23C]">
+          <span className="text-[9px] font-mono-code font-bold text-[#FFC857]">
             {currencies.astral_shards} SHARDS
           </span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
           {COSMETICS.map((cosmetic) => {
             const isOwned =
               cosmetic.shardPrice === 0 ||
@@ -180,15 +186,17 @@ export const ShopPanel: React.FC = () => {
             return (
               <div
                 key={cosmetic.id}
-                className={`bg-[#08080C] border p-2 flex flex-col justify-between gap-2 ${
-                  isActive ? 'border-[#FF3A46] ring-1 ring-[#FF3A46]' : 'border-[#4E4E66]'
+                className={`bg-[#171D35] border p-2 rounded-none flex flex-col justify-between gap-1.5 transition-all ${
+                  isActive
+                    ? 'border-[#36D9FF] shadow-[0_0_8px_rgba(155,81,111,0.2)]'
+                    : 'border-white/15 hover:border-white/40'
                 }`}
               >
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold text-[#F6F6FC]">
+                  <span className="text-xs font-display font-bold text-[#FFFFFF] uppercase">
                     {cosmetic.displayName}
                   </span>
-                  <span className="text-[10px] text-[#8686A2]">
+                  <span className="text-[9px] font-tech text-[#8993B2] mt-0.5">
                     {cosmetic.description}
                   </span>
                 </div>
@@ -196,13 +204,13 @@ export const ShopPanel: React.FC = () => {
                 <div>
                   {isOwned ? (
                     isActive ? (
-                      <div className="w-full py-1 bg-[#FF3A46] text-[#08080C] text-[10px] font-bold text-center flex items-center justify-center gap-1">
-                        <Check size={11} /> EQUIPPED
+                      <div className="w-full py-1 bg-[#36D9FF] text-[#171D35] text-[9px] font-display font-bold text-center rounded-none flex items-center justify-center gap-1">
+                        <Check size={10} /> ACTIVE
                       </div>
                     ) : (
                       <button
                         onClick={() => setActiveCosmetic(cosmetic.id)}
-                        className="w-full py-1 bg-[#2C2C3C] border border-[#4E4E66] text-[10px] font-bold text-[#F6F6FC] hover:bg-[#4E4E66]"
+                        className="w-full py-1 bg-[#101426] hover:bg-[#36D9FF] hover:text-black border border-white/20 text-[9px] font-display font-bold text-[#FFFFFF] rounded-none transition-all"
                       >
                         EQUIP
                       </button>
@@ -211,10 +219,8 @@ export const ShopPanel: React.FC = () => {
                     <button
                       onClick={() => buyCosmetic(cosmetic.id)}
                       disabled={!canAfford}
-                      className={`w-full py-1 text-[10px] font-bold border transition-colors ${
-                        canAfford
-                          ? 'bg-[#FFD23C] text-[#08080C] border-[#FFD23C] hover:bg-[#F6F6FC]'
-                          : 'bg-[#2C2C3C] text-[#8686A2] border-[#4E4E66] cursor-not-allowed opacity-50'
+                      className={`w-full py-1 text-[9px] font-display font-bold rounded-none ${
+                        canAfford ? 'hud-btn-gold' : 'bg-[#171D35] border border-white/10 text-[#8993B2] opacity-40 cursor-not-allowed'
                       }`}
                     >
                       {cosmetic.shardPrice} SHARDS

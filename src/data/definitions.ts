@@ -680,11 +680,12 @@ export const QUESTS: QuestDefinition[] = [
   // Daily Quests
   {
     id: 'd_slayer',
-    displayName: 'Daily Slayer',
-    description: 'Slay 100 enemies today.',
+    displayName: 'Void Hunter',
+    description: 'Slay 50 enemies in combat today.',
     kind: 'DAILY',
-    metric: 'kills',
-    targetValue: 100,
+    category: 'COMBAT',
+    metric: 'daily_kills',
+    targetValue: 50,
     rewardKind: 'TOKENS',
     rewardAmount: 2,
     sortOrder: 0,
@@ -692,57 +693,122 @@ export const QUESTS: QuestDefinition[] = [
   {
     id: 'd_bosses',
     displayName: 'Gate Sentinel',
-    description: 'Defeat 3 bosses today.',
+    description: 'Defeat 2 Gatekeeper Bosses today.',
     kind: 'DAILY',
-    metric: 'boss_wins',
-    targetValue: 3,
+    category: 'BOSS',
+    metric: 'daily_boss_wins',
+    targetValue: 2,
     rewardKind: 'CRYSTALS',
     rewardAmount: 5,
     sortOrder: 1,
   },
   {
-    id: 'd_arcade',
-    displayName: 'Arcade Enthusiast',
-    description: 'Play 2 Arcade minigames today.',
+    id: 'd_taps',
+    displayName: 'Shadow Barrage',
+    description: 'Land 150 manual strikes today.',
     kind: 'DAILY',
-    metric: 'minigame_played',
-    targetValue: 2,
-    rewardKind: 'ESSENCE',
-    rewardAmount: 500,
+    category: 'STRIKE',
+    metric: 'daily_taps',
+    targetValue: 150,
+    rewardKind: 'SHARDS',
+    rewardAmount: 25,
     sortOrder: 2,
   },
   {
-    id: 'd_looter',
-    displayName: 'Scavenger',
-    description: 'Obtain 3 gear drops today.',
+    id: 'd_arcade',
+    displayName: 'Arcade Contender',
+    description: 'Play 2 Arcade minigames today.',
     kind: 'DAILY',
-    metric: 'items_dropped',
-    targetValue: 3,
-    rewardKind: 'SHARDS',
-    rewardAmount: 20,
+    category: 'ARCADE',
+    metric: 'daily_minigame_played',
+    targetValue: 2,
+    rewardKind: 'ESSENCE',
+    rewardAmount: 3000,
     sortOrder: 3,
   },
   {
-    id: 'd_shopper',
-    displayName: 'Investor',
-    description: 'Buy 5 upgrades today.',
+    id: 'd_winner',
+    displayName: 'Arcade Champion',
+    description: 'Win 1 Arcade minigame trial today.',
     kind: 'DAILY',
-    metric: 'upgrades_bought',
-    targetValue: 5,
-    rewardKind: 'TOKENS',
-    rewardAmount: 1,
+    category: 'ARCADE',
+    metric: 'daily_minigame_wins',
+    targetValue: 1,
+    rewardKind: 'CRYSTALS',
+    rewardAmount: 4,
     sortOrder: 4,
   },
   {
-    id: 'd_winner',
-    displayName: 'Perfectionist',
-    description: 'Score a victory in any Arcade minigame.',
+    id: 'd_looter',
+    displayName: 'Relic Scavenger',
+    description: 'Obtain 2 gear drops today.',
     kind: 'DAILY',
-    metric: 'minigame_wins',
+    category: 'FORGE',
+    metric: 'daily_items_dropped',
+    targetValue: 2,
+    rewardKind: 'SHARDS',
+    rewardAmount: 20,
+    sortOrder: 5,
+  },
+  {
+    id: 'd_salvage',
+    displayName: 'Scrap Recycler',
+    description: 'Salvage 3 equipment pieces today.',
+    kind: 'DAILY',
+    category: 'FORGE',
+    metric: 'daily_salvage',
+    targetValue: 3,
+    rewardKind: 'ESSENCE',
+    rewardAmount: 5000,
+    sortOrder: 6,
+  },
+  {
+    id: 'd_forge',
+    displayName: 'Master Craftsman',
+    description: 'Forge 1 piece of equipment today.',
+    kind: 'DAILY',
+    category: 'FORGE',
+    metric: 'daily_forge',
     targetValue: 1,
     rewardKind: 'CRYSTALS',
     rewardAmount: 3,
-    sortOrder: 5,
+    sortOrder: 7,
+  },
+  {
+    id: 'd_shopper',
+    displayName: 'Astral Investor',
+    description: 'Purchase 8 upgrades today.',
+    kind: 'DAILY',
+    category: 'RESOURCE',
+    metric: 'daily_upgrades_bought',
+    targetValue: 8,
+    rewardKind: 'TOKENS',
+    rewardAmount: 1,
+    sortOrder: 8,
+  },
+  {
+    id: 'd_absorb',
+    displayName: 'Soul Assimilator',
+    description: 'Absorb 1 Boss Card into a Pet today.',
+    kind: 'DAILY',
+    category: 'RESOURCE',
+    metric: 'daily_cards_absorbed',
+    targetValue: 1,
+    rewardKind: 'SHARDS',
+    rewardAmount: 35,
+    sortOrder: 9,
+  },
+  {
+    id: 'd_essence',
+    displayName: 'Essence Siphon',
+    description: 'Harvest 10,000 Essence today.',
+    kind: 'DAILY',
+    category: 'RESOURCE',
+    metric: 'daily_essence_earned',
+    targetValue: 10000,
+    rewardKind: 'SHARDS',
+    rewardAmount: 30,
+    sortOrder: 10,
   },
 
   // Achievements
@@ -973,3 +1039,32 @@ export const ADS: AdPlacementDefinition[] = [
     sortOrder: 2,
   },
 ];
+
+export const DAILY_ALL_CLEAR_REWARDS = {
+  crystals: 15,
+  shards: 50,
+  tokens: 2,
+  essence: 10000,
+};
+
+export function getDailyQuestIdsForDate(dateStr: string): string[] {
+  let hash = 0;
+  for (let i = 0; i < dateStr.length; i++) {
+    hash = (hash << 5) - hash + dateStr.charCodeAt(i);
+    hash |= 0;
+  }
+  const seed = Math.abs(hash);
+
+  const combatPool = ['d_slayer', 'd_taps'];
+  const bossPool = ['d_bosses', 'd_essence'];
+  const forgePool = ['d_looter', 'd_salvage', 'd_forge'];
+  const arcadePool = ['d_arcade', 'd_winner', 'd_shopper', 'd_absorb'];
+
+  const q1 = combatPool[seed % combatPool.length];
+  const q2 = bossPool[(seed >> 2) % bossPool.length];
+  const q3 = forgePool[(seed >> 4) % forgePool.length];
+  const q4 = arcadePool[(seed >> 6) % arcadePool.length];
+
+  return [q1, q2, q3, q4];
+}
+

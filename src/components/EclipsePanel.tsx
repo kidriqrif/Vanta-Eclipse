@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { SKILLS } from '../data/definitions';
 import { formatNumber } from '../utils/numberFormat';
-import { Sparkles, Moon, ArrowUpRight, Lock, Check } from 'lucide-react';
+import { Moon, Lock, Check, ShieldAlert, Zap } from 'lucide-react';
 
 export const EclipsePanel: React.FC = () => {
   const {
@@ -41,32 +41,35 @@ export const EclipsePanel: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col p-3 overflow-y-auto bg-[#08080C] gap-3">
+    <div className="flex-1 flex flex-col p-2.5 overflow-y-auto bg-[#171D35] gap-2 select-none ">
       {/* Prestige Hero Card */}
-      <div className="bg-[#171722] border-2 border-[#FF3A46] p-3 flex flex-col gap-3">
+      <div className="bg-[#101426] border border-[#FF4268] p-3 rounded-none flex flex-col gap-2.5 shadow-[0_0_15px_rgba(90,59,105,0.2)] hud-corner">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-[#B01228] border border-[#FF3A46] flex items-center justify-center">
-              <Moon size={18} className="text-[#F6F6FC]" />
+            <div className="w-8 h-8 bg-[#FF4268]/10 border border-[#FF4268] flex items-center justify-center">
+              <Moon size={16} className="text-[#FF4268]" />
             </div>
             <div className="flex flex-col">
-              <span className="text-xs font-bold text-[#F6F6FC]">THE ECLIPSE</span>
-              <span className="text-[10px] text-[#8686A2]">
-                Eclipses performed: {eclipseCount} | Lifetime Peak: Lv.{lifetimePeakLevel}
+              <span className="text-xs font-display font-bold text-[#FFFFFF] uppercase tracking-wider">
+                SYS://ECLIPSE_OVERRIDE
+              </span>
+              <span className="text-[9px] font-tech text-[#8993B2]">
+                COLLAPSES: <span className="text-[#36D9FF] font-bold">{eclipseCount}</span> | RECORD: <span className="text-[#FF4268] font-bold">FLR {lifetimePeakLevel}</span>
               </span>
             </div>
           </div>
 
           <div className="flex flex-col items-end">
-            <span className="text-[10px] text-[#8686A2]">RUN PEAK</span>
-            <span className="text-sm font-bold text-[#FF3A46]">LV.{peakRunLevel}</span>
+            <span className="text-[8px] font-tech text-[#8993B2] uppercase">CURRENT PEAK</span>
+            <span className="text-xs font-mono-code font-bold text-[#FF4268]">FLR {peakRunLevel}</span>
           </div>
         </div>
 
-        <div className="bg-[#08080C] border border-[#4E4E66] p-2.5 flex items-center justify-between">
+        {/* Payout & Action Bar */}
+        <div className="bg-[#171D35] border border-white/15 p-2 flex items-center justify-between">
           <div className="flex flex-col">
-            <span className="text-[10px] text-[#8686A2]">ECLIPSE REWARD</span>
-            <span className="text-sm font-bold text-[#3EDCFA] flex items-center gap-1">
+            <span className="text-[8px] font-tech text-[#8993B2] uppercase">PRESTIGE HARVEST</span>
+            <span className="text-xs font-mono-code font-bold text-[#36D9FF] flex items-center gap-1">
               +{formatNumber(payout)} VOID CRYSTALS
             </span>
           </div>
@@ -74,44 +77,47 @@ export const EclipsePanel: React.FC = () => {
           <button
             onClick={handleEclipseClick}
             disabled={!canEclipse}
-            className={`px-4 py-2 text-xs font-bold border transition-all ${
+            className={`px-3 py-1.5 text-xs ${
               canEclipse
                 ? confirmPrestige
-                  ? 'bg-[#FF3A46] text-[#08080C] border-[#F6F6FC] animate-pulse'
-                  : 'bg-[#B01228] border-[#FF3A46] text-[#F6F6FC] hover:bg-[#FF3A46]'
-                : 'bg-[#2C2C3C] border-[#4E4E66] text-[#8686A2] cursor-not-allowed opacity-50'
+                  ? 'hud-btn-alert bg-[#FF4268] text-black animate-pulse'
+                  : 'hud-btn-alert'
+                : 'bg-[#171D35] border border-white/10 text-[#8993B2] cursor-not-allowed opacity-40'
             }`}
           >
             {canEclipse
               ? confirmPrestige
                 ? 'CONFIRM COLLAPSE?'
-                : 'ENTER ECLIPSE'
-              : 'UNLOCKS AT LV.50'}
+                : 'COMMENCE ECLIPSE'
+              : 'UNLOCKS FLR 50'}
           </button>
         </div>
 
         {confirmPrestige && (
-          <div className="text-[11px] text-[#FFD23C] bg-[#08080C] border border-[#FFD23C] p-2">
-            ⚠️ Entering the Eclipse will reset current run levels and Essence. You keep all Void Crystals, Relics, Pets, Equipment, Ascendant Powers, and records!
+          <div className="text-[10px] text-[#FFC857] bg-[#171D35] border border-[#FFC857] p-1.5 flex items-start gap-1">
+            <ShieldAlert size={12} className="shrink-0 mt-0.5" />
+            <span>WARNING: Collapsing current floor resets Essence. All Void Crystals, Relics, Pets, Hardware, and Ascendant Powers persist permanently.</span>
           </div>
         )}
       </div>
 
-      {/* Ascendant Powers Skill Tree */}
-      <div className="flex items-center justify-between bg-[#171722] border border-[#4E4E66] p-2 shrink-0">
+      {/* Ascendant Matrix Header */}
+      <div className="flex items-center justify-between bg-[#101426] border border-[#36D9FF]/40 p-2 rounded-none shrink-0">
         <div className="flex items-center gap-1.5">
-          <Sparkles size={14} className="text-[#3EDCFA]" />
-          <span className="text-xs font-bold text-[#F6F6FC]">ASCENDANT POWERS</span>
+          <Zap size={13} className="text-[#36D9FF]" />
+          <span className="text-xs font-display font-bold text-[#FFFFFF] uppercase tracking-wide">
+            ASCENDANT MATRIX
+          </span>
         </div>
 
         {/* Branch Filter Tabs */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 overflow-x-auto">
           <button
             onClick={() => setSelectedBranch('ALL')}
-            className={`px-2 py-0.5 text-[10px] font-bold border ${
+            className={`px-1.5 py-0.5 text-[8px] font-mono-code font-bold rounded-none ${
               selectedBranch === 'ALL'
-                ? 'bg-[#3EDCFA] text-[#08080C] border-[#3EDCFA]'
-                : 'bg-[#2C2C3C] text-[#8686A2] border-[#4E4E66]'
+                ? 'bg-[#36D9FF] text-[#171D35]'
+                : 'bg-[#171D35] text-[#8993B2] border border-white/10 hover:text-[#FFFFFF]'
             }`}
           >
             ALL
@@ -120,20 +126,20 @@ export const EclipsePanel: React.FC = () => {
             <button
               key={b}
               onClick={() => setSelectedBranch(b)}
-              className={`px-2 py-0.5 text-[10px] font-bold border ${
+              className={`px-1.5 py-0.5 text-[8px] font-mono-code font-bold rounded-none ${
                 selectedBranch === b
-                  ? 'bg-[#3EDCFA] text-[#08080C] border-[#3EDCFA]'
-                  : 'bg-[#2C2C3C] text-[#8686A2] border-[#4E4E66]'
+                  ? 'bg-[#36D9FF] text-[#171D35]'
+                  : 'bg-[#171D35] text-[#8993B2] border border-white/10 hover:text-[#FFFFFF]'
               }`}
             >
-              {b}
+              {b.toUpperCase()}
             </button>
           ))}
         </div>
       </div>
 
       {/* Skills Grid */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         {filteredSkills.map((skill) => {
           const curLevel = skillLevels[skill.id] || 0;
           const isMaxed = curLevel >= skill.maxLevel;
@@ -148,35 +154,34 @@ export const EclipsePanel: React.FC = () => {
           return (
             <div
               key={skill.id}
-              className={`bg-[#171722] border p-2.5 flex items-center justify-between gap-2 transition-all ${
+              className={`p-2 border transition-all flex items-center justify-between gap-2.5 rounded-none ${
                 isMaxed
-                  ? 'border-[#3EDCFA]/60 bg-[#171722]/80'
+                  ? 'bg-[#040406] border-[#36D9FF]/40'
                   : isLocked
-                  ? 'border-[#4E4E66] opacity-60'
-                  : 'border-[#4E4E66]'
+                  ? 'bg-[#040406] border-white/10 opacity-40'
+                  : 'bg-[#101426] border-white/15 hover:border-[#36D9FF]/50'
               }`}
             >
-              <div className="flex flex-col min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-[#F6F6FC]">
+              <div className="flex flex-col min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-xs font-display font-bold text-[#FFFFFF] uppercase">
                     {skill.displayName}
                   </span>
-                  <span className="text-[10px] text-[#3EDCFA] font-mono font-bold">
+                  <span className="text-[9px] font-mono-code font-bold text-[#36D9FF] bg-[#36D9FF]/10 px-1 border border-[#36D9FF]/30">
                     LV.{curLevel}/{skill.maxLevel}
                   </span>
-                  <span className="text-[9px] bg-[#2C2C3C] text-[#8686A2] px-1 py-0.2 uppercase">
+                  <span className="text-[7px] font-mono-code bg-[#171D35] border border-white/20 text-[#8993B2] px-1 uppercase">
                     {skill.branch}
                   </span>
                 </div>
 
-                <span className="text-[11px] text-[#C8C8DA] mt-0.5">
+                <span className="text-[10px] font-tech text-[#8993B2] mt-0.5">
                   {skill.description}
                 </span>
 
                 {isLocked && prereqSkill && (
-                  <span className="text-[10px] text-[#FF8A28] mt-0.5 flex items-center gap-1">
-                    <Lock size={10} /> Requires {prereqSkill.displayName} Lv.
-                    {skill.prereqLevel || 1}
+                  <span className="text-[9px] font-mono-code text-[#FFC857] mt-0.5 flex items-center gap-1">
+                    <Lock size={9} /> REQUIRES {prereqSkill.displayName.toUpperCase()} LV.{skill.prereqLevel || 1}
                   </span>
                 )}
               </div>
@@ -184,25 +189,23 @@ export const EclipsePanel: React.FC = () => {
               {/* Action Button */}
               <div className="shrink-0">
                 {isMaxed ? (
-                  <div className="px-3 py-1.5 bg-[#2C2C3C] border border-[#3EDCFA] text-[11px] font-bold text-[#3EDCFA] flex items-center gap-1">
-                    <Check size={12} /> MAX
+                  <div className="px-2.5 py-1 bg-[#171D35] border border-[#36D9FF] text-[9px] font-display font-bold text-[#36D9FF] flex items-center gap-1">
+                    <Check size={10} /> MAX
                   </div>
                 ) : isLocked ? (
-                  <div className="px-3 py-1.5 bg-[#2C2C3C] border border-[#4E4E66] text-[11px] font-bold text-[#8686A2] flex items-center gap-1">
-                    <Lock size={12} /> LOCKED
+                  <div className="px-2.5 py-1 bg-[#171D35] border border-white/10 text-[9px] font-display font-bold text-[#8993B2] flex items-center gap-1">
+                    <Lock size={10} /> LOCKED
                   </div>
                 ) : (
                   <button
                     onClick={() => buySkill(skill.id)}
                     disabled={!canAfford}
-                    className={`px-3 py-1.5 text-xs font-bold border transition-colors flex flex-col items-center min-w-[75px] ${
-                      canAfford
-                        ? 'bg-[#3EDCFA] text-[#08080C] border-[#F6F6FC] hover:bg-[#F6F6FC]'
-                        : 'bg-[#2C2C3C] border-[#4E4E66] text-[#8686A2] cursor-not-allowed opacity-50'
+                    className={`px-3 py-1 text-xs hud-btn flex flex-col items-center min-w-[76px] ${
+                      canAfford ? 'border-[#36D9FF]' : ''
                     }`}
                   >
                     <span>UPGRADE</span>
-                    <span className="text-[10px] font-normal">
+                    <span className="text-[8px] font-mono-code opacity-80">
                       {formatNumber(cost)} CRY
                     </span>
                   </button>

@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { formatNumber } from '../utils/numberFormat';
-import { Settings, Volume2, ShieldAlert, Download, Upload, Trash2, X, BarChart2 } from 'lucide-react';
+import { Settings, Volume2, ShieldAlert, Download, Upload, Trash2, X, BarChart2, Trophy } from 'lucide-react';
+import { PlayGamesAchievementsModal } from './PlayGamesAchievementsModal';
+import { playGamesService, PlayGamesAuthStatus } from '../services/playGamesService';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -23,6 +25,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
   const [copied, setCopied] = useState<boolean>(false);
   const [confirmReset, setConfirmReset] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'SETTINGS' | 'STATS'>('SETTINGS');
+  const [showAchievements, setShowAchievements] = useState<boolean>(false);
+  const [gpgsStatus, setGpgsStatus] = useState<PlayGamesAuthStatus>(playGamesService.getStatus());
+
+  useEffect(() => {
+    const unsub = playGamesService.subscribe((status) => {
+      setGpgsStatus(status);
+    });
+    return unsub;
+  }, []);
 
   const handleExport = () => {
     const data = exportSave();
@@ -38,59 +49,63 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#08080C]/80 flex items-center justify-center p-4">
-      <div className="bg-[#171722] border-2 border-[#4E4E66] max-w-sm w-full flex flex-col overflow-hidden max-h-[90vh]">
+    <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
+      <div className="bg-[#101426] border-2 border-[#30395C] max-w-sm w-full rounded-none flex flex-col overflow-hidden max-h-[90vh] shadow-[0_0_30px_rgba(0,0,0,0.9)]">
         {/* Modal Header */}
-        <div className="p-3 border-b border-[#4E4E66] flex items-center justify-between">
+        <div className="p-3 border-b border-[#30395C] flex items-center justify-between bg-[#171D35]">
           <div className="flex items-center gap-2">
-            <Settings size={16} className="text-[#FF3A46]" />
-            <span className="text-xs font-bold text-[#F6F6FC]">OPTIONS & ARCHIVE</span>
+            <div className="w-5 h-5 bg-[#101426] border border-[#36D9FF] flex items-center justify-center shadow-[0_0_6px_rgba(54,217,255,0.3)]">
+              <Settings size={12} className="text-[#36D9FF]" />
+            </div>
+            <span className="text-xs font-display font-bold text-[#E8EDF7] uppercase tracking-wider">
+              SYS://CONFIGURATION_HUB
+            </span>
           </div>
           <button
             onClick={onClose}
-            className="text-[#8686A2] hover:text-[#F6F6FC]"
+            className="w-5 h-5 bg-[#101426] hover:bg-[#FF4268] hover:text-[#080A12] text-[#8993B2] border border-[#30395C] flex items-center justify-center transition-all"
           >
-            <X size={16} />
+            <X size={12} />
           </button>
         </div>
 
         {/* Tab Toggle */}
-        <div className="grid grid-cols-2 border-b border-[#4E4E66] bg-[#08080C]">
+        <div className="grid grid-cols-2 border-b border-[#30395C] bg-[#171D35]">
           <button
             onClick={() => setActiveTab('SETTINGS')}
-            className={`py-1.5 text-xs font-bold ${
+            className={`py-2 text-xs font-display font-bold tracking-wider transition-all rounded-none ${
               activeTab === 'SETTINGS'
-                ? 'bg-[#171722] text-[#F6F6FC] border-b-2 border-[#FF3A46]'
-                : 'text-[#8686A2] hover:text-[#F6F6FC]'
+                ? 'bg-[#36D9FF] text-[#080A12] shadow-[0_0_8px_rgba(54,217,255,0.4)]'
+                : 'text-[#8993B2] hover:text-[#E8EDF7]'
             }`}
           >
             PREFERENCES
           </button>
           <button
             onClick={() => setActiveTab('STATS')}
-            className={`py-1.5 text-xs font-bold ${
+            className={`py-2 text-xs font-display font-bold tracking-wider transition-all rounded-none ${
               activeTab === 'STATS'
-                ? 'bg-[#171722] text-[#F6F6FC] border-b-2 border-[#FF3A46]'
-                : 'text-[#8686A2] hover:text-[#F6F6FC]'
+                ? 'bg-[#36D9FF] text-[#080A12] shadow-[0_0_8px_rgba(54,217,255,0.4)]'
+                : 'text-[#8993B2] hover:text-[#E8EDF7]'
             }`}
           >
             LIFETIME STATS
           </button>
         </div>
 
-        <div className="p-3 overflow-y-auto flex flex-col gap-3">
+        <div className="p-3 overflow-y-auto flex flex-col gap-2.5 bg-[#101426]">
           {activeTab === 'SETTINGS' ? (
             <>
               {/* Volume Sliders */}
-              <div className="flex flex-col gap-2 bg-[#08080C] border border-[#4E4E66] p-2.5">
-                <span className="text-xs font-bold text-[#F6F6FC] flex items-center gap-1.5">
-                  <Volume2 size={14} className="text-[#3EDCFA]" /> AUDIO CONTROLS
+              <div className="flex flex-col gap-2 bg-[#171D35] border border-[#30395C] p-2.5 rounded-none">
+                <span className="text-xs font-display font-bold text-[#E8EDF7] uppercase flex items-center gap-1">
+                  <Volume2 size={12} className="text-[#36D9FF]" /> AUDIO MATRIX
                 </span>
 
                 <div className="flex flex-col gap-1">
-                  <div className="flex justify-between text-[10px] text-[#8686A2]">
-                    <span>SOUND EFFECTS</span>
-                    <span>{Math.round(settings.sfxVolume * 100)}%</span>
+                  <div className="flex justify-between text-[9px] font-mono-code text-[#8993B2]">
+                    <span>TACTICAL SFX</span>
+                    <span className="text-[#36D9FF] font-bold">{Math.round(settings.sfxVolume * 100)}%</span>
                   </div>
                   <input
                     type="range"
@@ -101,14 +116,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                     onChange={(e) =>
                       updateSettings({ sfxVolume: parseFloat(e.target.value) })
                     }
-                    className="accent-[#FF3A46] cursor-pointer"
+                    className="accent-[#36D9FF] cursor-pointer"
                   />
                 </div>
 
-                <div className="flex flex-col gap-1 mt-1">
-                  <div className="flex justify-between text-[10px] text-[#8686A2]">
+                <div className="flex flex-col gap-1 mt-0.5">
+                  <div className="flex justify-between text-[9px] font-mono-code text-[#8993B2]">
                     <span>AMBIENT BGM</span>
-                    <span>{Math.round(settings.bgmVolume * 100)}%</span>
+                    <span className="text-[#36D9FF] font-bold">{Math.round(settings.bgmVolume * 100)}%</span>
                   </div>
                   <input
                     type="range"
@@ -119,91 +134,124 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                     onChange={(e) =>
                       updateSettings({ bgmVolume: parseFloat(e.target.value) })
                     }
-                    className="accent-[#3EDCFA] cursor-pointer"
+                    className="accent-[#36D9FF] cursor-pointer"
                   />
                 </div>
               </div>
 
               {/* Visual Toggles */}
-              <div className="flex flex-col gap-2 bg-[#08080C] border border-[#4E4E66] p-2.5">
-                <span className="text-xs font-bold text-[#F6F6FC]">GAMEPLAY FEEDBACK</span>
+              <div className="flex flex-col gap-1.5 bg-[#171D35] border border-[#30395C] p-2.5 rounded-none">
+                <span className="text-xs font-display font-bold text-[#E8EDF7] uppercase">
+                  FEEDBACK TELEMETRY
+                </span>
 
-                <label className="flex items-center justify-between text-xs text-[#C8C8DA] cursor-pointer">
-                  <span>Floating Damage Numbers</span>
+                <label className="flex items-center justify-between text-xs text-[#E8EDF7] font-tech cursor-pointer py-0.5">
+                  <span>FLOATING DAMAGE NUMBERS</span>
                   <input
                     type="checkbox"
                     checked={settings.damageNumbers}
                     onChange={(e) =>
                       updateSettings({ damageNumbers: e.target.checked })
                     }
-                    className="accent-[#FF3A46] w-4 h-4 cursor-pointer"
+                    className="accent-[#36D9FF] w-4 h-4 cursor-pointer"
                   />
                 </label>
 
-                <label className="flex items-center justify-between text-xs text-[#C8C8DA] cursor-pointer">
-                  <span>Screen Shake Effects</span>
+                <label className="flex items-center justify-between text-xs text-[#E8EDF7] font-tech cursor-pointer py-0.5">
+                  <span>IMPACT CAMERA SHAKE</span>
                   <input
                     type="checkbox"
                     checked={settings.screenShake}
                     onChange={(e) =>
                       updateSettings({ screenShake: e.target.checked })
                     }
-                    className="accent-[#FF3A46] w-4 h-4 cursor-pointer"
+                    className="accent-[#36D9FF] w-4 h-4 cursor-pointer"
                   />
                 </label>
               </div>
 
-              {/* Save Export / Import */}
-              <div className="flex flex-col gap-2 bg-[#08080C] border border-[#4E4E66] p-2.5">
-                <span className="text-xs font-bold text-[#F6F6FC]">SAVE MANAGEMENT</span>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleExport}
-                    className="flex-1 py-1 bg-[#2C2C3C] border border-[#4E4E66] text-xs font-bold text-[#F6F6FC] hover:bg-[#4E4E66] flex items-center justify-center gap-1"
-                  >
-                    <Download size={13} /> {copied ? 'COPIED!' : 'EXPORT SAVE'}
-                  </button>
+              {/* Google Play Games Services */}
+              <div className="flex flex-col gap-2 bg-[#171D35] border border-[#30395C] p-2.5 rounded-none">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-display font-bold text-[#E8EDF7] uppercase flex items-center gap-1.5">
+                    <Trophy size={13} className="text-[#FFC857]" /> GOOGLE PLAY GAMES
+                  </span>
+                  {gpgsStatus.isConnected ? (
+                    <span className="text-[8px] font-mono-code text-[#36D9FF] bg-[#17283A] border border-[#36D9FF]/40 px-1.5 py-0.5 font-bold">
+                      {gpgsStatus.isSandboxMode ? 'SANDBOX' : 'CONNECTED'}
+                    </span>
+                  ) : (
+                    <span className="text-[8px] font-mono-code text-[#8993B2]">
+                      DISCONNECTED
+                    </span>
+                  )}
                 </div>
 
-                <div className="flex flex-col gap-1 mt-1">
+                <p className="text-[10px] font-tech text-[#8993B2] leading-tight">
+                  Synchronize milestones, earn official Play Games XP, and view global game achievements.
+                </p>
+
+                <button
+                  id="btn-settings-achievements"
+                  onClick={() => setShowAchievements(true)}
+                  className="w-full py-2 bg-[#101426] hover:bg-[#36D9FF] hover:text-[#080A12] border border-[#36D9FF] text-xs font-display font-bold text-[#36D9FF] flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_12px_rgba(54,217,255,0.25)] active:scale-98"
+                >
+                  <Trophy size={14} className="text-[#FFC857]" />
+                  <span>ACHIEVEMENTS</span>
+                </button>
+              </div>
+
+              {/* Save Export / Import */}
+              <div className="flex flex-col gap-2 bg-[#171D35] border border-[#30395C] p-2.5 rounded-none">
+                <span className="text-xs font-display font-bold text-[#E8EDF7] uppercase">
+                  ARCHIVE PERSISTENCE
+                </span>
+
+                <button
+                  onClick={handleExport}
+                  className="w-full py-1.5 bg-[#101426] hover:bg-[#17283A] border border-[#30395C] text-[#E8EDF7] text-xs font-display font-bold flex items-center justify-center gap-1 transition-all"
+                >
+                  <Download size={12} className="text-[#36D9FF]" /> {copied ? 'ENCRYPTED SAVE COPIED' : 'EXPORT SAVE STRING'}
+                </button>
+
+                <div className="flex flex-col gap-1 mt-0.5">
                   <input
                     type="text"
-                    placeholder="Paste save string here..."
+                    placeholder="PASTE SAVE STRING..."
                     value={importStr}
                     onChange={(e) => setImportStr(e.target.value)}
-                    className="bg-[#171722] border border-[#4E4E66] text-xs text-[#F6F6FC] px-2 py-1 outline-none font-mono"
+                    className="bg-[#101426] border border-[#30395C] text-xs text-[#E8EDF7] px-2 py-1 outline-none font-mono-code focus:border-[#36D9FF]"
                   />
                   <button
                     onClick={handleImport}
                     disabled={!importStr.trim()}
-                    className="py-1 bg-[#2C2C3C] border border-[#4E4E66] text-xs font-bold text-[#3EDCFA] hover:bg-[#3EDCFA] hover:text-[#08080C] flex items-center justify-center gap-1 disabled:opacity-40"
+                    className="py-1 bg-[#101426] hover:bg-[#17283A] border border-[#30395C] text-[#E8EDF7] text-xs font-display font-bold flex items-center justify-center gap-1 disabled:opacity-40 transition-all"
                   >
-                    <Upload size={13} /> RESTORE IMPORT
+                    <Upload size={12} className="text-[#FFC857]" /> RESTORE ARCHIVE
                   </button>
                 </div>
               </div>
 
               {/* Hard Reset */}
-              <div className="flex flex-col gap-1.5 bg-[#08080C] border border-[#B01228] p-2.5">
-                <span className="text-xs font-bold text-[#FF3A46] flex items-center gap-1">
-                  <ShieldAlert size={14} /> DANGER ZONE
+              <div className="flex flex-col gap-1.5 bg-[#171D35] border border-[#FF4268]/50 p-2.5 rounded-none">
+                <span className="text-xs font-display font-bold text-[#FF4268] uppercase flex items-center gap-1">
+                  <ShieldAlert size={12} /> DANGER PROTOCOL
                 </span>
-                <span className="text-[10px] text-[#8686A2]">
-                  Permanently erase all progress, gear, cards, and prestige stats.
+                <span className="text-[9px] font-tech text-[#8993B2]">
+                  Permanently wipe all progress, unlocked gear, cards, and prestige matrix.
                 </span>
 
                 {confirmReset ? (
                   <div className="flex gap-2 mt-1">
                     <button
                       onClick={resetGameSave}
-                      className="flex-1 py-1 bg-[#FF3A46] text-[#08080C] text-xs font-bold hover:bg-[#F6F6FC]"
+                      className="flex-1 py-1 bg-[#FF4268] text-[#080A12] text-xs font-display font-bold hover:brightness-110"
                     >
-                      CONFIRM WIPE
+                      CONFIRM PURGE
                     </button>
                     <button
                       onClick={() => setConfirmReset(false)}
-                      className="flex-1 py-1 bg-[#2C2C3C] text-xs font-bold text-[#F6F6FC]"
+                      className="flex-1 py-1 bg-[#101426] border border-[#30395C] text-xs font-display font-bold text-[#E8EDF7]"
                     >
                       CANCEL
                     </button>
@@ -211,86 +259,77 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                 ) : (
                   <button
                     onClick={() => setConfirmReset(true)}
-                    className="py-1 bg-[#2C2C3C] border border-[#FF3A46] text-xs font-bold text-[#FF3A46] hover:bg-[#FF3A46] hover:text-[#08080C] flex items-center justify-center gap-1"
+                    className="py-1 bg-[#101426] hover:bg-[#FF4268] hover:text-[#080A12] border border-[#FF4268] text-xs font-display font-bold text-[#FF4268] flex items-center justify-center gap-1 mt-0.5 transition-all"
                   >
-                    <Trash2 size={13} /> WIPE SAVE DATA
+                    <Trash2 size={12} /> PURGE SAVE DATA
                   </button>
                 )}
-          {/* Legal Links */}
-          {activeTab === 'SETTINGS' && (
-            <div className="flex justify-center pt-2 pb-1">
-              <a
-                href="/privacy-policy.html"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[10px] text-[#8686A2] hover:text-[#3EDCFA] underline"
-              >
-                Privacy Policy
-              </a>
-            </div>
-          )}
+              </div>
+
+              {/* Legal Links */}
+              <div className="flex justify-center pt-0.5">
+                <a
+                  href="/privacy-policy.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] font-tech text-[#8993B2] hover:text-[#36D9FF] transition-colors underline"
+                >
+                  PRIVACY POLICY & TERMS
+                </a>
               </div>
             </>
           ) : (
             /* Stats Screen */
             <div className="flex flex-col gap-2">
-              <div className="bg-[#08080C] border border-[#4E4E66] p-2.5 flex flex-col gap-2">
-                <span className="text-xs font-bold text-[#F6F6FC] flex items-center gap-1.5">
-                  <BarChart2 size={14} className="text-[#6ADC3E]" /> COMBAT RECORDS
+              <div className="bg-[#171D35] border border-[#30395C] p-2.5 rounded-none flex flex-col gap-2">
+                <span className="text-xs font-display font-bold text-[#E8EDF7] uppercase flex items-center gap-1">
+                  <BarChart2 size={12} className="text-[#36D9FF]" /> LIFETIME COMBAT TELEMETRY
                 </span>
 
                 <div className="flex flex-col gap-1.5 text-xs">
-                  <div className="flex justify-between text-[#C8C8DA]">
-                    <span>Lifetime Peak Floor:</span>
-                    <span className="font-bold text-[#FF3A46]">LV.{lifetimePeakLevel}</span>
+                  <div className="flex justify-between items-center text-[#E8EDF7] border-b border-[#30395C]/40 pb-1">
+                    <span className="text-[10px] font-tech text-[#8993B2]">PEAK FLOOR LEVEL:</span>
+                    <span className="font-mono-code font-bold text-[#36D9FF]">FLR {lifetimePeakLevel}</span>
                   </div>
-                  <div className="flex justify-between text-[#C8C8DA]">
-                    <span>Total Enemies Slain:</span>
-                    <span className="font-bold text-[#F6F6FC]">
+                  <div className="flex justify-between items-center text-[#E8EDF7] border-b border-[#30395C]/40 pb-1">
+                    <span className="text-[10px] font-tech text-[#8993B2]">TARGETS VAPORIZED:</span>
+                    <span className="font-mono-code font-bold text-[#E8EDF7]">
                       {formatNumber(questCounters.kills || 0)}
                     </span>
                   </div>
-                  <div className="flex justify-between text-[#C8C8DA]">
-                    <span>Boss Gates Vanquished:</span>
-                    <span className="font-bold text-[#FFD23C]">
+                  <div className="flex justify-between items-center text-[#E8EDF7] border-b border-[#30395C]/40 pb-1">
+                    <span className="text-[10px] font-tech text-[#8993B2]">BOSS GATES BREACHED:</span>
+                    <span className="font-mono-code font-bold text-[#FFC857]">
                       {formatNumber(questCounters.boss_wins || 0)}
                     </span>
                   </div>
-                  <div className="flex justify-between text-[#C8C8DA]">
-                    <span>Eclipses Performed:</span>
-                    <span className="font-bold text-[#3EDCFA]">{eclipseCount}</span>
+                  <div className="flex justify-between items-center text-[#E8EDF7] border-b border-[#30395C]/40 pb-1">
+                    <span className="text-[10px] font-tech text-[#8993B2]">ECLIPSES EXECUTED:</span>
+                    <span className="font-mono-code font-bold text-[#36D9FF]">{eclipseCount}</span>
                   </div>
-                  <div className="flex justify-between text-[#C8C8DA]">
-                    <span>Upgrades Purchased:</span>
-                    <span className="font-bold text-[#F6F6FC]">
+                  <div className="flex justify-between items-center text-[#E8EDF7] border-b border-[#30395C]/40 pb-1">
+                    <span className="text-[10px] font-tech text-[#8993B2]">SUBSYSTEM UPGRADES:</span>
+                    <span className="font-mono-code font-bold text-[#E8EDF7]">
                       {formatNumber(questCounters.upgrades_bought || 0)}
                     </span>
                   </div>
-                  <div className="flex justify-between text-[#C8C8DA]">
-                    <span>Arcade Trials Completed:</span>
-                    <span className="font-bold text-[#A85CFF]">
-                      {questCounters.minigame_played || 0} ({questCounters.minigame_wins || 0} Wins)
+                  <div className="flex justify-between items-center text-[#E8EDF7]">
+                    <span className="text-[10px] font-tech text-[#8993B2]">ARCADE TRIALS:</span>
+                    <span className="font-mono-code font-bold text-[#FFC857]">
+                      {questCounters.minigame_played || 0} ({questCounters.minigame_wins || 0} WINS)
                     </span>
                   </div>
                 </div>
               </div>
             </div>
           )}
-          {/* Legal Links */}
-          {activeTab === 'SETTINGS' && (
-            <div className="flex justify-center pt-2 pb-1">
-              <a
-                href="/privacy-policy.html"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[10px] text-[#8686A2] hover:text-[#3EDCFA] underline"
-              >
-                Privacy Policy
-              </a>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Google Play Games Achievements Modal */}
+      {showAchievements && (
+        <PlayGamesAchievementsModal onClose={() => setShowAchievements(false)} />
+      )}
     </div>
   );
 };
