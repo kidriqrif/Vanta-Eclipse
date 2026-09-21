@@ -54,14 +54,14 @@ export const EclipsePanel: React.FC = () => {
                 SYS://ECLIPSE_OVERRIDE
               </span>
               <span className="text-[9px] font-tech text-[#8993B2]">
-                COLLAPSES: <span className="text-[#36D9FF] font-bold">{eclipseCount}</span> | RECORD: <span className="text-[#FF4268] font-bold">FLR {lifetimePeakLevel}</span>
+                COLLAPSES: <span className="text-[#36D9FF] font-bold">{eclipseCount}</span> | RECORD: <span className="text-[#FF4268] font-bold">FLOOR {lifetimePeakLevel}</span>
               </span>
             </div>
           </div>
 
           <div className="flex flex-col items-end">
             <span className="text-[8px] font-tech text-[#8993B2] uppercase">CURRENT PEAK</span>
-            <span className="text-xs font-mono-code font-bold text-[#FF4268]">FLR {peakRunLevel}</span>
+            <span className="text-xs font-mono-code font-bold text-[#FF4268]">FLOOR {peakRunLevel}</span>
           </div>
         </div>
 
@@ -89,7 +89,7 @@ export const EclipsePanel: React.FC = () => {
               ? confirmPrestige
                 ? 'CONFIRM COLLAPSE?'
                 : 'COMMENCE ECLIPSE'
-              : 'UNLOCKS FLR 50'}
+              : 'UNLOCKS AT FLOOR 50'}
           </button>
         </div>
 
@@ -168,7 +168,7 @@ export const EclipsePanel: React.FC = () => {
                     {skill.displayName}
                   </span>
                   <span className="text-[9px] font-mono-code font-bold text-[#36D9FF] bg-[#36D9FF]/10 px-1 border border-[#36D9FF]/30">
-                    LV.{curLevel}/{skill.maxLevel}
+                    LEVEL {curLevel}/{skill.maxLevel}
                   </span>
                   <span className="text-[7px] font-mono-code bg-[#171D35] border border-white/20 text-[#8993B2] px-1 uppercase">
                     {skill.branch}
@@ -181,7 +181,7 @@ export const EclipsePanel: React.FC = () => {
 
                 {isLocked && prereqSkill && (
                   <span className="text-[9px] font-mono-code text-[#FFC857] mt-0.5 flex items-center gap-1">
-                    <Lock size={9} /> REQUIRES {prereqSkill.displayName.toUpperCase()} LV.{skill.prereqLevel || 1}
+                    <Lock size={9} /> REQUIRES {prereqSkill.displayName.toUpperCase()} LEVEL {skill.prereqLevel || 1}
                   </span>
                 )}
               </div>
@@ -206,7 +206,7 @@ export const EclipsePanel: React.FC = () => {
                   >
                     <span>UPGRADE</span>
                     <span className="text-[8px] font-mono-code opacity-80">
-                      {formatNumber(cost)} CRY
+                      {formatNumber(cost)} CRYSTALS
                     </span>
                   </button>
                 )}

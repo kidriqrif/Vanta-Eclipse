@@ -159,7 +159,7 @@ export const ENEMIES: Record<string, EnemyDefinition> = {
 export const UPGRADES: UpgradeDefinition[] = [
   {
     id: 'void_claws',
-    displayName: 'Void Claws',
+    displayName: 'Tap Damage',
     description: 'Tap damage +1 per level.',
     stat: 'tap_damage',
     modifierType: 'ADDITIVE',
@@ -172,7 +172,7 @@ export const UPGRADES: UpgradeDefinition[] = [
   },
   {
     id: 'eclipse_fangs',
-    displayName: 'Eclipse Fangs',
+    displayName: 'Tap Power',
     description: 'Tap damage +10% per level.',
     stat: 'tap_damage',
     modifierType: 'PERCENT',
@@ -185,7 +185,7 @@ export const UPGRADES: UpgradeDefinition[] = [
   },
   {
     id: 'dark_focus',
-    displayName: 'Dark Focus',
+    displayName: 'Crit Chance',
     description: 'Critical chance +0.5% per level.',
     stat: 'crit_chance',
     modifierType: 'ADDITIVE',
@@ -198,7 +198,7 @@ export const UPGRADES: UpgradeDefinition[] = [
   },
   {
     id: 'blood_moon',
-    displayName: 'Blood Moon',
+    displayName: 'Crit Damage',
     description: 'Critical damage +25% per level.',
     stat: 'crit_damage',
     modifierType: 'ADDITIVE',
@@ -211,7 +211,7 @@ export const UPGRADES: UpgradeDefinition[] = [
   },
   {
     id: 'essence_siphon',
-    displayName: 'Essence Siphon',
+    displayName: 'Essence Rate',
     description: 'Essence from kills +10% per level.',
     stat: 'essence_gain',
     modifierType: 'PERCENT',

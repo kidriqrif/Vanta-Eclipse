@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useGame } from '../context/GameContext';
 import { MINIGAMES } from '../data/definitions';
 import { formatNumber } from '../utils/numberFormat';
@@ -39,12 +39,12 @@ export const ArcadeHub: React.FC = () => {
     }
   };
 
-  const handleFinishGame = (score: number, won: boolean) => {
+  const handleFinishGame = useCallback((score: number, won: boolean) => {
     if (!activeMinigameId) return;
     const reward = finishMinigame(activeMinigameId, score, won);
     setOutcomeModal({ won, reward, score });
     setActiveMinigameId(null);
-  };
+  }, [activeMinigameId, finishMinigame]);
 
   return (
     <div className="flex-1 flex flex-col p-2.5 overflow-y-auto bg-[#171D35] gap-2 select-none ">
@@ -197,7 +197,7 @@ export const ArcadeHub: React.FC = () => {
                   }`}
                 >
                   <Play size={10} />
-                  <span>PLAY (1T)</span>
+                  <span>PLAY (1 TOKEN)</span>
                 </button>
               </div>
             </div>

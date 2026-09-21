@@ -30,17 +30,17 @@ export const OnboardingManager: React.FC = () => {
   useEffect(() => {
     // Level 1: Welcome
     if (enemyLevel >= 1) {
-      triggerTutorial('welcome', 'SYSTEM INITIALIZED', 'Welcome to Vanta Eclipse. Tap the enemy in the center to deal damage. Defeat enemies to earn credits and advance levels.', <Sword size={24} />);
+      triggerTutorial('welcome', 'SYSTEM INITIALIZED', 'Welcome to Vanta Eclipse. Tap the enemy in the center to deal damage. Defeat enemies to harvest Essence and advance floors.', <Sword size={24} />);
     }
     
     // Level 5: Forge (Upgrades)
     if (enemyLevel >= 5) {
-      triggerTutorial('forge', 'FORGE UNLOCKED', 'Use Credits to buy passive Upgrades in the FORGE tab. These increase your tap damage and critical hits.', <Zap size={24} />);
+      triggerTutorial('forge', 'FORGE UNLOCKED', 'Use Essence to buy passive Upgrades in the FORGE tab. These increase your tap damage and critical strike power.', <Zap size={24} />);
     }
 
     // Level 10: Boss & Gear
     if (enemyLevel >= 10) {
-      triggerTutorial('gear', 'ARMOR UNLOCKED', 'Bosses drop GEAR! Equip items in the ARMOR tab to boost your stats. Gear has rarities and can significantly boost your power.', <Shield size={24} />);
+      triggerTutorial('gear', 'GEAR UNLOCKED', 'Bosses drop GEAR! Equip items in the GEAR tab to boost your stats. Gear has rarities and can significantly boost your power.', <Shield size={24} />);
     }
 
     // Level 25: Cards

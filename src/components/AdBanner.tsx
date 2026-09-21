@@ -25,12 +25,13 @@ const SPONSOR_CREATIVES: SponsorCreative[] = [
     rewardHint: '+25 CRYSTALS',
   },
   {
-    id: 'supporter_pack',
-    tag: 'SUPPORTER',
-    headline: 'VANTA PROTOCOL OVERRIDE',
-    subtext: 'Permanent 100% ad removal & permanent cosmic drop multipliers.',
+    id: 'cyber_forge',
+    tag: 'ARMORY',
+    headline: 'QUANTUM FORGE • GEAR REFINEMENT',
+    subtext: 'Enhance weapon damage and unlock relic synergies in the armory.',
     ctaText: 'UPGRADE',
     accentColor: '#36D9FF',
+    rewardHint: '+ATTACK MATRIX',
   },
   {
     id: 'void_chronicles',
@@ -42,18 +43,19 @@ const SPONSOR_CREATIVES: SponsorCreative[] = [
   },
 ];
 
-export const AdBanner: React.FC<{ onNavigateToShop?: () => void; onNavigateToJournal?: () => void }> = ({
+export const AdBanner: React.FC<{ 
+  onNavigateToShop?: () => void; 
+  onNavigateToJournal?: () => void;
+  onNavigateToGear?: () => void;
+}> = ({
   onNavigateToShop,
   onNavigateToJournal,
+  onNavigateToGear,
 }) => {
   const { hasRemovedAds } = useGame();
   const [creativeIndex, setCreativeIndex] = useState(0);
   const [isBannerVisible, setIsBannerVisible] = useState(true);
   const [nativeBannerActive, setNativeBannerActive] = useState(false);
-
-  if (hasRemovedAds) {
-    return null;
-  }
 
   // Handle native AdMob banner when running on Android/iOS Capacitor
   useEffect(() => {
@@ -61,6 +63,17 @@ export const AdBanner: React.FC<{ onNavigateToShop?: () => void; onNavigateToJou
 
     const setupNativeBanner = async () => {
       if (Capacitor.isNativePlatform()) {
+        if (hasRemovedAds) {
+          try {
+            await AdMob.hideBanner();
+            await AdMob.removeBanner();
+          } catch {
+            // ignore
+          }
+          if (isMounted) setNativeBannerActive(false);
+          return;
+        }
+
         try {
           const options: BannerAdOptions = {
             adId: 'ca-app-pub-3940256099942544/6300978111',
@@ -86,17 +99,19 @@ export const AdBanner: React.FC<{ onNavigateToShop?: () => void; onNavigateToJou
         AdMob.removeBanner().catch(() => {});
       }
     };
-  }, []);
+  }, [hasRemovedAds]);
 
   // Rotate web sponsor creative
   useEffect(() => {
+    if (hasRemovedAds) return;
     const timer = setInterval(() => {
       setCreativeIndex((prev) => (prev + 1) % SPONSOR_CREATIVES.length);
     }, 10000);
     return () => clearInterval(timer);
-  }, []);
+  }, [hasRemovedAds]);
 
-  if (!isBannerVisible) {
+  // Pro users: Banner is completely eradicated
+  if (hasRemovedAds || !isBannerVisible) {
     return null;
   }
 
@@ -116,8 +131,11 @@ export const AdBanner: React.FC<{ onNavigateToShop?: () => void; onNavigateToJou
   const creative = SPONSOR_CREATIVES[creativeIndex];
 
   const handleCtaClick = () => {
-    if (creative.id === 'astral_surge' || creative.id === 'supporter_pack') {
+    if (creative.id === 'astral_surge') {
       if (onNavigateToShop) onNavigateToShop();
+    } else if (creative.id === 'cyber_forge') {
+      if (onNavigateToGear) onNavigateToGear();
+      else if (onNavigateToShop) onNavigateToShop();
     } else if (creative.id === 'void_chronicles') {
       if (onNavigateToJournal) onNavigateToJournal();
     }

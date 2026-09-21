@@ -53,6 +53,23 @@
   image-rendering: crisp-edges;
 }
 
+@layer utilities {
+  .bg-grid-pattern {
+    background-image: linear-gradient(rgba(48, 57, 92, 0.15) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(48, 57, 92, 0.15) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+  .bg-scanline-pattern {
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.15),
+      rgba(0, 0, 0, 0.15) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+  }
+}
+
 /* Sharp Terminal & HUD Scrollbars */
 ::-webkit-scrollbar {
   width: 4px;

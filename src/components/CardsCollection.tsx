@@ -60,7 +60,7 @@ export const CardsCollection: React.FC = () => {
                 {selectedCard.rarity.toUpperCase()}
               </span>
               <span className="text-xs font-display font-bold text-[#FFFFFF]">
-                {selectedCard.bossName} [LV.{selectedCard.level}]
+                {selectedCard.bossName} [LEVEL {selectedCard.level}]
               </span>
             </div>
             <button
@@ -75,9 +75,9 @@ export const CardsCollection: React.FC = () => {
             <div className="bg-[#171D35] border border-white/15 p-1.5 rounded-none flex items-center gap-2">
               <Flame size={13} className="text-[#FFC857]" />
               <div className="flex flex-col">
-                <span className="text-[8px] text-[#8993B2] font-tech">COMPANION XP</span>
+                <span className="text-[8px] text-[#8993B2] font-tech">COMPANION EXPERIENCE</span>
                 <span className="text-xs font-mono-code font-bold text-[#FFC857]">
-                  +{formatNumber(selectedCard.power)} XP
+                  +{formatNumber(selectedCard.power)} EXP
                 </span>
               </div>
             </div>
@@ -140,7 +140,7 @@ export const CardsCollection: React.FC = () => {
                   >
                     {card.rarity.toUpperCase()}
                   </span>
-                  <span className="text-[8px] font-mono-code text-[#8993B2]">LV.{card.level}</span>
+                  <span className="text-[8px] font-mono-code text-[#8993B2]">LEVEL {card.level}</span>
                 </div>
 
                 <div className="my-1">
@@ -150,8 +150,8 @@ export const CardsCollection: React.FC = () => {
                 </div>
 
                 <div className="flex items-center justify-between text-[8px] font-mono-code bg-[#171D35] p-1 border border-white/10">
-                  <span className="text-[#FFC857] font-bold">+{card.power} XP</span>
-                  <span className="text-[#36D9FF] font-bold">+{card.vigor} VIG</span>
+                  <span className="text-[#FFC857] font-bold">+{card.power} EXP</span>
+                  <span className="text-[#36D9FF] font-bold">+{card.vigor} VIGOR</span>
                 </div>
               </div>
             );

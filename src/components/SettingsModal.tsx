@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
+import { sound } from '../utils/audio';
 import { formatNumber } from '../utils/numberFormat';
-import { Settings, Volume2, ShieldAlert, Download, Upload, Trash2, X, BarChart2, Trophy } from 'lucide-react';
+import { Settings, Volume2, VolumeX, Music, ShieldAlert, Download, Upload, Trash2, X, BarChart2, Trophy } from 'lucide-react';
 import { PlayGamesAchievementsModal } from './PlayGamesAchievementsModal';
 import { playGamesService, PlayGamesAuthStatus } from '../services/playGamesService';
 
@@ -96,16 +97,66 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
         <div className="p-3 overflow-y-auto flex flex-col gap-2.5 bg-[#101426]">
           {activeTab === 'SETTINGS' ? (
             <>
-              {/* Volume Sliders */}
-              <div className="flex flex-col gap-2 bg-[#171D35] border border-[#30395C] p-2.5 rounded-none">
-                <span className="text-xs font-display font-bold text-[#E8EDF7] uppercase flex items-center gap-1">
-                  <Volume2 size={12} className="text-[#36D9FF]" /> AUDIO MATRIX
-                </span>
+              {/* Volume Sliders & Master Control */}
+              <div className="flex flex-col gap-2.5 bg-[#171D35] border border-[#30395C] p-2.5 rounded-none">
+                {/* Audio Matrix Header & Master Switch */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-display font-bold text-[#E8EDF7] uppercase flex items-center gap-1.5">
+                    <Volume2 size={13} className="text-[#36D9FF]" /> AUDIO MATRIX
+                  </span>
 
-                <div className="flex flex-col gap-1">
-                  <div className="flex justify-between text-[9px] font-mono-code text-[#8993B2]">
-                    <span>TACTICAL SFX</span>
-                    <span className="text-[#36D9FF] font-bold">{Math.round(settings.sfxVolume * 100)}%</span>
+                  {/* Master Mute / Active Button */}
+                  <button
+                    id="btn-settings-master-mute"
+                    onClick={() => {
+                      const isAllMuted = settings.sfxMuted && settings.bgmMuted;
+                      updateSettings({ sfxMuted: !isAllMuted, bgmMuted: !isAllMuted });
+                    }}
+                    className={`px-2 py-0.5 text-[9px] font-mono-code font-bold uppercase border transition-all flex items-center gap-1 cursor-pointer select-none ${
+                      settings.sfxMuted && settings.bgmMuted
+                        ? 'bg-[#101426] border-[#FF4268] text-[#FF4268] hover:bg-[#FF4268] hover:text-[#080A12]'
+                        : 'bg-[#101426] border-[#36D9FF]/60 text-[#36D9FF] hover:border-[#36D9FF]'
+                    }`}
+                    title={settings.sfxMuted && settings.bgmMuted ? 'Unmute Master Audio' : 'Mute All Audio'}
+                  >
+                    {settings.sfxMuted && settings.bgmMuted ? (
+                      <>
+                        <VolumeX size={11} className="text-[#FF4268]" />
+                        <span>MASTER MUTED</span>
+                      </>
+                    ) : (
+                      <>
+                        <Volume2 size={11} className="text-[#36D9FF]" />
+                        <span>MASTER ONLINE</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Tactical SFX Channel */}
+                <div className="flex flex-col gap-1 bg-[#101426] border border-[#30395C]/60 p-2">
+                  <div className="flex items-center justify-between text-[9px] font-mono-code">
+                    <span className="text-[#8993B2] font-bold">SOUND EFFECTS (SFX)</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => sound.play('crit_hit')}
+                        disabled={settings.sfxMuted || settings.sfxVolume <= 0}
+                        className="px-1.5 py-0.5 bg-[#171D35] hover:bg-[#36D9FF] hover:text-[#080A12] border border-[#30395C] text-[#8993B2] text-[8px] font-bold uppercase transition-all disabled:opacity-30 disabled:pointer-events-none"
+                        title="Test Sound Effect"
+                      >
+                        TEST
+                      </button>
+                      <button
+                        onClick={() => updateSettings({ sfxMuted: !settings.sfxMuted })}
+                        className={`flex items-center gap-1 font-bold ${
+                          settings.sfxMuted ? 'text-[#FF4268]' : 'text-[#36D9FF]'
+                        }`}
+                        title={settings.sfxMuted ? 'Enable Sound Effects' : 'Mute Sound Effects'}
+                      >
+                        {settings.sfxMuted ? <VolumeX size={11} /> : <Volume2 size={11} />}
+                        <span>{settings.sfxMuted ? 'MUTED' : `${Math.round(settings.sfxVolume * 100)}%`}</span>
+                      </button>
+                    </div>
                   </div>
                   <input
                     type="range"
@@ -113,17 +164,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                     max="1"
                     step="0.05"
                     value={settings.sfxVolume}
-                    onChange={(e) =>
-                      updateSettings({ sfxVolume: parseFloat(e.target.value) })
-                    }
-                    className="accent-[#36D9FF] cursor-pointer"
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      updateSettings({ sfxVolume: val, sfxMuted: val === 0 ? true : settings.sfxMuted && val > 0 ? false : settings.sfxMuted });
+                    }}
+                    className="accent-[#36D9FF] cursor-pointer w-full"
                   />
                 </div>
 
-                <div className="flex flex-col gap-1 mt-0.5">
-                  <div className="flex justify-between text-[9px] font-mono-code text-[#8993B2]">
-                    <span>AMBIENT BGM</span>
-                    <span className="text-[#36D9FF] font-bold">{Math.round(settings.bgmVolume * 100)}%</span>
+                {/* Ambient BGM Channel */}
+                <div className="flex flex-col gap-1 bg-[#101426] border border-[#30395C]/60 p-2">
+                  <div className="flex items-center justify-between text-[9px] font-mono-code">
+                    <span className="text-[#8993B2] font-bold">BACKGROUND MUSIC (BGM)</span>
+                    <button
+                      onClick={() => updateSettings({ bgmMuted: !settings.bgmMuted })}
+                      className={`flex items-center gap-1 font-bold ${
+                        settings.bgmMuted ? 'text-[#FF4268]' : 'text-[#36D9FF]'
+                      }`}
+                      title={settings.bgmMuted ? 'Enable Background Music' : 'Mute Background Music'}
+                    >
+                      {settings.bgmMuted ? <VolumeX size={11} /> : <Music size={11} />}
+                      <span>{settings.bgmMuted ? 'MUTED' : `${Math.round(settings.bgmVolume * 100)}%`}</span>
+                    </button>
                   </div>
                   <input
                     type="range"
@@ -131,10 +193,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                     max="1"
                     step="0.05"
                     value={settings.bgmVolume}
-                    onChange={(e) =>
-                      updateSettings({ bgmVolume: parseFloat(e.target.value) })
-                    }
-                    className="accent-[#36D9FF] cursor-pointer"
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      updateSettings({ bgmVolume: val, bgmMuted: val === 0 ? true : settings.bgmMuted && val > 0 ? false : settings.bgmMuted });
+                    }}
+                    className="accent-[#36D9FF] cursor-pointer w-full"
                   />
                 </div>
               </div>
@@ -289,7 +352,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                 <div className="flex flex-col gap-1.5 text-xs">
                   <div className="flex justify-between items-center text-[#E8EDF7] border-b border-[#30395C]/40 pb-1">
                     <span className="text-[10px] font-tech text-[#8993B2]">PEAK FLOOR LEVEL:</span>
-                    <span className="font-mono-code font-bold text-[#36D9FF]">FLR {lifetimePeakLevel}</span>
+                    <span className="font-mono-code font-bold text-[#36D9FF]">FLOOR {lifetimePeakLevel}</span>
                   </div>
                   <div className="flex justify-between items-center text-[#E8EDF7] border-b border-[#30395C]/40 pb-1">
                     <span className="text-[10px] font-tech text-[#8993B2]">TARGETS VAPORIZED:</span>

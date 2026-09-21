@@ -31,7 +31,7 @@ export const RelicsPanel: React.FC = () => {
 
         {!relicsAwakened && (
           <div className="text-[8px] font-mono-code font-bold text-[#36D9FF] bg-[#171D35] border border-[#36D9FF] px-1.5 py-0.5 rounded-none flex items-center gap-1">
-            <Lock size={9} /> UNLOCKS FLR 51
+            <Lock size={9} /> UNLOCKS AT FLOOR 51
           </div>
         )}
       </div>

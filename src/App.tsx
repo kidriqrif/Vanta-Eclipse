@@ -15,6 +15,7 @@ import { ShopPanel } from './components/ShopPanel';
 import { NavigationTabs, TabType } from './components/NavigationTabs';
 import { AdBanner } from './components/AdBanner';
 import { SettingsModal } from './components/SettingsModal';
+import { NoAdsModal } from './components/NoAdsModal';
 import { OfflineRewardsModal } from './components/OfflineRewardsModal';
 import { WorldUnlockModal } from './components/WorldUnlockModal';
 import { OnboardingManager } from './components/OnboardingManager';
@@ -33,17 +34,22 @@ const EclipseOverlay: React.FC = () => {
 };
 
 const GameApp: React.FC = () => {
+  const { hasRemovedAds } = useGame();
   const [activeTab, setActiveTab] = useState<TabType>('UPGRADES');
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  const [isNoAdsOpen, setIsNoAdsOpen] = useState<boolean>(false);
 
   return (
     <div className="w-full h-screen bg-[#040509] text-[#E8EDF7] flex items-center justify-center overflow-hidden font-mono-code select-none pt-[env(safe-area-inset-top,24px)] pb-[env(safe-area-inset-bottom,0px)]">
       {/* Centered Tactical HUD Shell */}
-      <div className="w-full max-w-md h-full flex flex-col bg-[#080A12] sm:border-x sm:border-[#30395C] relative shadow-[0_0_50px_rgba(0,0,0,0.95)]">
+      <div className="w-full max-w-md h-full flex flex-col bg-[#080A12] bg-grid-pattern sm:border-x sm:border-[#30395C] relative shadow-[0_0_50px_rgba(0,0,0,0.95)]">
         <EclipseOverlay />
 
         {/* Header HUD */}
-        <Header onOpenSettings={() => setIsSettingsOpen(true)} />
+        <Header 
+          onOpenSettings={() => setIsSettingsOpen(true)} 
+          onOpenNoAds={() => setIsNoAdsOpen(true)} 
+        />
 
         {/* Combat Tap Arena */}
         <CombatArena />
@@ -64,16 +70,20 @@ const GameApp: React.FC = () => {
         {/* Bottom Navigation */}
         <NavigationTabs activeTab={activeTab} onSelectTab={setActiveTab} />
 
-        {/* Non-Intrusive Tactical Telemetry Banner */}
-        <AdBanner 
-          onNavigateToShop={() => setActiveTab('SHOP')} 
-          onNavigateToJournal={() => setActiveTab('JOURNAL')} 
-        />
+        {/* Non-Intrusive Tactical Telemetry Banner (Eliminated for Pro) */}
+        {!hasRemovedAds && (
+          <AdBanner 
+            onNavigateToShop={() => setActiveTab('SHOP')} 
+            onNavigateToJournal={() => setActiveTab('JOURNAL')} 
+            onNavigateToGear={() => setActiveTab('GEAR')}
+          />
+        )}
 
         {/* Overlay Modals */}
         {isSettingsOpen && (
           <SettingsModal onClose={() => setIsSettingsOpen(false)} />
         )}
+        <NoAdsModal isOpen={isNoAdsOpen} onClose={() => setIsNoAdsOpen(false)} />
         <OfflineRewardsModal />
         <WorldUnlockModal />
         <OnboardingManager />

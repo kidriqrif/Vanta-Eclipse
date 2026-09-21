@@ -261,7 +261,7 @@ export const GearPanel: React.FC = () => {
                         className="text-[8px] font-mono-code font-bold drop-shadow-md"
                         style={{ color: rarityConf?.text }}
                       >
-                        T{equippedItem.itemLevel}
+                        TIER {equippedItem.itemLevel}
                       </span>
                     )}
                   </div>
@@ -366,7 +366,7 @@ export const GearPanel: React.FC = () => {
                         className="text-[8px] font-mono-code font-bold drop-shadow-md"
                         style={{ color: rarityConf.text }}
                       >
-                        T{item.itemLevel}
+                        TIER {item.itemLevel}
                       </span>
                     </div>
 

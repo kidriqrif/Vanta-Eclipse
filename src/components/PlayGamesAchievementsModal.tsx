@@ -193,7 +193,7 @@ export const PlayGamesAchievementsModal: React.FC<PlayGamesAchievementsModalProp
                         {authStatus.player?.displayName || 'Play Games Player'}
                       </span>
                       <span className="text-[8px] font-mono-code bg-[#17283A] border border-[#36D9FF]/40 text-[#36D9FF] px-1 py-0.2 font-bold">
-                        LVL {authStatus.player?.level || 1}
+                        LEVEL {authStatus.player?.level || 1}
                       </span>
                       {authStatus.isSandboxMode && (
                         <span className="text-[8px] font-mono-code bg-[#FFC857]/20 border border-[#FFC857]/50 text-[#FFC857] px-1 font-bold">

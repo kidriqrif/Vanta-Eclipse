@@ -69,7 +69,7 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({
     badge?: number | string | boolean;
     badgeColor?: string;
   }[] = [
-    { id: 'UPGRADES', label: 'FORGE', icon: <Sword size={16} /> },
+    { id: 'UPGRADES', label: 'FORGE', icon: <Zap size={16} /> },
     {
       id: 'GEAR',
       label: 'ARMOR',
@@ -78,13 +78,19 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({
       badgeColor: '#36D9FF',
     },
     {
+      id: 'RELICS',
+      label: 'RELICS',
+      icon: <Sword size={16} />,
+      badge: !relicsAwakened ? undefined : undefined,
+    },
+    { id: 'SHOP', label: 'BAZAAR', icon: <ShoppingBag size={16} /> },
+    {
       id: 'JOURNAL',
-      label: 'QUEST',
+      label: 'CODEX',
       icon: <BookOpen size={16} />,
       badge: hasUnclaimedQuests ? '!' : undefined,
       badgeColor: '#FFC857',
     },
-    { id: 'SHOP', label: 'BAZAAR', icon: <ShoppingBag size={16} /> },
     {
       id: 'CARDS',
       label: 'CARDS',
@@ -93,12 +99,6 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({
       badgeColor: '#36D9FF',
     },
     { id: 'PETS', label: 'BEAST', icon: <Cpu size={16} /> },
-    {
-      id: 'RELICS',
-      label: 'RELIC',
-      icon: <Zap size={16} />,
-      badge: !relicsAwakened ? undefined : undefined,
-    },
     { id: 'ECLIPSE', label: 'ECLIPSE', icon: <Moon size={16} /> },
     {
       id: 'ARCADE',
@@ -117,68 +117,25 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({
 
   return (
     <div className="relative">
-      {/* More Menu Popup */}
-      {showMore && (
-        <div className="absolute bottom-full left-0 w-full bg-[#101426] border-t border-[#30395C] border-b border-[#30395C] p-2 z-50 shadow-[0_-10px_25px_rgba(0,0,0,0.9)]">
-          <div className="grid grid-cols-5 gap-1">
-            {secondaryTabs.map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    onSelectTab(tab.id);
-                    setShowMore(false);
-                  }}
-                  className={`flex flex-col items-center justify-center py-2 px-1 gap-1 relative transition-colors rounded-none ${
-                    isActive
-                      ? 'text-[#36D9FF] bg-[#171D35] font-bold border-b-2 border-[#36D9FF]'
-                      : 'text-[#8993B2] hover:text-[#E8EDF7] hover:bg-[#171D35]/50'
-                  }`}
-                >
-                  <div className="relative">
-                    {tab.icon}
-                    {tab.badge !== undefined && (
-                      <span
-                        className="absolute -top-1 -right-2 min-w-[12px] h-[12px] px-0.5 text-[8px] font-mono-code font-black rounded-none text-[#080A12] flex items-center justify-center shadow-sm"
-                        style={{ backgroundColor: tab.badgeColor || '#36D9FF' }}
-                      >
-                        {tab.badge}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-[9px] font-display uppercase tracking-wider leading-none">
-                    {tab.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
       {/* Main Bottom Nav */}
-      <nav className="w-full bg-[#101426] border-t border-[#30395C] px-1 py-1 flex items-center justify-between shrink-0 select-none">
-        {primaryTabs.map((tab) => {
+      <nav className="w-full bg-[#080A12] border-t border-[#30395C] px-0 flex items-center overflow-x-auto overflow-y-hidden shrink-0 select-none no-scrollbar">
+        {allTabs.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
-              onClick={() => {
-                onSelectTab(tab.id);
-                setShowMore(false);
-              }}
-              className={`flex-1 py-2 px-1 flex flex-col items-center justify-center gap-1.5 relative transition-colors rounded-none border-b-2 ${
-                isActive && !showMore
-                  ? 'text-[#36D9FF] bg-[#171D35] border-[#36D9FF] font-bold shadow-[inset_0_0_10px_rgba(54,217,255,0.12)]'
-                  : 'text-[#8993B2] hover:text-[#E8EDF7] border-transparent hover:bg-[#171D35]/40'
+              onClick={() => onSelectTab(tab.id)}
+              className={`min-w-[72px] flex-1 py-3 px-1 flex flex-col items-center justify-center gap-1.5 relative transition-colors rounded-none border-t-[3px] ${
+                isActive
+                  ? 'text-[#36D9FF] bg-[#101426] border-t-[#36D9FF] font-bold shadow-[inset_0_10px_15px_-10px_rgba(54,217,255,0.2)]'
+                  : 'text-[#8993B2] hover:text-[#E8EDF7] border-t-transparent hover:bg-[#101426]/50'
               }`}
             >
               <div className="relative">
                 {tab.icon}
                 {tab.badge !== undefined && (
                   <span
-                    className="absolute -top-1 -right-2 min-w-[12px] h-[12px] px-0.5 text-[8px] font-mono-code font-black rounded-none text-[#080A12] flex items-center justify-center shadow-sm"
+                    className="absolute -top-1.5 -right-3 min-w-[12px] h-[12px] px-0.5 text-[8px] font-mono-code font-black rounded-full text-[#080A12] flex items-center justify-center shadow-sm"
                     style={{ backgroundColor: tab.badgeColor || '#36D9FF' }}
                   >
                     {tab.badge}
@@ -191,28 +148,6 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({
             </button>
           );
         })}
-        
-        {/* MORE Button */}
-        <button
-          onClick={() => setShowMore(!showMore)}
-          className={`flex-1 py-2 px-1 flex flex-col items-center justify-center gap-1.5 relative transition-colors rounded-none border-b-2 ${
-            showMore || (isSecondaryActive && !showMore)
-              ? 'text-[#36D9FF] bg-[#171D35] border-[#36D9FF] font-bold shadow-[inset_0_0_10px_rgba(54,217,255,0.12)]'
-              : 'text-[#8993B2] hover:text-[#E8EDF7] border-transparent hover:bg-[#171D35]/40'
-          }`}
-        >
-          <div className="relative">
-            <MoreHorizontal size={16} />
-            {hasSecondaryBadge && !showMore && (
-              <span className="absolute -top-1 -right-2 min-w-[12px] h-[12px] px-0.5 text-[8px] font-mono-code font-black rounded-none text-[#080A12] flex items-center justify-center shadow-sm bg-[#FFC857]">
-                !
-              </span>
-            )}
-          </div>
-          <span className="text-[10px] font-display uppercase tracking-wider leading-none">
-            MORE
-          </span>
-        </button>
       </nav>
     </div>
   );

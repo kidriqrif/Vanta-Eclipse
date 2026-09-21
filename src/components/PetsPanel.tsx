@@ -95,7 +95,7 @@ export const PetsPanel: React.FC = () => {
                       </span>
                       {isOwned && (
                         <span className="text-[8px] font-mono-code font-bold text-[#36D9FF] bg-[#36D9FF]/10 px-1 border border-[#36D9FF]/30">
-                          LV.{level}/{pet.maxLevel}
+                          LEVEL {level}/{pet.maxLevel}
                         </span>
                       )}
                     </div>
@@ -103,7 +103,7 @@ export const PetsPanel: React.FC = () => {
                     <span className="text-[9px] font-tech text-[#8993B2] mt-0.5">
                       {pet.bonusStat === 'essence' ? 'Essence Resonance' : 'Strike Potency'}:{' '}
                       <span className="text-[#36D9FF] font-mono-code font-bold">
-                        {isOwned ? formatPercent(totalBonus) : `+${pet.bonusPerLevel * 100}%/LV`}
+                        {isOwned ? formatPercent(totalBonus) : `+${pet.bonusPerLevel * 100}%/LEVEL`}
                       </span>
                     </span>
 
@@ -131,7 +131,7 @@ export const PetsPanel: React.FC = () => {
                     )
                   ) : (
                     <span className="text-[9px] text-[#8993B2] font-tech">
-                      {pet.id === 'ember' ? 'AWAKENS FLR 51' : 'RUINS GATE DROP'}
+                      {pet.id === 'ember' ? 'AWAKENS AT FLOOR 51' : 'RUINS GATE DROP'}
                     </span>
                   )}
                 </div>
@@ -141,8 +141,8 @@ export const PetsPanel: React.FC = () => {
               {isOwned && level < pet.maxLevel && (
                 <div className="flex flex-col gap-0.5 mt-0.5">
                   <div className="flex justify-between text-[8px] font-mono-code text-[#8993B2]">
-                    <span>EXP INTEGRATION</span>
-                    <span>{xpIntoLevel} / 60 XP</span>
+                    <span>EXPERIENCE PROGRESS</span>
+                    <span>{xpIntoLevel} / 60 EXP</span>
                   </div>
                   <div className="w-full h-1 bg-[#171D35] border border-white/10 overflow-hidden">
                     <div

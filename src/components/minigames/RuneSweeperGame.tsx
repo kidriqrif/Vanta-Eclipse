@@ -79,19 +79,27 @@ export const RuneSweeperGame: React.FC<MinigameProps> = ({ onFinish, onQuit }) =
     setBoard(grid);
   }, []);
 
-  // Reveal flood fill
-  const revealTile = (grid: Tile[][], r: number, c: number) => {
-    if (r < 0 || r >= SIZE || c < 0 || c >= SIZE || grid[r][c].isOpen || grid[r][c].isFlagged) {
-      return;
-    }
-    grid[r][c].isOpen = true;
-    if (grid[r][c].adjacentTraps === 0 && !grid[r][c].isTrap) {
-      const dirs = [
-        [-1, -1], [-1, 0], [-1, 1],
-        [0, -1],           [0, 1],
-        [1, -1],  [1, 0],  [1, 1],
-      ];
-      dirs.forEach(([dr, dc]) => revealTile(grid, r + dr, c + dc));
+  // Reveal flood fill (Iterative BFS)
+  const revealTile = (grid: Tile[][], startR: number, startC: number) => {
+    const queue: [number, number][] = [[startR, startC]];
+    
+    while (queue.length > 0) {
+      const [r, c] = queue.shift()!;
+      
+      if (r < 0 || r >= SIZE || c < 0 || c >= SIZE || grid[r][c].isOpen || grid[r][c].isFlagged) {
+        continue;
+      }
+      
+      grid[r][c].isOpen = true;
+      
+      if (grid[r][c].adjacentTraps === 0 && !grid[r][c].isTrap) {
+        const dirs = [
+          [-1, -1], [-1, 0], [-1, 1],
+          [0, -1],           [0, 1],
+          [1, -1],  [1, 0],  [1, 1],
+        ];
+        dirs.forEach(([dr, dc]) => queue.push([r + dr, c + dc]));
+      }
     }
   };
 

@@ -62,7 +62,7 @@ export const VoidReflexGame: React.FC<MinigameProps> = ({ onFinish, onQuit }) =>
       if (flareTimerRef.current) clearTimeout(flareTimerRef.current);
       if (missTimerRef.current) clearTimeout(missTimerRef.current);
     };
-  }, [round, hits, reactionTimes, onFinish]);
+  }, [round, onFinish]);
 
   const handleSigilPress = () => {
     if (gameEnded) return;
