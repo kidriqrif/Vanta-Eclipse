@@ -57,7 +57,7 @@ export async function openTab(page: Page, label: RegExp) {
     return;
   }
   await nav.getByRole('button', { name: /more/i }).click();
-  await page.getByRole('button', { name: label }).first().click();
+  await page.getByRole('group', { name: /more tabs/i }).getByRole('button', { name: label }).first().click();
 }
 
 /** The combat arena: the region that receives taps. */

@@ -63,7 +63,7 @@ const METRIC_TAG: Record<string, string> = {
   taps: 'STRIKE',
   boss_wins: 'BOSS',
   enemy_level: 'CLIMB',
-  upgrades_bought: 'FORGE',
+  upgrades_bought: 'UPGRADES',
   items_dropped: 'GEAR',
   eclipses: 'ECLIPSE',
   minigame_wins: 'ARCADE',

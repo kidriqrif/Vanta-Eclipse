@@ -122,13 +122,15 @@ const OfflineBody: React.FC<{ pending: PendingOffline; onDismiss: () => void }> 
  */
 export const OfflineRewardsModal: React.FC = () => {
   const pending = useGameState((s) => s.ui.pendingOffline);
+  // The reward is already granted; the modal just waits until no minigame covers the screen.
+  const inRun = useGameState((s) => s.ui.activeRun !== null);
   const dispatch = useDispatch();
   const dismiss = useCallback(() => {
     dispatch({ type: 'DISMISS_OFFLINE' });
   }, [dispatch]);
 
   return (
-    <Modal open={!!pending} onClose={dismiss} title="Welcome back" icon={<Moon size={14} className="text-neon" aria-hidden />}>
+    <Modal open={!!pending && !inRun} onClose={dismiss} title="Welcome back" icon={<Moon size={14} className="text-neon" aria-hidden />}>
       {pending && <OfflineBody pending={pending} onDismiss={dismiss} />}
     </Modal>
   );

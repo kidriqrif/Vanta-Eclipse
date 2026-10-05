@@ -37,10 +37,10 @@ const TIPS: Tip[] = [
   {
     id: 'forge',
     level: 5,
-    title: 'THE FORGE',
+    title: 'UPGRADES',
     icon: Zap,
     lines: [
-      'Spend essence in the FORGE tab on upgrades: more tap damage, more critical hits and more essence per kill.',
+      'Spend essence in the UPGRADES tab: more tap damage, more critical hits and more essence per kill.',
     ],
   },
   {
@@ -81,7 +81,7 @@ const TIPS: Tip[] = [
     icon: Moon,
     lines: [
       `Once a run reaches level ${formatNumber(ECLIPSE_UNLOCK_LEVEL)}, the ECLIPSE tab can end it.`,
-      'You restart at level 1 and lose your essence and FORGE upgrades. In return you get Void Crystals: the higher you climbed, the more.',
+      'You restart at level 1 and lose your essence and upgrades. In return you get Void Crystals: the higher you climbed, the more.',
       'Crystals buy permanent skills. Gear, cards, companions and relics are always kept.',
     ],
   },

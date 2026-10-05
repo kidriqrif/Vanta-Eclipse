@@ -64,10 +64,13 @@ export interface ReduceOutput {
 
 const COMBO_WINDOW_MS = 1500;
 const MAX_AUTO_HITS_PER_TICK = 20;
-const PET_XP_PER_KILL = 3;
-const RELIC_DROP_CHANCE = 0.25;
-const FROSTLING_DROP_CHANCE = 0.15;
-const BOSS_TOKEN_CHANCE = 0.1;
+/** Tuning constants the screens also quote, so copy and rules cannot drift apart. */
+export const PET_XP_PER_KILL = 3;
+export const RELIC_DROP_CHANCE = 0.25;
+export const FROSTLING_DROP_CHANCE = 0.15;
+export const BOSS_TOKEN_CHANCE = 0.1;
+/** Each point of card vigor adds this much to the absorbing pet's bonus. */
+export const VIGOR_TO_BONUS = 0.002;
 const ECLIPSE_COMMIT_GUARD_MS = 3000;
 const PROCESSED_TRANSACTIONS_KEPT = 200;
 
@@ -509,7 +512,7 @@ function handle(d: D, a: Action, c: Ctx, base: GameState): ActionResult {
       if (atMax && (pet.absorbed || 0) >= PET_ABSORB_CAP) return fail('no_gain');
       const card = d.cards[idx];
       d.cards.splice(idx, 1);
-      pet.absorbed = Math.min(PET_ABSORB_CAP, (pet.absorbed || 0) + card.vigor * 0.002);
+      pet.absorbed = Math.min(PET_ABSORB_CAP, (pet.absorbed || 0) + card.vigor * VIGOR_TO_BONUS);
       givePetXp(d, c, petId, card.power);
       bumpCounter(d as GameState, 'cards_absorbed', 1);
       sound(c, 'fanfare');

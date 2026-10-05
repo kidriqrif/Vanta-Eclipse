@@ -5,12 +5,11 @@ import type { Card } from '../types/game';
 import type { GameState } from '../game/state';
 import { CARD_COLLECTION_CAP, WORLD_TWO_FIRST_LEVEL } from '../game/state';
 import { PET_ABSORB_CAP, petBonusValue, petDisplayName, petLevelFromXp, petSprite } from '../game/stats';
+import { VIGOR_TO_BONUS } from '../game/reducer';
 import { useDispatch, useGameState, useGameStore } from '../hooks/useGame';
 import { formatNumber, formatPercent } from '../utils/numberFormat';
 import { Button, PanelHeader, TabBody } from './ui';
 
-/** Each point of card vigor adds this much to the active pet's bonus (reducer: card.vigor * 0.002). */
-const VIGOR_TO_BONUS = 0.002;
 const NOTICE_MS = 3500;
 
 const BONUS_NOUN: Record<string, string> = {

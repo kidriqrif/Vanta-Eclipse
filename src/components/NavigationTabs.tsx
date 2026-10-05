@@ -94,7 +94,7 @@ const RUINS_LOCK = {
 
 function buildTabs(n: NavState): Record<TabType, TabSpec> {
   return {
-    UPGRADES: { label: 'FORGE', icon: Zap, badge: null, locked: null },
+    UPGRADES: { label: 'UPGRADES', icon: Zap, badge: null, locked: null },
     GEAR: { label: 'ARMOR', icon: Shield, badge: countBadge(n.unseenItems, 'new item', 'neon'), locked: null },
     ARCADE: {
       label: 'ARCADE',

@@ -24,7 +24,7 @@ let lastFilter: Filter = 'ALL';
 
 const NOTICE_MS = 3500;
 
-/** How each skill stat reads. Crit damage is shown as a percent, like the FORGE upgrades. */
+/** How each skill stat reads. Crit damage is shown as a percent, like the upgrades tab. */
 const STAT_COPY: Record<string, { noun: string; unit: 'percent' | 'hours' }> = {
   essence: { noun: 'essence', unit: 'percent' },
   crystal_gain: { noun: 'Eclipse crystals', unit: 'percent' },
@@ -289,7 +289,7 @@ export const EclipsePanel: React.FC = () => {
               </span>
               <ul className="flex flex-col gap-1">
                 <ListItem>Essence → 0</ListItem>
-                <ListItem>Every upgrade (FORGE tab)</ListItem>
+                <ListItem>Every upgrade (UPGRADES tab)</ListItem>
                 <ListItem>Level → 1 (Dark Forest)</ListItem>
                 <ListItem>World unlocks re-lock</ListItem>
                 {!hasReflex && (

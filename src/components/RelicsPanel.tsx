@@ -4,6 +4,7 @@ import { RELICS } from '../data/definitions';
 import type { RelicDefinition } from '../types/game';
 import type { GameState } from '../game/state';
 import { WORLD_TWO_FIRST_LEVEL } from '../game/state';
+import { RELIC_DROP_CHANCE } from '../game/reducer';
 import { useDispatch, useGameState } from '../hooks/useGame';
 import { formatNumber } from '../utils/numberFormat';
 import { Button, PanelHeader, TabBody } from './ui';
@@ -143,7 +144,7 @@ export const RelicsPanel: React.FC = () => {
             ))}
 
             <p className="text-[10px] font-tech text-dim leading-snug px-0.5">
-              Relics drop from Frozen Ruins bosses (25% per boss) until you have all {formatNumber(RELICS.length)}. Each one is a
+              Relics drop from Frozen Ruins bosses ({formatNumber(Math.round(RELIC_DROP_CHANCE * 100))}% per boss) until you have all {formatNumber(RELICS.length)}. Each one is a
               single permanent power; only the attuned relic is active.
             </p>
           </>

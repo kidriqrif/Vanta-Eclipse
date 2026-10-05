@@ -130,7 +130,7 @@ const StatCell: React.FC<{ label: string; value: string; tone: string }> = ({ la
   </div>
 );
 
-/** The FORGE tab: run upgrades bought with essence. An Eclipse resets them. */
+/** The UPGRADES tab: run upgrades bought with essence. An Eclipse resets them. */
 export const UpgradeShop: React.FC = () => {
   const stats = useStats();
   const [want, setWant] = useState<Want>(lastWant);
@@ -144,7 +144,7 @@ export const UpgradeShop: React.FC = () => {
     <div className="flex-1 min-h-0 flex flex-col">
       <PanelHeader
         icon={<Zap size={16} className="text-neon" aria-hidden />}
-        title="FORGE"
+        title="UPGRADES"
         subtitle="Spend essence on upgrades. An Eclipse resets them."
       />
 

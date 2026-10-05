@@ -31,7 +31,7 @@ mechanic teaches itself within 1-2 taps). First kill should land within
 After a few kills, the player has enough Eclipse Essence to afford the
 first Tap Damage upgrade (5 essence; it was called Void Claws in the earlier
 engines). The upgrade list is the home tab, open under the combat arena
-(its tab is labelled FORGE; gear forging lives in the ARMOR tab), and the
+(its tab is labelled UPGRADES; gear forging lives in the ARMOR tab), and the
 essence counter is always visible in the header.
 
 **Needs:** notice they can afford something (the buy button visibly lights

@@ -15,7 +15,7 @@ test.describe('core loop', () => {
     expect(s.combat.level).toBeGreaterThan(1);
     expect(s.ui.tapGuard.lockedUntil).toBe(0);
 
-    for (const label of [/forge/i, /armor/i, /arcade/i, /codex/i, /cards/i, /beast/i, /relics/i, /eclipse/i, /bazaar/i]) {
+    for (const label of [/upgrades/i, /armor/i, /arcade/i, /codex/i, /cards/i, /beast/i, /relics/i, /eclipse/i, /bazaar/i]) {
       await openTab(page, label);
       await page.waitForTimeout(150);
     }
@@ -28,11 +28,13 @@ test.describe('core loop', () => {
     await patchState(page, `s.upgrades.void_claws = 1000000; s.combat.level = 9; s.combat.enemy = { ...s.combat.enemy, level: 9, hp: 1, maxHp: 1 }; s.tutorialsSeen = { welcome: true, forge: true, bosses: true }; return s;`);
     await humanTaps(page, 1);
     await expect.poll(async () => (await getState(page)).combat.mode).toBe('BOSS_FIGHT');
+    // RETREAT is a two-tap confirm because it sits inside the tap field.
     await page.getByRole('button', { name: /retreat/i }).click();
+    await page.getByRole('button', { name: /confirm retreat/i }).click();
     await expect.poll(async () => (await getState(page)).combat).toMatchObject({ mode: 'FARM_MODE', level: 9 });
     await page.getByRole('button', { name: /challenge boss/i }).click();
     await expect.poll(async () => (await getState(page)).combat).toMatchObject({ mode: 'BOSS_FIGHT', level: 10 });
-    await humanTaps(page, 3);
+    await humanTaps(page, 1); // damage is one-shot here: one tap kills the boss
     await expect.poll(async () => (await getState(page)).combat.level).toBe(11);
     const s = await getState(page);
     expect(s.cards.length).toBe(1);
@@ -63,8 +65,10 @@ test.describe('core loop', () => {
 test.describe('saves and offline', () => {
   test('an old v1 save migrates, and offline earnings can be doubled once', async ({ page }) => {
     const errors = watchErrors(page);
-    await page.goto('/');
-    await page.evaluate(() => {
+    // Seed before the app's first load (once), exactly as an old install would have it.
+    await page.addInitScript(() => {
+      if (sessionStorage.getItem('seeded')) return;
+      sessionStorage.setItem('seeded', '1');
       localStorage.clear();
       localStorage.setItem(
         'vanta_eclipse_save_v1',

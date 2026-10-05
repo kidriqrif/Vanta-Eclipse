@@ -5,12 +5,10 @@ import type { OwnedPet, PetDefinition } from '../types/game';
 import type { GameState } from '../game/state';
 import { WORLD_TWO_FIRST_LEVEL } from '../game/state';
 import { PET_ABSORB_CAP, PET_XP_PER_LEVEL, petBonusValue, petDisplayName, petLevelFromXp, petSprite, petStage } from '../game/stats';
+import { FROSTLING_DROP_CHANCE, PET_XP_PER_KILL } from '../game/reducer';
 import { useDispatch, useGameState } from '../hooks/useGame';
 import { formatNumber, formatPercent } from '../utils/numberFormat';
 import { Button, PanelHeader, TabBody } from './ui';
-
-/** Mirrors the reducer's per-kill pet XP (not exported from the game core). */
-const PET_XP_PER_KILL = 3;
 
 /** How each pet bonus reads in a sentence. */
 const BONUS_NOUN: Record<string, string> = {
@@ -21,7 +19,7 @@ const BONUS_NOUN: Record<string, string> = {
 /** How an undiscovered companion is obtained. */
 const HOW_TO_GET: Record<string, string> = {
   ember: 'Granted on reaching the Frozen Ruins',
-  frostling: '15% chance from Frozen Ruins bosses',
+  frostling: `${Math.round(FROSTLING_DROP_CHANCE * 100)}% chance from Frozen Ruins bosses`,
 };
 
 const selectAwakened = (s: GameState) => s.relicsAwakened;

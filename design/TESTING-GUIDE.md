@@ -153,7 +153,7 @@ recent one wins. Back should do the following, in this order:
 2. leave a minigame (a run in progress is forfeited like QUIT, per
    `design/ux/milestone-9-minigame-framework.md`, and the boss timer runs
    again);
-3. from any other tab, go to the home tab (the upgrades, labelled FORGE);
+3. from any other tab, go to the home tab (the upgrades, labelled UPGRADES);
 4. from the home tab, minimize the app (`src/context/GameProvider.tsx`).
 
 Back must never kill the app. Reopen it from recents and it should be exactly
