@@ -1,204 +1,185 @@
-import React, { useState } from 'react';
-import { useGame } from '../context/GameContext';
+import React, { useCallback, useState } from 'react';
+import { Crosshair, Flame, Gem, Target, Zap, type LucideIcon } from 'lucide-react';
 import { UPGRADES } from '../data/definitions';
-import { formatNumber } from '../utils/numberFormat';
-import { Anvil, Zap, Target, Crosshair, Cpu } from 'lucide-react';
+import type { UpgradeDefinition } from '../types/game';
+import { affordableUpgrades, upgradeCost } from '../game/reducer';
+import type { GameState } from '../game/state';
+import { shallowEqual, useDispatch, useGameState, useStats } from '../hooks/useGame';
+import { formatNumber, formatPercent } from '../utils/numberFormat';
+import { Button, PanelHeader, TabBody } from './ui';
 
-export type MultiplierType = 1 | 10 | 25 | 'MAX';
+type Want = 1 | 10 | 25 | 'max';
 
-export const UpgradeShop: React.FC = () => {
-  const {
-    currencies,
-    upgradeLevels,
-    getUpgradeCost,
-    buyUpgrade,
-    buyMaxUpgrade,
-    tapDamage,
-    critChance,
-    critDamage,
-    essenceMultiplier,
-  } = useGame();
+const WANTS: { want: Want; label: string }[] = [
+  { want: 1, label: 'x1' },
+  { want: 10, label: 'x10' },
+  { want: 25, label: 'x25' },
+  { want: 'max', label: 'MAX' },
+];
 
-  const [multiplier, setMultiplier] = useState<MultiplierType>(1);
-  const multipliers: MultiplierType[] = [1, 10, 25, 'MAX'];
+/** The buy size survives tab switches for the session. */
+let lastWant: Want = 1;
 
-  const getUpgradeIcon = (id: string) => {
-    switch (id) {
-      case 'void_claws':
-        return <Zap size={14} />;
-      case 'eclipse_fangs':
-        return <Cpu size={14} />;
-      case 'dark_focus':
-        return <Target size={14} />;
-      case 'blood_moon':
-        return <Crosshair size={14} />;
-      case 'essence_siphon':
-        return <Anvil size={14} />;
-      default:
-        return <Zap size={14} />;
-    }
-  };
+const SORTED_UPGRADES = [...UPGRADES].sort((a, b) => a.sortOrder - b.sortOrder);
 
-  const getUpgradeColor = (id: string) => {
-    switch (id) {
-      case 'void_claws': return '#36D9FF'; // Cyan
-      case 'eclipse_fangs': return '#A78BFA'; // Magenta/Purple
-      case 'dark_focus': return '#FFC857'; // Orange
-      case 'blood_moon': return '#FF4268'; // Red
-      case 'essence_siphon': return '#39FF14'; // Green
-      default: return '#36D9FF';
-    }
-  };
+/** How each upgrade stat reads in a sentence, and its accent. Unknown stats fall back to the display name. */
+const STAT_COPY: Record<string, { noun: string; icon: LucideIcon; tone: string }> = {
+  'tap_damage:ADDITIVE': { noun: 'tap damage', icon: Zap, tone: 'text-neon border-neon/50 bg-neon/10' },
+  'tap_damage:PERCENT': { noun: 'tap damage', icon: Flame, tone: 'text-purple border-purple/50 bg-purple/10' },
+  'crit_chance:ADDITIVE': { noun: 'crit chance', icon: Target, tone: 'text-gold border-gold/50 bg-gold/10' },
+  'crit_damage:ADDITIVE': { noun: 'crit damage', icon: Crosshair, tone: 'text-crimson border-crimson/50 bg-crimson/10' },
+  'essence_gain:PERCENT': { noun: 'essence from kills', icon: Gem, tone: 'text-toxic border-toxic/50 bg-toxic/10' },
+};
+const FALLBACK_TONE = 'text-neon border-neon/50 bg-neon/10';
 
-  const getUpgradeStatSummary = (id: string) => {
-    switch (id) {
-      case 'void_claws':
-        return `Tap Dmg: ${formatNumber(tapDamage)}`;
-      case 'eclipse_fangs':
-        return `Tap Power: ${formatNumber(tapDamage * 10)}`;
-      case 'dark_focus':
-        return `Crit Chance: ${(critChance * 100).toFixed(1)}%`;
-      case 'blood_moon':
-        return `Crit Multiplier: ${(critDamage * 100).toFixed(0)}%`;
-      case 'essence_siphon':
-        return `Essence Rate: ${((essenceMultiplier - 1) * 100).toFixed(0)}%`;
-      default:
-        return '';
-    }
+/** "+10%", "+0.5%": a decimal only when the value needs one. */
+function pct(v: number): string {
+  const hundredths = Math.round(v * 10000);
+  return formatPercent(v, hundredths % 100 === 0 ? 0 : 1);
+}
+
+/** "+1 tap damage per level · total +12", read from the definition rather than hard-coded. */
+function effectText(def: UpgradeDefinition, level: number): string {
+  const asPercent = def.modifierType === 'PERCENT' || def.displayAsPercent;
+  const fmt = (v: number) => (asPercent ? pct(v) : `+${formatNumber(v)}`);
+  const noun = STAT_COPY[`${def.stat}:${def.modifierType}`]?.noun ?? def.displayName.toLowerCase();
+  const per = `${fmt(def.valuePerLevel)} ${noun} per level`;
+  return level > 0 ? `${per} · total ${fmt(def.valuePerLevel * level)}` : per;
+}
+
+const selectEssence = (s: GameState) => s.currencies.essence;
+
+const UpgradeRow: React.FC<{ def: UpgradeDefinition; want: Want }> = React.memo(({ def, want }) => {
+  const dispatch = useDispatch();
+  const level = useGameState(useCallback((s: GameState) => s.upgrades[def.id] || 0, [def.id]));
+  const essence = useGameState(selectEssence);
+  const offer = useGameState(
+    useCallback((s: GameState) => affordableUpgrades(s, def.id, want), [def.id, want]),
+    shallowEqual,
+  );
+
+  const copy = STAT_COPY[`${def.stat}:${def.modifierType}`];
+  const Icon = copy?.icon ?? Zap;
+  const maxed = def.maxLevel > 0 && level >= def.maxLevel;
+  const isMax = want === 'max';
+  // x1/x10/x25 are all or nothing (shrinking only to the room under maxLevel); MAX buys what it can.
+  const canBuy = isMax ? offer.count > 0 : offer.limit > 0 && offer.count === offer.limit;
+  const buyCount = isMax ? Math.max(1, offer.count) : offer.limit;
+  const price = canBuy ? offer.cost : upgradeCost(level, def.id, buyCount);
+  const shortBy = canBuy ? 0 : Math.max(0, Math.ceil(price - essence));
+
+  const buy = () => {
+    dispatch({ type: 'BUY_UPGRADE', id: def.id, count: want });
   };
 
   return (
-    <div className="flex-1 flex flex-col p-2.5 overflow-y-auto bg-[#080A12] gap-2 select-none ">
-      {/* Tactical Header & Multiplier Matrix */}
-      <div className="flex items-center justify-between bg-[#080A12] border border-[#30395C] p-2 rounded-none shrink-0 border-l-4 border-l-[#36D9FF]">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#17283A] border border-[#36D9FF] flex items-center justify-center shadow-[0_0_6px_rgba(54,217,255,0.2)]">
-            <Zap size={16} className="text-[#36D9FF]" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-display font-bold text-[#E8EDF7] uppercase tracking-wider leading-tight">
-              UPGRADES
-            </span>
-            <span className="text-[9px] font-tech text-[#8993B2] uppercase">
-              ENHANCE STATS
-            </span>
-          </div>
-        </div>
-
-        {/* Multiplier Selectors */}
-        <div className="flex items-center border border-[#36D9FF]/40 p-0.5 bg-[#101426]">
-          {multipliers.map((m) => (
-            <button
-              key={m}
-              onClick={() => setMultiplier(m)}
-              className={`px-2 py-1 text-[9px] font-mono-code font-bold transition-all rounded-none ${
-                multiplier === m
-                  ? 'bg-[#36D9FF] text-[#080A12] shadow-[0_0_6px_rgba(54,217,255,0.4)]'
-                  : 'text-[#8993B2] hover:text-[#E8EDF7]'
-              }`}
-            >
-              {typeof m === 'number' ? `x${m}` : m}
-            </button>
-          ))}
-        </div>
+    <div className={`bg-panel border p-2 flex items-center gap-2.5 ${maxed ? 'border-line/60' : 'border-line'}`}>
+      <div className={`w-9 h-9 shrink-0 border flex items-center justify-center ${copy?.tone ?? FALLBACK_TONE}`}>
+        <Icon size={16} aria-hidden />
       </div>
 
-      {/* Upgrades List Grid */}
-      <div className="flex flex-col gap-2 mt-2">
-        {UPGRADES.map((upgrade) => {
-          const currentLevel = upgradeLevels[upgrade.id] || 0;
-          const isMaxLevel = upgrade.maxLevel > 0 && currentLevel >= upgrade.maxLevel;
-          const color = getUpgradeColor(upgrade.id);
+      <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="text-xs font-display font-bold text-ink uppercase tracking-wide truncate">{def.displayName}</span>
+          <span key={level} className="animate-fade-in shrink-0 text-[10px] font-mono-code font-bold text-dim border border-line px-1 leading-4">
+            LV {formatNumber(level)}
+            {def.maxLevel > 0 && `/${formatNumber(def.maxLevel)}`}
+          </span>
+        </div>
+        <span className="text-[10px] font-tech text-dim leading-tight">{effectText(def, level)}</span>
+        {!maxed && !canBuy && (
+          <span className="text-[10px] font-tech text-crimson leading-tight">Need {formatNumber(shortBy)} more essence</span>
+        )}
+      </div>
 
-          let countToBuy = 1;
-          if (multiplier === 'MAX') {
-            countToBuy = 1;
-          } else {
-            countToBuy = multiplier;
-            if (upgrade.maxLevel > 0) {
-              countToBuy = Math.min(countToBuy, upgrade.maxLevel - currentLevel);
-            }
-          }
+      <div className="shrink-0 w-[96px]">
+        {maxed ? (
+          <div className="min-h-[44px] border border-line bg-panel2 flex flex-col items-center justify-center text-[10px] font-display font-bold text-dim">
+            MAXED
+          </div>
+        ) : (
+          <Button
+            variant={canBuy ? 'primary' : 'ghost'}
+            size="md"
+            block
+            disabled={!canBuy}
+            onClick={buy}
+            aria-label={`Buy ${buyCount} ${def.displayName} for ${formatNumber(price)} essence${canBuy ? '' : ', not enough essence'}`}
+          >
+            <span className="flex flex-col items-center leading-tight">
+              <span>BUY {formatNumber(buyCount)}</span>
+              <span className="font-mono-code text-[10px] text-ink">
+                <span className="text-neon" aria-hidden>
+                  ◆{' '}
+                </span>
+                {formatNumber(price)}
+              </span>
+            </span>
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+});
+UpgradeRow.displayName = 'UpgradeRow';
 
-          const cost = getUpgradeCost(upgrade.id, multiplier === 'MAX' ? 1 : countToBuy);
-          const canAfford = !isMaxLevel && currencies.essence >= cost && countToBuy > 0;
+const StatCell: React.FC<{ label: string; value: string; tone: string }> = ({ label, value, tone }) => (
+  <div className="bg-panel border border-line px-1.5 py-1 flex flex-col items-center min-w-0">
+    <span className="text-[9px] font-tech text-dim uppercase tracking-wider">{label}</span>
+    <span className={`text-xs font-mono-code font-bold truncate max-w-full ${tone}`}>{value}</span>
+  </div>
+);
 
-          const handleBuy = () => {
-            if (multiplier === 'MAX') {
-              buyMaxUpgrade(upgrade.id);
-            } else {
-              buyUpgrade(upgrade.id, countToBuy);
-            }
-          };
+/** The FORGE tab: run upgrades bought with essence. An Eclipse resets them. */
+export const UpgradeShop: React.FC = () => {
+  const stats = useStats();
+  const [want, setWant] = useState<Want>(lastWant);
 
-          return (
-            <div
-              key={upgrade.id}
-              className={`relative overflow-hidden p-2 border transition-all flex items-center justify-between gap-2.5 rounded-none bg-scanline-pattern ${
-                isMaxLevel
-                  ? 'bg-[#040509] border-[#30395C]/40 opacity-50'
-                  : 'bg-[#080A12] hover:bg-[#101426]'
-              }`}
-              style={!isMaxLevel ? { borderColor: `${color}40` } : {}}
-            >
-              {/* Left Side Details */}
-              <div className="flex items-center gap-2.5 min-w-0 flex-1 relative z-10">
-                <div 
-                  className="w-9 h-9 flex items-center justify-center shrink-0 border-l-[3px]"
-                  style={{ backgroundColor: `${color}15`, borderLeftColor: color, borderTopColor: `${color}40`, borderRightColor: `${color}40`, borderBottomColor: `${color}40`, borderStyle: 'solid', borderWidth: '1px 1px 1px 3px', color: color }}
+  const choose = (w: Want) => {
+    lastWant = w;
+    setWant(w);
+  };
+
+  return (
+    <div className="flex-1 min-h-0 flex flex-col">
+      <PanelHeader
+        icon={<Zap size={16} className="text-neon" aria-hidden />}
+        title="FORGE"
+        subtitle="Upgrades bought with essence. An Eclipse resets them."
+        right={
+          <div className="flex border border-line bg-void" role="group" aria-label="Buy amount">
+            {WANTS.map(({ want: w, label }) => {
+              const active = w === want;
+              return (
+                <button
+                  key={label}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => choose(w)}
+                  className={`min-w-[34px] min-h-[32px] px-1.5 text-[10px] font-mono-code font-bold transition-colors ${
+                    active ? 'bg-neon text-void' : 'text-dim hover:text-ink'
+                  }`}
                 >
-                  {getUpgradeIcon(upgrade.id)}
-                </div>
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        }
+      />
 
-                <div className="flex flex-col min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5 flex-nowrap">
-                    <span className="text-xs sm:text-sm font-display font-bold text-[#E8EDF7] uppercase tracking-wide whitespace-nowrap">
-                      {upgrade.displayName}
-                    </span>
-                    <span className="text-[9px] sm:text-[10px] font-mono-code font-bold px-1.5 py-0.5 border shrink-0 whitespace-nowrap"
-                          style={{ backgroundColor: `${color}20`, borderColor: `${color}50`, color: color }}>
-                      LV.{currentLevel < 10 ? `0${currentLevel}` : currentLevel}
-                    </span>
-                  </div>
+      <TabBody>
+        <div className="grid grid-cols-4 gap-1.5" aria-label="Current stats">
+          <StatCell label="Tap" value={formatNumber(stats.tapDamage)} tone="text-neon" />
+          <StatCell label="Crit %" value={formatPercent(stats.critChance).replace(/^\+/, '')} tone="text-gold" />
+          <StatCell label="Crit ×" value={`×${formatNumber(stats.critDamage)}`} tone="text-crimson" />
+          <StatCell label="Essence ×" value={`×${formatNumber(stats.essenceMultiplier)}`} tone="text-toxic" />
+        </div>
 
-                  <span className="text-[9px] sm:text-[10px] font-tech text-[#8993B2] mt-0.5 leading-tight whitespace-nowrap">
-                    {getUpgradeStatSummary(upgrade.id)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Right Action Button (Shorter Width) */}
-              <div className="shrink-0 relative z-10">
-                {isMaxLevel ? (
-                  <div className="px-2.5 py-1.5 bg-[#171D35] border border-[#30395C] text-[10px] font-display font-bold text-[#414866] min-w-[64px] sm:min-w-[70px] text-center">
-                    MAX
-                  </div>
-                ) : (
-                  <button
-                    onClick={handleBuy}
-                    disabled={!canAfford}
-                    className={`px-2 py-1 text-xs font-display font-bold flex flex-col items-center min-w-[64px] sm:min-w-[70px] transition-all rounded-none border-l-[3px]`}
-                    style={{
-                      borderColor: canAfford ? color : '#30395C',
-                      backgroundColor: canAfford ? `${color}10` : '#101426',
-                      color: canAfford ? color : '#414866',
-                      opacity: canAfford ? 1 : 0.5
-                    }}
-                  >
-                    <span className="text-[10px] sm:text-[11px] tracking-wide font-bold leading-tight">
-                      UPGRADE
-                    </span>
-                    <span className="text-[9px] sm:text-[10px] font-mono-code font-bold mt-0.5 flex items-center gap-1 text-[#E8EDF7] leading-none">
-                      <span style={{ color: color }}>◆</span>
-                      {cost >= 1000 ? `${(cost / 1000).toFixed(1)}K` : cost}
-                    </span>
-                  </button>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+        {SORTED_UPGRADES.map((def) => (
+          <UpgradeRow key={def.id} def={def} want={want} />
+        ))}
+      </TabBody>
     </div>
   );
 };
