@@ -93,8 +93,8 @@ const BossTimer: React.FC<{ seconds: number }> = ({ seconds }) => {
   const urgent = seconds < URGENT_SECONDS;
   return (
     <div className={`flex-1 min-w-0 flex flex-col gap-0.5 ${urgent ? 'animate-pulse motion-reduce:animate-none' : ''}`}>
-      <div className="flex items-center justify-between gap-2 font-tech uppercase">
-        <span className={`flex items-center gap-1 text-[9px] tracking-wider ${urgent ? 'text-crimson font-bold' : 'text-dim'}`}>
+      <div className="flex items-center justify-between gap-2 font-tech">
+        <span className={`flex items-center gap-1 text-[9px] uppercase tracking-wider ${urgent ? 'text-crimson font-bold' : 'text-dim'}`}>
           <Timer size={10} aria-hidden />
           {urgent ? 'Time running out' : 'Boss timer'}
         </span>
@@ -248,7 +248,8 @@ export const CombatArena: React.FC = () => {
       onContextMenu={(e) => e.preventDefault()}
       role="region"
       aria-label="Combat. Tap anywhere to attack."
-      className="relative w-full h-[288px] sm:h-[310px] shrink-0 overflow-hidden bg-void border-b border-line select-none touch-none cursor-crosshair"
+      data-testid="combat-arena"
+      className="relative w-full h-[300px] sm:h-[310px] shrink-0 overflow-hidden bg-void border-b border-line select-none touch-none cursor-crosshair"
     >
       {/* Everything shakes together; the outer box stays still so tap coordinates never jitter. */}
       <div ref={shakeRef} onAnimationEnd={onShakeEnd} className="absolute inset-0 isolate">
@@ -317,7 +318,7 @@ export const CombatArena: React.FC = () => {
 
           {/* Combo */}
           {combo >= COMBO_MIN && (
-            <div className="absolute right-3 top-[58px] pointer-events-none bg-panel border border-gold px-2 py-0.5 shadow-[0_0_8px] shadow-gold/30">
+            <div className="absolute right-3 top-[70px] pointer-events-none bg-panel border border-gold px-2 py-0.5 shadow-[0_0_8px] shadow-gold/30">
               <span className="text-[10px] font-display font-black text-gold uppercase tracking-wider whitespace-nowrap">
                 {formatNumber(combo)} STRIKES · {formatPercent(comboBonus(combo), 0)} DMG
               </span>
@@ -326,7 +327,7 @@ export const CombatArena: React.FC = () => {
 
           {/* Enemy */}
           <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-1 pointer-events-none">
-            <div ref={spriteBoxRef} className="relative w-28 h-28 shrink-0 flex items-center justify-center">
+            <div ref={spriteBoxRef} className="relative w-24 h-24 shrink-0 flex items-center justify-center">
               <div
                 className={`absolute inset-0 rounded-full blur-md opacity-30 ${
                   isBoss
@@ -348,15 +349,17 @@ export const CombatArena: React.FC = () => {
                     alt={enemyName}
                     draggable={false}
                     onError={() => setBrokenTexture(texture)}
-                    className={`w-22 h-22 object-contain pixelated ${spriteClass(isBoss, hit.kind)}`}
+                    className={`w-20 h-20 object-contain pixelated ${spriteClass(isBoss, hit.kind)}`}
                   />
                 ) : (
-                  <Ghost size={56} className={isBoss ? 'text-crimson' : 'text-neon'} aria-label={enemyName} />
+                  <span role="img" aria-label={enemyName}>
+                    <Ghost size={48} className={isBoss ? 'text-crimson' : 'text-neon'} aria-hidden />
+                  </span>
                 )}
               </div>
             </div>
             <span
-              className={`max-w-full truncate text-base sm:text-lg font-display font-bold uppercase tracking-[0.12em] text-ink text-shadow-[0_0_10px] ${
+              className={`shrink-0 max-w-full truncate leading-tight text-sm sm:text-base font-display font-bold uppercase tracking-[0.12em] text-ink text-shadow-[0_0_10px] ${
                 isBoss ? 'text-shadow-crimson/60' : 'text-shadow-neon/50'
               }`}
             >
@@ -488,10 +491,10 @@ export const CombatArena: React.FC = () => {
               key={n.id}
               className={`absolute anim-damage font-display font-bold whitespace-nowrap ${
                 n.crit
-                  ? 'text-base text-gold text-shadow-[0_0_10px] text-shadow-gold/70'
+                  ? 'text-lg text-gold text-shadow-[0_0_10px] text-shadow-gold/70'
                   : n.auto
-                    ? 'text-[11px] opacity-85'
-                    : 'text-sm'
+                    ? 'text-xs opacity-85'
+                    : 'text-base'
               }`}
               style={{
                 left: n.x,

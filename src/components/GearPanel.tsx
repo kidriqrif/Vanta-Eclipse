@@ -178,7 +178,7 @@ const SlotTile: React.FC<{ slot: SlotDefinition; item: Item | undefined; onOpen:
         </span>
         <Pips rarity={item.rarity} className="relative" />
         <span className="relative text-[9px] font-mono-code text-dim">LV {formatNumber(item.itemLevel)}</span>
-        <span className="relative text-[9px] font-mono-code font-bold text-ink truncate max-w-full">{stat}</span>
+        <span className="relative text-[9px] font-tech font-bold text-ink leading-tight break-words max-w-full">{stat}</span>
       </button>
     );
   },
@@ -452,7 +452,7 @@ const ForgeSection: React.FC<{ onForged: (item: Item) => void; onNotice: (text: 
         })}
       </div>
 
-      <Button variant={canForge ? 'gold' : 'ghost'} size="lg" block disabled={!canForge || forging} onClick={forge}>
+      <Button variant={canForge ? 'gold' : 'ghost'} size="md" block disabled={!canForge || forging} onClick={forge}>
         <Hammer size={14} aria-hidden className={forging ? 'motion-safe:animate-pulse' : ''} />
         {forging ? 'FORGING…' : `FORGE ${slotName(slot).toUpperCase()} · ${formatNumber(cost)} SCRAPS`}
       </Button>
@@ -537,6 +537,8 @@ export const GearPanel: React.FC = () => {
     else if (item) view = { kind: 'equipped', item };
     else view = { kind: 'empty', slot: target.slot };
   }
+  // A new subject remounts the card, so an armed SALVAGE never carries over to another item.
+  const viewKey = !view ? 'none' : 'item' in view ? `${view.kind}:${view.item.id}` : `${view.kind}:${view.slot}`;
 
   const equip = (item: Item) => {
     const res = dispatch({ type: 'EQUIP_ITEM', itemId: item.id });
@@ -582,7 +584,7 @@ export const GearPanel: React.FC = () => {
         title="ARMOR"
         subtitle={
           <span aria-live="polite" className={notice ? 'text-ink' : undefined}>
-            {notice ?? 'Gear is kept through an Eclipse. Tap a slot to inspect it.'}
+            {notice ?? 'Gear stays through an Eclipse.'}
           </span>
         }
         right={
@@ -618,8 +620,8 @@ export const GearPanel: React.FC = () => {
             size="sm"
             block
             disabled={commons === 0}
-            label={`SALVAGE ALL COMMONS (${formatNumber(commons)}) · +${formatNumber(commons * COMMON_YIELD)} SCRAPS`}
-            armedLabel={`TAP AGAIN: ${formatNumber(commons)} ITEMS → +${formatNumber(commons * COMMON_YIELD)} SCRAPS`}
+            label={`SALVAGE ALL COMMONS (${formatNumber(commons)}): +${formatNumber(commons * COMMON_YIELD)} SCRAPS`}
+            armedLabel={`TAP AGAIN: ${formatNumber(commons)} ${commons === 1 ? 'ITEM' : 'ITEMS'} → +${formatNumber(commons * COMMON_YIELD)} SCRAPS`}
             onConfirm={salvageCommons}
           />
 
@@ -648,6 +650,7 @@ export const GearPanel: React.FC = () => {
       </TabBody>
 
       <Inspector
+        key={viewKey}
         view={view}
         isNew={view?.kind === 'inventory' ? isNew(view.item) : false}
         onClose={close}

@@ -1,217 +1,272 @@
-import React, { useState } from 'react';
-import { sound } from '../../utils/audio';
-
-interface MinigameProps {
-  onFinish: (score: number, won: boolean) => void;
-  onQuit: () => void;
-}
-
-type Cell = 0 | 1 | 2; // 0: empty, 1: Player (Red), 2: AI (Purple)
+import React, { useEffect, useRef, useState } from 'react';
+import { formatNumber } from '../../utils/numberFormat';
+import type { MinigameProps, MinigameResult } from './types';
 
 const ROWS = 6;
 const COLS = 7;
+const EMPTY = 0;
+const PLAYER = 1;
+const AI = 2;
+type Side = typeof PLAYER | typeof AI;
+type Disc = typeof EMPTY | Side;
+/** Row-major, row 0 at the top: cell = row * COLS + col. */
+type Board = readonly Disc[];
 
-export const ConnectFourGame: React.FC<MinigameProps> = ({ onFinish, onQuit }) => {
-  const [board, setBoard] = useState<Cell[][]>(
-    Array(ROWS).fill(0).map(() => Array(COLS).fill(0))
-  );
-  const [turn, setTurn] = useState<1 | 2>(1); // 1 = Player, 2 = AI
-  const [moves, setMoves] = useState<number>(0);
-  const [winner, setWinner] = useState<0 | 1 | 2 | 'DRAW'>(0);
+/** The void's column preference when nothing is forced: centre first, then outward. Ties are random. */
+const CENTRE_TIERS: readonly (readonly number[])[] = [[3], [2, 4], [1, 5], [0, 6]];
+const DIRECTIONS: readonly (readonly [number, number])[] = [
+  [0, 1], // across
+  [1, 0], // down
+  [1, 1], // diagonal \
+  [1, -1], // diagonal /
+];
+const AI_DELAY_MS = 550;
+/** How long the final board stays up before the host's result banner takes over. */
+const END_PAUSE_MS = 1000;
+const DISC_ART: Record<Side, string> = {
+  [PLAYER]: '/art/minigames/disc_player.png',
+  [AI]: '/art/minigames/disc_ai.png',
+};
 
-  // Check 4-in-a-row
-  const checkWin = (b: Cell[][], r: number, c: number, p: Cell): boolean => {
-    const directions = [
-      [0, 1], // horizontal
-      [1, 0], // vertical
-      [1, 1], // diagonal \
-      [1, -1], // diagonal /
-    ];
+interface C4State {
+  board: Board;
+  turn: 'player' | 'ai';
+  playerMoves: number;
+  lastCell: number | null;
+  winLine: readonly number[] | null;
+  result: MinigameResult | null;
+}
 
-    for (const [dr, dc] of directions) {
-      let count = 1;
-      // forward
-      for (let step = 1; step <= 3; step++) {
-        const nr = r + dr * step;
-        const nc = c + dc * step;
-        if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && b[nr][nc] === p) {
-          count++;
-        } else break;
-      }
-      // backward
-      for (let step = 1; step <= 3; step++) {
-        const nr = r - dr * step;
-        const nc = c - dc * step;
-        if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && b[nr][nc] === p) {
-          count++;
-        } else break;
-      }
-      if (count >= 4) return true;
-    }
-    return false;
+const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+const pick = <T,>(items: readonly T[]): T => items[Math.floor(Math.random() * items.length)];
+const plural = (n: number, word: string) => `${formatNumber(n)} ${word}${n === 1 ? '' : 's'}`;
+
+function newGame(): C4State {
+  return {
+    board: new Array<Disc>(ROWS * COLS).fill(EMPTY),
+    turn: 'player',
+    playerMoves: 0,
+    lastCell: null,
+    winLine: null,
+    result: null,
   };
+}
 
-  // AI Move
-  const makeAIMove = (currentBoard: Cell[][], moveCount: number) => {
-    setTimeout(() => {
-      // Find valid columns
-      const validCols: number[] = [];
-      for (let c = 0; c < COLS; c++) {
-        if (currentBoard[0][c] === 0) validCols.push(c);
+/** The row a disc dropped in `col` lands on, or -1 when the column is full. */
+function dropRow(board: Board, col: number): number {
+  for (let r = ROWS - 1; r >= 0; r--) if (board[r * COLS + col] === EMPTY) return r;
+  return -1;
+}
+
+function withDisc(board: Board, row: number, col: number, side: Side): Board {
+  const next = board.slice();
+  next[row * COLS + col] = side;
+  return next;
+}
+
+/** Every cell of the run of `side` through (row, col) if it is four or longer, else null. */
+function lineThrough(board: Board, row: number, col: number, side: Side): number[] | null {
+  for (const [dr, dc] of DIRECTIONS) {
+    const line = [row * COLS + col];
+    for (const sign of [1, -1]) {
+      let r = row + dr * sign;
+      let c = col + dc * sign;
+      while (r >= 0 && r < ROWS && c >= 0 && c < COLS && board[r * COLS + c] === side) {
+        line.push(r * COLS + c);
+        r += dr * sign;
+        c += dc * sign;
       }
+    }
+    if (line.length >= 4) return line;
+  }
+  return null;
+}
 
-      if (validCols.length === 0) {
-        setWinner('DRAW');
-        setTimeout(() => onFinish(moveCount, false), 1000);
-        return;
-      }
+/** Columns where `side` would complete four with its next disc. */
+function winningColumns(board: Board, side: Side): number[] {
+  const cols: number[] = [];
+  for (let c = 0; c < COLS; c++) {
+    const r = dropRow(board, c);
+    if (r >= 0 && lineThrough(withDisc(board, r, c, side), r, c, side)) cols.push(c);
+  }
+  return cols;
+}
 
-      // Check if AI can win immediately
-      let chosenCol = -1;
-      for (const c of validCols) {
-        let targetRow = -1;
-        for (let r = ROWS - 1; r >= 0; r--) {
-          if (currentBoard[r][c] === 0) {
-            targetRow = r;
-            break;
-          }
-        }
-        if (targetRow !== -1 && checkWin(currentBoard, targetRow, c, 2)) {
-          chosenCol = c;
-          break;
-        }
-      }
+/** Win if possible, else block, else the most central column that does not hand the player a win. */
+function chooseAiColumn(board: Board): number {
+  const open: number[] = [];
+  for (let c = 0; c < COLS; c++) if (dropRow(board, c) >= 0) open.push(c);
+  if (open.length === 0) return -1;
 
-      // Block player win
-      if (chosenCol === -1) {
-        for (const c of validCols) {
-          let targetRow = -1;
-          for (let r = ROWS - 1; r >= 0; r--) {
-            if (currentBoard[r][c] === 0) {
-              targetRow = r;
-              break;
-            }
-          }
-          if (targetRow !== -1 && checkWin(currentBoard, targetRow, c, 1)) {
-            chosenCol = c;
-            break;
-          }
-        }
-      }
+  const wins = winningColumns(board, AI);
+  if (wins.length > 0) return pick(wins);
+  const blocks = winningColumns(board, PLAYER);
+  if (blocks.length > 0) return pick(blocks);
 
-      // Random fallback
-      if (chosenCol === -1) {
-        chosenCol = validCols[Math.floor(Math.random() * validCols.length)];
-      }
+  const safe = open.filter((c) => winningColumns(withDisc(board, dropRow(board, c), c, AI), PLAYER).length === 0);
+  const pool = safe.length > 0 ? safe : open;
+  for (const tier of CENTRE_TIERS) {
+    const options = tier.filter((c) => pool.includes(c));
+    if (options.length > 0) return pick(options);
+  }
+  return pick(pool);
+}
 
-      // Apply AI drop
-      let targetRow = -1;
-      for (let r = ROWS - 1; r >= 0; r--) {
-        if (currentBoard[r][chosenCol] === 0) {
-          targetRow = r;
-          break;
-        }
-      }
+function resultFor(winner: Side | null, playerMoves: number): MinigameResult {
+  if (winner === PLAYER) {
+    return {
+      won: true,
+      performance: clamp(1 - (playerMoves - 4) / 17, 0.4, 1),
+      score: playerMoves,
+      detail: `Won in ${plural(playerMoves, 'move')}`,
+    };
+  }
+  if (winner === AI) return { won: false, performance: 0.2, score: playerMoves, detail: 'The void connected four' };
+  return { won: false, performance: 0.5, score: playerMoves, detail: 'Draw — the board filled' };
+}
 
-      const nextBoard = currentBoard.map((row) => [...row]);
-      nextBoard[targetRow][chosenCol] = 2;
-      setBoard(nextBoard);
-      sound.play('click');
+/** Pure: one disc for `side` in `col`, then win / draw detection. Illegal or late moves return the state unchanged. */
+function applyDrop(state: C4State, col: number, side: Side): C4State {
+  if (state.result || state.turn !== (side === PLAYER ? 'player' : 'ai')) return state;
+  if (col < 0 || col >= COLS) return state;
+  const row = dropRow(state.board, col);
+  if (row < 0) return state;
 
-      if (checkWin(nextBoard, targetRow, chosenCol, 2)) {
-        setWinner(2);
-        sound.play('fail');
-        setTimeout(() => onFinish(moveCount + 1, false), 1200);
-      } else {
-        setTurn(1);
-      }
-    }, 450);
+  const board = withDisc(state.board, row, col, side);
+  const playerMoves = state.playerMoves + (side === PLAYER ? 1 : 0);
+  const winLine = lineThrough(board, row, col, side);
+  const full = board.every((d) => d !== EMPTY);
+  return {
+    board,
+    turn: side === PLAYER ? 'ai' : 'player',
+    playerMoves,
+    lastCell: row * COLS + col,
+    winLine,
+    result: winLine ? resultFor(side, playerMoves) : full ? resultFor(null, playerMoves) : null,
   };
+}
 
-  // Player Column Click
-  const handleDrop = (col: number) => {
-    if (winner !== 0 || turn !== 1) return;
+/** Calls onFinish exactly once, a beat after the outcome is decided so the final board stays readable. */
+function useFinishOnce(result: MinigameResult | null, onFinish: MinigameProps['onFinish']) {
+  const onFinishRef = useRef(onFinish);
+  const sentRef = useRef(false);
+  useEffect(() => {
+    onFinishRef.current = onFinish;
+  }, [onFinish]);
+  useEffect(() => {
+    if (!result || sentRef.current) return;
+    const timer = window.setTimeout(() => {
+      if (sentRef.current) return;
+      sentRef.current = true;
+      onFinishRef.current(result);
+    }, END_PAUSE_MS);
+    return () => window.clearTimeout(timer);
+  }, [result]);
+}
 
-    // Find lowest empty row in col
-    let targetRow = -1;
-    for (let r = ROWS - 1; r >= 0; r--) {
-      if (board[r][col] === 0) {
-        targetRow = r;
-        break;
-      }
-    }
+function statusLine(game: C4State): { text: string; tone: string } {
+  if (game.result?.won) return { text: 'Four in a row — you win', tone: 'text-gold' };
+  if (game.result && game.winLine) return { text: 'The void connected four', tone: 'text-crimson' };
+  if (game.result) return { text: 'Draw — the board filled', tone: 'text-dim' };
+  if (game.turn === 'player') return { text: 'Your turn — tap a column', tone: 'text-neon' };
+  return { text: 'The void is choosing…', tone: 'text-dim' };
+}
 
-    if (targetRow === -1) return; // full col
+function columnLabel(board: Board, col: number): string {
+  const stack: string[] = [];
+  for (let r = ROWS - 1; r >= 0; r--) {
+    const d = board[r * COLS + col];
+    if (d === EMPTY) break;
+    stack.push(d === PLAYER ? 'yours' : 'void');
+  }
+  const free = ROWS - stack.length;
+  const contents = stack.length > 0 ? `${stack.join(', ')} from the bottom` : 'empty';
+  return `Column ${col + 1}: ${contents}; ${free === 0 ? 'full' : `${free} free`}`;
+}
 
-    sound.play('confirm');
-    const nextBoard = board.map((row) => [...row]);
-    nextBoard[targetRow][col] = 1;
-    setBoard(nextBoard);
+/** A disc with a shape cue as well as colour: the void's discs are hollow-centred, yours are solid. */
+const DiscArt: React.FC<{ side: Side; className?: string }> = ({ side, className = '' }) => (
+  <span className={`relative block ${className}`}>
+    <img src={DISC_ART[side]} alt="" draggable={false} className="w-full h-full pixelated" />
+    {side === AI && <span className="absolute inset-[34%] rounded-full bg-void/75" />}
+  </span>
+);
 
-    const newMoves = moves + 1;
-    setMoves(newMoves);
+export const ConnectFourGame: React.FC<MinigameProps> = ({ onFinish }) => {
+  const [game, setGame] = useState<C4State>(newGame);
+  useFinishOnce(game.result, onFinish);
 
-    if (checkWin(nextBoard, targetRow, col, 1)) {
-      setWinner(1);
-      sound.play('fanfare');
-      setTimeout(() => onFinish(newMoves, true), 1200);
-    } else {
-      setTurn(2);
-      makeAIMove(nextBoard, newMoves);
-    }
+  // The void's turn. Input is locked until its disc lands; the timer dies with the component.
+  useEffect(() => {
+    if (game.turn !== 'ai' || game.result) return;
+    const board = game.board;
+    const timer = window.setTimeout(() => {
+      const col = chooseAiColumn(board);
+      setGame((g) => (g.board === board ? applyDrop(g, col, AI) : g));
+    }, AI_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [game.turn, game.result, game.board]);
+
+  const playerTurn = game.turn === 'player' && !game.result;
+  const winCells = new Set(game.winLine ?? []);
+  const status = statusLine(game);
+
+  const drop = (col: number) => {
+    if (!playerTurn) return;
+    setGame((g) => applyDrop(g, col, PLAYER));
   };
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-between p-4 bg-[#08080C] text-[#F6F6FC]">
-      {/* Top Header */}
-      <div className="w-full flex items-center justify-between">
-        <div className="flex flex-col">
-          <span className="text-xs font-bold text-[#FF8A28]">CONNECT FOUR</span>
-          <span className="text-[10px] text-[#8686A2]">
-            Turn: {turn === 1 ? 'YOUR TURN' : 'VOID AI THINKING...'} | Moves: {moves}
+    <div className="flex-1 min-h-0 w-full overflow-y-auto bg-void bg-grid-pattern flex flex-col items-center gap-3 p-3">
+      <div className="w-full max-w-sm flex items-center justify-between gap-2 bg-panel border border-line px-2.5 py-1.5">
+        <div className="flex items-center gap-3 text-[10px] font-tech text-dim uppercase">
+          <span className="flex items-center gap-1">
+            <DiscArt side={PLAYER} className="w-4 h-4" /> You
+          </span>
+          <span className="flex items-center gap-1">
+            <DiscArt side={AI} className="w-4 h-4" /> Void
           </span>
         </div>
-
-        <button
-          onClick={onQuit}
-          className="px-2.5 py-1 text-xs bg-[#2C2C3C] border border-[#4E4E66] text-[#8686A2] hover:text-[#F6F6FC]"
-        >
-          FORFEIT
-        </button>
+        <span className="text-[10px] font-tech text-dim uppercase">
+          Your moves <span className="text-xs font-mono-code font-bold text-ink">{formatNumber(game.playerMoves)}</span>
+        </span>
       </div>
 
-      {/* Board */}
-      <div className="bg-[#171722] border-2 border-[#4E4E66] p-2 flex flex-col gap-1.5 my-auto max-w-sm w-full">
-        {board.map((row, rIdx) => (
-          <div key={rIdx} className="grid grid-cols-7 gap-1.5">
-            {row.map((cell, cIdx) => (
-              <button
-                key={cIdx}
-                onClick={() => handleDrop(cIdx)}
-                disabled={turn !== 1 || winner !== 0}
-                className={`aspect-square rounded-full border flex items-center justify-center transition-all ${
-                  cell === 1
-                    ? 'bg-[#FF3A46] border-[#F6F6FC] shadow-[0_0_8px_#FF3A46]'
-                    : cell === 2
-                    ? 'bg-[#A85CFF] border-[#F6F6FC] shadow-[0_0_8px_#A85CFF]'
-                    : 'bg-[#08080C] border-[#4E4E66] hover:border-[#8686A2]'
-                }`}
-              />
-            ))}
-          </div>
-        ))}
+      <p role="status" aria-live="polite" className={`min-h-[20px] text-xs font-display font-bold uppercase tracking-wider text-center ${status.tone}`}>
+        {status.text}
+      </p>
+
+      <div className="w-full max-w-sm grid grid-cols-7 gap-1 bg-panel border-2 border-line p-1.5">
+        {Array.from({ length: COLS }, (_, c) => {
+          const full = game.board[c] !== EMPTY;
+          return (
+            <button
+              key={c}
+              type="button"
+              onClick={() => drop(c)}
+              disabled={!playerTurn || full}
+              aria-label={columnLabel(game.board, c)}
+              className="flex flex-col gap-1 p-0.5 transition-colors enabled:hover:bg-active enabled:active:bg-active disabled:cursor-default"
+            >
+              {Array.from({ length: ROWS }, (_, r) => {
+                const cell = r * COLS + c;
+                const disc = game.board[cell];
+                const ring = winCells.has(cell) ? 'ring-2 ring-gold' : game.lastCell === cell ? 'ring-1 ring-ink/60' : '';
+                return (
+                  <span key={r} className={`relative block w-full aspect-square rounded-sm ${ring}`}>
+                    <img src="/art/minigames/cell_empty.png" alt="" draggable={false} className="absolute inset-0 w-full h-full pixelated" />
+                    {disc !== EMPTY && <DiscArt side={disc} className="absolute inset-[6%] animate-fade-in" />}
+                  </span>
+                );
+              })}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Bottom Hint */}
-      <div className="text-center text-xs text-[#8686A2]">
-        {winner === 1 ? (
-          <span className="text-[#6ADC3E] font-bold">VICTORY! 4 IN A ROW!</span>
-        ) : winner === 2 ? (
-          <span className="text-[#FF3A46] font-bold">DEFEATED BY VOID AI!</span>
-        ) : (
-          <span>Connect 4 of your red discs horizontally, vertically, or diagonally.</span>
-        )}
-      </div>
+      <p className="max-w-sm text-center text-[10px] font-tech text-dim">
+        Line up four of your discs across, down or diagonally before the void does. Centre columns are strongest.
+      </p>
     </div>
   );
 };

@@ -1,173 +1,185 @@
 # Vanta Eclipse — Release Checklist
 
-**What must EXIST before submission.** `TESTING-GUIDE.md` lists what must be
-*proven*; start there instead if you want the order of operations.
+What has to be true before this build goes from **closed testing to production**
+on Google Play. `design/TESTING-GUIDE.md` covers what has to be *proven*, and
+`production/monetisation-switch.md` is the step-by-step runbook for turning on ads
+and billing.
 
-Everything that can be produced from inside this repository now exists and is
-verified against a real artifact rather than asserted. What remains needs a
-Google account, a human accepting a licence, or a physical device.
+`[x]` means it is true in the repository today. `[ ]` means it is not done yet,
+or it can only be done in a Google console or on a phone.
+
+The Unity-era version of this checklist, with its build script, keystore notes
+and stubbed monetisation, is in git history. None of it applies to this build.
 
 ---
 
-## Build and signing — done, and checked on the artifact
+## Build and signing
 
-- [x] **Toolchain**, all outside the repo, all stated in
-      `tools/build_android.sh` so none of it lives in someone's shell history:
+- [x] **Identity.** Package `com.vantrexagames.vantaeclipse` in
+      `android/app/build.gradle` and `capacitor.config.ts`. It is permanent
+      once the app is published.
+- [x] **SDK levels** in `android/variables.gradle`: minSdk 24, compileSdk 36,
+      targetSdk 36. Play raises the minimum target level every August, so
+      check it again before each release after that.
+- [x] **Version.** versionName `1.4.0`, versionCode `5` in
+      `android/app/build.gradle`, with `package.json` at `1.4.0`. The game
+      reads its displayed version from `package.json` (injected by Vite), so
+      change both together.
+- [x] **Secrets cannot be committed by accident.** `.gitignore` blocks
+      keystores (.jks, .keystore), key.properties, google-services.json,
+      service-account JSON files and built .aab/.apk files. The web bundle
+      that cap sync copies into the Android project is generated and is
+      gitignored too.
+- [ ] **Replace the stock Capacitor launcher icon and splash.** The mipmap
+      launcher icons and the splash images under `android/app/src/main/res/`
+      are still Capacitor's default blue "X" on white, and the adaptive icon
+      background colour is #FFFFFF. The game's own icon art is in
+      `public/icons/` (`adaptive_foreground_432.png`,
+      `adaptive_background_432.png`, `launcher_192.png`). Android Studio's
+      Image Asset tool will regenerate the mipmaps from it.
+- [ ] **Bump versionCode for every upload**, including closed-testing ones.
+      Play rejects a versionCode it has already seen.
+- [ ] **Build the bundle:**
 
-      | | |
-      |---|---|
-      | Unity | 6000.5.7f1 |
-      | JDK 17 | `C:/Users/kidri/dev-tools/jdk-17` (Temurin 17.0.13) |
-      | Android SDK | `C:/Users/kidri/Android/Sdk` |
-      | packages | platform-tools, build-tools 35.0.0 / 36.0.0 / 36.1.0, platforms 35 + 36 |
+      ```
+      npm run android:sync      # tsc + vite build, then npx cap sync android
+      npx cap open android
+      ```
 
-- [x] **Debug APK** — `bash tools/build_android.sh debug`. Verified rather than
-      merely produced: `apksigner` confirms APK Signature Scheme v2, and
-      `aapt2 dump badging` reports package `com.kidriqrif.vantaeclipse`,
-      versionCode 3, **minSdk 26 / targetSdk 36**, arm64-v8a, exactly one real
-      permission (`VIBRATE`), and a **launchable activity**.
+      In Android Studio choose Build → Generate Signed App Bundle / APK →
+      Android App Bundle, then the **existing upload keystore**: the one the
+      closed-testing uploads were signed with. Keep it, and its passwords,
+      outside the repository and backed up somewhere you control. Play App
+      Signing holds the real app-signing key, and a lost upload key can be
+      reset from Play Console's app-signing page, but that takes time, so
+      don't count on it.
+- [ ] In Play Console's App bundle explorer, check the new bundle: the
+      versionCode, no 16 KB page-size warning (required for apps targeting
+      Android 15+), and the permissions you expect: INTERNET,
+      ACCESS_NETWORK_STATE and AD_ID from AdMob, and BILLING from the Play
+      Billing library. `npm run android:sync` regenerates the Capacitor plugin
+      list (`android/capacitor.settings.gradle`,
+      `android/app/capacitor.build.gradle`) so that it includes
+      @capgo/native-purchases, which means the billing library ships even
+      while billing is switched off. Commit the regenerated files.
 
-      > The launcher-activity check is a hard failure in the script because an
-      > APK once shipped without one. `Assets/Plugins/Android/AndroidManifest.xml`
-      > REPLACES Unity's `UnityManifest.xml` rather than merging into it, so
-      > declaring a permission and an empty `<application>` deleted both Unity
-      > activity blocks. It installed and could not be started.
+## Monetization go-live
 
-- [x] **Signed release AAB** — `bash tools/build_android.sh release`, 27.6 MB.
-      The script compares the bundle's signer fingerprint to the keystore's;
-      `jar verified` alone is true of a debug-signed bundle too.
+The details and the test procedure are in `production/monetisation-switch.md`.
+Today the build serves Google's **sample** ads and sells nothing.
 
-      > Unity 6000.5.7f1 **does not parse** `-keystorePath` / `-keystorePass` /
-      > `-keyaliasName` / `-keyaliasPass`; those literals appear nowhere in
-      > `Unity.exe`, `UnityEditor.dll` or the Android extension.
-      > `BuildAndroid.ApplySigning` reads them, and `ClearSigning` scrubs the
-      > fields in a `finally` so an editor exit cannot persist a password into
-      > `ProjectSettings.asset`, which is tracked and pushed to a public remote.
+- [x] AdMob is integrated: an adaptive banner (hidden by Remove Ads) and opt-in
+      rewarded offers, initialised in `src/services/ads.ts` after the UMP
+      consent check. No interstitials.
+- [x] Play Billing is integrated in `src/services/billing.ts` behind
+      `BILLING_ENABLED`. Prices come from Google Play; none are hard-coded.
+- [ ] Create the AdMob app (Android) plus one **banner** unit and one
+      **rewarded** unit. All three rewarded placements share that one rewarded
+      unit.
+- [ ] Put the real AdMob **App ID** in `android/app/src/main/AndroidManifest.xml`
+      (`com.google.android.gms.ads.APPLICATION_ID`, currently the sample
+      `ca-app-pub-3940256099942544~3347511713`).
+- [ ] Put the real unit IDs in `src/config/monetization.ts`
+      (`ADMOB.bannerAdUnitId`, `ADMOB.rewardedAdUnitId`).
+- [ ] Set `ADMOB.isTesting` to `false` in the same file, for the production
+      build only, and only once the real IDs are in.
+- [ ] Publish **app-ads.txt** at the root of the developer website named in the
+      Play listing, then check its status in AdMob → Apps → app-ads.txt.
+- [ ] In AdMob → Privacy & messaging, create and publish the **European
+      regulations (GDPR)** message and the **US state regulations** message.
+      The app shows Google's consent form only when UMP says one is required.
+- [ ] Set up a Play Console payments profile, which is needed before you can
+      sell anything.
+- [ ] Create the one-time products in Play Console with exactly these IDs
+      (they must match `storeId` in `src/data/definitions.ts`, and an ID
+      can never be reused):
+      `vanta_remove_ads` and `vanta_starter_pack` (non-consumable), and
+      `vanta_shards_small` (consumable). Play Console has no consumable
+      setting; the app consumes the product when it is bought. You can create
+      and license-test the products on the **closed testing track** before
+      production.
+- [ ] Add license testers, test every purchase, then set `BILLING_ENABLED` to
+      `true` in `src/config/monetization.ts`. Until then the three products
+      show "COMING SOON".
 
-- [x] **16 KB page size** — all six `.so` in the bundle carry `PT_LOAD
-      p_align = 0x4000`. Read the ELF headers, not the zip entry offsets: an
-      entry offset says nothing about the alignment of a compressed library.
+## Play Console declarations
 
-- [x] **Upload keystore**, RSA 2048, valid to 2053:
-      `C:/Users/kidri/keystores/vanta-eclipse-upload.jks`, alias `upload`,
-      password in `vanta-eclipse-upload.password.txt` beside it. Both outside
-      the repo. SHA-256:
-      `3A:5B:8A:01:C8:37:06:8B:CB:F1:06:B3:2A:45:3B:6C:8D:9E:EE:3A:9B:8D:9C:EA:EB:9C:DB:A0:AB:D2:62:13`
+- [ ] **Privacy policy URL**:
+      https://kidriqrif.github.io/Vanta-Eclipse/privacy-policy.html.
+      `docs/privacy-policy.html`, with an identical in-app copy at
+      `public/privacy-policy.html`, now describes AdMob, the banner, rewarded
+      videos, Play Billing and the permissions. **The live page does not yet:**
+      it is the 2026-08-10 version, which says the app has no ads. It updates
+      when the file reaches the branch GitHub Pages publishes from. After that,
+      check that the live page shows the new date.
+- [ ] **Ads**: Contains ads, **Yes**. Every build from this codebase includes
+      AdMob.
+- [ ] **Advertising ID**: Yes. The AdMob SDK adds the AD_ID permission, and
+      its purpose is advertising.
+- [ ] **Data safety.** Fill this in from Google's own AdMob SDK disclosure
+      (https://developers.google.com/admob/android/privacy/play-data-disclosure)
+      rather than from this list. Expect: **Device or other IDs** (the
+      advertising ID), **App interactions** and **Diagnostics**, all collected
+      by the AdMob SDK for advertising, analytics and fraud prevention, plus
+      **approximate location** from the IP address, which the privacy policy
+      already states. Once billing is on, also declare **Purchase history**.
+      The game itself sends nothing: progress is a local save with no account
+      and no cloud copy.
+- [ ] **In-app purchases**: Yes, once `BILLING_ENABLED` is true and the
+      products are active.
+- [ ] **Target audience**: 13 and over. The privacy policy says the app is not
+      directed at children under 13. If under-13 age groups are selected, the
+      Families policy applies: Families-certified ad SDKs only, child-directed
+      ad requests (not set anywhere in `src/services/ads.ts` today), and a
+      rewritten privacy policy.
+- [ ] **Content rating** (IARC questionnaire). Answer it from what is on
+      screen: tap combat with health bars against stylised pixel-art
+      creatures. Answer it again once purchases go on, because it asks about
+      digital purchases.
+- [ ] App access (no login, nothing gated), plus the news, financial, health
+      and government declarations (all No).
+- [ ] **Production access.** A personal developer account created after
+      2023-11-13 needs at least 12 testers opted in to closed testing for 14
+      continuous days before it can apply for production in the Dashboard.
 
-      > **Back this up somewhere you control, today.** Lose it and you cannot
-      > ship an update to an app signed with it. Play App Signing can reset an
-      > *upload* key on request, which is a strong reason to enrol when you
-      > create the app — but do not rely on it.
+## Testing
 
-- [x] **Identity.** `com.kidriqrif.vantaeclipse`, versionName `0.1.0`,
-      versionCode `1`. Bump the code on every upload; Play rejects a repeat.
+- [ ] `npm test` passes on the release commit. That is 47 Vitest tests in
+      `src/game/__tests__/` covering the reducer, tap guard and save
+      migration. They pass as of this edit.
+- [ ] `npm run e2e` passes. It runs the Playwright smoke tests against the
+      dev server, as configured in `playwright.config.ts`. To use a browser
+      that is already installed instead of `npx playwright install`:
 
-- [ ] **Confirm the package name before the first upload.** It was chosen from
-      the GitHub account and is **permanent once published**. If you own a
-      domain, use it instead.
+      ```
+      PW_CHROMIUM=/path/to/chrome npm run e2e
+      ```
+- [ ] Work through the device checklist in `design/TESTING-GUIDE.md` on a
+      physical phone, with the app **installed from the closed testing track**
+      rather than sideloaded.
+- [ ] **Save upgrade.** Install the previous closed-testing build, play for a
+      while, then update to this one. Progress must survive the v1 → v2
+      migration in `src/game/save.ts`. A Remove Ads or Starter Pack that the AI
+      Studio build granted without payment is removed, and what the pack
+      contained stays.
+- [ ] Do the ads and billing tests in `production/monetisation-switch.md` on
+      a registered AdMob test device and with a license-tester account.
 
-- [ ] **Check the target SDK against current policy.** It is 36, which meets
-      the requirement as of August 2026. Play raises the floor every August.
+## Store assets
 
-## Store assets — done
+Listing copy and field values are in `production/store-listing.md`.
 
-All generated from the theme's own values, so the listing and the game agree.
-`python tools/make_icons.py` rebuilds them.
-
-- [x] Launcher icon 192×192 and both 432×432 adaptive layers. Foreground art
-      inside the 264px safe circle; background fully opaque; the occluded disc
-      punched to transparent rather than black, so launcher parallax cannot
-      reveal a seam.
-- [x] 512×512 store icon, alpha stripped — Play rejects an alpha channel even
-      when every pixel is opaque.
-- [x] Feature graphic 1024×500.
-- [x] Listing copy, categorisation and Data Safety notes:
-      `production/store-listing.md`.
-- [x] **Privacy policy is live and dated** at
-      `https://kidriqrif.github.io/Vanta-Eclipse/privacy-policy.html`, and
-      `SettingsMenu` opens that exact URL. Source is `docs/privacy-policy.html`;
-      `tools/check_docs.py` keeps it honest.
-- [x] **The advertising version of the policy is written and staged** at
-      `docs/privacy-policy-ads.html` — full AdMob disclosure, Play Billing, the
-      `AD_ID` permission, the opt-out routes and the EEA/UK consent note. It is
-      deliberately NOT published: the live page has to describe the app that
-      actually installs, and that app has no adverts and no `INTERNET`
-      permission. `production/monetisation-switch.md` is the single atomic
-      commit that swaps it in.
-- [x] **Phone screenshots re-captured from the shipping build.** Six 1080×1920
-      PNGs in `production/screenshots/`, published by
-      `python tools/make_store_screenshots.py` straight out of the same captures
-      stage 8 gates on, with alpha flattened and every one of Play's limits
-      (count, bit depth, side length, aspect) checked rather than assumed. They
-      cannot drift from the build again without the sweep noticing.
-
-## Blocking, outside this repository
-
-### Play Console
-- [ ] Developer account and the $25 fee.
-- [ ] Enrol in Play App Signing.
-- [ ] **Data safety** form. The app collects nothing: no account, no analytics,
-      no network calls anywhere in the codebase, and the manifest does not even
-      declare `INTERNET`. All progress is a local JSON file in private storage.
-- [ ] **IARC content rating.** Combat is a health bar and a particle burst
-      against stylised creatures — no gore, no human targets, no blood, which
-      is normally Everyone 10+ / PEGI 7. Answer the questionnaire honestly
-      rather than copying that; a wrong answer is a policy strike.
-- [ ] Target audience and content. 13+; targeting under-13 pulls the app into
-      the Families policy.
-- [ ] Ads declaration: **No**.
-- [ ] App access: no login required, nothing gated.
-- [ ] Privacy policy URL field.
-- [ ] The news / financial / health / government declarations (all No).
-
-### Calendar, not a form
-- [ ] **Closed testing: 12 testers for 14 continuous days**, if the developer
-      account is a personal one created after 2023-11-13. Production access is
-      not granted until it completes.
-
-### Hardware
-- [ ] **Run the game on a physical device.** It never has. See
-      `TESTING-GUIDE.md` stage 2.
-
-## Not blocking, but decide before launch
-- [ ] **Text is pixel-exact at 1920 high and nowhere else.** The CanvasScaler
-      matches on height against a 1080×1920 reference, so only integer factors
-      land every 9px tier on whole glyph boxes. Three ways out, none taken:
-      accept it, switch to constant-pixel-size scaling with letterboxing, or
-      author the face at a second size.
-- [ ] **`x86_64` is not built.** arm64-v8a only, which excludes ChromeOS and
-      every standard emulator. Play splits an AAB per ABI, so adding it costs
-      end users nothing.
-- [ ] Cloud saves via Play Games Services. `SaveManager.GetFullSaveText()`
-      already returns exactly the document a provider would upload.
-- [ ] Localisation. Every string is inline English.
-- [ ] Analytics for the balance assumptions.
-
-## Monetisation — deliberately absent, and ready to switch on
-
-`production/monetisation-switch.md` is the whole list, as one atomic commit.
-
-## Monetisation — deliberately absent
-
-`MonetizationManager.UseStubProviders` is `true`, so `PaidSurfacesAvailable` is
-`false` and every paid surface is hidden. There is no ad SDK and no Play Billing
-library in the bundle, the app shows no ads and takes no money, and
-`production/store-listing.md` declares exactly that. **This ships as-is.**
-
-Shipping monetised instead is a project, not a checkbox: a real ad SDK, Play
-Billing, **server-side receipt validation** (a client-only "purchase succeeded"
-is trivially spoofable), SKUs created in Play Console matching `store_id` in the
-product definitions, and a decision about where entitlements live — today they
-are plain strings in the save file, which is the right call for a local cache
-and the wrong one for an authority. Flip `UseStubProviders`, the two listing
-declarations, the Data Safety form and the `AD_ID` permission declaration in
-one change, never separately.
-
-## Known deliberate gaps
-
-- **Two worlds ship** (Dark Forest 1–50, Frozen Ruins 51–100); the GDD sketches
-  five. World 3+ is pure data and needs no code.
-- **`WorldManager` does not unlock past the last world's boss**, so the
-  level-100 boss currently leads nowhere. Correct until World 3 exists.
-- **Astral Shards: ~420 earnable against 740 needed** for every cosmetic, so
-  the two most expensive trails are unreachable while monetisation is stubbed.
+- [x] Store icon, 512×512 with no alpha: `production/icons/store_icon_512.png`.
+- [x] Feature graphic, 1024×500 with no alpha:
+      `production/icons/feature_graphic_1024x500.png`.
+- [ ] **Recapture the phone screenshots.** The six 1080×1920 PNGs in
+      `production/screenshots/` come from the Unity build. They show its old
+      SHOP / MENU / GEAR layout and a "Development build" banner, and none of
+      the current UI. Capture the React build at a 9:16 size such as
+      1080×1920, because Play rejects a screenshot whose long side is more
+      than twice its short side, and that includes 20:9 phone captures.
+- [ ] Decide whether the store icon (a crescent) should match the launcher art
+      in `public/icons/` (a dark disc with a crescent), and make the Android
+      launcher icon match whichever you choose.
+- [ ] Paste the listing copy and check the Play preview against the build
+      testers actually installed.

@@ -204,7 +204,13 @@
 @keyframes floatUpFade {
   0% {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translate(-50%, 0) scale(1.15);
+  }
+  15% {
+    transform: translate(-50%, -10px) scale(1);
+  }
+  55% {
+    opacity: 1;
   }
   100% {
     opacity: 0;
@@ -372,7 +378,7 @@
 }
 
 .anim-damage {
-  animation: floatUpFade 0.65s cubic-bezier(0.1, 1, 0.2, 1) forwards;
+  animation: floatUpFade 0.8s ease-out forwards;
 }
 
 .anim-enemy-idle {

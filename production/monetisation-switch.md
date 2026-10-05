@@ -1,184 +1,211 @@
-# The monetisation switch
+# Monetisation go-live runbook
 
-Everything that has to change **in one commit** when AdMob and Play Billing go
-in. Not a sequence — a single atomic flip, because each half of it makes the
-other half a false declaration to Google.
+How to take ads and purchases from where they are today (Google's sample ads,
+billing switched off) to live. Every Android build made with
+`npm run android:sync` already contains AdMob and the Play Billing library.
+Going live means changing values in two files and configuring two Google
+consoles.
 
-The privacy policy for the monetised build is already written and sits at
-`docs/privacy-policy-ads.html`. It is **not published**: the live page at
-`docs/privacy-policy.html` describes the app that actually installs today, which
-takes no money, shows no adverts, and does not even hold the `INTERNET`
-permission. Publishing an advertising policy for a build with no advertising is
-a false statement to users and contradicts the Data Safety form, so it waits.
-
----
-
-## Why it is atomic
-
-Play cross-checks four things against each other and against the artifact:
-
-| | must say |
-|---|---|
-| The bundle | contains the advert SDK, declares `AD_ID` and `INTERNET` |
-| Data safety | Advertising ID collected, device data collected, purpose "advertising" |
-| Store listing | Contains ads = **Yes**, In-app purchases = **Yes** |
-| Privacy policy URL | describes exactly that collection |
-
-Any one of them out of step with the others is a policy violation, and the two
-directions fail differently. Declaring ads you do not serve gets the listing
-rejected. **Serving ads you did not declare gets the app suspended.**
+The Play Console declarations this depends on (Ads, Data safety, In-app
+purchases, content rating) are listed in `design/RELEASE-CHECKLIST.md`. The
+design rules come from `design/ux/milestone-14-monetization.md`: every video is
+opt-in, never interstitial, and is a bonus on top of something already earned.
 
 ---
 
-## What only the account holder can supply
+## The switches
 
-None of this can be produced from inside the repository, and the code cannot be
-written blind against it — an ad unit ID is not guessable and a billing
-integration cannot be tested without a Play Console that has the SKUs in it.
+Only two files change at launch.
 
-| Needed | Where it comes from | Blocks |
-|---|---|---|
-| AdMob account + app registered for Android | admob.google.com, free | everything advert |
-| **App ID** `ca-app-pub-…~…` | AdMob, per app | goes in `GoogleMobileAdsSettings`; a wrong one crashes on launch |
-| **Rewarded ad unit IDs** ×3 | AdMob, one per placement | `arcade_token`, `essence_boost`, `offline_double` |
-| A certified CMP configured for EEA/UK | AdMob → Privacy & messaging | lawful ads in Europe, and the promise the policy already makes |
-| Play Console app entry, package uploaded once | play.google.com/console | Billing cannot be tested until a build with the library is on a track |
-| **Three SKUs created and activated** | Play Console → Products | `vanta_remove_ads`, `vanta_starter_pack`, `vanta_shards_small` |
-| Prices confirmed per SKU | Play Console | $4.99 / $2.99 / $1.99 are the current placeholders |
-| A licence-tester account | Play Console → Setup → Licence testing | buying without being charged |
-| A decision on receipt validation | you | see below — it is the one item with a cost attached |
+| Switch | File | Today | What it does |
+|---|---|---|---|
+| AdMob App ID | `android/app/src/main/AndroidManifest.xml`, meta-data `com.google.android.gms.ads.APPLICATION_ID` | Google's sample `ca-app-pub-3940256099942544~3347511713` | Identifies the app to the Mobile Ads SDK. It must be the ID (with a `~`) of the same AdMob app that owns the two units below. |
+| `ADMOB.bannerAdUnitId` | `src/config/monetization.ts` | sample banner unit | The adaptive banner at the bottom of the screen. |
+| `ADMOB.rewardedAdUnitId` | `src/config/monetization.ts` | sample rewarded unit | One unit shared by all three rewarded offers. |
+| `ADMOB.isTesting` | `src/config/monetization.ts` | `true` | While `true`, the AdMob plugin replaces whatever unit ID it is given with Google's sample ID, so real IDs plus `true` still show only test ads and earn nothing. It also starts the SDK in testing mode. Set `false` only for the production build. |
+| `BILLING_ENABLED` | `src/config/monetization.ts` | `false` | While `false`, `src/services/billing.ts` never connects to Play: paid items read "COMING SOON" and nothing is granted. While `true`, on launch the app asks Play for the three products. Each one Play returns becomes buyable at Play's own localised price, and owned non-consumables are re-granted. |
 
-**Receipt validation is the fork in the road.** Client-only "the purchase
-succeeded" is trivially spoofable on a rooted device. Validating properly means
-a server — Cloud Functions, a small VPS, anything — holding a Google Play
-service-account key and answering "does this token entitle this account". That
-is a running service with a bill, however small, attached to an app that
-currently has no backend at all and no `INTERNET` permission. The honest
-alternative for a $4.99 cosmetic-and-convenience SKU is to accept client-side
-grants and treat the save file as the record, which is what the code does
-today. It is a real trade-off and it is yours to make.
+Nothing else needs editing. Ad placements, caps and product contents are data
+in `src/data/definitions.ts`.
 
----
+## What the player gets
 
-## The list
+**Ads.** AdMob initialises first, then checks UMP consent and shows Google's
+form if one is required. Only after that does it request any ad (see
+`src/services/ads.ts`).
 
-### Code
-- [ ] Add the Google Mobile Ads Unity package and Play Billing. **Neither is in
-      `Packages/manifest.json` today** — the dependency list is ten Unity
-      modules and Newtonsoft, nothing else. That is why the bundle can honestly
-      declare no advert SDK.
-- [ ] Implement `UnityAdProvider : IAdProvider` and
-      `UnityBillingProvider : IBillingProvider` in
-      `Assets/Scripts/Monetization/Providers.cs`, including `RestorePurchases()`
-      — the Shop already calls it. Both classes exist and both deliberately
-      **refuse**: they log an error and report failure rather than returning the
-      stub's silent success, so a half-finished switch cannot grant anything.
-- [ ] **The EEA/UK consent form (Google UMP) is a separate integration.**
-      `docs/privacy-policy-ads.html` already promises that "the advert SDK will
-      ask for your consent, or offer you a way to refuse". AdMob does not do
-      that on its own — it needs the User Messaging Platform SDK and a certified
-      CMP configured in the AdMob console, gathered *before* the first ad
-      request. Without it that sentence is a false statement to European users
-      and serving personalised ads there is a GDPR problem, not just a policy
-      one.
-- [ ] **Show the store's localised price, not `priceText`.** Every product asset
-      carries a hardcoded `"$4.99"`-style string and `Shop.MakeProductCard`
-      renders it directly. Play Billing returns the real, currency-correct price
-      per user; a British player must not be shown dollars. Query the SKU and
-      keep `priceText` only as the pre-connection fallback.
-- [ ] **Server-side receipt validation.** A client-only "purchase succeeded" is
-      trivially spoofable. Nothing that costs real money may be granted on the
-      client's word alone.
-- [ ] Decide where entitlements live. Today they are plain strings in
-      `savegame.json`, so adding `"remove_ads"` by hand grants it. `SaveRead`
-      deliberately preserves unrecognised entitlements rather than erasing them,
-      which is right for a local cache and wrong for an authority: once billing
-      is real, the store's response must be what grants an entitlement and the
-      save file only caches it offline.
-- [ ] Set `MonetizationManager.UseStubProviders = false`. This one line flips
-      `PaidSurfacesAvailable`, which un-hides the Shop's offers tab, the arcade
-      token offer and the offline doubler.
-- [ ] Restore `INTERNET` and `ACCESS_NETWORK_STATE` in
-      `Assets/Plugins/Android/AndroidManifest.xml`. They are absent on purpose
-      today and that absence is what makes the current policy's "makes no
-      network requests" claim true rather than aspirational.
-- [ ] The advert SDK adds `com.google.android.gms.permission.AD_ID` itself.
-      Confirm it in the built artifact with `aapt2 dump badging`, do not assume.
+| Placement | Where it appears | Reward | Daily cap |
+|---|---|---|---|
+| `offline_double` | only in the offline-rewards modal | doubles the essence just granted | 3 |
+| `arcade_token` | the Arcade, when out of tokens | +1 Arcade Token | 3 |
+| `essence_boost` | the BAZAAR (shop) tab | 600 s of essence at the current rate | 5 |
 
-### Published pages
-- [ ] `cp docs/privacy-policy-ads.html docs/privacy-policy.html`, then
-      `python tools/make_docs.py` to restyle it, then check the date at the top
-      says the day it goes live.
-- [ ] `Assets/Scripts/UI/SettingsMenu.cs` already opens
-      `https://kidriqrif.github.io/Vanta-Eclipse/privacy-policy.html`, so the
-      URL does not change. Verify the page it lands on is the new one.
+A watch is counted after the reward is granted, so a watch that pays nothing
+never uses up an offer. Remove Ads skips the video only, and the daily caps
+still apply.
 
-### Play Console
-- [ ] Store listing: **Contains ads = Yes**, **In-app purchases = Yes**
-      (rewarded video only; $0.99–$4.99).
-- [ ] Redo **Data Safety** from the advert SDK's own disclosure — not from this
-      file, and not from the game's code, because the SDK collects things the
-      game never sees.
-- [ ] Advertising ID declaration.
-- [ ] Create the SKUs matching `store_id` in the product definitions:
-      `vanta_remove_ads`, `vanta_starter_pack`, `vanta_shards_small`.
-- [ ] Re-check the content rating questionnaire — it asks about advertising.
+**Products.** None of them carries a price in code.
 
-### Listing copy
-- [ ] `production/store-listing.md` currently declares no ads and no IAP, and
-      its FAIR BY DESIGN paragraph says "no ads, no purchases". Both have to
-      change in the same commit. The design intent — every advert opt-in, every
-      advert a bonus rather than a gate, nothing pay-gated — is what the
-      replacement paragraph should say, because that is what the code enforces
-      through `MonetizationManager`.
+| Product | Play product ID | Type | Contents |
+|---|---|---|---|
+| Remove Ads | `vanta_remove_ads` | non-consumable | hides the banner; every offer becomes instant |
+| Starter Pack | `vanta_starter_pack` | non-consumable | 25 Void Crystals, 5 Arcade Tokens, the Ember Trail |
+| Astral Shards Pouch | `vanta_shards_small` | consumable | 200 Astral Shards |
+
+Purchases are granted in `src/game/reducer.ts` (`PURCHASE_GRANTED`,
+`RESTORE_ENTITLEMENTS`). While billing is on, `src/context/GameProvider.tsx`
+asks Play on every launch which non-consumables the Google account owns, and
+re-grants any that are missing. A reinstall, or a new phone signed in to the
+same account, therefore gets Remove Ads back without a tap.
 
 ---
 
-## What is already built, and does not need touching
+## Steps
 
-The whole surface exists and is wired; only the two providers are hollow.
+### 1. AdMob console
 
-| | |
-|---|---|
-| Rewarded placements | `arcade_token` (1 token, 3/day), `essence_boost` (600s of essence at the live rate, 5/day), `offline_double` (doubles the collection, 3/day, contextual) |
-| Products | `remove_ads` $4.99, `starter_pack` $2.99, `shards_small` $1.99 — SKUs `vanta_remove_ads`, `vanta_starter_pack`, `vanta_shards_small` |
-| Surfaces | Shop offers tab, Arcade's out-of-tokens offer, the offline modal's doubler, Restore Purchases |
-| `remove_ads` behaviour | every offer becomes one-tap and instant; the daily caps still apply, so it removes the chore and never the balance |
-| Integrity | a use is burned only on a completed watch that actually paid; entitlements survive a definition that fails to load; a double-tap cannot run two |
+- [ ] Create the app (Android). It does not need to be on the Play Store yet;
+      link it to the store listing once the listing is public.
+- [ ] Create one **Banner** unit and one **Rewarded** unit. The game ignores
+      the reward amount you type into the rewarded unit, because the game
+      decides the reward itself.
+- [ ] Privacy & messaging: create and publish a **European regulations
+      (GDPR)** message and a **US state regulations** message.
+- [ ] app-ads.txt: AdMob shows you one line for your publisher ID. Publish it
+      as app-ads.txt at the root of the domain entered as "Website" in the
+      Play listing. AdMob does not look under a path. If that website is this
+      repo's GitHub Pages site, the root is https://kidriqrif.github.io/,
+      which is served by a separate repository named kidriqrif.github.io.
+      A file in this repo's `docs/` would end up under /Vanta-Eclipse/, where
+      AdMob would not find it.
+- [ ] Settings → Test devices: register every phone you will run the release
+      build on.
 
-## What is NOT optimised, and is a decision rather than a bug
+### 2. Ads in code
 
-- **Nothing upsells `remove_ads`.** It is one card on the Shop's offers tab and
-  appears nowhere else. The moment a remove-ads SKU converts is the moment a
-  player has just watched their third advert of the day and is told "none left
-  today" — and that string is rendered by `Shop.MakeOfferCard` with no route to
-  the product sitting two cards below it. Same for the Arcade offer and the
-  offline modal, both of which say *watch* without ever saying *or don't*.
-- **`essence_boost` is worth 10 minutes; `offline_double` is worth up to 8.**
-  The offline cap is `IdleManager.OfflineCapSeconds` = 8h before Long Slumber
-  extends it, so the contextual placement can pay ~48× what the standing one
-  does for the same 30-second advert. Players learn that ratio fast and the
-  Shop's offers go dead. Either raise `rewardAmount` or accept that the offline
-  doubler is the real placement and the other two are garnish.
-- **One shard pack against a 320-shard shortfall.** ~420 shards are earnable
-  and every cosmetic costs 740, so the gap is exactly 1.6 × `shards_small`.
-  A player who wants the last two trails must buy the same $1.99 pack twice
-  and overshoot. A second, larger tier would price the whole set in one go.
-- **`starter_pack` is permanent and unframed.** Starter packs convert on
-  first-session urgency; this one is card five in a list, forever.
+- [ ] Put the real App ID in `android/app/src/main/AndroidManifest.xml` and
+      the two real unit IDs in `src/config/monetization.ts`. Leave
+      `isTesting: true`.
+- [ ] Bump versionCode, run `npm run android:sync`, and install. You should
+      still see sample ads with a test label, which confirms the plugin's
+      substitution is working.
+- [ ] Production build only: set `isTesting: false`. Install it on a
+      **registered test device**. AdMob should serve real-inventory ads
+      marked as test ads. If an ad appears without a test label, the device is
+      not registered: do not tap it.
+- [ ] Consent: the code passes no debug geography to
+      `AdMob.requestConsentInfo`, so the GDPR form only appears where it
+      legally applies. To see it from outside the EEA/UK, temporarily pass
+      `debugGeography` and `testDeviceIdentifiers` in `src/services/ads.ts`,
+      then remove them before release. The privacy policy promises an "Ad
+      privacy options" entry in Settings where consent applies. It is driven
+      by `usePrivacyOptionsRequired()` in `src/hooks/useMonetization.ts` and
+      `ads.showPrivacyOptions()`, so check that the entry appears.
 
-None of these block the switch. They are the difference between monetisation
-that exists and monetisation that earns, and each one is a design call rather
-than a defect — which is why they are listed here and not in the checklist.
+### 3. Play Console (billing)
+
+- [ ] Set up a payments profile (merchant account). Without one you cannot
+      create paid products.
+- [ ] Put a bundle from this codebase on the closed testing track. It carries
+      the BILLING permission, and Play Console may refuse to create in-app
+      products until an uploaded build has it.
+- [ ] Monetize → one-time products: create `vanta_remove_ads`,
+      `vanta_starter_pack` and `vanta_shards_small`, with exactly those IDs
+      (they are `storeId` in `src/data/definitions.ts`). Set the names,
+      descriptions and prices, then activate them. Play Console has no
+      consumable switch: the app consumes the product, based on `consumable`
+      in the definitions.
+- [ ] Settings → License testing: add the Google accounts you will test
+      with. Each one must also be opted in to the closed track and must
+      install the app **from Play**, not by sideloading.
+
+### 4. Billing in code
+
+- [ ] Set `BILLING_ENABLED = true`, bump versionCode, run
+      `npm run android:sync`, sign and upload to closed testing.
+- [ ] **That build charges real money** to any closed tester who is not a
+      license tester. Keep the track to license testers while you test, or
+      warn testers.
+
+### 5. Test
+
+Test ads on a registered test device:
+
+- [ ] The banner appears at the bottom and does not cover the navigation bar.
+- [ ] Each rewarded offer: watching to the end grants the reward and lowers
+      the remaining count. Closing early grants nothing and costs nothing. At
+      the cap the offer is disabled.
+- [ ] In airplane mode the offers are unavailable and the game still plays.
+- [ ] In the EEA (real or debug geography), the consent form appears before
+      any ad, and declining it does not block the game.
+
+Test purchases with a license-tester account:
+
+- [ ] Each product shows Play's price, not "COMING SOON".
+- [ ] Buy each one. It is granted once, and a cancelled purchase grants
+      nothing.
+- [ ] Remove Ads: the banner disappears and offers become instant, with the
+      caps unchanged.
+- [ ] Starter Pack: 25 crystals, 5 tokens and the Ember Trail arrive, and it
+      cannot be bought a second time.
+- [ ] Shards Pouch: it can be bought again, because it is consumed.
+- [ ] Clear the app's data (or reinstall) and launch: Remove Ads and the
+      Starter Pack come back on their own. Restore Purchases in Settings does
+      the same on demand. Shards are not restored, which is expected for a
+      consumable.
+- [ ] Pending payment (the license tester's "slow" test card): the game says
+      the purchase is pending and grants nothing. See the known gaps below for
+      what happens when the payment clears.
+
+### 6. Release
+
+- [ ] Production build: real IDs, `isTesting: false`, `BILLING_ENABLED` set to
+      `true` (or left `false` to launch with ads only), versionCode bumped.
+- [ ] Play Console declarations updated to match: see
+      `design/RELEASE-CHECKLIST.md`. Play checks the bundle, the Ads
+      declaration, Data safety and the privacy policy against each other.
+      Shipping ads you have not declared is the failure that gets an app
+      suspended.
+- [ ] Once the listing is public, link the AdMob app to it. AdMob limits ad
+      serving until the app is linked and has passed its review.
 
 ---
 
-## What stays true either way
+## What not to do
 
-The stance in the GDD does not move: **no mechanic is ever pay-gated.** Every
-advert is offered and opt-in, never interstitial; every advert reward is a bonus
-on top of something already earned, never a gate on receiving it; declining is
-never punished; offers are capped per day so "grind adverts" is never optimal.
-`MonetizationManager` enforces the caps and `PaidSurfacesAvailable` is the
-single switch that hides every paid surface, so a monetisation-free build stays
-shippable from the same source.
+- **Never click your own live ads**, and never ask friends or testers to.
+  AdMob treats it as invalid traffic and can disable the account. Register
+  your own phones as test devices instead.
+- **Keep `isTesting: true` until the real IDs are in place** and you are
+  building for production. Shipping real IDs with `isTesting: true` serves
+  test ads to every player and earns nothing.
+- Don't mix the sample App ID with real unit IDs, or the other way round.
+  Change all three IDs together.
+- Don't rename or recreate products. Play product IDs are permanent and must
+  equal `storeId` in `src/data/definitions.ts`.
+- Don't add interstitials or forced ads. The spec and the published privacy
+  policy both promise that every video is optional.
+- Don't test monetisation in the browser. The web build has no ad network.
+  `npm run dev` simulates a rewarded watch so the flows can be tested, and a
+  production web build offers nothing.
+
+## Known gaps (decisions, not blockers)
+
+- **No server-side receipt validation.** The game has no server. Grants rely
+  on the Play Billing client's purchase state, and the save's `entitlements`
+  list is the record, so a rooted device could edit it. For these three
+  products that is an acceptable trade. Closing the gap would mean a backend
+  holding a Play service-account key.
+- **Refunds are not revoked.** Entitlements are only ever added (purchase,
+  restore). A refunded Remove Ads stays in the save.
+- **Pending purchases.** `src/services/billing.ts` grants nothing while a
+  payment is pending. When the payment clears, the next launch's restore
+  re-grants a non-consumable, but nothing in `src/` grants a Shards Pouch
+  that cleared later. Run the slow-card test above, then look at the order in
+  Play Console (Order management) a few days later. Play refunds purchases
+  that are never acknowledged.
+- **Saves from the AI Studio build.** That build granted Remove Ads and the
+  Starter Pack without payment. The v1 → v2 migration in `src/game/save.ts`
+  drops those entitlements and keeps what the pack contained. Closed testers
+  who "bought" them will see the banner again, so mention it in the release
+  notes.

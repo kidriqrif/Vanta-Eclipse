@@ -79,8 +79,8 @@ const UpgradeRow: React.FC<{ def: UpgradeDefinition; want: Want }> = React.memo(
       </div>
 
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span className="text-xs font-display font-bold text-ink uppercase tracking-wide truncate">{def.displayName}</span>
+        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 min-w-0">
+          <span className="text-xs font-display font-bold text-ink uppercase tracking-wide leading-tight">{def.displayName}</span>
           <span key={level} className="animate-fade-in shrink-0 text-[10px] font-mono-code font-bold text-dim border border-line px-1 leading-4">
             LV {formatNumber(level)}
             {def.maxLevel > 0 && `/${formatNumber(def.maxLevel)}`}
@@ -145,9 +145,20 @@ export const UpgradeShop: React.FC = () => {
       <PanelHeader
         icon={<Zap size={16} className="text-neon" aria-hidden />}
         title="FORGE"
-        subtitle="Upgrades bought with essence. An Eclipse resets them."
-        right={
-          <div className="flex border border-line bg-void" role="group" aria-label="Buy amount">
+        subtitle="Spend essence on upgrades. An Eclipse resets them."
+      />
+
+      <TabBody>
+        <div className="grid grid-cols-4 gap-1.5" aria-label="Current stats">
+          <StatCell label="Tap" value={formatNumber(stats.tapDamage)} tone="text-neon" />
+          <StatCell label="Crit" value={formatPercent(stats.critChance).replace(/^\+/, '')} tone="text-gold" />
+          <StatCell label="Crit dmg" value={`×${formatNumber(stats.critDamage)}`} tone="text-crimson" />
+          <StatCell label="Essence" value={`×${formatNumber(stats.essenceMultiplier)}`} tone="text-toxic" />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-[9px] font-tech text-dim uppercase tracking-wider shrink-0">Buy amount</span>
+          <div className="flex-1 grid grid-cols-4 border border-line bg-panel" role="group" aria-label="Buy amount">
             {WANTS.map(({ want: w, label }) => {
               const active = w === want;
               return (
@@ -156,7 +167,7 @@ export const UpgradeShop: React.FC = () => {
                   type="button"
                   aria-pressed={active}
                   onClick={() => choose(w)}
-                  className={`min-w-[34px] min-h-[32px] px-1.5 text-[10px] font-mono-code font-bold transition-colors ${
+                  className={`min-h-[32px] text-[10px] font-mono-code font-bold transition-colors ${
                     active ? 'bg-neon text-void' : 'text-dim hover:text-ink'
                   }`}
                 >
@@ -165,15 +176,6 @@ export const UpgradeShop: React.FC = () => {
               );
             })}
           </div>
-        }
-      />
-
-      <TabBody>
-        <div className="grid grid-cols-4 gap-1.5" aria-label="Current stats">
-          <StatCell label="Tap" value={formatNumber(stats.tapDamage)} tone="text-neon" />
-          <StatCell label="Crit %" value={formatPercent(stats.critChance).replace(/^\+/, '')} tone="text-gold" />
-          <StatCell label="Crit ×" value={`×${formatNumber(stats.critDamage)}`} tone="text-crimson" />
-          <StatCell label="Essence ×" value={`×${formatNumber(stats.essenceMultiplier)}`} tone="text-toxic" />
         </div>
 
         {SORTED_UPGRADES.map((def) => (
