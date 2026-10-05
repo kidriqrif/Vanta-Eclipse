@@ -5,12 +5,16 @@ should name which stage they serve.
 
 ## 1. First Launch
 
-Player opens the app for the first time. Sees the animated void-nebula main
-menu, the Vanta Eclipse title and emblem. No tutorial modal — the single
-PLAY button is the only real choice, so there's nothing to explain yet.
+Player opens the app for the first time. The current build has no main
+menu: the app opens straight onto the Dark Forest combat screen, with a
+one-time welcome tip over it. The earlier engines opened on an animated
+void-nebula main menu whose single PLAY button was the only real choice.
+That menu and its "find PLAY without hunting" need are history, though
+`design/ux/milestone-4-idle-offline.md` still refers to them.
 
 **Needs:** feel the tone (dark, mysterious, a little grand) in under 3
-seconds; find PLAY without hunting.
+seconds; get to the first tap without hunting. The welcome tip must not be a
+wall of text, and it must dismiss with one obvious tap.
 
 ## 2. First Combat
 
@@ -24,9 +28,11 @@ mechanic teaches itself within 1-2 taps). First kill should land within
 
 ## 3. First Purchase
 
-After a few kills, the player has enough Eclipse Essence to afford Void
-Claws (5 essence). The UPGRADES button and essence counter are both always
-visible during combat.
+After a few kills, the player has enough Eclipse Essence to afford the
+first Tap Damage upgrade (5 essence; it was called Void Claws in the earlier
+engines). The upgrade list is the home tab, open under the combat arena
+(its tab is labelled FORGE; gear forging lives in the ARMOR tab), and the
+essence counter is always visible in the header.
 
 **Needs:** notice they can afford something (the buy button visibly lights
 up when affordable) and feel the payoff immediately (next tap hits harder).
@@ -119,6 +125,10 @@ from play, evolves at milestones (visible transformation), and its
 passive bonus is legible; managing pets is a light, rewarding routine,
 never a chore, and never required to progress.
 
-## 12. Future stages (not yet built)
+## 12. Later stages (built, not yet written up here)
 
-First Prestige (Milestone 8) — First Minigame (Milestone 9+).
+First Prestige (the Eclipse, Milestone 8) — First Minigame (the Arcade,
+Milestone 9+). Both are in the game; their stages have not been written in
+this document yet. Until they are, the design frames are in
+`design/ux/milestone-8-prestige.md` and
+`design/ux/milestone-9-minigame-framework.md`.

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Sun } from 'lucide-react';
 import { formatNumber } from '../../utils/numberFormat';
 import type { MinigameProps, MinigameResult } from './types';
+import { useFinishOnce } from './useFinishOnce';
 
 const SIZE = 4;
 const PANES = SIZE * SIZE;
@@ -85,26 +86,10 @@ function press(state: PanesState, i: number): PanesState {
 }
 
 /** Calls onFinish exactly once, a beat after the outcome is decided so the final board stays readable. */
-function useFinishOnce(result: MinigameResult | null, onFinish: MinigameProps['onFinish']) {
-  const onFinishRef = useRef(onFinish);
-  const sentRef = useRef(false);
-  useEffect(() => {
-    onFinishRef.current = onFinish;
-  }, [onFinish]);
-  useEffect(() => {
-    if (!result || sentRef.current) return;
-    const timer = window.setTimeout(() => {
-      if (sentRef.current) return;
-      sentRef.current = true;
-      onFinishRef.current(result);
-    }, END_PAUSE_MS);
-    return () => window.clearTimeout(timer);
-  }, [result]);
-}
 
 export const LightsOutGame: React.FC<MinigameProps> = ({ onFinish }) => {
   const [game, setGame] = useState<PanesState>(newGame);
-  useFinishOnce(game.result, onFinish);
+  useFinishOnce(game.result, onFinish, END_PAUSE_MS);
 
   const litCount = game.lit.filter(Boolean).length;
   const movesLeft = MOVE_CAP - game.moves;

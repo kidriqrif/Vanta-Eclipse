@@ -1,11 +1,13 @@
 # Milestone 7 Visual Design — Relics & Pets
 
+> Engine-agnostic behaviour spec. Written for an earlier engine; node and file names in bold are historical. The live implementation is the React build — see `docs/ARCHITECTURE.md`.
+
 Author: art-director. Gives visual treatment to the approved
 `design/ux/milestone-7-relics-pets.md` (note its §1 DESIGN OVERRIDE: the
 relic slot awakens and the starter pet is granted at the **first world
 unlock — Frozen Ruins, World 2**, not the Astral Temple). Method identical
 to the M5/M6 visual specs — ramp-mirroring for new color families, computed
-WCAG contrast, direct transcription of `main_theme.tres` vocabulary
+WCAG contrast, direct transcription of **main_theme.tres** vocabulary
 (StyleBoxFlat params, `Color()`, `theme_type_variation` names), and an
 "explicitly NOT needed" list. Reference canvas 1080×1920.
 
@@ -306,7 +308,7 @@ Attack/hit animation is a decorative scale-pop synced to
 `enemy_damaged`/`enemy_died` (the pet is a passive bonus, not a damage
 source).
 
-### 2.5 Pets scene (`Assets/Scenes/Pets.unity`, UX §3D)
+### 2.5 Pets scene (**Assets/Scenes/Pets.unity**, UX §3D)
 
 Full `SceneManager` scene. **Reuses `VoidBackground`** with the current
 world's palette (per engine notes / M6 §5) — stepping into Pets stays under
@@ -400,7 +402,7 @@ never released this milestone.
 
 Construction idiom for all: **glow-disc + faceted polygons, radial/linear
 gradients only, NO SVG filters** (the essence/slot/enemy idiom). New files
-under `sprites/`.
+under **sprites/**.
 
 ### 3.1 Relic sigils — 5 × 128×128, shared aureole frame, unique center
 
@@ -419,11 +421,11 @@ into every existing icon) so the five are drop-in and always read as a set.
 
 | # | file | central sigil (hints its effect) |
 |---|---|---|
-| 1 | `sprites/ui/relic_eclipse_heart.svg` | **Eclipse Heart** (offline ×3): a dark eclipse disc (`#100a04` moon) crossing a `relic-glow` corona (reuse `eclipse_emblem` corona logic in gold), a small faceted heart glinting at the eclipse center — "beats in the dark between sessions." |
-| 2 | `sprites/ui/relic_hunters_sigil.svg` | **Hunter's Sigil** (boss dmg +50%): a bold faceted **downward arrowhead/chevron** striking into a small notched crown silhouette at the base — "slays the mighty." Two `relic-veil`→`relic-deep` facets split on a center seam. |
-| 3 | `sprites/ui/relic_twin_fang.svg` | **Twin Fang** (auto-attack ×2 speed): **two mirrored curved fang polygons** crossing, with two thin `relic-light` motion-slash slivers behind — "fires twice as fast." |
-| 4 | `sprites/ui/relic_shatterstone.svg` | **Shatterstone** (crit dmg +100%): a faceted gem **fracturing outward**, 3–4 shard fragments flung off (reuse `void_scraps` fragment logic in gold) with a `relic-veil` crack-line — "critical shatter." |
-| 5 | `sprites/ui/relic_essence_prism.svg` | **Essence Prism** (essence ×2): a triangular **prism refracting a beam into two facet-rays** (reuse essence-crystal facet logic), the split reading as "doubles" — one beam in, two out. |
+| 1 | **sprites/ui/relic_eclipse_heart.svg** | **Eclipse Heart** (offline ×3): a dark eclipse disc (`#100a04` moon) crossing a `relic-glow` corona (reuse `eclipse_emblem` corona logic in gold), a small faceted heart glinting at the eclipse center — "beats in the dark between sessions." |
+| 2 | **sprites/ui/relic_hunters_sigil.svg** | **Hunter's Sigil** (boss dmg +50%): a bold faceted **downward arrowhead/chevron** striking into a small notched crown silhouette at the base — "slays the mighty." Two `relic-veil`→`relic-deep` facets split on a center seam. |
+| 3 | **sprites/ui/relic_twin_fang.svg** | **Twin Fang** (auto-attack ×2 speed): **two mirrored curved fang polygons** crossing, with two thin `relic-light` motion-slash slivers behind — "fires twice as fast." |
+| 4 | **sprites/ui/relic_shatterstone.svg** | **Shatterstone** (crit dmg +100%): a faceted gem **fracturing outward**, 3–4 shard fragments flung off (reuse `void_scraps` fragment logic in gold) with a `relic-veil` crack-line — "critical shatter." |
+| 5 | **sprites/ui/relic_essence_prism.svg** | **Essence Prism** (essence ×2): a triangular **prism refracting a beam into two facet-rays** (reuse essence-crystal facet logic), the split reading as "doubles" — one beam in, two out. |
 
 ### 3.2 Pet sprites — 512×512, bold masses (read down to 64px)
 
@@ -436,15 +438,15 @@ facets.
 
 | # | file | form |
 |---|---|---|
-| 1 | `sprites/pets/pet_ember.svg` | **Ember** (starter S1): small rounded flame-cub, coral→amber body, a single soft flame tuft, ally-violet aura + eyes. |
-| 2 | `sprites/pets/pet_blaze.svg` | **Blaze** (starter S2): larger, brighter coral-gold flame-beast, taller triple flame crest, more facets — a clear "bigger, evolved" silhouette. |
-| 3 | `sprites/pets/pet_frostling.svg` | **Frostling** (drop S1): small pale-ice sprite, rounded crystalline body, two stubby ice-shard nubs, ally aura + eyes. |
-| 4 | `sprites/pets/pet_frostwyrm.svg` | **Frostwyrm** (drop S2): elongated serpentine ice-drake, crystalline dorsal crest, brighter ice facets — visibly evolved from Frostling. |
+| 1 | **sprites/pets/pet_ember.svg** | **Ember** (starter S1): small rounded flame-cub, coral→amber body, a single soft flame tuft, ally-violet aura + eyes. |
+| 2 | **sprites/pets/pet_blaze.svg** | **Blaze** (starter S2): larger, brighter coral-gold flame-beast, taller triple flame crest, more facets — a clear "bigger, evolved" silhouette. |
+| 3 | **sprites/pets/pet_frostling.svg** | **Frostling** (drop S1): small pale-ice sprite, rounded crystalline body, two stubby ice-shard nubs, ally aura + eyes. |
+| 4 | **sprites/pets/pet_frostwyrm.svg** | **Frostwyrm** (drop S2): elongated serpentine ice-drake, crystalline dorsal crest, brighter ice facets — visibly evolved from Frostling. |
 
 **Deferrable (content-drop, `silent_colossus` precedent — data may point the
 slot at the stage-2 sprite with `TODO(content)`):**
-`sprites/pets/pet_ember_s3.svg`, `sprites/pets/pet_frostwyrm_s3.svg`
-(stage-3 caps, names TBD by writer), and `sprites/pets/pet_sparkling.svg`
+**sprites/pets/pet_ember_s3.svg**, **sprites/pets/pet_frostwyrm_s3.svg**
+(stage-3 caps, names TBD by writer), and **sprites/pets/pet_sparkling.svg**
 (third line, base).
 
 ### 3.3 Explicitly NOT needed
@@ -467,7 +469,7 @@ slot at the stage-2 sprite with `TODO(content)`):**
   set and no compare table (UX §7.1 confirms these are variants, not new
   patterns).
 - **No empty-state sigil asset** — the awakened-empty tile reuses the
-  existing `slot_relic.svg` at 0.30 modulate.
+  existing **slot_relic.svg** at 0.30 modulate.
 - **Stage-3 pet forms + the Sparkling line are NOT M7 art** — deferrable
   content-drop (§3.2).
 

@@ -409,4 +409,12 @@ describe('ads, purchases and offline', () => {
     expect(h.state.shop.entitlements).toContain('remove_ads');
     expect(h.state.currencies.astral_shards).toBe(400);
   });
+
+  it('a Play transaction is granted once, however many times it is reported', () => {
+    const h = harness(newGame());
+    expect(h.dispatch({ type: 'PURCHASE_GRANTED', productId: 'shards_small', transactionId: 'GPA.1' }).ok).toBe(true);
+    expect(h.dispatch({ type: 'PURCHASE_GRANTED', productId: 'shards_small', transactionId: 'GPA.1' })).toMatchObject({ ok: false, reason: 'already_granted' });
+    expect(h.dispatch({ type: 'PURCHASE_GRANTED', productId: 'shards_small', transactionId: 'GPA.2' }).ok).toBe(true);
+    expect(h.state.currencies.astral_shards).toBe(400);
+  });
 });

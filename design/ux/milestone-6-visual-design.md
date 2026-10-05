@@ -1,5 +1,7 @@
 # Milestone 6 Visual Design — Equipment, Inventory, Loot & Crafting
 
+> Engine-agnostic behaviour spec. Written for an earlier engine; node and file names in bold are historical. The live implementation is the React build — see `docs/ARCHITECTURE.md`.
+
 Author: lead dev in the art-director role (produced inline during a
 subagent usage-limit outage; method identical to the M4/M5 visual specs
 — ramp values, computed WCAG contrast, theme-vocabulary transcription).
@@ -162,20 +164,20 @@ All 128×128 unless noted, glow-disc + faceted-polygon idiom, gradients
 only (no SVG filters). Slot/chrome icons use a NEUTRAL lavender-steel tint
 (`#9a94c4` family) so they never compete with rarity color.
 
-1. `sprites/ui/slot_weapon.svg` — an angular sword/fang silhouette.
-2. `sprites/ui/slot_helmet.svg` — a faceted helm arc.
-3. `sprites/ui/slot_armor.svg` — a chestplate trapezoid.
-4. `sprites/ui/slot_gloves.svg` — a gauntlet/hand-guard.
-5. `sprites/ui/slot_boots.svg` — a greave/boot wedge.
-6. `sprites/ui/slot_ring.svg` — a faceted band with a gem (gem uses a
+1. **sprites/ui/slot_weapon.svg** — an angular sword/fang silhouette.
+2. **sprites/ui/slot_helmet.svg** — a faceted helm arc.
+3. **sprites/ui/slot_armor.svg** — a chestplate trapezoid.
+4. **sprites/ui/slot_gloves.svg** — a gauntlet/hand-guard.
+5. **sprites/ui/slot_boots.svg** — a greave/boot wedge.
+6. **sprites/ui/slot_ring.svg** — a faceted band with a gem (gem uses a
    soft violet, the only non-neutral accent, to read as "jewellery").
-7. `sprites/ui/slot_relic.svg` — an eye/rune sigil (shown desaturated +
+7. **sprites/ui/slot_relic.svg** — an eye/rune sigil (shown desaturated +
    locked until M7).
-8. `sprites/ui/void_scraps_icon.svg` — like `essence_icon.svg` but a
+8. **sprites/ui/void_scraps_icon.svg** — like **essence_icon.svg** but a
    broken/fragmented crystal shard cluster, steel-grey `#8890b0` family
    with a faint violet glow disc (distinct material from essence).
-9. `sprites/ui/forge_icon.svg` — a simple anvil silhouette (violet-steel).
-10. `sprites/ui/lock_glyph.svg` — a tiny padlock (48×48) for the sealed
+9. **sprites/ui/forge_icon.svg** — a simple anvil silhouette (violet-steel).
+10. **sprites/ui/lock_glyph.svg** — a tiny padlock (48×48) for the sealed
     relic tile.
 
 **Explicitly NOT needed:** per-item art (items are slot-icon + rarity +

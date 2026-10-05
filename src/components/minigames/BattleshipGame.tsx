@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { formatNumber } from '../../utils/numberFormat';
 import type { MinigameProps, MinigameResult } from './types';
+import { useFinishOnce } from './useFinishOnce';
 
 const GRID = 7;
 const CELLS = GRID * GRID;
@@ -115,22 +116,6 @@ function fire(state: SalvoState, cell: number): SalvoState {
 }
 
 /** Calls onFinish exactly once, a beat after the outcome is decided so the final grid stays readable. */
-function useFinishOnce(result: MinigameResult | null, onFinish: MinigameProps['onFinish']) {
-  const onFinishRef = useRef(onFinish);
-  const sentRef = useRef(false);
-  useEffect(() => {
-    onFinishRef.current = onFinish;
-  }, [onFinish]);
-  useEffect(() => {
-    if (!result || sentRef.current) return;
-    const timer = window.setTimeout(() => {
-      if (sentRef.current) return;
-      sentRef.current = true;
-      onFinishRef.current(result);
-    }, END_PAUSE_MS);
-    return () => window.clearTimeout(timer);
-  }, [result]);
-}
 
 function statusLine(game: SalvoState): { text: string; tone: string } {
   if (game.result?.won) return { text: 'Fleet sunk — you win', tone: 'text-gold' };
@@ -153,7 +138,7 @@ const CELL_WORD: Record<CellView, string> = {
 
 export const BattleshipGame: React.FC<MinigameProps> = ({ onFinish }) => {
   const [game, setGame] = useState<SalvoState>(newGame);
-  useFinishOnce(game.result, onFinish);
+  useFinishOnce(game.result, onFinish, END_PAUSE_MS);
 
   const sunk = game.ships.map((ship) => isSunk(ship, game.shot));
   const hullHit = game.owner.reduce((sum, n, i) => sum + (n >= 0 && game.shot[i] ? 1 : 0), 0);

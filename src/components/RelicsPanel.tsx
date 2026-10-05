@@ -1,111 +1,154 @@
-import React from 'react';
-import { useGame } from '../context/GameContext';
+import React, { useEffect, useState } from 'react';
+import { Check, Lock, Sword } from 'lucide-react';
 import { RELICS } from '../data/definitions';
-import { Check, Lock, Zap } from 'lucide-react';
+import type { RelicDefinition } from '../types/game';
+import type { GameState } from '../game/state';
+import { WORLD_TWO_FIRST_LEVEL } from '../game/state';
+import { useDispatch, useGameState } from '../hooks/useGame';
+import { formatNumber } from '../utils/numberFormat';
+import { Button, PanelHeader, TabBody } from './ui';
 
-export const RelicsPanel: React.FC = () => {
-  const {
-    relicsAwakened,
-    ownedRelics,
-    activeRelicId,
-    setActiveRelic,
-  } = useGame();
+const selectAwakened = (s: GameState) => s.relicsAwakened;
+const selectRelics = (s: GameState) => s.relics;
+const selectActiveRelicId = (s: GameState) => s.activeRelicId;
+const selectBestLevel = (s: GameState) => s.lifetimePeakLevel;
 
+const OwnedRelicCard: React.FC<{ def: RelicDefinition; active: boolean; isNew: boolean }> = ({ def, active, isNew }) => {
+  const dispatch = useDispatch();
   return (
-    <div className="flex-1 flex flex-col p-2.5 overflow-y-auto bg-[#171D35] gap-2 select-none ">
-      {/* Header Info */}
-      <div className="bg-[#101426] border border-[#36D9FF]/40 p-2 rounded-none flex items-center justify-between hud-corner">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-[#36D9FF]/10 border border-[#36D9FF] flex items-center justify-center">
-            <Zap size={13} className="text-[#36D9FF]" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs font-display font-bold text-[#FFFFFF] uppercase tracking-wider">
-              SYS://RELIC_ARRAY [{ownedRelics.length}/{RELICS.length}]
-            </span>
-            <span className="text-[9px] font-tech text-[#8993B2]">
-              ENGAGE QUANTUM SIGILS TO MODIFY TACTICAL ATTRIBUTES
-            </span>
-          </div>
-        </div>
+    <div className={`bg-panel border p-2.5 flex items-center gap-2.5 ${active ? 'border-gold' : 'border-line'}`}>
+      <div className="w-14 h-14 shrink-0 bg-panel2 border border-line flex items-center justify-center p-1.5">
+        <img src={def.sigil} alt={def.displayName} className="w-full h-full object-contain pixelated" />
+      </div>
 
-        {!relicsAwakened && (
-          <div className="text-[8px] font-mono-code font-bold text-[#36D9FF] bg-[#171D35] border border-[#36D9FF] px-1.5 py-0.5 rounded-none flex items-center gap-1">
-            <Lock size={9} /> UNLOCKS AT FLOOR 51
-          </div>
+      <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+          <span className="text-xs font-display font-bold text-ink uppercase tracking-wide leading-tight">{def.displayName}</span>
+          {active && (
+            <span className="text-[9px] font-mono-code font-black text-void bg-gold px-1 leading-4 flex items-center gap-0.5">
+              <Check size={9} aria-hidden /> ATTUNED
+            </span>
+          )}
+          {isNew && (
+            <span className="text-[9px] font-mono-code font-black text-void bg-neon px-1 leading-4">
+              NEW
+            </span>
+          )}
+        </div>
+        <span className="text-[11px] font-mono-code font-bold text-neon leading-tight">{def.effectDescription}</span>
+        <span className="text-[10px] font-tech text-dim italic leading-tight">“{def.flavor}”</span>
+      </div>
+
+      <div className="shrink-0 w-[84px]">
+        {active ? (
+          <Button variant="ghost" size="md" block onClick={() => dispatch({ type: 'SET_ACTIVE_RELIC', id: null })}>
+            DETACH
+          </Button>
+        ) : (
+          <Button variant="gold" size="md" block onClick={() => dispatch({ type: 'SET_ACTIVE_RELIC', id: def.id })}>
+            ATTUNE
+          </Button>
         )}
       </div>
+    </div>
+  );
+};
 
-      {/* Relics List */}
-      <div className="flex flex-col gap-2">
-        {RELICS.map((relic) => {
-          const isOwned = ownedRelics.some((r) => r.id === relic.id);
-          const isActive = activeRelicId === relic.id;
+const UnknownRelicCard: React.FC<{ def: RelicDefinition }> = ({ def }) => (
+  <div className="bg-panel border border-dashed border-line p-2.5 flex items-center gap-2.5">
+    <div className="w-14 h-14 shrink-0 bg-void border border-line flex items-center justify-center p-1.5">
+      <img src={def.sigil} alt="" className="w-full h-full object-contain pixelated brightness-0 opacity-60" />
+    </div>
+    <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+      <span className="text-xs font-display font-bold text-dim uppercase tracking-wide flex items-center gap-1">
+        <Lock size={11} aria-hidden /> Undiscovered relic
+      </span>
+      <span className="text-[10px] font-tech text-dim leading-tight">Drops from a Frozen Ruins boss.</span>
+    </div>
+  </div>
+);
 
-          return (
-            <div
-              key={relic.id}
-              className={`p-2.5 border transition-all flex items-center justify-between gap-3 rounded-none ${
-                isActive
-                  ? 'bg-[#101426] border-[#36D9FF] shadow-[inset_0_0_8px_rgba(155,81,111,0.15)]'
-                  : isOwned
-                  ? 'bg-[#101426] border-white/15 hover:border-white/30'
-                  : 'bg-[#040406] border-white/10 opacity-40'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <div className="w-12 h-12 bg-[#171D35] border border-white/20 flex items-center justify-center p-1.5 shrink-0">
-                  {isOwned ? (
-                    <img
-                      src={relic.sigil}
-                      alt={relic.displayName}
-                      className="w-full h-full object-contain pixelated"
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    <Lock size={16} className="text-[#8993B2]" />
-                  )}
-                </div>
+/** The RELICS tab: the relic collection. One relic is attuned at a time; swapping is free. */
+export const RelicsPanel: React.FC = () => {
+  const dispatch = useDispatch();
+  const awakened = useGameState(selectAwakened);
+  const relics = useGameState(selectRelics);
+  const activeRelicId = useGameState(selectActiveRelicId);
+  const bestLevel = useGameState(selectBestLevel);
 
-                <div className="flex flex-col">
-                  <span className="text-xs font-display font-bold text-[#FFFFFF] uppercase">
-                    {isOwned ? relic.displayName : 'UNKNOWN SIGIL'}
-                  </span>
-                  <span className="text-[10px] text-[#36D9FF] font-mono-code font-bold mt-0.5">
-                    {relic.effectDescription}
-                  </span>
-                  <span className="text-[9px] text-[#8993B2] font-tech italic mt-0.5">
-                    "{relic.flavor}"
-                  </span>
-                </div>
-              </div>
+  // Relics unseen when the tab opened keep their NEW label for the whole visit.
+  const [newAtEntry] = useState(() => new Set(relics.filter((r) => !r.seen).map((r) => r.id)));
 
-              <div className="shrink-0">
-                {isOwned ? (
-                  isActive ? (
-                    <div className="px-2.5 py-1 bg-[#36D9FF] text-[#171D35] text-[10px] font-display font-bold rounded-none flex items-center gap-1">
-                      <Check size={11} /> ACTIVE
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setActiveRelic(relic.id)}
-                      className="px-2.5 py-1 hud-btn text-[10px] font-display font-bold"
-                    >
-                      ENGAGE
-                    </button>
-                  )
-                ) : (
-                  <span className="text-[9px] text-[#8993B2] font-tech">
-                    RUINS BOSS DROP
-                  </span>
-                )}
-              </div>
+  // Leaving the tab marks every relic seen.
+  useEffect(
+    () => () => {
+      dispatch({ type: 'MARK_RELICS_SEEN' });
+    },
+    [dispatch],
+  );
+
+  const owned = RELICS.filter((def) => relics.some((r) => r.id === def.id));
+  const missing = RELICS.filter((def) => !relics.some((r) => r.id === def.id));
+  const active = RELICS.find((def) => def.id === activeRelicId) ?? null;
+  const isNew = (id: string) => newAtEntry.has(id) || relics.some((r) => r.id === id && !r.seen);
+
+  return (
+    <div className="flex-1 min-h-0 flex flex-col">
+      <PanelHeader
+        icon={<Sword size={16} className="text-gold" aria-hidden />}
+        tone="gold"
+        title="RELICS"
+        subtitle={awakened ? 'One relic attuned at a time. Swapping is free.' : 'Locked until the Frozen Ruins.'}
+        right={
+          awakened ? (
+            <span className="text-[10px] font-mono-code font-bold text-dim border border-line px-1.5 py-1">
+              {formatNumber(owned.length)} / {formatNumber(RELICS.length)} found
+            </span>
+          ) : undefined
+        }
+      />
+
+      <TabBody>
+        {!awakened ? (
+          <div className="bg-panel border border-line p-4 flex flex-col items-center gap-2 text-center">
+            <Lock size={22} className="text-gold" aria-hidden />
+            <p className="text-xs font-display font-bold text-ink uppercase tracking-wide">Locked</p>
+            <p className="text-[11px] font-tech text-ink leading-snug">
+              Relics awaken when you reach the Frozen Ruins (level {formatNumber(WORLD_TWO_FIRST_LEVEL)}).
+            </p>
+            <p className="text-[10px] font-tech text-dim">
+              Best level so far: {formatNumber(bestLevel)} / {formatNumber(WORLD_TWO_FIRST_LEVEL)}
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="bg-panel border border-line p-2.5 flex flex-col gap-0.5" aria-live="polite">
+              <span className="text-[9px] font-tech text-dim uppercase tracking-wider">Attuned now</span>
+              {active ? (
+                <span className="text-[11px] font-tech text-ink leading-tight">
+                  <span className="font-display font-bold text-gold uppercase">{active.displayName}</span> — {active.effectDescription}
+                </span>
+              ) : (
+                <span className="text-[11px] font-tech text-dim leading-tight">
+                  {owned.length > 0 ? 'No relic attuned. Tap ATTUNE on one below.' : 'No relic yet.'}
+                </span>
+              )}
             </div>
-          );
-        })}
-      </div>
+
+            {owned.map((def) => (
+              <OwnedRelicCard key={def.id} def={def} active={def.id === activeRelicId} isNew={isNew(def.id)} />
+            ))}
+            {missing.map((def) => (
+              <UnknownRelicCard key={def.id} def={def} />
+            ))}
+
+            <p className="text-[10px] font-tech text-dim leading-snug px-0.5">
+              Relics drop from Frozen Ruins bosses (25% per boss) until you have all {formatNumber(RELICS.length)}. Each one is a
+              single permanent power; only the attuned relic is active.
+            </p>
+          </>
+        )}
+      </TabBody>
     </div>
   );
 };

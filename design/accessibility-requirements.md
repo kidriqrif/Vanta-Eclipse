@@ -8,10 +8,13 @@ Basic and several Enhanced items; this document makes the bar explicit and
 auditable going forward).
 
 ### Basic (floor — already met)
-- Body text legible at default OS scale; no text below ~24px at our
-  1080-width reference canvas.
-- Touch targets at least 96×96px on the reference canvas (~44dp), per
-  `docs/ARCHITECTURE.md` mobile-first conventions.
+- Body text legible at default OS scale; no text below ~24px on the
+  1080-wide reference canvas the specs were drawn on. In the React build
+  that is 8 CSS px on a 360 CSS px-wide phone.
+- Touch targets at least 96×96px on the reference canvas: 32 CSS px on a
+  360 CSS px-wide phone, the floor in the mobile-first conventions of
+  `docs/ARCHITECTURE.md`. Primary actions should be nearer 44 CSS px (44dp).
+  In the Android WebView, 1 CSS px is 1dp.
 - No feedback is color-only: every state change pairs color with a second
   signal (size, motion, icon, or text).
 - A haptics on/off setting exists and is respected everywhere haptics fire.
@@ -22,24 +25,29 @@ auditable going forward).
   may block the player from acting for longer than its stated duration.
   TODO(Milestone 4+): add a "Reduce Motion" setting that shortens/removes
   hover and drift animations; until it exists, keep all such animations
-  short (<1.5s cycle) and non-essential to comprehension.
+  short (<1.5s cycle) and non-essential to comprehension. Today: Settings
+  has Screen Shake and Damage Numbers toggles, and `src/index.css` turns
+  off the enemy idle, hit and shake animations under the OS-level
+  prefers-reduced-motion setting. There is no general Reduce Motion
+  setting yet.
 - **Color-independent state:** already required at Basic; Enhanced adds
   that this must hold under common color-vision deficiencies specifically
   (red-green, blue-yellow) — verified by checking the non-color signal
   alone would still communicate the state.
 - **Readable numbers:** any earned/spent amount shown to the player uses
-  `NumberFormat` with full precision available on tap-and-hold or a details
-  view where relevant (not just abbreviated "1.2K").
+  the formatters in `src/utils/numberFormat.ts`, with full precision
+  available on tap-and-hold or a details view where relevant (not just
+  abbreviated "1.2K").
 - **Interruptible modals:** popups (e.g. offline-rewards) must be dismissible
   with a single, obvious, always-visible action — never require reading to
   find the exit.
-- **Sound has a non-audio equivalent:** every UI sound cue (Milestone 14+
-  when audio is fully wired) pairs with a visual and/or haptic cue, since
-  many mobile players play muted.
+- **Sound has a non-audio equivalent:** every UI sound cue (all of them
+  play through `src/services/audio.ts`) pairs with a visual and/or haptic
+  cue, since many mobile players play muted.
 
 ### Full (future consideration, not yet committed)
-- Full TalkBack/VoiceOver traversal order and accessible labels on every
-  interactive Control.
+- Full TalkBack/VoiceOver traversal order (DOM order in the React build)
+  and accessible labels on every interactive element.
 - Remappable input / adjustable touch-target sizing.
 - A high-contrast theme variant.
 - Adjustable global text scale.
@@ -47,6 +55,7 @@ auditable going forward).
 ## How to use this document
 
 Every UX spec must state which committed-tier requirements apply and how
-the design satisfies them. The accessibility-specialist review pass in
-`/team-ui` Phase 4 checks against the **Enhanced** tier above and blocks on
-any violation.
+the design satisfies them. Any review of a UI change checks against the
+**Enhanced** tier above and blocks on any violation. When the UX specs
+mention "Phase-4" lessons, they mean this review as it ran in the old
+**/team-ui** workflow, which is no longer in the repo.

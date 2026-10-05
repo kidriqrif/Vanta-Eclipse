@@ -1,5 +1,7 @@
 # Milestone 13 — The Journal: Quests, Dailies & Achievements
 
+> Engine-agnostic behaviour spec. Written for an earlier engine; node and file names in bold are historical. The live implementation is the React build — see `docs/ARCHITECTURE.md`.
+
 Design frame + UX spec. This is the game's **retention and direction** layer:
 it never adds power the player couldn't otherwise get, it tells them what to do
 next and pays them for doing it.

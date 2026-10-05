@@ -61,7 +61,8 @@ export type Action =
   | { type: 'CLAIM_QUEST'; id: string }
   | { type: 'CLAIM_ALL_CLEAR' }
   | { type: 'AD_REWARD'; placementId: string }
-  | { type: 'PURCHASE_GRANTED'; productId: string }
+  /** A purchase Google Play confirmed. `transactionId` makes the grant idempotent. */
+  | { type: 'PURCHASE_GRANTED'; productId: string; transactionId?: string }
   | { type: 'RESTORE_ENTITLEMENTS'; productIds: string[] }
   | { type: 'BUY_COSMETIC'; id: string }
   | { type: 'SET_COSMETIC'; id: string }

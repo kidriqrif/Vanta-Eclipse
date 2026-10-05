@@ -1,5 +1,7 @@
 # Milestone 7 UX Spec — Relics & Pets
 
+> Engine-agnostic behaviour spec. Written for an earlier engine; node and file names in bold are historical. The live implementation is the React build — see `docs/ARCHITECTURE.md`.
+
 Author: ux-designer · Status: draft for Phase 1c review
 Serves: `design/player-journey.md` Stage 10 (First Relic) and Stage 11
 (Pet Companion).
@@ -19,7 +21,7 @@ thresholds, relic/pet drop rates) exactly as M6 did — a parallel tuning
 sim owns the magnitudes; no layout or copy here depends on one, and every
 illustrative figure in a wireframe is marked as such.
 
-Grading criteria from `player-journey.md`: **Stage 10** — a relic must
+Grading criteria from `design/player-journey.md`: **Stage 10** — a relic must
 read at a glance as *different* from equipment (unique named effect, not
 random affixes); the effect must feel meaningful and build-shaping; only
 one active, so the choice matters; swapping is free and reversible.
@@ -341,7 +343,7 @@ x=40                                                        x=1040
   straight from `RelicDefinition.effect_description` — no derived math, no
   jargon (§8).
 
-### 3D. Pets screen (new scene: `Assets/Scenes/Pets.unity`)
+### 3D. Pets screen (new scene: **Assets/Scenes/Pets.unity**)
 
 ```
 x=40                                                          x=1040
@@ -782,7 +784,7 @@ them, exactly as it already calls UpgradeManager and EquipmentManager):
   resume, so PetManager grants offline XP from the same estimate without
   re-deriving it (a downward-free, signal-only handoff).
 - **Definitions are data, per the content-as-data rule.**
-  - `RelicDefinition` in `data/relics/`: `id` (StringName, save-stable
+  - `RelicDefinition` in **data/relics/**: `id` (StringName, save-stable
     forever), `display_name`, `sigil` (Texture2D), `effect_id` (StringName
     the RelicManager `match` switches on — e.g. `&"boss_pct"`,
     `&"crit_pct"`, `&"essence_mult"`, `&"offline_mult"`, `&"attack_speed"`),
@@ -790,7 +792,7 @@ them, exactly as it already calls UpgradeManager and EquipmentManager):
     plain sentence), `flavor`, and drop weight/source. Adding a relic is a
     new `.tres`; only `effect_id` values with no existing routing need a
     line of manager code.
-  - `PetDefinition` in `data/pets/`: `id`, an ordered **evolution stages**
+  - `PetDefinition` in **data/pets/**: `id`, an ordered **evolution stages**
     array (each: `name`, `sprite`, `level_threshold`), the **bonus stat**
     (StringName, matching the PlayerStats stat vocabulary), and the **bonus
     curve** (base + per-level params). New pet = new `.tres`.
@@ -984,7 +986,7 @@ feature unlocks, so it adds **zero** persistent navigation chrome — the
 object's presence *is* the affordance. Distinct from a nav Button (which is
 UI chrome with a permanent slot) and from the Tap-to-Attack CombatArea
 (which is the primary action's target, not a navigation entry).
-**Implementation:** proposed as a `Button` node in `Assets/Scenes/Gameplay.unity`'s world
+**Implementation:** proposed as a `Button` node in **Assets/Scenes/Gameplay.unity**'s world
 region bound to `SceneManager.change_scene(SCENE_PETS)`, shown/hidden on
 `pet_unlocked` and driven by `active_pet_changed`.
 
@@ -1052,7 +1054,7 @@ mistake them for un-catalogued invention.)*
 - **For engineering, not design:** (a) autoload table gains RelicManager and
   PetManager between EquipmentManager and PlayerStats — re-verify the
   IdleManager connect-order comment survives (IdleManager stays last);
-  (b) `SCENE_PETS` constant + `Assets/Scenes/Pets.unity` per the architecture's
+  (b) `SCENE_PETS` constant + **Assets/Scenes/Pets.unity** per the architecture's
   new-screen checklist; (c) the Relic Collection panel reuses the Forge
   panel's offsets — extract shared slide-up constants or accept the
   duplication consciously; (d) IdleManager's three new touches

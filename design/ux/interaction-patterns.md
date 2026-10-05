@@ -1,5 +1,7 @@
 # Vanta Eclipse — Interaction Pattern Library
 
+> Engine-agnostic behaviour spec. Written for an earlier engine; node and file names in bold are historical. The live implementation is the React build — see `docs/ARCHITECTURE.md`.
+
 Reusable UI/UX patterns already implemented in the game. New screens reuse
 these instead of inventing variants. When implementation introduces a
 genuinely new pattern, it gets added here (see each milestone's
@@ -12,7 +14,7 @@ Implementation phase).
 **Behavior:** 0.25s fade to a near-black overlay, swap scene, fade back in.
 Input is blocked while covered.
 **Implementation:** `SceneManager.change_scene()`
-(`Assets/Scripts/Core/SceneFlow.cs`), a `CanvasLayer` at layer 100 with a
+(**Assets/Scripts/Core/SceneFlow.cs**), a `CanvasLayer` at layer 100 with a
 full-rect `ColorRect`.
 
 ## Tap-to-Attack Combat Area
@@ -21,8 +23,8 @@ full-rect `ColorRect`.
 the sprite bounds). One `InputEventMouseButton` press = one attack, works
 identically for touch and mouse — Unity's EventSystem delivers both through
 the same pointer callbacks.
-**Implementation:** `Assets/Scripts/UI/TapSurface.cs` on `CombatArea`, driven
-by `Assets/Scripts/UI/Gameplay.cs`.
+**Implementation:** **Assets/Scripts/UI/TapSurface.cs** on `CombatArea`, driven
+by **Assets/Scripts/UI/Gameplay.cs**.
 
 ## Floating Damage Number
 **Used in:** every hit landed on an enemy.
@@ -30,8 +32,8 @@ by `Assets/Scripts/UI/Gameplay.cs`.
 sideways, fades out over ~0.75s, then frees itself. Crits are larger, gold,
 with a darker outline — color is never the *only* signal; size and motion
 differ too.
-**Implementation:** `DamageNumber` (`Assets/Scripts/UI/DamageNumber.cs`),
-instantiated from `Assets/Resources/Prefabs/DamageNumber.prefab`.
+**Implementation:** `DamageNumber` (**Assets/Scripts/UI/DamageNumber.cs**),
+instantiated from **Assets/Resources/Prefabs/DamageNumber.prefab**.
 
 ## Slide-Up Panel (bottom sheet)
 **Used in:** the upgrade shop.
@@ -39,14 +41,14 @@ instantiated from `Assets/Resources/Prefabs/DamageNumber.prefab`.
 bottom half of the screen over 0.28s (cubic ease-out), with a CLOSE button;
 sliding back down hides it. The screen behind stays interactive-adjacent
 (player can keep tapping the enemy above the sheet).
-**Implementation:** `UpgradeShopPanel` (`Assets/Scripts/UI/UpgradeShopPanel.cs`).
+**Implementation:** `UpgradeShopPanel` (**Assets/Scripts/UI/UpgradeShopPanel.cs**).
 
 ## Currency Pop/Bounce Feedback
 **Used in:** the Essence counter.
 **Behavior:** whenever a tracked currency's balance changes, its display
 scales up ~12% then eases back over 0.18s (back-ease). Cheap, readable
 "something changed" signal without a full animation queue.
-**Implementation:** `_pop_essence_display()` in `Assets/Scripts/UI/Gameplay.cs`,
+**Implementation:** `_pop_essence_display()` in **Assets/Scripts/UI/Gameplay.cs**,
 driven by `EventBus.currency_changed`.
 
 ## Button Styles — Primary vs. Default
@@ -56,7 +58,7 @@ larger font) marks the one action the player is most likely to want next
 (e.g. PLAY on the main menu). Default `Button` styling is used for
 everything else (SETTINGS, BACK, MENU, individual shop buy buttons).
 **Implementation:** `theme_type_variation = &"PrimaryButton"` in
-`ui/theme/main_theme.tres`.
+**ui/theme/main_theme.tres**.
 
 ## Settings Control Row (Label + Slider/Toggle)
 **Used in:** the Settings screen.
@@ -65,7 +67,7 @@ everything else (SETTINGS, BACK, MENU, individual shop buy buttons).
 their value from the relevant manager on `_ready()` *before* connecting
 `value_changed`, so restoring a saved value never fires a spurious "changed
 by the player" side effect.
-**Implementation:** `Assets/Scripts/UI/SettingsMenu.cs`.
+**Implementation:** **Assets/Scripts/UI/SettingsMenu.cs**.
 
 ## Enemy Animation States
 **Used in:** the enemy view during combat.
@@ -74,7 +76,7 @@ by the player" side effect.
 color flash, extra rotation wobble on crit), death (shrink + fade +
 particle burst in the enemy's own glow color). No external animation
 files — all `Tween`-driven.
-**Implementation:** `Assets/Scripts/UI/EnemyView.cs`.
+**Implementation:** **Assets/Scripts/UI/EnemyView.cs**.
 
 ## Haptic Feedback on Impact Events
 **Used in:** crits (light buzz) and kills (stronger buzz).
@@ -93,10 +95,10 @@ exactly ONE dismiss action styled as `PrimaryButton`, live from the first
 frame — no tap-outside, no timeout, no second exit. Entrance 0.2s/0.25s
 back-ease pop; exit 0.18s/0.2s; the node frees itself.
 **Implementation:** the reusable artifact is the script contract
-`CenteredModalDialog` (`Assets/Scripts/UI/CenteredModalDialog.cs`; expects
+`CenteredModalDialog` (**Assets/Scripts/UI/CenteredModalDialog.cs**; expects
 `%Scrim`, `%Card`, `%ConfirmButton`, emits `confirmed`). Each concrete
 dialog is its own scene extending it (first:
-`Assets/Resources/Prefabs/OfflineRewardsModal.prefab`). A shared base *scene* is
+**Assets/Resources/Prefabs/OfflineRewardsModal.prefab**). A shared base *scene* is
 deliberately deferred until a third consumer exists.
 
 ## Unlock Celebration Toast (non-blocking)
@@ -106,8 +108,8 @@ unlock worth celebrating without interrupting play.
 that ignores ALL input (taps pass through to combat), pops in with the
 project's back-ease bounce, holds ~1.4s, fades, frees itself. Plays at most
 once per save file per unlock — never replayed on load.
-**Implementation:** `Assets/Resources/Prefabs/AutoAttackToast.prefab` +
-`Assets/Scripts/UI/AutoAttackToast.cs`, instanced by the gameplay scene on the
+**Implementation:** **Assets/Resources/Prefabs/AutoAttackToast.prefab** +
+**Assets/Scripts/UI/AutoAttackToast.cs**, instanced by the gameplay scene on the
 relevant EventBus signal.
 
 ## Status Badge (pill)
@@ -117,9 +119,9 @@ any permanent "system is active" readout.
 touch-target minimums) with icon + text; state is carried by presence and
 words, never color alone. Appears with a one-time scale pop, then a purely
 decorative 1.2s opacity pulse (1.0↔0.75). Once shown, never hidden again.
-**Implementation:** `BadgePanel` theme variation in `main_theme.tres`;
-badge node lives in `Assets/Scenes/Gameplay.unity`'s `WorldVBox`, pop/pulse tweens in
-`Assets/Scripts/UI/Gameplay.cs`.
+**Implementation:** `BadgePanel` theme variation in **main_theme.tres**;
+badge node lives in **Assets/Scenes/Gameplay.unity**'s `WorldVBox`, pop/pulse tweens in
+**Assets/Scripts/UI/Gameplay.cs**.
 
 ## Hold-to-Reveal Exact Number
 **Used in:** the offline modal's essence figure. Future: retrofit onto the
@@ -129,7 +131,7 @@ pressing and holding the figure swaps in the exact comma-grouped integer
 (`NumberFormat.format_exact()`) for as long as held. A caption advertises
 the affordance. Satisfies the Enhanced tier's "Readable numbers" rule.
 **Implementation:** label with `mouse_filter = STOP` + `gui_input`
-press/release handling — see `Assets/Scripts/UI/OfflineRewardsModal.cs`.
+press/release handling — see **Assets/Scripts/UI/OfflineRewardsModal.cs**.
 
 ## Countdown Timer Bar
 **Used in:** boss fights. Future: timed minigames, timed ad-bonus windows.
@@ -139,8 +141,8 @@ text over a moving two-tone fill is always outline-anchored). Urgency at
 `min(10s, duration/3)` remaining: ember fill + 0.6s decorative pulse; the
 numerals alone are sufficient. Non-interactive. The bar never owns the
 countdown — it polls its owner system per frame.
-**Implementation:** `Assets/Resources/Prefabs/CountdownTimerBar.prefab` +
-`Assets/Scripts/UI/CountdownTimerBar.cs` (self-syncs via `sync_with_combat()`).
+**Implementation:** **Assets/Resources/Prefabs/CountdownTimerBar.prefab** +
+**Assets/Scripts/UI/CountdownTimerBar.cs** (self-syncs via `sync_with_combat()`).
 
 ## Transient Result Banner (repeatable, non-blocking)
 **Used in:** boss win/fail. Future: minigame results, drop announcements.
@@ -148,8 +150,8 @@ countdown — it polls its owner system per frame.
 transparency, but repeatable and parameterized (`setup(icon, headline,
 body, is_win)`); win variant celebrates in violet, fail stays neutral.
 A depth-1 queue (owned by the spawning scene) prevents layer-50 stacking.
-**Implementation:** `Assets/Resources/Prefabs/ResultBanner.prefab` +
-`Assets/Scripts/UI/ResultBanner.cs`.
+**Implementation:** **Assets/Resources/Prefabs/ResultBanner.prefab** +
+**Assets/Scripts/UI/ResultBanner.cs**.
 
 ## Blocking-Modal Presentation Queue
 **Used in:** gameplay arrivals where multiple must-acknowledge moments
@@ -158,7 +160,7 @@ collide (offline rewards + world unlock).
 one at a time — chronological past (offline) before go-forward state
 (world unlock) — each next presentation on the previous one's exit.
 **Implementation:** `_enqueue_modal()` / `_present_next_modal()` in
-`Assets/Scripts/UI/Gameplay.cs`.
+**Assets/Scripts/UI/Gameplay.cs**.
 
 ## Inspector Card (dismissible, multi-action)
 **Used in:** the item detail card (equip/salvage/close). Future: any
@@ -170,8 +172,8 @@ CLOSE), and closes by CLOSE **or** scrim-tap. Rarity-bordered card on a
 lighter scrim (0.6, a browse surface not a hard stop). Buttons live from
 frame one. Supports an info-only mode (empty/sealed slots) that shows one
 message and CLOSE alone.
-**Implementation:** `Assets/Scripts/UI/InspectorCard.cs` +
-`Assets/Resources/Prefabs/InspectorCard.prefab`.
+**Implementation:** **Assets/Scripts/UI/InspectorCard.cs** +
+**Assets/Resources/Prefabs/InspectorCard.prefab**.
 
 ## Loot Toast (compact transient pickup)
 **Used in:** equipment drops. Future: any frequent, low-ceremony pickup.
@@ -181,8 +183,8 @@ IGNORE) that pops, holds ~1.3s, fades, self-frees. Quick successive drops
 hard MAX_LIFETIME ceiling stops a drop storm from keeping it alive
 forever. Rarity is carried by pip count + word, never color alone. Rare
 top-tier events (Mythic) escalate to the Result Banner instead.
-**Implementation:** `Assets/Scripts/UI/LootToast.cs` +
-`Assets/Resources/Prefabs/LootToast.prefab`.
+**Implementation:** **Assets/Scripts/UI/LootToast.cs** +
+**Assets/Resources/Prefabs/LootToast.prefab**.
 
 ## Two-Tap Arm (in-place destructive confirm)
 **Used in:** Epic+ single salvage and bulk salvage-commons. Future: any
@@ -193,8 +195,8 @@ also **discloses the outcome** ("TAP AGAIN: +N SCRAPS", "TAP AGAIN: N →
 commits; the yield is always on the button face before commitment.
 Common/Rare skip arming (cheap, plentiful). Never applies to equipped
 items.
-**Implementation:** `Assets/Scripts/UI/InspectorCard.cs` (single),
-`Assets/Scripts/UI/Gear.cs` (bulk).
+**Implementation:** **Assets/Scripts/UI/InspectorCard.cs** (single),
+**Assets/Scripts/UI/Gear.cs** (bulk).
 
 ## CanvasLayer Registry
 Overlay stacking is fixed project-wide: scene UI = 0, celebration toast =
@@ -207,7 +209,7 @@ slot below 100 so a scene change can always cover them.
 definitions and instances one row scene per entry. Adding content is a data
 file, not a code change.
 **Implementation:** `UpgradeShopPanel._ready()` +
-`Assets/Resources/Prefabs/UpgradeRow.prefab`.
+**Assets/Resources/Prefabs/UpgradeRow.prefab**.
 
 ## Diegetic Companion Entry & Durable Badges
 **Used in:** the active pet on the combat screen (`CompanionButton`,
@@ -225,8 +227,8 @@ mirror this on the GEAR side — `_update_count_pill()` sums unseen equipment
 **and** unseen relics, so the pill is the durable record for everything
 behind Gear.
 **Implementation:** `_update_companion()` / `_pop_control()` /
-`_update_count_pill()` in `Assets/Scripts/UI/Gameplay.cs`; nodes in
-`Assets/Scenes/Gameplay.unity`.
+`_update_count_pill()` in **Assets/Scripts/UI/Gameplay.cs**; nodes in
+**Assets/Scenes/Gameplay.unity**.
 
 ## Single-Class Accent Scope
 **Used in:** relics, pets, bosses — every family that carries a signature
@@ -242,8 +244,8 @@ per-species tint. Data labels stay standard ink `Color(0.906,0.886,0.973)`.
 Relic glow is a single sanctioned step (shadow_size 12), below the
 PrimaryButton hover glow; the empty relic slot dims its sigil
 (`modulate.a 0.30`, shadow 8) so it never reads as attuned.
-**Implementation:** `ALLY_VIOLET`/`STANDARD` in `Assets/Scripts/UI/Pets.cs`;
-`_make_relic_tile()` in `Assets/Scripts/UI/Gear.cs`.
+**Implementation:** `ALLY_VIOLET`/`STANDARD` in **Assets/Scripts/UI/Pets.cs**;
+`_make_relic_tile()` in **Assets/Scripts/UI/Gear.cs**.
 
 ## Segmented Panel Switch
 **Used in:** the Eclipse screen (ASCEND | POWERS). Future: any screen with
@@ -255,7 +257,7 @@ color, and a 4px underline bar in the family accent. The segment's own word
 is its label, so the active view is always named. Switching never reloads
 data; both panels are built once and toggled.
 **Implementation:** `_set_active_tab()` / `_style_tab()` in
-`Assets/Scripts/UI/Eclipse.cs`.
+**Assets/Scripts/UI/Eclipse.cs**.
 
 ## Reset/Kept Disclosure
 **Used in:** the Eclipse (prestige) commit. Future: any irreversible action
@@ -267,7 +269,7 @@ The commit itself then uses the **Two-Tap Arm** pattern, whose armed face
 discloses the yield ("TAP AGAIN · +N ◆ · RESETS RUN"). The player can never
 be surprised by what an irreversible act costs them.
 **Implementation:** `_make_summary_column()` / `_on_collapse_pressed()` in
-`Assets/Scripts/UI/Eclipse.cs`.
+**Assets/Scripts/UI/Eclipse.cs**.
 
 ## Scroll-Safe Built Content
 **Used in:** every list built in code inside a `ScrollContainer` (Eclipse
@@ -276,10 +278,10 @@ powers/ascend, gear, pets).
 raycast target **swallows a touch-drag that begins on it** — so a card body or
 label silently kills drag-scrolling from that point. Every non-interactive
 Image and Text built in code therefore sets `raycastTarget = false`; only real
-controls keep it. `Assets/Scripts/UI/UIBuild.cs` does this in every
+controls keep it. **Assets/Scripts/UI/UIBuild.cs** does this in every
 constructor for exactly this reason, and a stray transparent Image left over a
 tile eats the tap that tile exists to receive.
-**Implementation:** `Assets/Scripts/UI/Eclipse.cs` (all builders).
+**Implementation:** **Assets/Scripts/UI/Eclipse.cs** (all builders).
 
 ## Font-Safe Glyphs
 **Applies to:** every string that reaches a Button or a `HeaderLabel` /
@@ -287,7 +289,7 @@ tile eats the tap that tile exists to receive.
 **Behavior:** the theme sets Cinzel on `Button/fonts/font` and the header
 label variations, and Cinzel is a 220-codepoint Latin display face. It does
 **not** contain `◈ ◆ ★ ● →`, so those render as `.notdef` boxes there —
-verified against `fonts/cinzel-latin-700-normal.woff2`. Only `·` (U+00B7)
+verified against **fonts/cinzel-latin-700-normal.woff2**. Only `·` (U+00B7)
 and `—` (U+2014) among the punctuation we use are Cinzel-safe.
 Therefore: **buttons and headers spell it out** ("PLAY · 1 TOKEN",
 "NEED 12 MORE", "TAP AGAIN: 12 FOR +24"), while decorative glyphs live only
@@ -296,7 +298,7 @@ face does not render as a substitute or a .notdef box, it renders as nothing
 at all, and a label silently loses a word. Where a glyph would be identity
 rather than decoration (a currency mark), prefer the actual **icon** beside
 the number — it is a stronger cue than a character and cannot go missing.
-**Check:** `python tools/check_glyphs.py` reads the codepoints the face
+**Check:** **python tools/check_glyphs.py** reads the codepoints the face
 actually contains and fails on any the UI renders.
 
 ## Minigame Teardown
@@ -315,7 +317,7 @@ independently of `process_mode`, so an unmanaged one keeps animating after a
 run resolves — flipping a card or dropping a piece underneath the result
 banner. `Minigame.create_managed_tween()` records the tween so `teardown()`
 kills it.
-**Check:** inside `scripts/minigames/`, `create_tween()` should appear only in
+**Check:** inside **scripts/minigames/**, `create_tween()` should appear only in
 `create_managed_tween()` itself.
 **Corollary — a tween must never own a resting state that outlives the run.**
 Teardown *kills* managed tweens rather than completing them (completing them
@@ -341,9 +343,9 @@ to a run that met the objective, and in a `lower_is_better` game a loss scores
 the worst possible value, which would otherwise be written in as the first
 "best".
 **Implementation:** `Minigame.teardown()` / `create_managed_tween()` in
-`Assets/Scripts/UI/Minigame.cs`; called from `_on_game_finished` in
-`Assets/Scripts/UI/MinigameHost.cs`; child Timers in
-`Assets/Scripts/UI/Minigames/VoidReflex.cs` and `Assets/Scripts/UI/Minigames/MemoryMatch.cs` as the reference.
+**Assets/Scripts/UI/Minigame.cs**; called from `_on_game_finished` in
+**Assets/Scripts/UI/MinigameHost.cs**; child Timers in
+**Assets/Scripts/UI/Minigames/VoidReflex.cs** and **Assets/Scripts/UI/Minigames/MemoryMatch.cs** as the reference.
 
 ## Static Checks Beyond the Compiler
 **Why:** a compiler resolves names, types and arity, so the two classes of
@@ -398,5 +400,5 @@ anchor string they patched did not exist in the file.
 
 **One harness bug of the same family:** a stage written `check | sed 's/^/   /'`
 reports **sed's** exit status, so `|| status=1` never fired and two stages of
-`validate_all.sh` could not fail the sweep. `set -o pipefail` is load-bearing
+**validate_all.sh** could not fail the sweep. `set -o pipefail` is load-bearing
 in that script.

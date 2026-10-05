@@ -1,6 +1,32 @@
 # Milestone 14 — Monetization: Offers, Purchases, Cosmetics
 
+> Engine-agnostic behaviour spec. Written for an earlier engine; node and file names in bold are historical. The live implementation is the React build — see `docs/ARCHITECTURE.md`.
+
 ## 0. SCOPE WARNING — READ FIRST
+
+### Status in the React build
+
+- **AdMob is integrated** (the @capacitor-community/admob plugin, `src/services/ads.ts`):
+  initialize, then UMP consent, then a banner and the opt-in rewarded offers.
+  The ad unit IDs in `src/config/monetization.ts` and the AdMob
+  `APPLICATION_ID` in `android/app/src/main/AndroidManifest.xml` are still
+  Google's sample IDs, which serve test ads only, and `isTesting` is true. On
+  the web there are no ads; a dev build (`npm run dev`) simulates a watch so
+  the flows can be tested.
+- **Google Play Billing is implemented** (the @capgo/native-purchases plugin,
+  `src/services/billing.ts`) behind `BILLING_ENABLED` in
+  `src/config/monetization.ts`, which is false. Until it is switched on, paid
+  products read "COMING SOON" and nothing is granted without a purchase. There
+  is still no server-side receipt validation.
+- The build also shows a **banner advert** (hidden by Remove Ads), which this
+  spec did not originally plan.
+- The stub providers, **MonetizationManager**, the simulated 3-second wait and
+  the dev banner described below are historical. The stance (§1) and the
+  three placements with their daily caps (§2) match the live build. The live
+  products are `remove_ads`, `starter_pack` and the consumable `shards_small`
+  (`PRODUCTS` in `src/data/definitions.ts`).
+
+### Original scope note
 
 **This milestone ships the architecture, not a store-ready integration.**
 

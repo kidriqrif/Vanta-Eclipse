@@ -1,5 +1,7 @@
 # Milestone 6 UX Spec — Equipment, Inventory, Loot & Crafting
 
+> Engine-agnostic behaviour spec. Written for an earlier engine; node and file names in bold are historical. The live implementation is the React build — see `docs/ARCHITECTURE.md`.
+
 Author: ux-designer · Status: draft for Phase 1c review
 Serves: `design/player-journey.md` Stage 8 (First Equipment Drop) and
 Stage 9 (Gear Routine).
@@ -23,7 +25,7 @@ stays correct whatever those numbers turn out to be** (all figures format
 via `NumberFormat`; no layout or copy depends on a magnitude; every
 illustrative value in a wireframe is marked as such).
 
-Grading criteria from `player-journey.md`: Stage 8 — the drop must be
+Grading criteria from `design/player-journey.md`: Stage 8 — the drop must be
 noticeable without interrupting combat; finding where gear lives must
 take one obvious tap; item power must read at a glance for a player who
 has never seen an RPG stat sheet; equipping must show bigger numbers on
@@ -288,7 +290,7 @@ y≈1844 └──────────────────────�
   screen entry. Hidden at zero — presence means "unseen loot exists,"
   matching the Status Badge philosophy of state-by-presence-and-words.
 
-### 3B. Gear screen (new scene: `Assets/Scenes/Gear.unity`)
+### 3B. Gear screen (new scene: **Assets/Scenes/Gear.unity**)
 
 ```
 x=40                                                          x=1040
@@ -319,7 +321,7 @@ y≈1892 └──────────────────────�
 - **TopBar** — mirrors the gameplay top bar: `HeaderLabel` "GEAR" 38px
   (IGNORE, explicit), BACK button 200×96 (STOP by nature) →
   `SceneManager.change_scene(SCENE_GAMEPLAY)`.
-- **ScrapsRow** — scrap icon 44×44 (`sprites/ui/void_scrap_icon.svg`,
+- **ScrapsRow** — scrap icon 44×44 (**sprites/ui/void_scrap_icon.svg**,
   NEW asset, essence-icon construction rules) + balance at 42px via
   `NumberFormat`, Currency Pop on every `currency_changed` for
   `void_scraps`, and **Hold-to-Reveal** on the label (the pattern's
@@ -365,9 +367,9 @@ EQUIPPED               EMPTY                  SEALED (relic)
 - Tile = `Button`-derived panel (STOP by nature); every child label/icon
   `mouse_filter = IGNORE` (explicit). Content: slot name 24px small-caps
   muted; slot glyph 76×76 (seven NEW assets,
-  `sprites/ui/slot_weapon.svg` … `slot_relic.svg`, essence-icon
+  **sprites/ui/slot_weapon.svg** … **slot_relic.svg**, essence-icon
   construction rules); pip row (five 20×20 sockets, N filled —
-  `sprites/ui/rarity_pip.svg`, filled/empty variants); `"Lv. 23"` 24px;
+  **sprites/ui/rarity_pip.svg**, filled/empty variants); `"Lv. 23"` 24px;
   key-stat line 24px = the item's highest-value affix in short form
   (`short_label` from the affix definition: `+14 TAP`, `+9% CRIT`,
   `+8% ESSENCE`, `+15% BOSS`). Rarity border color is the art
@@ -378,7 +380,7 @@ EQUIPPED               EMPTY                  SEALED (relic)
   Inspector Card variant: `"RING — EMPTY"` / `"Gear for this slot drops
   from any enemy."` / CLOSE. One vocabulary: tap a tile, get a card.
 - Sealed relic: solid border, dimmed lock glyph
-  (`sprites/ui/slot_relic_lock.svg` or lock overlay), `"Sealed"` 24px.
+  (**sprites/ui/slot_relic_lock.svg** or lock overlay), `"Sealed"` 24px.
   Tap → Inspector Card variant: `"RELIC — SEALED"` / *"Relics awaken in
   the Astral Temple."* / CLOSE (§4B). The mystery is a promise, not a
   denial — same doctrine as the boss fail copy.
@@ -531,9 +533,9 @@ y430–610, existing geometry/queue):
   a scene slots into M5's machinery with zero new signals (§6).
   Cost accepted: ~0.25s fade each way at a minutes-scale cadence —
   cheap; the threaded loader keeps it hitch-free.
-- **Engineering hooks:** `SCENE_GEAR` constant in `Assets/Scripts/Core/SceneFlow.cs`
+- **Engineering hooks:** `SCENE_GEAR` constant in **Assets/Scripts/Core/SceneFlow.cs**
   (the architecture's "adding a new screen" checklist, step 3);
-  `Assets/Scenes/Gear.unity` + `Assets/Scripts/UI/Gear.cs`.
+  **Assets/Scenes/Gear.unity** + **Assets/Scripts/UI/Gear.cs**.
 - **Combat continues headless.** Autoloads run sceneless: auto-attack
   ticks, kills pay essence, drops roll, farm mode farms. The Gear
   screen is a second window into the same managers — its list connects
@@ -803,11 +805,11 @@ has a named manager owner.
 - **Items are data, not resources.** Generated items are plain dicts
   serialized in the save — procedural content can't be `.tres` files.
   The *definitions* are data-driven resources, per the content-as-data
-  rule: `AffixDefinition` in `data/affixes/` (id, stat StringName —
+  rule: `AffixDefinition` in **data/affixes/** (id, stat StringName —
   matching the UpgradeManager stat vocabulary plus `&"boss_damage"` —
   modifier kind, display template `"Tap Damage +{v}"`, `short_label`
   `"TAP"`, per-level/rarity value curve params) and `SlotDefinition` in
-  `data/equipment_slots/` (id, display name, glyph path, sort order,
+  **data/equipment_slots/** (id, display name, glyph path, sort order,
   `sealed: bool` — the relic ships `true`; M7 flips a data file, not
   code). Adding an affix or unsealing a slot is a data drop.
 - **Save section shape** (loose contract; engineering owns exact keys):
@@ -831,7 +833,7 @@ has a named manager owner.
   stored in acquisition order (append newest); the UI renders it
   reversed. Absent section = empty inventory (pre-M6 saves migrate
   silently, §6). Affix `id`s are save-stable forever, like upgrade ids.
-- **UI owns nothing:** `Assets/Scripts/UI/Gear.cs`, the Inspector Card, the Forge
+- **UI owns nothing:** **Assets/Scripts/UI/Gear.cs**, the Inspector Card, the Forge
   panel, Loot Toast, and the GEAR pill render manager state and EventBus
   signals, and report exactly these actions: `equip(uid)`,
   `unequip(slot)`, `salvage(uid)`, `salvage_all_commons()`, `forge(slot)`,
@@ -1026,8 +1028,8 @@ like every blocking overlay. Distinct from Centered Modal Dialog by
 exactly three contract clauses (initiation, action count, exit paths);
 that pattern's one-dismiss announcement contract is untouched and keeps
 its two consumers.
-**Implementation:** proposed as `Assets/Scripts/UI/InspectorCard.cs` +
-`Assets/Resources/Prefabs/InspectorCard.prefab` (`Scrim`, `Card`, `CloseButton`,
+**Implementation:** proposed as **Assets/Scripts/UI/InspectorCard.cs** +
+**Assets/Resources/Prefabs/InspectorCard.prefab** (`Scrim`, `Card`, `CloseButton`,
 content-driven action row; may share scrim/tween code with
 `CenteredModalDialog` by composition — engineering's call, not a
 pattern merge).
@@ -1047,8 +1049,8 @@ must never accumulate debt. Distinct from the Result Banner (event-
 scale announcements, queued, mid-screen) and the Unlock Celebration
 Toast (once-per-save); the three form a volume ladder: toast < banner
 < blocking modal.
-**Implementation:** proposed as `Assets/Resources/Prefabs/LootToast.prefab` +
-`Assets/Scripts/UI/LootToast.cs`, instanced by the gameplay scene on
+**Implementation:** proposed as **Assets/Resources/Prefabs/LootToast.prefab** +
+**Assets/Scripts/UI/LootToast.cs**, instanced by the gameplay scene on
 `item_dropped`.
 
 ### 7.3 Two-Tap Arm (in-place destructive confirm)
@@ -1064,7 +1066,7 @@ alone, never ember). Second activation within 3s executes; timeout or
 any other input disarms silently. Single motor target, zero new
 containers, consequence stated before commitment.
 **Implementation:** a small reusable component
-(`Assets/Scripts/UI/PressHold.cs`) wrapping a Button's label/style
+(**Assets/Scripts/UI/PressHold.cs**) wrapping a Button's label/style
 swap and disarm timer.
 
 *(Considered and NOT proposed as patterns: the GEAR count pill — a
@@ -1102,8 +1104,8 @@ existing celebration vocabulary, no independent contract.)*
   gold, and — hard constraint — outside the ember family, whose M5
   scope rule reserves it for boss threat. Verified with the composited
   method; pips + rarity words already carry every state without them.
-  Asset order: `void_scrap_icon.svg`, seven slot glyphs + relic lock,
-  `rarity_pip.svg` (filled/empty), all on essence-icon construction
+  Asset order: **void_scrap_icon.svg**, seven slot glyphs + relic lock,
+  **rarity_pip.svg** (filled/empty), all on essence-icon construction
   rules.
 - **"Boss Damage" stat wording** (writer): plain and literal here;
   a flavored name ("Slayer") must not obscure what it does.

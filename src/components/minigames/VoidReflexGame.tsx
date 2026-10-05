@@ -102,10 +102,10 @@ function statusLine(s: RoundState): { text: string; tone: string } {
   if (s.phase === 'wait') return { text: 'WAIT for a sigil to flare…', tone: 'text-dim' };
   if (s.phase === 'flare') return { text: 'TAP THE FLARING SIGIL!', tone: 'text-neon-bright' };
   if (s.phase === 'done') {
-    const hits = hitTimes(s.outcomes).length;
-    return hits >= WIN_HITS
-      ? { text: `DONE · ${summarize(s.outcomes).detail}`, tone: 'text-toxic' }
-      : { text: `DONE · ${summarize(s.outcomes).detail} · ${formatNumber(WIN_HITS)} needed`, tone: 'text-dim' };
+    const result = summarize(s.outcomes);
+    return result.won
+      ? { text: `DONE · ${result.detail}`, tone: 'text-toxic' }
+      : { text: `DONE · ${result.detail} · ${formatNumber(WIN_HITS)} needed`, tone: 'text-dim' };
   }
   if (!last) return { text: '', tone: 'text-dim' };
   switch (last.kind) {
@@ -143,10 +143,13 @@ export const VoidReflexGame: React.FC<MinigameProps> = ({ onFinish }) => {
   // One timer per phase; each is cleared when the phase ends or the game unmounts.
   useEffect(() => {
     if (phase !== 'wait') return;
-    const t = setTimeout(() => {
-      audio.play('whoosh');
-      send({ type: 'flare', target: Math.floor(Math.random() * SIGILS) });
-    }, MIN_WAIT_MS + Math.random() * (MAX_WAIT_MS - MIN_WAIT_MS));
+    const t = setTimeout(
+      () => {
+        audio.play('whoosh');
+        send({ type: 'flare', target: Math.floor(Math.random() * SIGILS) });
+      },
+      MIN_WAIT_MS + Math.random() * (MAX_WAIT_MS - MIN_WAIT_MS),
+    );
     return () => clearTimeout(t);
   }, [phase, round]);
 

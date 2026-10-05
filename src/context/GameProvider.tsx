@@ -12,6 +12,7 @@ import { audio } from '../services/audio';
 import { impact } from '../services/haptics';
 import { ads } from '../services/ads';
 import { billing } from '../services/billing';
+import { syncPurchases } from '../hooks/useMonetization';
 
 const TICK_MS = 100;
 const AUTOSAVE_MS = 5000;
@@ -164,10 +165,12 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Ads (consent first) and the store's entitlements.
   useEffect(() => {
     void ads.init();
-    void billing.init().then(async () => {
-      const owned = await billing.ownedEntitlements();
-      if (owned.length > 0) store.dispatch({ type: 'RESTORE_ENTITLEMENTS', productIds: owned });
-    });
+    // Picks up purchases that cleared while the app was closed, and re-grants entitlements
+    // after a reinstall. Silent: the Settings button reports errors when the player asks.
+    void billing
+      .init()
+      .then(() => syncPurchases(store.dispatch))
+      .catch((err) => console.warn('Purchase sync failed; will retry next launch', err));
   }, [store]);
 
   return (

@@ -286,7 +286,7 @@ export const SequenceEchoGame: React.FC<MinigameProps> = ({ onFinish }) => {
               onClick={() => dispatch({ type: 'tap', rune: id })}
               disabled={!inputOpen}
               aria-label={`${rune.name} rune`}
-              className={`aspect-square border-2 flex flex-col items-center justify-center gap-2 transition-[transform,background-color,border-color,box-shadow] duration-100 ${frame} ${
+              className={`aspect-square border-2 flex flex-col items-center justify-center gap-2 transition-all duration-100 ${frame} ${
                 inputOpen ? 'cursor-pointer active:scale-95' : 'cursor-default'
               }`}
             >

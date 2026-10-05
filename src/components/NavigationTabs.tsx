@@ -1,18 +1,28 @@
-import React, { useState } from 'react';
-import { useGame } from '../context/GameContext';
-import { QUESTS } from '../data/definitions';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import {
-  Sword,
-  Shield,
-  Layers,
-  ShoppingBag,
-  Moon,
-  Gamepad2,
   BookOpen,
-  Cpu,
+  Ellipsis,
+  Gamepad2,
+  Gem,
+  Layers,
+  Lock,
+  Moon,
+  PawPrint,
+  Shield,
+  ShoppingBag,
   Zap,
-  MoreHorizontal
+  type LucideIcon,
 } from 'lucide-react';
+import {
+  selectHasClaimableQuest,
+  selectUnseenItemCount,
+  selectUnseenPetCount,
+  selectUnseenRelicCount,
+} from '../game/selectors';
+import { ARCADE_UNLOCK_LEVEL, ECLIPSE_UNLOCK_LEVEL, WORLD_TWO_FIRST_LEVEL, type GameState } from '../game/state';
+import { useBackHandler } from '../hooks/useBackHandler';
+import { shallowEqual, useGameState } from '../hooks/useGame';
+import { formatNumber } from '../utils/numberFormat';
 
 export type TabType =
   | 'UPGRADES'
@@ -30,124 +40,265 @@ interface NavigationTabsProps {
   onSelectTab: (tab: TabType) => void;
 }
 
-export const NavigationTabs: React.FC<NavigationTabsProps> = ({
-  activeTab,
-  onSelectTab,
-}) => {
-  const {
-    unseenItemCount,
-    tokens,
-    relicsAwakened,
-    cards,
-    activeDailyIds,
-    dailyClaimedQuests,
-    dailyAllClearClaimed,
-    claimedQuests,
-    questCounters,
-    dailyQuestCounters,
-  } = useGame();
-  const [showMore, setShowMore] = useState(false);
+/** neon/gold badges ask for attention; info badges (the card count) only inform. */
+type BadgeTone = 'neon' | 'gold' | 'info';
 
-  // Check unclaimed rewards in Journal
-  const hasUnclaimedQuests = QUESTS.some((q) => {
-    if (q.kind === 'DAILY') {
-      if (!activeDailyIds.includes(q.id)) return false;
-      if (dailyClaimedQuests.includes(q.id)) return false;
-      const progress = dailyQuestCounters[q.metric] || 0;
-      return progress >= q.targetValue;
-    } else {
-      if (claimedQuests.includes(q.id)) return false;
-      const progress = questCounters[q.metric] || 0;
-      return progress >= q.targetValue;
-    }
-  }) || (!dailyAllClearClaimed && activeDailyIds.length > 0 && activeDailyIds.every((id) => dailyClaimedQuests.includes(id)));
+interface Badge {
+  text: string;
+  /** What the badge means, for screen readers. */
+  spoken: string;
+  tone: BadgeTone;
+}
 
-  const allTabs: {
-    id: TabType;
-    label: string;
-    icon: React.ReactNode;
-    badge?: number | string | boolean;
-    badgeColor?: string;
-  }[] = [
-    { id: 'UPGRADES', label: 'FORGE', icon: <Zap size={16} /> },
-    {
-      id: 'GEAR',
-      label: 'ARMOR',
-      icon: <Shield size={16} />,
-      badge: unseenItemCount > 0 ? unseenItemCount : undefined,
-      badgeColor: '#36D9FF',
-    },
-    {
-      id: 'RELICS',
-      label: 'RELICS',
-      icon: <Sword size={16} />,
-      badge: !relicsAwakened ? undefined : undefined,
-    },
-    { id: 'SHOP', label: 'BAZAAR', icon: <ShoppingBag size={16} /> },
-    {
-      id: 'JOURNAL',
-      label: 'CODEX',
-      icon: <BookOpen size={16} />,
-      badge: hasUnclaimedQuests ? '!' : undefined,
-      badgeColor: '#FFC857',
-    },
-    {
-      id: 'CARDS',
-      label: 'CARDS',
-      icon: <Layers size={16} />,
-      badge: cards.length > 0 ? cards.length : undefined,
-      badgeColor: '#36D9FF',
-    },
-    { id: 'PETS', label: 'BEAST', icon: <Cpu size={16} /> },
-    { id: 'ECLIPSE', label: 'ECLIPSE', icon: <Moon size={16} /> },
-    {
-      id: 'ARCADE',
+interface TabSpec {
+  label: string;
+  icon: LucideIcon;
+  badge: Badge | null;
+  /** Why the feature is still locked, or null. Locked tabs still open: their panels explain. */
+  locked: { short: string; long: string } | null;
+}
+
+const PRIMARY: TabType[] = ['UPGRADES', 'GEAR', 'ARCADE', 'JOURNAL'];
+const SECONDARY: TabType[] = ['CARDS', 'PETS', 'RELICS', 'ECLIPSE', 'SHOP'];
+
+const BADGE_TONE: Record<BadgeTone, string> = {
+  neon: 'bg-neon text-void',
+  gold: 'bg-gold text-void',
+  info: 'bg-panel2 text-ink border border-line',
+};
+
+const selectNav = (s: GameState) => ({
+  unseenItems: selectUnseenItemCount(s),
+  unseenRelics: selectUnseenRelicCount(s),
+  unseenPets: selectUnseenPetCount(s),
+  claimable: selectHasClaimableQuest(s),
+  tokens: s.arcade.tokens,
+  arcadeOpen: s.lifetimePeakLevel >= ARCADE_UNLOCK_LEVEL,
+  cards: s.cards.length,
+  relicsAwakened: s.relicsAwakened,
+  eclipseOpen: s.peakRunLevel >= ECLIPSE_UNLOCK_LEVEL,
+});
+type NavState = ReturnType<typeof selectNav>;
+
+const short = (n: number) => (n > 99 ? '99+' : formatNumber(n));
+
+/** `noun` is singular; the spoken label adds the plural "s". */
+function countBadge(n: number, noun: string, tone: BadgeTone): Badge | null {
+  return n > 0 ? { text: short(n), spoken: `${formatNumber(n)} ${noun}${n === 1 ? '' : 's'}`, tone } : null;
+}
+
+const RUINS_LOCK = {
+  short: `LV ${formatNumber(WORLD_TWO_FIRST_LEVEL)}`,
+  long: `unlocks in the Frozen Ruins, level ${formatNumber(WORLD_TWO_FIRST_LEVEL)}`,
+};
+
+function buildTabs(n: NavState): Record<TabType, TabSpec> {
+  return {
+    UPGRADES: { label: 'FORGE', icon: Zap, badge: null, locked: null },
+    GEAR: { label: 'ARMOR', icon: Shield, badge: countBadge(n.unseenItems, 'new item', 'neon'), locked: null },
+    ARCADE: {
       label: 'ARCADE',
-      icon: <Gamepad2 size={16} />,
-      badge: tokens > 0 ? tokens : undefined,
-      badgeColor: '#FFC857',
+      icon: Gamepad2,
+      badge: n.arcadeOpen ? countBadge(n.tokens, 'token', 'gold') : null,
+      locked: n.arcadeOpen
+        ? null
+        : { short: `LV ${formatNumber(ARCADE_UNLOCK_LEVEL)}`, long: `unlocks at level ${formatNumber(ARCADE_UNLOCK_LEVEL)}` },
     },
-  ];
+    JOURNAL: {
+      label: 'CODEX',
+      icon: BookOpen,
+      badge: n.claimable ? { text: '!', spoken: 'rewards ready to claim', tone: 'gold' } : null,
+      locked: null,
+    },
+    CARDS: { label: 'CARDS', icon: Layers, badge: countBadge(n.cards, 'card', 'info'), locked: null },
+    PETS: {
+      label: 'BEAST',
+      icon: PawPrint,
+      badge: countBadge(n.unseenPets, 'new companion', 'neon'),
+      locked: n.relicsAwakened ? null : RUINS_LOCK,
+    },
+    RELICS: {
+      label: 'RELICS',
+      icon: Gem,
+      badge: countBadge(n.unseenRelics, 'new relic', 'neon'),
+      locked: n.relicsAwakened ? null : RUINS_LOCK,
+    },
+    ECLIPSE: {
+      label: 'ECLIPSE',
+      icon: Moon,
+      badge: null,
+      locked: n.eclipseOpen
+        ? null
+        : {
+            short: `LV ${formatNumber(ECLIPSE_UNLOCK_LEVEL)}`,
+            long: `unlocks when a run reaches level ${formatNumber(ECLIPSE_UNLOCK_LEVEL)}`,
+          },
+    },
+    SHOP: { label: 'BAZAAR', icon: ShoppingBag, badge: null, locked: null },
+  };
+}
 
-  const primaryTabs = allTabs.slice(0, 4);
-  const secondaryTabs = allTabs.slice(4);
+function spokenLabel(t: TabSpec): string {
+  return [t.label, t.badge?.spoken, t.locked ? `locked, ${t.locked.long}` : null].filter(Boolean).join(', ');
+}
 
-  const isSecondaryActive = secondaryTabs.some(t => t.id === activeTab);
-  const hasSecondaryBadge = secondaryTabs.some(t => t.badge !== undefined && t.badge !== false && t.badge !== 0);
+const BadgeChip: React.FC<{ badge: Badge; className?: string }> = ({ badge, className = '' }) => (
+  <span
+    aria-hidden
+    className={`min-w-[16px] h-4 px-1 text-[9px] font-mono-code font-black leading-none flex items-center justify-center ${BADGE_TONE[badge.tone]} ${className}`}
+  >
+    {badge.text}
+  </span>
+);
+
+const slotClass = (lit: boolean) =>
+  `relative min-h-[56px] px-1 py-2 flex flex-col items-center justify-center gap-1.5 border-t-2 transition-colors ${
+    lit ? 'text-neon bg-panel border-t-neon font-bold' : 'text-dim border-t-transparent hover:text-ink hover:bg-panel/60'
+  }`;
+
+const SlotLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <span className="text-[10px] font-display uppercase tracking-wider leading-none">{children}</span>
+);
+
+/**
+ * The bottom bar: four primary tabs and MORE, which opens a small sheet with the rest.
+ * Badges are read from state, so nothing new can be missed.
+ */
+export const NavigationTabs: React.FC<NavigationTabsProps> = ({ activeTab, onSelectTab }) => {
+  const nav = useGameState(selectNav, shallowEqual);
+  const tabs = buildTabs(nav);
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const sheetId = useId();
+
+  const close = useCallback(() => setOpen(false), []);
+  useBackHandler(open, close);
+
+  // A tab change from anywhere (the back button, a shop link) closes the sheet.
+  useEffect(() => {
+    setOpen(false);
+  }, [activeTab]);
+
+  // Outside tap or Escape closes it. The tap still reaches what it landed on.
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e: PointerEvent) => {
+      const el = wrapRef.current;
+      if (el && e.target instanceof Node && !el.contains(e.target)) setOpen(false);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown, true);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown, true);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [open]);
+
+  const select = (id: TabType) => {
+    setOpen(false);
+    onSelectTab(id);
+  };
+
+  const secondaryActive = SECONDARY.includes(activeTab);
+  const moreNews = SECONDARY.some((id) => {
+    const b = tabs[id].badge;
+    return !!b && b.tone !== 'info';
+  });
+  const moreLabel = [
+    'More tabs',
+    // Names no tab, so finding a tab by its name never lands on MORE.
+    secondaryActive ? 'the open tab is in this list' : null,
+    moreNews ? 'something new inside' : null,
+  ]
+    .filter(Boolean)
+    .join(', ');
 
   return (
-    <div className="relative">
-      {/* Main Bottom Nav */}
-      <nav className="w-full bg-[#080A12] border-t border-[#30395C] px-0 flex items-center overflow-x-auto overflow-y-hidden shrink-0 select-none no-scrollbar">
-        {allTabs.map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => onSelectTab(tab.id)}
-              className={`min-w-[72px] flex-1 py-3 px-1 flex flex-col items-center justify-center gap-1.5 relative transition-colors rounded-none border-t-[3px] ${
-                isActive
-                  ? 'text-[#36D9FF] bg-[#101426] border-t-[#36D9FF] font-bold shadow-[inset_0_10px_15px_-10px_rgba(54,217,255,0.2)]'
-                  : 'text-[#8993B2] hover:text-[#E8EDF7] border-t-transparent hover:bg-[#101426]/50'
-              }`}
-            >
-              <div className="relative">
-                {tab.icon}
-                {tab.badge !== undefined && (
-                  <span
-                    className="absolute -top-1.5 -right-3 min-w-[12px] h-[12px] px-0.5 text-[8px] font-mono-code font-black rounded-full text-[#080A12] flex items-center justify-center shadow-sm"
-                    style={{ backgroundColor: tab.badgeColor || '#36D9FF' }}
-                  >
-                    {tab.badge}
+    <div ref={wrapRef} className="relative shrink-0 select-none">
+      {open && (
+        <div
+          id={sheetId}
+          role="group"
+          aria-label="More tabs"
+          className="absolute bottom-full right-0 z-[58] w-60 max-w-full bg-panel border border-neon/50 border-b-0 shadow-[0_-8px_24px_rgba(0,0,0,0.6)] flex flex-col animate-fade-in"
+        >
+          {SECONDARY.map((id) => {
+            const t = tabs[id];
+            const Icon = t.icon;
+            const active = id === activeTab;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => select(id)}
+                aria-label={spokenLabel(t)}
+                aria-current={active ? 'page' : undefined}
+                className={`min-h-[48px] px-3 flex items-center gap-2.5 border-b border-line text-left transition-colors ${
+                  active ? 'bg-active text-neon' : 'text-ink hover:bg-panel2'
+                }`}
+              >
+                <Icon size={16} aria-hidden className={active ? 'text-neon' : 'text-dim'} />
+                <span className="flex-1 text-[11px] font-display font-bold uppercase tracking-wider">{t.label}</span>
+                {t.locked && (
+                  <span aria-hidden className="flex items-center gap-1 text-[9px] font-mono-code text-dim">
+                    <Lock size={10} />
+                    {t.locked.short}
                   </span>
                 )}
-              </div>
-              <span className="text-[10px] font-display uppercase tracking-wider leading-none">
-                {tab.label}
+                {t.badge && <BadgeChip badge={t.badge} />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <nav aria-label="Game sections" className="w-full grid grid-cols-5 bg-void border-t border-line">
+        {PRIMARY.map((id) => {
+          const t = tabs[id];
+          const Icon = t.icon;
+          const active = id === activeTab;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => select(id)}
+              aria-label={spokenLabel(t)}
+              aria-current={active ? 'page' : undefined}
+              className={slotClass(active)}
+            >
+              <span className="relative">
+                <Icon size={18} aria-hidden />
+                {t.locked && (
+                  <span aria-hidden className="absolute -bottom-1 -left-2 bg-void text-dim leading-none">
+                    <Lock size={10} />
+                  </span>
+                )}
+                {t.badge && <BadgeChip badge={t.badge} className="absolute -top-2 left-3" />}
               </span>
+              <SlotLabel>{t.label}</SlotLabel>
             </button>
           );
         })}
+
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-label={moreLabel}
+          aria-expanded={open}
+          aria-controls={open ? sheetId : undefined}
+          className={slotClass(secondaryActive || open)}
+        >
+          <span className="relative">
+            <Ellipsis size={18} aria-hidden />
+            {moreNews && (
+              <span aria-hidden className="absolute -top-1 -right-1.5 w-2 h-2 rounded-full bg-gold ring-2 ring-void" />
+            )}
+          </span>
+          <SlotLabel>MORE</SlotLabel>
+        </button>
       </nav>
     </div>
   );

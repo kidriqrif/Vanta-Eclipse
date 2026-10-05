@@ -1,276 +1,436 @@
-import React, { useState } from 'react';
-import { useGame } from '../context/GameContext';
-import { QUESTS, DAILY_ALL_CLEAR_REWARDS } from '../data/definitions';
-import { QuestDefinition } from '../types/game';
-import { formatNumber } from '../utils/numberFormat';
+import React, { useCallback, useMemo, useState } from 'react';
+import { BookOpen, Calendar, Check, Clock, Gift, Link, Lock, Trophy, type LucideIcon } from 'lucide-react';
+import { DAILY_ALL_CLEAR_REWARDS, QUESTS } from '../data/definitions';
+import type { QuestDefinition } from '../types/game';
 import {
-  BookOpen,
-  Trophy,
-  CheckCircle,
-  Calendar,
-  Gift,
-  Zap,
-  Lock,
-} from 'lucide-react';
-import { PlayGamesAchievementsModal } from './PlayGamesAchievementsModal';
+  activeDailies,
+  canClaimAllClear,
+  canClaimQuest,
+  getQuestProgress,
+  isQuestClaimed,
+  isQuestLocked,
+} from '../game/quests';
+import { localDateKey, type GameState } from '../game/state';
+import { shallowEqual, useDispatch, useGameState, useNow } from '../hooks/useGame';
+import { formatDuration, formatNumber } from '../utils/numberFormat';
+import { Button, PanelHeader, TabBody } from './ui';
 
-export const JournalPanel: React.FC = () => {
-  const {
-    questCounters,
-    dailyQuestCounters,
-    claimedQuests,
-    dailyClaimedQuests,
-    dailyAllClearClaimed,
-    claimQuestReward,
-    claimDailyAllClearReward,
-    activeDailyIds,
-  } = useGame();
+type Section = 'DAILY' | 'CHAIN' | 'FEATS';
+type RewardKind = QuestDefinition['rewardKind'];
+type QuestStatus = 'ready' | 'progress' | 'locked' | 'done';
 
-  const [activeTab, setActiveTab] = useState<'DAILY' | 'CHAIN' | 'ACHIEVEMENTS'>('DAILY');
-  const [showPlayGamesModal, setShowPlayGamesModal] = useState<boolean>(false);
+/** The open section survives tab switches for the session. */
+let lastSection: Section = 'DAILY';
 
-  // Daily calculations
-  const dailyQuests = QUESTS.filter(
-    (q) => q.kind === 'DAILY' && activeDailyIds.includes(q.id)
-  );
-  const dailyCompletedCount = dailyQuests.filter((q) =>
-    dailyClaimedQuests.includes(q.id)
-  ).length;
-  const isDailyAllClearReady =
-    dailyQuests.length > 0 &&
-    dailyCompletedCount === dailyQuests.length &&
-    !dailyAllClearClaimed;
+const byOrder = (a: QuestDefinition, b: QuestDefinition) => a.sortOrder - b.sortOrder;
+const CHAIN = QUESTS.filter((q) => q.kind === 'CHAIN').sort(byOrder);
+const FEATS = QUESTS.filter((q) => q.kind === 'ACHIEVEMENT').sort(byOrder);
+const QUEST_NAMES = new Map(QUESTS.map((q) => [q.id, q.displayName]));
 
-  const chainQuests = QUESTS.filter((q) => q.kind === 'CHAIN');
-  const achievementQuests = QUESTS.filter((q) => q.kind === 'ACHIEVEMENT');
+/** formatNumber without trailing zeros: 3000 → "3K", 1500 → "1.5K", 50 → "50". */
+function amount(n: number): string {
+  return formatNumber(n).replace(/\.?0+([A-Za-z]+)$/, '$1');
+}
 
-  const renderQuestItem = (quest: QuestDefinition) => {
-    const isDaily = quest.kind === 'DAILY';
-    const isClaimed = isDaily
-      ? dailyClaimedQuests.includes(quest.id)
-      : claimedQuests.includes(quest.id);
+const REWARD: Record<RewardKind, { one: string; many: string; tone: string }> = {
+  ESSENCE: { one: 'ESSENCE', many: 'ESSENCE', tone: 'text-neon' },
+  CRYSTALS: { one: 'CRYSTAL', many: 'CRYSTALS', tone: 'text-purple' },
+  SHARDS: { one: 'SHARD', many: 'SHARDS', tone: 'text-gold' },
+  TOKENS: { one: 'TOKEN', many: 'TOKENS', tone: 'text-crimson' },
+};
 
-    const currentVal = isDaily
-      ? dailyQuestCounters[quest.metric] || 0
-      : questCounters[quest.metric] || 0;
+/** "+2 TOKENS", "+5 CRYSTALS", "+3K ESSENCE". */
+function rewardText(kind: RewardKind, n: number): string {
+  const r = REWARD[kind];
+  return `+${amount(n)} ${n === 1 ? r.one : r.many}`;
+}
 
-    const progress = Math.min(quest.targetValue, currentVal);
-    const percent = Math.min(100, (progress / quest.targetValue) * 100);
-    const isReadyToClaim = !isClaimed && progress >= quest.targetValue;
+/** Adding a reward to DAILY_ALL_CLEAR_REWARDS without naming it here is a compile error. */
+const ALL_CLEAR_KIND: Record<keyof typeof DAILY_ALL_CLEAR_REWARDS, RewardKind> = {
+  crystals: 'CRYSTALS',
+  shards: 'SHARDS',
+  tokens: 'TOKENS',
+  essence: 'ESSENCE',
+};
+const ALL_CLEAR_LINES = (Object.keys(ALL_CLEAR_KIND) as (keyof typeof DAILY_ALL_CLEAR_REWARDS)[]).map((k) => ({
+  kind: ALL_CLEAR_KIND[k],
+  n: DAILY_ALL_CLEAR_REWARDS[k],
+}));
 
-    const isLocked = quest.prereqId && !claimedQuests.includes(quest.prereqId);
+/** A tag for quests whose definition has no category. */
+const METRIC_TAG: Record<string, string> = {
+  kills: 'COMBAT',
+  taps: 'STRIKE',
+  boss_wins: 'BOSS',
+  enemy_level: 'CLIMB',
+  upgrades_bought: 'FORGE',
+  items_dropped: 'GEAR',
+  eclipses: 'ECLIPSE',
+  minigame_wins: 'ARCADE',
+  minigame_played: 'ARCADE',
+  pets_owned: 'COMPANION',
+  relics_owned: 'RELIC',
+  skills_bought: 'SKILL',
+  crystals_earned: 'RESOURCE',
+};
 
-    return (
-      <div
-        key={quest.id}
-        className={`p-2.5 border transition-all flex items-center justify-between gap-3 rounded-none ${
-          isClaimed
-            ? 'bg-[#040406] border-white/10 opacity-50'
-            : isReadyToClaim
-            ? 'bg-[#101426] border-[#36D9FF] shadow-[inset_0_0_8px_rgba(57,255,20,0.15)]'
-            : isLocked
-            ? 'bg-[#040406] border-white/10 opacity-30'
-            : 'bg-[#101426] border-white/15 hover:border-[#36D9FF]/50'
-        }`}
-      >
-        <div className="flex flex-col min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-display font-bold text-[#FFFFFF] uppercase tracking-wide truncate">
+function questStatus(s: GameState, q: QuestDefinition): QuestStatus {
+  if (isQuestClaimed(s, q)) return 'done';
+  if (isQuestLocked(s, q)) return 'locked';
+  return canClaimQuest(s, q) ? 'ready' : 'progress';
+}
+
+function msUntilLocalMidnight(now: number): number {
+  const d = new Date(now);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime() - now;
+}
+
+const selectDailyDate = (s: GameState) => s.quests.daily.date;
+const selectAllClearClaimed = (s: GameState) => s.quests.daily.allClearClaimed;
+const selectDailyClaimedCount = (s: GameState) =>
+  activeDailies(s).reduce((n, q) => n + (s.quests.daily.claimed.includes(q.id) ? 1 : 0), 0);
+const selectFeatsDone = (s: GameState) => FEATS.reduce((n, q) => n + (isQuestClaimed(s, q) ? 1 : 0), 0);
+/** One character per chain quest (d = done, l = locked, o = open), so the selector returns a primitive. */
+const selectChainKey = (s: GameState) =>
+  CHAIN.map((q) => (isQuestClaimed(s, q) ? 'd' : isQuestLocked(s, q) ? 'l' : 'o')).join('');
+/** Rewards ready to claim per section: [daily (incl. the all-clear), chain, feats]. */
+const selectReady = (s: GameState): number[] => [
+  activeDailies(s).reduce((n, q) => n + (canClaimQuest(s, q) ? 1 : 0), 0) + (canClaimAllClear(s) ? 1 : 0),
+  CHAIN.reduce((n, q) => n + (canClaimQuest(s, q) ? 1 : 0), 0),
+  FEATS.reduce((n, q) => n + (canClaimQuest(s, q) ? 1 : 0), 0),
+];
+
+const StateChip: React.FC<{ icon: LucideIcon; label: string; tone: string; className?: string }> = ({
+  icon: Icon,
+  label,
+  tone,
+  className = '',
+}) => (
+  <span
+    className={`min-h-[32px] w-full px-1.5 flex items-center justify-center gap-1 border border-line bg-panel2 text-[10px] font-display font-bold ${tone} ${className}`}
+  >
+    <Icon size={12} aria-hidden />
+    {label}
+  </span>
+);
+
+const QuestRow: React.FC<{ quest: QuestDefinition }> = React.memo(({ quest }) => {
+  const dispatch = useDispatch();
+  const progress = useGameState(useCallback((s: GameState) => getQuestProgress(s, quest), [quest]));
+  const status = useGameState(useCallback((s: GameState) => questStatus(s, quest), [quest]));
+  const [justClaimed, setJustClaimed] = useState(false);
+
+  const target = quest.targetValue;
+  // A claimed quest was complete when claimed; show it full even if an old save's counter is lower.
+  const shown = status === 'done' ? target : Math.min(progress, target);
+  const pct = target > 0 ? Math.min(100, (shown / target) * 100) : 100;
+  const reward = rewardText(quest.rewardKind, quest.rewardAmount);
+  const tag = quest.category ?? METRIC_TAG[quest.metric];
+  const prereqName = (quest.prereqId && QUEST_NAMES.get(quest.prereqId)) || 'the previous quest';
+
+  const claim = () => {
+    const r = dispatch({ type: 'CLAIM_QUEST', id: quest.id });
+    if (r.ok) setJustClaimed(true);
+  };
+
+  const spine = status === 'ready' ? 'border-l-neon' : status === 'done' ? 'border-l-line' : 'border-l-neon/30';
+
+  return (
+    <div
+      className={`bg-panel border border-line border-l-4 ${spine} p-2 flex flex-col gap-1.5 ${
+        status === 'done' ? 'opacity-75' : ''
+      }`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex flex-col gap-0.5">
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+            <span className="text-xs font-display font-bold text-ink uppercase tracking-wide leading-tight">
               {quest.displayName}
             </span>
-            {quest.category && (
-              <span className="text-[8px] font-mono-code bg-[#171D35] border border-white/20 text-[#8993B2] px-1 rounded-none uppercase">
-                {quest.category}
+            {tag && (
+              <span className="text-[9px] font-mono-code text-dim border border-line bg-panel2 px-1 leading-4 uppercase">
+                {tag}
               </span>
             )}
           </div>
+          <p className="text-[10px] font-tech text-dim leading-tight">{quest.description}</p>
+        </div>
+        <span className={`shrink-0 text-[10px] font-mono-code font-bold ${REWARD[quest.rewardKind].tone}`}>{reward}</span>
+      </div>
 
-          <span className="text-[10px] font-tech text-[#8993B2] truncate mt-0.5">
-            {quest.description}
+      <div className="flex items-end gap-2">
+        <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+          <span className="text-[10px] font-mono-code text-dim">
+            {amount(shown)} / {amount(target)}
           </span>
-
-          {/* Progress Bar */}
-          <div className="flex flex-col gap-0.5 mt-1.5">
-            <div className="flex justify-between text-[8px] font-mono-code text-[#8993B2]">
-              <span>PROGRESS</span>
-              <span>
-                {formatNumber(progress)} / {formatNumber(quest.targetValue)} [{percent.toFixed(0)}%]
-              </span>
-            </div>
-            <div className="w-full h-1 bg-[#171D35] border border-white/15 overflow-hidden">
-              <div
-                className={`h-full transition-all duration-150 ${
-                  isReadyToClaim || isClaimed
-                    ? 'bg-[#36D9FF]'
-                    : 'bg-[#36D9FF]'
-                }`}
-                style={{ width: `${percent}%` }}
-              />
-            </div>
+          <div
+            role="progressbar"
+            aria-label={`${quest.displayName} progress`}
+            aria-valuemin={0}
+            aria-valuemax={target}
+            aria-valuenow={shown}
+            aria-valuetext={`${amount(shown)} of ${amount(target)}`}
+            className="h-1.5 bg-panel2 border border-line overflow-hidden"
+          >
+            <div
+              className={`h-full transition-[width] duration-150 ${status === 'locked' ? 'bg-faint' : 'bg-neon'}`}
+              style={{ width: `${pct}%` }}
+            />
           </div>
         </div>
-
-        {/* Action Button */}
-        <div className="shrink-0 flex flex-col items-end gap-1">
-          {isClaimed ? (
-            <div className="px-2.5 py-1 bg-[#171D35] border border-white/15 text-[9px] font-display font-bold text-[#36D9FF] rounded-none flex items-center gap-1">
-              <CheckCircle size={10} /> DONE
-            </div>
-          ) : isLocked ? (
-            <div className="px-2.5 py-1 bg-[#171D35] border border-white/10 text-[9px] font-display font-bold text-[#8993B2] rounded-none flex items-center gap-1">
-              <Lock size={10} /> LOCKED
-            </div>
-          ) : (
-            <button
-              onClick={() => claimQuestReward(quest.id)}
-              disabled={!isReadyToClaim}
-              className={`px-3 py-1.5 text-xs font-display font-bold transition-all flex items-center gap-1 rounded-none ${
-                isReadyToClaim
-                  ? 'hud-btn bg-[#36D9FF] text-[#171D35] border-[#36D9FF] animate-pulse'
-                  : 'bg-[#101426] border border-white/10 text-[#8993B2] cursor-not-allowed opacity-40'
-              }`}
+        <div className="shrink-0 w-[88px]" aria-live="polite">
+          {status === 'ready' && (
+            <Button
+              variant="solid"
+              size="md"
+              block
+              onClick={claim}
+              className="motion-safe:animate-pulse"
+              aria-label={`Claim ${reward} for ${quest.displayName}`}
             >
-              <span>
-                +{formatNumber(quest.rewardAmount)} {quest.rewardKind}
-              </span>
-            </button>
+              CLAIM
+            </Button>
+          )}
+          {status === 'done' && (
+            <StateChip icon={Check} label="DONE" tone="text-neon" className={justClaimed ? 'animate-fade-in' : ''} />
+          )}
+          {status === 'locked' && <StateChip icon={Lock} label="LOCKED" tone="text-dim" />}
+        </div>
+      </div>
+
+      {status === 'locked' && (
+        <p className="text-[10px] font-tech text-dim leading-tight flex items-center gap-1">
+          <Lock size={10} aria-hidden className="shrink-0" />
+          Complete {prereqName} first
+        </p>
+      )}
+    </div>
+  );
+});
+QuestRow.displayName = 'QuestRow';
+
+/** "Resets in 5h 12m", to local midnight — the moment the dailies reroll. */
+const ResetsIn: React.FC = () => {
+  const now = useNow(1000);
+  const dailyDate = useGameState(selectDailyDate);
+  const text =
+    dailyDate === localDateKey(now)
+      ? `Resets in ${formatDuration(Math.max(0, Math.ceil(msUntilLocalMidnight(now) / 1000)))}`
+      : 'New dailies arriving…';
+  return (
+    <span className="text-[10px] font-tech text-dim flex items-center gap-1">
+      <Clock size={11} aria-hidden />
+      {text}
+    </span>
+  );
+};
+
+const AllClearBanner: React.FC<{ total: number; claimed: number }> = ({ total, claimed }) => {
+  const dispatch = useDispatch();
+  const ready = useGameState(canClaimAllClear);
+  const done = useGameState(selectAllClearClaimed);
+  const left = Math.max(0, total - claimed);
+
+  const status = done
+    ? 'Claimed for today.'
+    : ready
+      ? 'Every daily is claimed. Your bonus is ready.'
+      : `Claim all of today's dailies to unlock it (${amount(left)} to go).`;
+
+  return (
+    <section
+      aria-label="Daily all-clear bonus"
+      className={`bg-panel border border-l-4 p-2 flex flex-col gap-1.5 ${
+        ready ? 'border-gold border-l-gold' : 'border-gold/40 border-l-gold/40'
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        <div className="w-8 h-8 shrink-0 border border-gold bg-void flex items-center justify-center">
+          <Gift size={15} className="text-gold" aria-hidden />
+        </div>
+        <div className="flex-1 min-w-0 flex flex-col">
+          <span className="text-[11px] font-display font-bold text-gold uppercase tracking-wide">ALL-CLEAR BONUS</span>
+          <span className="text-[10px] font-tech text-dim leading-tight">{status}</span>
+        </div>
+        <div className="shrink-0 w-[88px]" aria-live="polite">
+          {done ? (
+            <StateChip icon={Check} label="DONE" tone="text-gold" />
+          ) : (
+            <Button
+              variant="gold"
+              size="md"
+              block
+              disabled={!ready}
+              onClick={() => dispatch({ type: 'CLAIM_ALL_CLEAR' })}
+              className={ready ? 'motion-safe:animate-pulse' : ''}
+              aria-label={ready ? 'Claim the all-clear bonus' : 'All-clear bonus, not ready yet'}
+            >
+              CLAIM
+            </Button>
           )}
         </div>
       </div>
-    );
+      <ul className="flex flex-wrap gap-x-2.5 gap-y-0.5" aria-label="Bonus rewards">
+        {ALL_CLEAR_LINES.map((l) => (
+          <li key={l.kind} className={`text-[10px] font-mono-code font-bold ${REWARD[l.kind].tone}`}>
+            {rewardText(l.kind, l.n)}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+};
+
+const DailySection: React.FC = () => {
+  const dailies = useGameState(activeDailies, shallowEqual);
+  const claimed = useGameState(selectDailyClaimedCount);
+  return (
+    <>
+      <div className="flex items-center justify-between gap-2 px-0.5">
+        <ResetsIn />
+        <span className="text-[10px] font-mono-code text-dim">
+          {amount(claimed)}/{amount(dailies.length)} CLAIMED
+        </span>
+      </div>
+      <p className="text-[10px] font-tech text-dim leading-tight px-0.5">
+        New goals every day. Rewards not claimed by the reset are lost.
+      </p>
+      <AllClearBanner total={dailies.length} claimed={claimed} />
+      {dailies.map((q) => (
+        <QuestRow key={q.id} quest={q} />
+      ))}
+    </>
+  );
+};
+
+/** The chain reads as a path: the current quest, the next one (locked), then what is done. */
+const ChainSection: React.FC = () => {
+  const key = useGameState(selectChainKey);
+  const view = useMemo(() => {
+    const open: QuestDefinition[] = [];
+    const locked: QuestDefinition[] = [];
+    const done: QuestDefinition[] = [];
+    CHAIN.forEach((q, i) => (key[i] === 'd' ? done : key[i] === 'l' ? locked : open).push(q));
+    return { open, next: locked[0] ?? null, hidden: Math.max(0, locked.length - 1), done };
+  }, [key]);
+
+  return (
+    <>
+      <p className="text-[10px] font-tech text-dim leading-tight px-0.5">
+        Story quests unlock one at a time, in order. {amount(view.done.length)}/{amount(CHAIN.length)} complete.
+      </p>
+      {view.open.map((q) => (
+        <QuestRow key={q.id} quest={q} />
+      ))}
+      {view.next && <QuestRow key={view.next.id} quest={view.next} />}
+      {view.hidden > 0 && (
+        <p className="text-[10px] font-tech text-dim text-center py-1">
+          {amount(view.hidden)} more {view.hidden === 1 ? 'quest unlocks' : 'quests unlock'} after that.
+        </p>
+      )}
+      {view.open.length === 0 && !view.next && (
+        <p className="text-[10px] font-tech text-neon text-center py-1">Every story quest is complete.</p>
+      )}
+      {view.done.length > 0 && (
+        <>
+          <h3 className="text-[10px] font-display font-bold text-dim uppercase tracking-wider mt-1 px-0.5">Completed</h3>
+          {view.done.map((q) => (
+            <QuestRow key={q.id} quest={q} />
+          ))}
+        </>
+      )}
+    </>
+  );
+};
+
+const FeatsSection: React.FC = () => {
+  const done = useGameState(selectFeatsDone);
+  return (
+    <>
+      <p className="text-[10px] font-tech text-dim leading-tight px-0.5">
+        Lifetime milestones. They are kept through every Eclipse. {amount(done)}/{amount(FEATS.length)} claimed.
+      </p>
+      {FEATS.map((q) => (
+        <QuestRow key={q.id} quest={q} />
+      ))}
+    </>
+  );
+};
+
+const SECTIONS: { id: Section; label: string; icon: LucideIcon }[] = [
+  { id: 'DAILY', label: 'DAILY', icon: Calendar },
+  { id: 'CHAIN', label: 'CHAIN', icon: Link },
+  { id: 'FEATS', label: 'FEATS', icon: Trophy },
+];
+
+/** The CODEX tab: daily goals, the story chain and lifetime feats, all claimed by hand. */
+export const JournalPanel: React.FC = () => {
+  const [section, setSection] = useState<Section>(lastSection);
+  const ready = useGameState(selectReady, shallowEqual);
+  const totalReady = ready.reduce((a, b) => a + b, 0);
+
+  const choose = (s: Section) => {
+    lastSection = s;
+    setSection(s);
   };
 
   return (
-    <div className="flex-1 flex flex-col p-2.5 overflow-y-auto bg-[#171D35] gap-2 select-none ">
-      {/* Top Tactical Header */}
-      <div className="bg-[#101426] border border-[#36D9FF]/40 p-2 rounded-none flex items-center justify-between hud-corner">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-[#36D9FF]/10 border border-[#36D9FF] flex items-center justify-center">
-            <BookOpen size={13} className="text-[#36D9FF]" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs font-display font-bold text-[#FFFFFF] uppercase tracking-wider">
-              SYS://BOUNTY_MATRIX
+    <div className="flex-1 min-h-0 flex flex-col">
+      <PanelHeader
+        icon={<BookOpen size={16} className="text-neon" aria-hidden />}
+        title="CODEX"
+        subtitle="Goals and their rewards. Claim each one when it is done."
+        right={
+          totalReady > 0 ? (
+            <span className="px-1.5 py-1 border border-gold/60 text-[10px] font-display font-bold text-gold">
+              {amount(totalReady)} READY
             </span>
-            <span className="text-[9px] font-tech text-[#8993B2]">
-              OPERATIONAL OBJECTIVES & BOUNTY CLEARANCE
-            </span>
-          </div>
-        </div>
-      </div>
+          ) : undefined
+        }
+      />
 
-      {/* Tabs */}
-      <div className="grid grid-cols-3 bg-[#171D35] border border-white/20 p-0.5 rounded-none">
-        <button
-          onClick={() => setActiveTab('DAILY')}
-          className={`py-1 text-xs font-display font-bold tracking-wider transition-all flex items-center justify-center gap-1 rounded-none ${
-            activeTab === 'DAILY'
-              ? 'bg-[#36D9FF] text-[#171D35]'
-              : 'text-[#8993B2] hover:text-[#FFFFFF]'
-          }`}
-        >
-          <Calendar size={12} />
-          <span>DAILY [{dailyCompletedCount}/{dailyQuests.length}]</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('CHAIN')}
-          className={`py-1 text-xs font-display font-bold tracking-wider transition-all flex items-center justify-center gap-1 rounded-none ${
-            activeTab === 'CHAIN'
-              ? 'bg-[#36D9FF] text-[#171D35]'
-              : 'text-[#8993B2] hover:text-[#FFFFFF]'
-          }`}
-        >
-          <Zap size={12} />
-          <span>CHRONICLES</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('ACHIEVEMENTS')}
-          className={`py-1 text-xs font-display font-bold tracking-wider transition-all flex items-center justify-center gap-1 rounded-none ${
-            activeTab === 'ACHIEVEMENTS'
-              ? 'bg-[#36D9FF] text-[#171D35]'
-              : 'text-[#8993B2] hover:text-[#FFFFFF]'
-          }`}
-        >
-          <Trophy size={12} />
-          <span>FEATS</span>
-        </button>
-      </div>
-
-      {/* Daily Grand Clearance Banner */}
-      {activeTab === 'DAILY' && (
-        <div className="bg-[#101426] border border-[#FFC857]/40 p-2.5 rounded-none flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[#FFC857]/10 border border-[#FFC857] flex items-center justify-center">
-              <Gift size={15} className="text-[#FFC857]" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[11px] font-display font-bold text-[#FFC857] uppercase">
-                DAILY ALL-CLEAR GRAND BOUNTY
-              </span>
-              <span className="text-[9px] font-mono-code text-[#8993B2]">
-                +{DAILY_ALL_CLEAR_REWARDS.crystals} Crystals, +{DAILY_ALL_CLEAR_REWARDS.shards} Shards, +{DAILY_ALL_CLEAR_REWARDS.tokens} Tokens
-              </span>
-            </div>
-          </div>
-
-          <div>
-            {dailyAllClearClaimed ? (
-              <div className="px-3 py-1 bg-[#171D35] border border-white/20 text-[9px] font-display font-bold text-[#36D9FF] rounded-none flex items-center gap-1">
-                <CheckCircle size={10} /> CLAIMED
-              </div>
-            ) : (
+      <div className="px-2.5 pt-2 bg-void">
+        <div className="grid grid-cols-3 border border-line bg-panel" role="tablist" aria-label="Codex sections">
+          {SECTIONS.map(({ id, label, icon: Icon }, i) => {
+            const active = id === section;
+            const n = ready[i] ?? 0;
+            return (
               <button
-                onClick={() => claimDailyAllClearReward()}
-                disabled={!isDailyAllClearReady}
-                className={`px-3 py-1 text-xs hud-btn-gold ${
-                  isDailyAllClearReady ? 'animate-pulse' : 'opacity-40 cursor-not-allowed'
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => choose(id)}
+                className={`min-h-[40px] px-1 flex items-center justify-center gap-1.5 text-[11px] font-display font-bold tracking-wider border-b-2 transition-colors ${
+                  active ? 'bg-active text-neon border-b-neon' : 'text-dim border-b-transparent hover:text-ink'
                 }`}
               >
-                CLAIM ALL-CLEAR
+                <Icon size={12} aria-hidden />
+                {label}
+                {n > 0 && (
+                  <>
+                    <span
+                      aria-hidden
+                      className="min-w-[16px] h-4 px-1 bg-gold text-void text-[9px] font-mono-code font-black leading-none flex items-center justify-center"
+                    >
+                      {amount(n)}
+                    </span>
+                    <span className="sr-only">, {amount(n)} ready to claim</span>
+                  </>
+                )}
               </button>
-            )}
-          </div>
+            );
+          })}
         </div>
-      )}
-
-      {/* Google Play Games Feats Banner */}
-      {activeTab === 'ACHIEVEMENTS' && (
-        <div className="bg-[#101426] border border-[#36D9FF]/40 p-2.5 rounded-none flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[#36D9FF]/10 border border-[#36D9FF] flex items-center justify-center shadow-[0_0_8px_rgba(57,255,20,0.15)]">
-              <Trophy size={16} className="text-[#36D9FF]" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[11px] font-display font-bold text-[#FFFFFF] uppercase">
-                GOOGLE PLAY GAMES MATRIX
-              </span>
-              <span className="text-[9px] font-mono-code text-[#8993B2]">
-                Official Play Games XP & Cloud Sync
-              </span>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowPlayGamesModal(true)}
-            className="px-2.5 py-1 text-xs bg-[#171D35] hover:bg-[#36D9FF] hover:text-[#171D35] border border-[#36D9FF] text-[#36D9FF] font-display font-bold transition-all cursor-pointer flex items-center gap-1 shadow-[0_0_8px_rgba(155,81,111,0.2)]"
-          >
-            <Trophy size={11} /> OPEN
-          </button>
-        </div>
-      )}
-
-      {/* Quests List */}
-      <div className="flex flex-col gap-1.5">
-        {activeTab === 'DAILY' && dailyQuests.map(renderQuestItem)}
-        {activeTab === 'CHAIN' && chainQuests.map(renderQuestItem)}
-        {activeTab === 'ACHIEVEMENTS' && achievementQuests.map(renderQuestItem)}
       </div>
 
-      {/* Google Play Games Achievements Modal */}
-      {showPlayGamesModal && (
-        <PlayGamesAchievementsModal onClose={() => setShowPlayGamesModal(false)} />
-      )}
+      <TabBody>
+        <div role="tabpanel" aria-label={section} className="flex flex-col gap-2">
+          {section === 'DAILY' && <DailySection />}
+          {section === 'CHAIN' && <ChainSection />}
+          {section === 'FEATS' && <FeatsSection />}
+        </div>
+      </TabBody>
     </div>
   );
 };

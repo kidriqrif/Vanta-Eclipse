@@ -24,11 +24,17 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   block?: boolean;
 }
 
-/** The game's button. Touch targets stay at least 32px tall. */
-export const Button: React.FC<ButtonProps> = ({ variant = 'primary', size = 'md', block, className = '', type = 'button', ...rest }) => (
-  <button
-    type={type}
-    className={`${VARIANTS[variant]} ${SIZES[size]} ${block ? 'w-full' : ''} inline-flex items-center justify-center gap-1.5 select-none ${className}`}
-    {...rest}
-  />
-);
+/** The game's button. Touch targets stay at least 32px tall. Forwards its ref so callers can focus it. */
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+  { variant = 'primary', size = 'md', block, className = '', type = 'button', ...rest },
+  ref,
+) {
+  return (
+    <button
+      ref={ref}
+      type={type}
+      className={`${VARIANTS[variant]} ${SIZES[size]} ${block ? 'w-full' : ''} inline-flex items-center justify-center gap-1.5 select-none ${className}`}
+      {...rest}
+    />
+  );
+});

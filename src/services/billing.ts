@@ -9,11 +9,22 @@ export interface StoreProduct {
   price: string;
 }
 
+/** A purchase Google Play reports as paid, which the game must grant and then finalize. */
+export interface PaidPurchase {
+  productId: string;
+  transactionId: string;
+  purchaseToken: string;
+  consumable: boolean;
+  acknowledged: boolean;
+}
+
 export type PurchaseOutcome =
-  | { status: 'purchased'; productId: string }
+  | { status: 'purchased'; purchase: PaidPurchase }
   | { status: 'cancelled' }
   | { status: 'failed'; message: string }
   | { status: 'unavailable' };
+
+const PURCHASED = '1';
 
 /**
  * Google Play Billing behind one switch (`BILLING_ENABLED` in src/config/monetization.ts).
@@ -21,8 +32,15 @@ export type PurchaseOutcome =
  * While the switch is off — or off-device — the store reports itself unavailable and the shop
  * shows "COMING SOON". Nothing is ever granted without Google confirming a purchase.
  *
- * There is no server-side receipt validation (the game has no server); grants rely on the
- * Play Billing client's verified purchase state.
+ * Order of operations, so a crash can never lose or duplicate a purchase:
+ *   1. Google confirms the purchase.
+ *   2. The game grants it (idempotent per transaction id) and saves.
+ *   3. Only then is it acknowledged (entitlements) or consumed (shard packs).
+ * A purchase that cleared later (pending payment) or was never finalized shows up in
+ * `reconcile()` on the next launch and goes through steps 2–3 then. Google refunds anything
+ * left unacknowledged for three days.
+ *
+ * There is no server-side receipt validation (the game has no server).
  */
 class BillingService {
   private products = new Map<string, StoreProduct>();
@@ -52,10 +70,14 @@ class BillingService {
     return this.loaded;
   }
 
+  private async plugin() {
+    return import('@capgo/native-purchases');
+  }
+
   private async doInit() {
     if (!BILLING_ENABLED || !Capacitor.isNativePlatform()) return;
     try {
-      const { NativePurchases, PURCHASE_TYPE } = await import('@capgo/native-purchases');
+      const { NativePurchases, PURCHASE_TYPE } = await this.plugin();
       const supported = await NativePurchases.isBillingSupported();
       if (!supported.isBillingSupported) return;
       const { products } = await NativePurchases.getProducts({
@@ -79,18 +101,27 @@ class BillingService {
     const def = PRODUCTS.find((p) => p.id === productId);
     if (!this.available || !def || !this.products.has(productId)) return { status: 'unavailable' };
     try {
-      const { NativePurchases, PURCHASE_TYPE } = await import('@capgo/native-purchases');
+      const { NativePurchases, PURCHASE_TYPE } = await this.plugin();
       const tx = await NativePurchases.purchaseProduct({
         productIdentifier: def.storeId,
         productType: PURCHASE_TYPE.INAPP,
-        isConsumable: def.consumable,
-        autoAcknowledgePurchases: true,
+        isConsumable: false,
+        autoAcknowledgePurchases: false,
       });
-      // purchaseState "1" is PURCHASED on Android; "pending" purchases are granted on restore later.
-      if (tx.purchaseState !== undefined && String(tx.purchaseState) !== '1') {
-        return { status: 'failed', message: 'Purchase is pending. It will arrive once Google confirms it.' };
+      if (tx.purchaseState !== undefined && String(tx.purchaseState) !== PURCHASED) {
+        return { status: 'failed', message: 'Payment is pending. Your item arrives automatically once Google confirms it.' };
       }
-      return { status: 'purchased', productId: def.id };
+      if (!tx.purchaseToken) return { status: 'failed', message: 'Google Play did not return a purchase token.' };
+      return {
+        status: 'purchased',
+        purchase: {
+          productId: def.id,
+          transactionId: tx.transactionId || tx.purchaseToken,
+          purchaseToken: tx.purchaseToken,
+          consumable: def.consumable,
+          acknowledged: tx.isAcknowledged === true,
+        },
+      };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       if (/cancel/i.test(message)) return { status: 'cancelled' };
@@ -98,20 +129,41 @@ class BillingService {
     }
   }
 
-  /** Product ids of non-consumables this Google account owns (Remove Ads, Starter Pack). */
-  async ownedEntitlements(): Promise<string[]> {
+  /**
+   * Every paid purchase Google Play still holds for this account: entitlements, plus any
+   * shard pack that was paid but not yet consumed. Throws when Play cannot be reached, so
+   * "nothing to restore" is never shown for a network error.
+   */
+  async reconcile(): Promise<PaidPurchase[]> {
     await this.init();
     if (!this.available) return [];
+    const { NativePurchases, PURCHASE_TYPE } = await this.plugin();
+    const { purchases } = await NativePurchases.getPurchases({ productType: PURCHASE_TYPE.INAPP });
+    const out: PaidPurchase[] = [];
+    for (const p of purchases) {
+      if (p.purchaseState !== undefined && String(p.purchaseState) !== PURCHASED) continue;
+      const def = PRODUCTS.find((d) => d.storeId === p.productIdentifier);
+      if (!def || !p.purchaseToken) continue;
+      out.push({
+        productId: def.id,
+        transactionId: p.transactionId || p.purchaseToken,
+        purchaseToken: p.purchaseToken,
+        consumable: def.consumable,
+        acknowledged: p.isAcknowledged === true,
+      });
+    }
+    return out;
+  }
+
+  /** Step 3: call only after the purchase has been granted and saved. */
+  async finalize(p: PaidPurchase): Promise<void> {
     try {
-      const { NativePurchases, PURCHASE_TYPE } = await import('@capgo/native-purchases');
-      const { purchases } = await NativePurchases.getPurchases({ productType: PURCHASE_TYPE.INAPP });
-      return purchases
-        .filter((p) => p.purchaseState === undefined || String(p.purchaseState) === '1')
-        .map((p) => PRODUCTS.find((d) => d.storeId === p.productIdentifier && !d.consumable)?.id)
-        .filter((id): id is string => !!id);
+      const { NativePurchases } = await this.plugin();
+      if (p.consumable) await NativePurchases.consumePurchase({ purchaseToken: p.purchaseToken });
+      else if (!p.acknowledged) await NativePurchases.acknowledgePurchase({ purchaseToken: p.purchaseToken });
     } catch (err) {
-      console.warn('Restore failed', err);
-      return [];
+      // Not fatal: the purchase stays un-finalized and reconcile() retries on the next launch.
+      console.warn('Could not finalize purchase', err);
     }
   }
 }

@@ -121,7 +121,7 @@ const OfferRow: React.FC<{ def: AdPlacementDefinition }> = ({ def }) => {
         <span className="text-[11px] font-mono-code font-bold text-neon">{rewardText(def, rewardRate)}</span>
         <span className="text-[10px] font-tech text-dim">
           {formatNumber(offer.remaining)}/{formatNumber(offer.cap)} left today
-          {capped ? ' · Back tomorrow' : !offer.canWatch ? ' · Ads unavailable on this device' : ''}
+          {!capped && !offer.canWatch ? ' · Ads unavailable on this device' : ''}
         </span>
         <NoteLine note={note} />
       </div>
@@ -300,7 +300,7 @@ const CosmeticCard: React.FC<{
       </div>
       <div className="flex items-center justify-between gap-1 min-w-0">
         <span className="text-[10px] font-display font-bold text-ink uppercase truncate">{def.displayName}</span>
-        <span className="text-[9px] font-tech text-dim uppercase shrink-0">{equipped ? 'Equipped' : owned ? 'Owned' : 'Locked'}</span>
+        <span className="text-[9px] font-tech text-dim uppercase shrink-0">{equipped ? 'Equipped' : owned ? 'Owned' : 'Not owned'}</span>
       </div>
       {equipped ? (
         <StateBadge className="w-full">

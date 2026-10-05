@@ -1,5 +1,7 @@
 # Milestone 5 Visual Design — Bosses, Worlds & Unlocks
 
+> Engine-agnostic behaviour spec. Written for an earlier engine; node and file names in bold are historical. The live implementation is the React build — see `docs/ARCHITECTURE.md`.
+
 Author: lead dev in the art-director role (produced inline during the
 subagent-credit outage; method identical to the M4 visual spec — ramp
 mirroring, composited WCAG verification with computed ratios, theme
@@ -64,7 +66,7 @@ World palettes are HUD backgrounds first, art second.
 
 ### 2A. BossPlate
 HBox in the EnemyNameLabel slot (UX §3A). Skull icon 36×36
-(`boss_skull_icon.svg`, §3). Name label: Cinzel via `HeaderLabel`
+(**boss_skull_icon.svg**, §3). Name label: Cinzel via `HeaderLabel`
 variation, 42px, `font_color = danger-light`,
 `font_outline_color = Color(0.486, 0.176, 0.071, 0.8)` (danger-abyss),
 `outline_size = 6`, shadow `Color(0.02, 0.01, 0.05, 0.5)` offset-y 4 —
@@ -106,7 +108,7 @@ Both use the `CelebrationToast` card recipe with the border re-accented:
 - **Win:** border `Color(0.655, 0.545, 0.98, 0.9)` (violet-light) +
   violet glow shadow 18 — celebration lives in the game's reward color.
   Headline "BOSS FELLED": Cinzel 40, `TitleLabel` colors (violet recipe).
-  Icon slot 56×56: `boss_skull_icon.svg` (the threat, ended).
+  Icon slot 56×56: **boss_skull_icon.svg** (the threat, ended).
 - **Fail:** border `Color(0.29, 0.22, 0.44, 0.8)` (the passive panel
   border) + the plain panel shadow — deliberately *neutral*, per UX §3C
   ("failure copy redirects, never scolds"). Headline "THE BOSS ENDURES":
@@ -133,7 +135,7 @@ width. The one glowing element in farm mode by design (UX §3B).
 ### 2G. Global adjustment required by the Frozen Ruins sky
 The gameplay footer color `Color(0.45, 0.41, 0.56)` measures 3.4:1 over
 the FR sky's bottom-edge patch (vignette-dimmed) — fail. The footer
-(`SessionLabel`, `PlayTimeLabel` in `Assets/Scenes/Gameplay.unity`) brightens one step
+(`SessionLabel`, `PlayTimeLabel` in **Assets/Scenes/Gameplay.unity**) brightens one step
 to **`Color(0.55, 0.51, 0.68)`**: 4.9:1 over the FR worst case, improves
 Dark Forest too, and stays visibly the dimmest text tier. No other
 existing color is touched.
@@ -143,16 +145,16 @@ existing color is touched.
 ## 3. Asset Manifest
 
 Construction idiom for all: glow-disc + faceted polygons, radial/linear
-gradients only, NO SVG filters. All in `sprites/`.
+gradients only, NO SVG filters. All in **sprites/**.
 
-1. **`sprites/ui/boss_skull_icon.svg`** — 128×128. Danger family. Radial
+1. **sprites/ui/boss_skull_icon.svg** — 128×128. Danger family. Radial
    glow disc r=62 (`danger-glow` stops 0.4→0.45, 0.8→0.1, 1→0). Stylized
    angular skull: cranium from two facet polygons (upper-left
    `danger-veil`→`danger-light`, lower-right `danger-deep`→`danger-abyss`
    linear gradients, split on a vertical center seam), two eye sockets as
    dark negative shapes (`#12060A`-family), a three-tooth jaw silhouette.
    Bold masses only — used at 36px (plate) and 56px (banners).
-2. **`sprites/enemies/hollow_sovereign.svg`** — 512×512, Dark Forest
+2. **sprites/enemies/hollow_sovereign.svg** — 512×512, Dark Forest
    world boss. Crowned antlered tree-lord: tall trunk-body silhouette
    (violet-family darks, `#1E1240`/`#120826`), branching antler crown
    (6-8 spiked polygons), hollow void face (near-black ellipse) with
@@ -160,20 +162,20 @@ gradients only, NO SVG filters. All in `sprites/`.
    wears the danger accent in its own body), root-tendrils at the base
    reusing the wisp's flame-lick construction. Aura disc: violet glow at
    0.45 with an inner `danger-glow` ring stop at 0.25 opacity.
-3. **`sprites/enemies/frost_shade.svg`** — 512×512. FR roster 1: drifting
+3. **sprites/enemies/frost_shade.svg** — 512×512. FR roster 1: drifting
    shard-spirit — inverted-teardrop body in ice-deep/abyss gradients,
    three orbiting ice-shard polygons, `ice-light` eyes. Aura `ice-glow`.
-4. **`sprites/enemies/rime_fiend.svg`** — 512×512. FR roster 2: squat
+4. **sprites/enemies/rime_fiend.svg** — 512×512. FR roster 2: squat
    crystalline brute — hexagonal faceted body (the essence-crystal facet
    logic in ice colors), stalagmite spikes down the back, `ice-veil`
    glint facets, `ice-light` eyes.
-5. **`sprites/enemies/hollow_sentinel.svg`** — 512×512. FR roster 3: tall
+5. **sprites/enemies/hollow_sentinel.svg** — 512×512. FR roster 3: tall
    broken statue-guardian — rectangular cracked-monolith silhouette
    (ice-abyss darks), a single horizontal visor-eye in `ice-light`,
    floating fracture fragments beside the shoulders.
-6. **`sprites/enemies/silent_colossus.svg`** — FR world boss.
+6. **sprites/enemies/silent_colossus.svg** — FR world boss.
    **DEFERRABLE** (players reach level 100 weeks out; the data slot may
-   ship pointing at `hollow_sentinel.svg` with a `TODO(content)` until
+   ship pointing at **hollow_sentinel.svg** with a `TODO(content)` until
    the art lands in a content drop).
 
 **Elder variant rule (no new art):** Elder bosses reuse the base

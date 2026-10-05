@@ -88,7 +88,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSettings, onOpenNoAds }) =
         <CurrencyTile label="Essence" glyph="◆" value={essence} accent="border-l-neon text-neon" />
         <CurrencyTile label="Crystals" glyph="◆" value={crystals} accent="border-l-purple text-purple" />
         <CurrencyTile label="Scraps" glyph="⬢" value={scraps} accent="border-l-gold text-gold" />
-        <CurrencyTile label="Tokens" glyph="✦" value={tokens} accent="border-l-crimson text-crimson" />
+        <CurrencyTile label="Tokens" glyph="◈" value={tokens} accent="border-l-toxic text-toxic" />
       </div>
     </header>
   );

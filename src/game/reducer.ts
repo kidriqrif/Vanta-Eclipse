@@ -69,6 +69,7 @@ const RELIC_DROP_CHANCE = 0.25;
 const FROSTLING_DROP_CHANCE = 0.15;
 const BOSS_TOKEN_CHANCE = 0.1;
 const ECLIPSE_COMMIT_GUARD_MS = 3000;
+const PROCESSED_TRANSACTIONS_KEPT = 200;
 
 type D = Draft<GameState>;
 
@@ -657,6 +658,13 @@ function handle(d: D, a: Action, c: Ctx, base: GameState): ActionResult {
     case 'PURCHASE_GRANTED':
     case 'RESTORE_ENTITLEMENTS': {
       const ids = a.type === 'PURCHASE_GRANTED' ? [a.productId] : a.productIds;
+      if (a.type === 'PURCHASE_GRANTED' && a.transactionId) {
+        if (d.shop.processedTransactions.includes(a.transactionId)) return fail('already_granted');
+        d.shop.processedTransactions.push(a.transactionId);
+        if (d.shop.processedTransactions.length > PROCESSED_TRANSACTIONS_KEPT) {
+          d.shop.processedTransactions.splice(0, d.shop.processedTransactions.length - PROCESSED_TRANSACTIONS_KEPT);
+        }
+      }
       let granted = 0;
       for (const id of ids) {
         const product = PRODUCTS.find((p) => p.id === id || p.storeId === id);

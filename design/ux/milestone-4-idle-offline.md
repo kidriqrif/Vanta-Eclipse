@@ -1,5 +1,7 @@
 # Milestone 4 UX Spec — Auto-Attack Unlock & Offline Rewards
 
+> Engine-agnostic behaviour spec. Written for an earlier engine; node and file names in bold are historical. The live implementation is the React build — see `docs/ARCHITECTURE.md`.
+
 Author: ux-designer · Status: revised after Phase 1c review round 1
 Serves: `design/player-journey.md` Stage 4 (Idle Discovery) and Stage 5
 (Return Session).
@@ -28,7 +30,7 @@ now, get paid for it later, possibly much later.
 
 Per `design/gdd/game-concept.md`: "a meaningful reward every time the
 player returns after time away" is a stated core-loop target, not a nice
-extra. Per `player-journey.md` Stage 4/5, the two hard requirements this
+extra. Per `design/player-journey.md` Stage 4/5, the two hard requirements this
 spec is graded against are: (a) the unlock must be *celebratory*, not a
 silent flag flip, and (b) the return popup must never block or slow down
 getting back into the game.
@@ -135,7 +137,7 @@ right before this away-period started)
 **Why the popup lives on the gameplay screen, never the main menu**
 (resolves the open design question from the task):
 
-- `player-journey.md` Stage 1 is explicit that the main menu's only job is
+- `design/player-journey.md` Stage 1 is explicit that the main menu's only job is
   "feel the tone... find PLAY without hunting" — no modal, ever, competes
   with that on a screen whose entire design intent is "nothing to explain
   yet."
@@ -155,7 +157,7 @@ right before this away-period started)
 
 ## 3. Wireframe
 
-Reference canvas 1080×1920, matching `Assets/Scenes/Gameplay.unity`'s
+Reference canvas 1080×1920, matching **Assets/Scenes/Gameplay.unity**'s
 current `MarginContainer` (margins 40/40/40/28) and `GameplayVBox`
 (separation 18). All Y-values below are derived from that scene's actual
 node sizes and are accurate to roughly ±25px — enough to build against,
@@ -190,7 +192,7 @@ y≈174 └───────────────────────
 
 - Pill-style badge, left-aligned, auto-width (~280×40px): small icon
   (NEW asset needed — no lightning/auto icon exists yet in
-  `sprites/ui/`, artist to add one matching `essence_icon.svg`'s style)
+  **sprites/ui/**, artist to add one matching **essence_icon.svg**'s style)
   + label text "AUTO-ATTACK ACTIVE", 24px font (the accessibility-doc
   floor for this canvas), teal/cyan accent color distinct from the
   violet `PrimaryButton` family so it doesn't compete with the essence
@@ -274,7 +276,7 @@ y≈1260└───────────────────────
 - Card: ~860×600px, centered on the full 1080×1920 canvas (x 110–970,
   y 660–1260 — vertical center at 960, matching screen center).
   `PanelContainer` styled consistent with `UpgradeShopPanel`'s card look
-  from `ui/theme/main_theme.tres`.
+  from **ui/theme/main_theme.tres**.
 - "+1.24K Essence" uses the existing `NumberFormat` abbreviation (same
   formatter as the HUD essence counter — exact integers with comma
   grouping are never shown as the headline; the exact value lives behind
@@ -325,7 +327,7 @@ about the exact cap value.
 - **Badge appear animation:** an appear-from-nothing variant of the
   existing **Currency Pop/Bounce Feedback** pattern — scale 0 → 1.12 →
   1.0 over 0.24s, `TRANS_BACK`/`EASE_OUT` (same easing language as
-  `_pop_essence_display()` in `Assets/Scripts/UI/Gameplay.cs`, adapted for an
+  `_pop_essence_display()` in **Assets/Scripts/UI/Gameplay.cs**, adapted for an
   element becoming visible rather than an already-visible value ticking
   up).
 - **Toast animation:** container scale 0 → 1.05 → 1.0 + fade in over
@@ -357,7 +359,7 @@ about the exact cap value.
   (`enemy_damaged`, `enemy_died`) with zero UI-layer special-casing.
 - Each auto-attack hit must trigger the same **Floating Damage Number**
   and **Enemy Animation States** hit-reaction a manual tap does — this
-  is already half-built: `Assets/Scripts/UI/Gameplay.cs`'s `_spawn_damage_number()`
+  is already half-built: **Assets/Scripts/UI/Gameplay.cs**'s `_spawn_damage_number()`
   already branches on `_has_tap_position` and spawns the number above
   the enemy's center when there's no tap point, specifically commented
   `# Auto attacks (Milestone 4) have no tap point`. No new visual
@@ -383,7 +385,7 @@ about the exact cap value.
 - **Reward granted immediately** on eligibility (not on COLLECT tap) via
   `CurrencyManager.add(CurrencyManager.ESSENCE, reward)`, emitting
   `EventBus.essence_earned` with `source = &"offline"` — the signal's
-  doc comment in `Assets/Scripts/Core/EventBus.cs` already names this exact source string
+  doc comment in **Assets/Scripts/Core/EventBus.cs** already names this exact source string
   as planned. If the gameplay screen is already alive when this fires
   (background-resume case), the existing **Currency Pop/Bounce Feedback**
   on the essence counter plays automatically, for free, with no new
@@ -455,7 +457,7 @@ milestone's state has a named manager owner:
   calls into the same damage path `player_tap_attack()` uses, so
   crits/essence/signals are inherited (§4B), and `CombatManager` remains
   the only system that touches enemy state.
-- **UI (`Assets/Scripts/UI/Gameplay.cs`, the toast, the badge, the modal)** owns nothing:
+- **UI (Assets/Scripts/UI/Gameplay.cs, the toast, the badge, the modal)** owns nothing:
   it renders `IdleManager`/`CombatManager` state and EventBus signals,
   and reports exactly one input — the COLLECT tap — back as a dismiss.
 
@@ -540,7 +542,7 @@ Mapped against the committed **Enhanced** tier in
   formula almost certainly needs a cap — the exact cap value is a
   balancing decision for the game designer, not this spec (placeholder
   used throughout: 8h). What *is* in scope here: the cap must be
-  communicated, never hidden. `player-journey.md` Stage 5 explicitly
+  communicated, never hidden. `design/player-journey.md` Stage 5 explicitly
   warns against the player feeling "punished... without understanding
   why." The popup always shows the player's *true* elapsed time (up to
   the day-granular format in §4C) and, only when a cap actually reduced
@@ -602,7 +604,7 @@ player must actively acknowledge before continuing:
   target — no tap-outside-to-close — so there is exactly one, unambiguous
   way to exit, satisfying the "single, obvious, always-visible action"
   accessibility bar.
-- A centered card (`PanelContainer`, styled per `main_theme.tres`) holds
+- A centered card (`PanelContainer`, styled per **main_theme.tres**) holds
   the content and exactly one primary dismiss action, styled with the
   `PrimaryButton` theme variation.
 - Entrance: scrim fades in over 0.2s while the card scales 0.85 → 1.0
@@ -620,8 +622,8 @@ player must actively acknowledge before continuing:
   can still visually cover it if one is ever triggered while it's open.
 
 **Implementation:** proposed as a new script, e.g.
-`Assets/Scripts/UI/CenteredModalDialog.cs` + a base scene under
-`scenes/common/`, generic enough to host different body content per
+**Assets/Scripts/UI/CenteredModalDialog.cs** + a base scene under
+**scenes/common/**, generic enough to host different body content per
 use (this milestone: essence figure + duration line + COLLECT; future:
 a confirmation question + CONFIRM/CANCEL). Left for the UI specialist
 (Phase 3 pre-req) to structure as a reusable prefab rather than a
@@ -639,7 +641,7 @@ one-off.
   capped reward exists (placeholder: 8 hours, used only for illustrative
   copy in §3E) but doesn't derive the rate or the cap — that's balancing
   work parallel to the existing `ENEMY_HP_GROWTH`/`ESSENCE_REWARD_GROWTH`
-  tuning in `Assets/Scripts/Managers/CombatManager.cs`. Whatever the cap turns out to be, §6
+  tuning in **Assets/Scripts/Managers/CombatManager.cs**. Whatever the cap turns out to be, §6
   requires the popup to state it plainly when it applies.
 - **MIN_OFFLINE_SECONDS placeholder (60s).** Reasonable default to
   suppress rapid app-switching; confirm or adjust.

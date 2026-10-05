@@ -1,5 +1,7 @@
 # Milestone 8 — Eclipse (Prestige) & Ascendant Powers
 
+> Engine-agnostic behaviour spec. Written for an earlier engine; node and file names in bold are historical. The live implementation is the React build — see `docs/ARCHITECTURE.md`.
+
 Design frame + UX spec. Serves player-journey stage 8 ("Prestige — become
 stronger, repeat forever") and establishes the game's long-term meta loop.
 
@@ -55,7 +57,7 @@ player back to farming). The crystal payout is always computed from the run
 peak, so time already earned is never lost to a bad boss timer.
 
 **Reward formula** (final constants owned by the sim,
-`scratchpad/prestige_sim.py`): crystals grow super-linearly with the run
+**scratchpad/prestige_sim.py**): crystals grow super-linearly with the run
 peak so pushing deeper each cycle is always worth it, but the first Eclipse
 at level 50 still pays a satisfying starter handful (enough for one or two
 powers). The Crystalline power multiplies this payout.

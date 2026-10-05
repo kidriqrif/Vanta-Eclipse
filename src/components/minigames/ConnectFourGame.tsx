@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { formatNumber } from '../../utils/numberFormat';
 import type { MinigameProps, MinigameResult } from './types';
+import { useFinishOnce } from './useFinishOnce';
 
 const ROWS = 6;
 const COLS = 7;
@@ -147,22 +148,6 @@ function applyDrop(state: C4State, col: number, side: Side): C4State {
 }
 
 /** Calls onFinish exactly once, a beat after the outcome is decided so the final board stays readable. */
-function useFinishOnce(result: MinigameResult | null, onFinish: MinigameProps['onFinish']) {
-  const onFinishRef = useRef(onFinish);
-  const sentRef = useRef(false);
-  useEffect(() => {
-    onFinishRef.current = onFinish;
-  }, [onFinish]);
-  useEffect(() => {
-    if (!result || sentRef.current) return;
-    const timer = window.setTimeout(() => {
-      if (sentRef.current) return;
-      sentRef.current = true;
-      onFinishRef.current(result);
-    }, END_PAUSE_MS);
-    return () => window.clearTimeout(timer);
-  }, [result]);
-}
 
 function statusLine(game: C4State): { text: string; tone: string } {
   if (game.result?.won) return { text: 'Four in a row — you win', tone: 'text-gold' };
@@ -184,9 +169,12 @@ function columnLabel(board: Board, col: number): string {
   return `Column ${col + 1}: ${contents}; ${free === 0 ? 'full' : `${free} free`}`;
 }
 
-/** A disc with a shape cue as well as colour: the void's discs are hollow-centred, yours are solid. */
-const DiscArt: React.FC<{ side: Side; className?: string }> = ({ side, className = '' }) => (
-  <span className={`relative block ${className}`}>
+/**
+ * A disc with a shape cue as well as colour: the void's discs are hollow-centred, yours are solid.
+ * `className` must position it (relative or absolute) so the centre mark has an anchor.
+ */
+const DiscArt: React.FC<{ side: Side; className: string }> = ({ side, className }) => (
+  <span className={`block ${className}`}>
     <img src={DISC_ART[side]} alt="" draggable={false} className="w-full h-full pixelated" />
     {side === AI && <span className="absolute inset-[34%] rounded-full bg-void/75" />}
   </span>
@@ -194,7 +182,7 @@ const DiscArt: React.FC<{ side: Side; className?: string }> = ({ side, className
 
 export const ConnectFourGame: React.FC<MinigameProps> = ({ onFinish }) => {
   const [game, setGame] = useState<C4State>(newGame);
-  useFinishOnce(game.result, onFinish);
+  useFinishOnce(game.result, onFinish, END_PAUSE_MS);
 
   // The void's turn. Input is locked until its disc lands; the timer dies with the component.
   useEffect(() => {
@@ -221,10 +209,10 @@ export const ConnectFourGame: React.FC<MinigameProps> = ({ onFinish }) => {
       <div className="w-full max-w-sm flex items-center justify-between gap-2 bg-panel border border-line px-2.5 py-1.5">
         <div className="flex items-center gap-3 text-[10px] font-tech text-dim uppercase">
           <span className="flex items-center gap-1">
-            <DiscArt side={PLAYER} className="w-4 h-4" /> You
+            <DiscArt side={PLAYER} className="relative w-4 h-4" /> You
           </span>
           <span className="flex items-center gap-1">
-            <DiscArt side={AI} className="w-4 h-4" /> Void
+            <DiscArt side={AI} className="relative w-4 h-4" /> Void
           </span>
         </div>
         <span className="text-[10px] font-tech text-dim uppercase">

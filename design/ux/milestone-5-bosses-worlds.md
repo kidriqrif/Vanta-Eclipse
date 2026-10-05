@@ -1,5 +1,7 @@
 # Milestone 5 UX Spec — Boss Battles, World Progression & Unlocks
 
+> Engine-agnostic behaviour spec. Written for an earlier engine; node and file names in bold are historical. The live implementation is the React build — see `docs/ARCHITECTURE.md`.
+
 Author: ux-designer · Status: revised after Phase 1c review round 1
 Serves: `design/player-journey.md` Stage 6 (First Boss) and Stage 7
 (World Unlock).
@@ -47,7 +49,7 @@ and its first doors:
    moment of the kill, before any presentation, so no crash or interruption
    can ever take one back.
 
-Grading criteria from `player-journey.md`: Stage 6 — "this is different
+Grading criteria from `design/player-journey.md`: Stage 6 — "this is different
 and dangerous" must be readable with zero tutorial text, and losing must
 say "grow stronger, then come back" with an obvious retry path. Stage 7 —
 a "new chapter" moment bigger than any celebration so far, acknowledged
@@ -215,7 +217,7 @@ FARM MODE:
 
 ## 3. Wireframes
 
-Reference canvas 1080×1920, matching `Assets/Scenes/Gameplay.unity`'s
+Reference canvas 1080×1920, matching **Assets/Scenes/Gameplay.unity**'s
 `MarginContainer` (margins 40/40/40/28) and `GameplayVBox` (separation
 18). Y-values are derived from the scene's real node sizes, accurate to
 roughly ±25px. The first boss (level 10) happens *before* the Auto-Attack
@@ -265,7 +267,7 @@ y≈1844 └──────────────────────�
 - **BossPlate** — a new HBox row occupying the same `GameplayVBox` slot as
   `EnemyNameLabel` (which hides for the fight's duration; same ~58px
   height, so swapping them causes no reflow): skull icon 36×36 (NEW asset,
-  `sprites/ui/boss_skull_icon.svg`, essence-icon construction rules — see
+  **sprites/ui/boss_skull_icon.svg**, essence-icon construction rules — see
   asset note in §4A) + boss name in the `HeaderLabel`/Cinzel treatment at
   the same 42px as `EnemyNameLabel`, in a danger accent family (crimson/
   gold territory — exact values are the art director's Phase 2 call; the
@@ -431,7 +433,7 @@ y≈1320└───────────────────────
   sky* changing behind the scrim is the before/after, at full screen
   size, in the real material — a thumbnail preview would only compete
   with it.
-- `✦` flourishes reuse `sprites/ui/star_flourish.svg` (the M4 asset,
+- `✦` flourishes reuse **sprites/ui/star_flourish.svg** (the M4 asset,
   explicitly built for "any Centered Modal Dialog headline").
   Payout figure reuses the Hold-to-Reveal Exact Number pattern exactly as
   the offline modal implements it (`mouse_filter = STOP` on that label
@@ -497,7 +499,7 @@ the sky palette (color — never alone), and the enemy roster (shape).
   itself also fires the ordinary `enemy_spawned` so `EnemyView` and the
   HUD render it through their existing handlers.
 - **Boss data is content, not code:** bosses are `EnemyDefinition`
-  resources (per-world, in `data/enemies/`), extended with an
+  resources (per-world, in **data/enemies/**), extended with an
   `is_boss: bool` and a view scale (~1.3× — final value with the art
   director), plus distinct larger art. `EnemyView` renders them through
   the same four animation states; the only view change is the scale and
@@ -532,7 +534,7 @@ the sky palette (color — never alone), and the enemy roster (shape).
   the game continues behind it, and pausing would turn every boss into a
   solved puzzle (shop forever, win always). The visible drain above the
   sheet (§3E) makes the cost of shopping legible in real time.
-- **Asset note (art director):** `sprites/ui/boss_skull_icon.svg`,
+- **Asset note (art director):** **sprites/ui/boss_skull_icon.svg**,
   128×128 canvas, glow-disc + faceted-polygon construction per the M4
   asset manifest idiom, in the danger accent family; used at 36×36 in
   the BossPlate and at ~56×56 in Result Banners. As with M4's bolt: an
@@ -630,7 +632,7 @@ the sky palette (color — never alone), and the enemy roster (shape).
 - `WorldLabel` = current world name, always, from `WorldManager`
   (§3F). The label is never the only signal: palette + roster travel
   with it.
-- Worlds are `WorldDefinition` resources (`data/worlds/`): display name,
+- Worlds are `WorldDefinition` resources (**data/worlds/**): display name,
   level range, enemy roster (paths), the three nebula palette colors,
   essence multiplier. Adding World 6 is a data drop, per the
   architecture's content-as-data rule.
@@ -693,7 +695,7 @@ a named manager owner:
   level* (gate−1 whenever the player is at a wall) instead of raw
   `enemy_level` (§6), with the world essence multiplier flowing through
   `get_essence_reward()` automatically.
-- **UI (`Assets/Scripts/UI/Gameplay.cs`, BossPlate, TimerBar, ChallengeBossButton, the
+- **UI (Assets/Scripts/UI/Gameplay.cs, BossPlate, TimerBar, ChallengeBossButton, the
   banners, the World Unlock modal, `VoidBackground`)** owns nothing: it
   renders manager state and EventBus signals, polls the timer read-only,
   and reports exactly two *actions* — the CHALLENGE BOSS tap
@@ -887,8 +889,8 @@ remaining: accent shift + 0.6s opacity pulse + the numerals — three
 simultaneous signals, numerals sufficient alone. Non-interactive
 (`mouse_filter = IGNORE`, stated explicitly on bar and label). Appears/
 disappears with a 0.25s slide+fade, never persists outside its mechanic.
-**Implementation:** proposed as `Assets/Resources/Prefabs/CountdownTimerBar.prefab`
-+ `Assets/Scripts/UI/CountdownTimerBar.cs`; owner system exposes
+**Implementation:** proposed as **Assets/Resources/Prefabs/CountdownTimerBar.prefab**
++ **Assets/Scripts/UI/CountdownTimerBar.cs**; owner system exposes
 `get_time_remaining()` and the UI polls in `_process()` (the
 PlayTimeLabel precedent) — the bar never owns the countdown.
 
@@ -909,8 +911,8 @@ pending banner queues (depth 1) instead of stacking. The Unlock
 Celebration Toast remains in the library unchanged as the once-per-save
 special case; implementation may unify them behind one scene later —
 that is an engineering choice, not a pattern merge.
-**Implementation:** proposed as `Assets/Resources/Prefabs/ResultBanner.prefab` +
-`Assets/Scripts/UI/ResultBanner.cs` with a `setup()` contract, instanced by
+**Implementation:** proposed as **Assets/Resources/Prefabs/ResultBanner.prefab** +
+**Assets/Scripts/UI/ResultBanner.cs** with a `setup()` contract, instanced by
 the gameplay scene on `boss_fight_won` / `boss_fight_failed`.
 
 *(Considered and NOT proposed as patterns: the BossPlate — a one-slot
@@ -936,7 +938,7 @@ consumer in sight.)*
 - **Boss names and art per world** (writer + artist): one boss
   definition per gate minimum; "Hollow Warden" throughout this spec is
   illustrative placeholder only. Asset order so far:
-  `boss_skull_icon.svg` (§4A), five Dark Forest boss sprites, Frozen
+  **boss_skull_icon.svg** (§4A), five Dark Forest boss sprites, Frozen
   Ruins roster + palette values, world 2 boss sprites.
 - **Frozen Ruins palette values** (art director): three shader uniforms
   per world (§4C); needs the M4-style contrast verification of HUD text
@@ -958,5 +960,5 @@ consumer in sight.)*
   `CombatManager` state, flagged so it isn't lost; (b) `WorldLabel` and
   the enemy-roster constant in `CombatManager` become
   `WorldManager`-driven (the `TODO(Milestone 5)` already in
-  `Assets/Scripts/Managers/CombatManager.cs`); (c) the `EnemyView` withdraw micro-state (§4B)
+  **Assets/Scripts/Managers/CombatManager.cs**); (c) the `EnemyView` withdraw micro-state (§4B)
   is the only view-layer code ask in this spec.

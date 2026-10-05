@@ -1,5 +1,7 @@
 # Milestone 9 — Visual Design: The Arcade
 
+> Engine-agnostic behaviour spec. Written for an earlier engine; node and file names in bold are historical. The live implementation is the React build — see `docs/ARCHITECTURE.md`.
+
 Transcribes the M9 UX spec. Reuses all established chrome (void background,
 PrimaryButton, BadgePanel, Result Banner, Two-Tap Arm, Segmented/Scroll
 patterns). One new reserved identity: the **Arcade** family.
@@ -32,9 +34,9 @@ uses the token **icon** beside "3 / 5" rather than the glyph, which is a
 stronger cue than a character anyway.
 
 ## 2. Assets (SVG, gradients only, no filters, readable at 64px)
-- `sprites/ui/arcade_token_icon.svg` — a rounded rhombus token: arcade-deep
+- **sprites/ui/arcade_token_icon.svg** — a rounded rhombus token: arcade-deep
   rim, arcade body, an arcade-core inner spark. Used in the meter and cards.
-- `sprites/ui/minigame_reflex_icon.svg` — the Void Reflex sigil at rest: a
+- **sprites/ui/minigame_reflex_icon.svg** — the Void Reflex sigil at rest: a
   ringed circle with a small core, in the arcade family.
 
 ## 3. The Arcade hub

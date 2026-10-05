@@ -72,6 +72,8 @@ export interface ShopSlice {
   ownedCosmetics: string[];
   activeCosmeticId: string;
   adWatches: Record<string, AdWatch>;
+  /** Google Play transaction ids already granted, so a purchase can never pay out twice. */
+  processedTransactions: string[];
 }
 
 export interface TapGuardState {
@@ -209,7 +211,13 @@ export function createInitialState(now: number): GameState {
     skills: {},
     arcade: { tokens: TOKEN_CAP, regenAnchor: now, records: {} },
     quests: { counters: {}, daily: freshDaily(localDateKey(now)), claimed: [] },
-    shop: { entitlements: [], ownedCosmetics: ['trail_void'], activeCosmeticId: 'trail_void', adWatches: {} },
+    shop: {
+      entitlements: [],
+      ownedCosmetics: ['trail_void'],
+      activeCosmeticId: 'trail_void',
+      adWatches: {},
+      processedTransactions: [],
+    },
     settings: { ...DEFAULT_SETTINGS },
     tutorialsSeen: {},
     nextId: 1,

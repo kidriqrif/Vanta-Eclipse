@@ -1,149 +1,313 @@
 # Testing Guide — Vanta Eclipse
 
-What must be **proven**, staged from "does it compile at all" to "a stranger
-played it". `RELEASE-CHECKLIST.md` lists what must *exist*; this lists what must
-be *shown to work*. Start here.
+What has to be **proven**, in order, before a build goes to Google Play.
+`design/RELEASE-CHECKLIST.md` lists what has to *exist*;
+`production/monetisation-switch.md` has the full ads and billing procedure.
+Work top to bottom. A later step never stands in for an earlier one, and
+nothing in steps 1–4 stands in for a phone.
 
-**Where the project actually stands:** stages 0 and 1 pass. Stage 2 has never
-been run — the game has never executed on Android hardware. Everything below
-stage 2 is therefore unverified, and no amount of stage 1 substitutes for it.
+**Where things stand:** the 47 unit tests (step 2) pass as of this edit. The
+device checklist (step 6) has to be done again for 1.4.0, because the game
+core and every screen changed after the last closed-testing build.
+
+The Unity-era guide (the **tools/validate_all.sh** sweep, headless
+**tools/screenshots.sh** captures, **tools/build_android.sh**) is in git
+history. None of it applies to this build.
 
 ---
 
-## Stage 0 — the sweep
+## 1. Types
 
 ```
-bash tools/validate_all.sh
+npm run typecheck
 ```
 
-Eight stages, every one a hard gate, and it runs all of them even after a
-failure so one break cannot hide the next five. Stages 1 and 7 need Unity and
-skip cleanly if `$UNITY` does not resolve; the rest are Python and always run.
+`tsc --noEmit` over the whole project. `npm run lint` is the same command;
+there is no ESLint. This is a gate, not a check of behaviour.
 
-| | |
+## 2. Unit tests
+
+```
+npm test
+```
+
+Vitest in Node, no browser. 47 tests in `src/game/__tests__/`:
+
+| File | Covers |
 |---|---|
-| 1 | C# compiles — a real `Unity -batchmode` compile, not a parser |
-| 2 | project invariants: palette closure, 9px glyph grid, scene/prefab/sprite names |
-| 3 | font coverage — every character the UI renders exists in the face |
-| 4 | generated art is on the 16-colour palette, every pixel of every PNG |
-| 5 | shipped assets are byte-identical to what their generators produce |
-| 6 | README and the published site match the code |
-| 7 | runtime logic — 49 assertions against the real managers |
-| 8 | **every screen rendered at 10 Android shapes** |
+| `src/game/__tests__/reducer.test.ts` (34) | combat and boss gates, spending, gear, pets, the Eclipse, the arcade latch and payout, token regen, quests, ad caps, purchases, offline |
+| `src/game/__tests__/save.test.ts` (7) | v1 → v2 migration, backup fallback, corrupt saves, round-trips |
+| `src/game/__tests__/tapGuard.test.ts` (6) | the autoclicker signals, lockout escalation, forgiveness |
 
-Stage 8 is the only one that looks at pixels. Everything above it compares
-files to other files.
+`src/game/__tests__/helpers.ts` gives a fixed clock you can advance and a
+seeded RNG, so every rule is tested deterministically. A change to a rule in
+`src/game/` gets a test here.
 
-## Stage 1 — screens, headless
+## 3. End-to-end in a browser
 
 ```
-bash tools/screenshots.sh                     all 11 screens x 10 shapes
-bash tools/screenshots.sh MainMenu,Gameplay   named screens only
-SHAPES=1080x1920_9-16 bash tools/screenshots.sh Gear
+npm run e2e
+PW_CHROMIUM=/path/to/chrome npm run e2e     # use an installed browser
 ```
 
-Renders each screen in **play mode** — so `Awake`/`Start` run, the managers
-boot, and the screens populate themselves — into a RenderTexture at each shape,
-then measures four things: a blank frame, content outside the frame, layout rows
-collapsed to zero height or overlapping, and glyph box / device pixels. PNGs and
-`report.csv` land in `build/screenshots/`.
+Playwright, configured in `playwright.config.ts`: a Pixel 7 portrait profile
+against the Vite dev server on port 5173, which it starts or reuses. The tests
+drive the real UI and read or patch state through the dev-only `window.__vanta`
+handle that `src/context/GameProvider.tsx` sets.
 
-**Open the images.** The exit code is a gate, not a verdict: every piece of art
-and text this project got wrong looked correct in source, and three separate
-checks once passed a main-menu tagline that had silently lost both its periods.
+- `e2e/smoke.spec.ts`: a new game taps, earns and climbs, and every tab
+  opens without a console error; boss gate retreat and challenge; a metronome
+  autoclicker is locked out while human-paced tapping is not; a v1 save
+  migrates and its offline reward can be doubled once; paid items grant
+  nothing while billing is off; an ad offer stops at its daily cap.
+- `e2e/arcade.spec.ts`: every minigame plays to an outcome and pays exactly
+  once; quitting forfeits the token, pays nothing and lets the paused boss
+  timer run again.
 
-Two flags are deliberately absent from the Unity invocation inside that script
-and both get "helpfully" added back — `-nographics` gives a null graphics device
-and every capture comes back empty, and `-quit` closes the editor before play
-mode has started.
+The dev build fakes a rewarded watch (about a second, then "rewarded"), which
+is why ad flows can run here at all. It proves the game's side of the flow and
+nothing about AdMob.
 
-**What it cannot see:** a real GPU driver, touch, audio hardware, memory
-pressure, frame pacing, or install. `Screen.safeArea` on desktop is the whole
-screen, so the display-cutout inset that `SafeAreaFitter` exists for is not
-exercised.
-
-## Stage 2 — first run on hardware  ⟵ **never done**
+## 4. Production build
 
 ```
-bash tools/build_android.sh debug
-adb install -r build/vanta-eclipse.apk
-adb logcat -c && adb logcat -s Unity
+npm run build       # tsc, then vite build into dist/
+npm run preview     # serves that build on port 3000
 ```
 
-The build script verifies the artifact rather than trusting the exit code:
-`apksigner` confirms the signature scheme, `aapt2 dump badging` prints the
-package, SDK levels, permissions and native code, and the run **fails** if there
-is no launchable activity. That last check exists because an APK once shipped
-with no launcher activity at all — it installed and could not be started.
+Open the preview once, on a phone browser if you can. This is the web build
+as shipped: there is no `window.__vanta`, rewarded offers are unavailable
+(there is no ad network on the web), and the service worker in `public/sw.js`
+registers. Check that it loads, that the fonts look right (they are bundled
+through @fontsource, so a blank or fallback face means a broken build), and
+that it plays.
 
-What to establish, in order:
+## 5. Android build on a device
 
-1. It launches, and the main menu draws.
-2. Every screen opens and comes back. Eleven screens, one tap each.
-3. Text is legible at arm's length on a real panel, not a monitor.
-4. Taps land where they look like they land. The tap targets are 72px on the
-   9px grid for a reason (`accessibility-requirements.md` §4B).
-5. Haptics fire. `AndroidHaptics` goes through the Vibrator service directly,
-   which is why `VIBRATE` is declared by hand in
-   `Assets/Plugins/Android/AndroidManifest.xml` — Unity cannot see an
-   `AndroidJavaObject` call and will not inject the permission for one.
-6. Audio plays, and does not clip or pop on a phone speaker.
-7. A shader that compiles on desktop can still fail on a mobile GPU. Look at
-   the enemy rim light and the ground glow specifically.
-8. Frame pacing and battery over a ten-minute session.
+You need Android Studio and JDK 21 (see `README.md`).
 
-**Save file on device:** `/sdcard/Android/data/com.kidriqrif.vantaeclipse/files/`
-— `savegame.json` and `savegame.backup.json`.
+```
+npm run android:sync          # npm run build, then npx cap sync android
+npx cap run android           # build and install on a connected device
+```
 
-> **Resetting a save means deleting BOTH files.** `SaveManager` writes
-> atomically through the backup slot and falls back to it when the main file is
-> missing, so removing only `savegame.json` restores the backup on next launch —
-> a "reset" that comes back at level 60 with 20 boss cards.
+Or `npx cap open android` and Run from Android Studio. The sync copies
+the web bundle into the Android assets folder, which is generated and
+untracked, so run it before every Android build or the phone gets an old
+bundle.
 
-## Stage 3 — the run that matters
+A debug build's WebView can be inspected. With the phone on USB debugging,
+open chrome://inspect on the computer and choose the Vanta Eclipse WebView.
+You get the console, the network panel and storage. A release build, including
+one installed from Play, cannot be inspected.
 
-One uninterrupted session from a fresh save, on the device, without touching
-the editor:
+## 6. The device checklist
 
-- Reach level 15 and unlock the auto-attacker.
-- Lose a boss fight on the timer, farm the gate, win it.
-- Equip something, salvage something, forge something.
-- Play all four arcade boards to a win and a loss.
-- Trigger an Eclipse and spend Void Crystals.
-- Close the app for an hour. Come back. Check the offline reward against what
-  the idle rate says it should be.
+On a physical phone. Do it once on a debug build, then again on the build
+installed from the closed testing track (step 7).
 
-Then kill the app mid-write (`adb shell am force-stop`) during an autosave and
-confirm the next launch loads rather than starting over.
+**Ads (test ads and consent).** The build carries Google's sample ad IDs and
+`isTesting: true` (`src/config/monetization.ts`), so every ad must carry a
+"Test Ad" label. A banner appears at the bottom after the consent check.
+The consent form only appears where UMP says it is legally required, and
+`src/services/ads.ts` passes no debug geography. To see it from outside the
+EEA/UK, temporarily pass `debugGeography` (EEA) and your device's hashed ID in
+`testDeviceIdentifiers` to the `requestConsentInfo` call. The UMP SDK prints
+the hashed ID to logcat. Do not commit the change. Then check:
 
-## Stage 4 — internal testing
+- the form appears before any ad loads;
+- refusing consent leaves the game fully playable;
+- Settings shows the ad privacy options entry when consent applies, and it
+  reopens the form.
 
-Upload the AAB to Play's Internal Testing track and install it **from Play**,
-not from `adb`. That is the first time the artifact is exercised as Play
-delivers it: split by ABI, re-signed with the app signing key, and installed by
-the store rather than sideloaded.
+Once answered, the form does not come back on its own. Clear the app's storage
+to see it again, which also deletes the save, so export the save from Settings
+first.
 
-Check that the store listing's screenshots match what the app actually looks
-like on the device it was installed on.
+**Rewarded offers grant only after the video.** There are three placements,
+each with a daily cap from `ADS` in `src/data/definitions.ts`: double offline
+reward (in the offline-rewards modal only, 3 a day), a bonus Arcade token (in
+the Arcade when out of tokens, 3 a day), and Essence Surge (in the BAZAAR, 5 a
+day). For each placement:
 
-## Stage 5 — closed testing
+- Watch to the end: the reward lands once and the remaining count drops by one.
+- Close the video early: nothing is granted and the count does not drop. A
+  watch is counted after the grant.
+- In airplane mode: the offer fails cleanly, grants nothing and does not spin
+  forever.
 
-If the developer account is a personal one created after 2023-11-13, Play
-requires **12 testers for 14 continuous days** before production access is
-granted. That is a two-week gate rather than a form, and it belongs on the
-calendar before a launch date is chosen.
+**The banner never covers the game.** The banner is a native view drawn over
+the WebView. The app reserves a strip of its height at the bottom of the
+layout. Check:
+
+- every tab, the MORE sheet and the bottom navigation bar are fully tappable
+  above it;
+- the bottom edge of every modal and of the minigame screen is clear of it;
+- the banner sits above the system navigation bar with both gesture
+  navigation and three-button navigation.
+
+**Back button.** Handlers stack in `src/hooks/useBackHandler.ts`, and the most
+recent one wins. Back should do the following, in this order:
+
+1. close the open modal;
+2. leave a minigame (a run in progress is forfeited like QUIT, per
+   `design/ux/milestone-9-minigame-framework.md`, and the boss timer runs
+   again);
+3. from any other tab, go to the home tab (the upgrades, labelled FORGE);
+4. from the home tab, minimize the app (`src/context/GameProvider.tsx`).
+
+Back must never kill the app. Reopen it from recents and it should be exactly
+where you left it.
+
+**Music pauses in the background.** Press home, switch apps or turn the
+screen off: music and sound stop. Come back: music resumes. On a cold start
+there is no sound until the first tap. That is expected, because Web Audio
+cannot start before a user gesture.
+
+**Haptics toggle.** With haptics on in Settings, these vibrate: a manual
+critical hit (light), a boss fight starting (medium), a boss dying and the
+Eclipse (heavy), and Epic or better drops. With haptics off, none of them do.
+If nothing vibrates with the setting on, check the phone's own vibration
+settings before calling it a bug.
+
+**Offline reward.** Offline earnings need auto-attack, so first reach run
+level 15 (or own Eternal Reflex). On a save below that, getting no reward is
+correct. Then:
+
+- Press home, wait at least 2 minutes and come back. The offline modal shows
+  what was earned, and that amount is already in the essence total. Resuming
+  pays only after 60 s or more away.
+- Force-close: swipe the app out of recents, or run
+  `adb shell am force-stop com.vantrexagames.vantaeclipse`. Wait at least 2
+  minutes and relaunch. The modal should appear on load.
+- The amount should be close to 50% of the idle rate × the time away, capped
+  at 8 hours. Long Slumber, Deep Rest and an attuned Eclipse Heart raise it
+  (`src/game/offline.ts`).
+- Doubling works once. The modal closes with one tap.
+- After 30 minutes or more away, the Arcade token meter (if it was not full)
+  has refilled by one per 30 minutes, up to 5.
+
+**The save survives a force-close.** Play for a while, then leave the game
+alone for about 10 seconds. It autosaves every 5 s when something changed, and
+immediately on background, an Eclipse, a world unlock, an arcade start or
+result, an ad reward and a purchase. Then force-stop and relaunch: level,
+essence and gear are as you left them. `am force-stop` sends the app no pause event, so up to the last
+few seconds of play can be lost. Anything more is a bug. Also try a force-stop
+straight after an Eclipse. Whether that write reaches disk in time is a real
+question for the WebView, not a formality.
+
+**Portrait lock.** With auto-rotate on, turn the phone: the game stays
+portrait (`android:screenOrientation` in
+`android/app/src/main/AndroidManifest.xml`). See the landscape note at the
+end for large screens.
+
+**Notch and safe areas.** Test on a phone with a camera cutout running
+Android 15 or later, where edge-to-edge is enforced. The header must not sit
+under the status bar or cutout, and the navigation bar and banner must not sit
+under the gesture handle. The layout pads itself with the safe-area insets
+(`src/App.tsx`, with `viewport-fit=cover` in `index.html`). If you can, repeat
+on an Android 14 or older phone, because older WebViews report insets
+differently.
+
+**Autoclicker lockout.** Install any autoclicker app from Play, point it at
+the enemy and set an interval of about 100 ms. Within a few seconds manual
+taps lock, and the arena says tapping is paused. Check:
+
+- the lockout lasts 10 s, then 30 s on the next strike, then 60 s;
+- auto-attack keeps hitting during a lockout;
+- taps made while locked do not count toward quests;
+- no ad appears at any point;
+- after 5 clean minutes the next lockout is back to 10 s.
+
+Then tap as fast as you can with two thumbs for 30 seconds: no lockout.
+
+The thresholds are in `src/game/tapGuard.ts`: 25 taps in 1 s, 50 in 3 s, 20
+near-identical intervals at 4 or more taps a second, or 20 touch taps within
+1.5 px. A bot slower than about 4 taps a second is not caught by any
+signal.
+
+**General.**
+
+- It launches straight onto the combat screen.
+- Every tab and the MORE sheet open and come back.
+- Text is legible at arm's length on a real panel, and taps land where they
+  look like they land (`design/accessibility-requirements.md`).
+- Sound does not clip or pop on the phone speaker.
+- Over a ten-minute session the phone does not get hot, and battery drain is
+  unremarkable.
+
+**One long session** from a fresh save (Settings → reset, or clear storage):
+
+- reach level 15 and see auto-attack unlock;
+- lose a boss on the timer, RETREAT, farm, CHALLENGE BOSS and win;
+- equip, salvage and forge gear (ARMOR tab);
+- unlock the Arcade at lifetime level 20 and play each unlocked game to a win
+  and a loss;
+- beat the level-50 world boss, see the Frozen Ruins unlock and receive Ember;
+- trigger an Eclipse and spend Void Crystals.
+
+## 7. Installed from Play
+
+Upload the AAB to the internal or closed testing track and install it **from
+Play**, not with adb. This is the first time the app runs as Play delivers it:
+re-signed with the app-signing key, split by device, installed by the store.
+Repeat step 6 on that install. Also check the save upgrade from the previous
+closed-testing build, as described in `design/RELEASE-CHECKLIST.md`, and that
+the store screenshots match what the phone shows.
+
+A personal developer account created after 2023-11-13 needs 12 testers opted
+in for 14 continuous days before it can apply for production. That is a
+calendar gate, so book it before choosing a launch date.
 
 ---
+
+## Where the save lives on a device
+
+The save is the WebView's `localStorage`, under the origin https://localhost
+(Capacitor serves the app from there). It sits inside the app's private data
+directory, as LevelDB files under:
+
+```
+/data/data/com.vantrexagames.vantaeclipse/app_webview/
+```
+
+It is not on shared storage, and a file manager cannot reach it. On a debug
+build, inspect it through chrome://inspect → Application → Local Storage →
+https://localhost. The keys, from `src/game/save.ts`:
+
+| Key | What |
+|---|---|
+| vanta_eclipse_save_v1 | the save: JSON with `version: 2` inside (the key name predates the version field) |
+| vanta_eclipse_save_backup | the last save that loaded successfully |
+| vanta_eclipse_save_v1_premigration | a one-time copy of an old v1 save, taken before its first migration |
+
+On a release build, the export in Settings copies the same JSON to the
+clipboard. That is the way to get a tester's save for a bug report.
+
+> **Resetting means removing both the save and the backup.** If only
+> vanta_eclipse_save_v1 is deleted, the next launch loads the backup and the
+> "reset" comes back. Settings → reset clears both. Android's Clear storage
+> clears everything, including the UMP consent answer.
+
+Saves are local only, with no cloud save. Because `android:allowBackup` is
+true, Android Auto Backup may restore the app's data on a reinstall or a new
+phone. To test it, run `adb shell bmgr backupnow com.vantrexagames.vantaeclipse`,
+then uninstall, reinstall and look.
 
 ## What has no test yet
 
 - **Localisation.** Every string is inline English.
-- **Analytics.** Every economy number was tuned by simulation against a *model*
-  of a player, never against a real one.
-- **Cloud saves.** `SaveManager.GetFullSaveText()` already returns exactly the
-  document a provider would upload; nothing uploads it.
-- **Landscape.** The app is portrait-locked with no landscape layout, and
-  Android 16 ignores `screenOrientation` on displays 600dp and wider. A tablet,
-  an unfolded foldable, or any phone in split-screen will show it in landscape
-  regardless. Nothing is cropped — content strands, and the width cap in
-  `SafeAreaFitter` is what stops it.
+- **Analytics.** There are none. The economy has never been checked against
+  real players.
+- **Clock changes.** Offline earnings and token regen use the device clock.
+  Setting the clock back grants nothing, but setting it forward pays up to the
+  caps. There is no server to check against.
+- **Receipts.** There is no server-side receipt validation. Grants rely on the
+  Play Billing client.
+- **Landscape.** The activity is portrait-locked, but Android 16 ignores that
+  on displays 600dp and wider for apps targeting SDK 36. A tablet, an unfolded
+  foldable or a large split-screen window can show the game in landscape. The
+  layout is a single centred column at most 448 CSS px wide, so it should
+  strand rather than break. Nobody has looked yet. Android 16 exempts games
+  that declare `android:appCategory="game"` in the manifest, and this one
+  does not declare it.

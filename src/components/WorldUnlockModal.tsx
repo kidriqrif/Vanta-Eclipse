@@ -1,46 +1,94 @@
-import React from 'react';
-import { useGame } from '../context/GameContext';
+import React, { useCallback } from 'react';
+import { Gem, Mountain, PawPrint, Skull, TrendingUp, type LucideIcon } from 'lucide-react';
 import { WORLDS } from '../data/definitions';
-import { Trophy } from 'lucide-react';
+import { WORLD_TWO_FIRST_LEVEL, type GameState } from '../game/state';
+import { useDispatch, useGameState } from '../hooks/useGame';
+import { formatNumber } from '../utils/numberFormat';
+import { Button, Modal } from './ui';
 
+const selectWorldId = (s: GameState) => s.ui.worldUnlockModal;
+/** A minigame is its own screen; the celebration waits until the player is back. */
+const selectInRun = (s: GameState) => s.ui.activeRun !== null;
+/**
+ * The world can reopen after an Eclipse; Ember only joins the first time. The 'ruins' tip
+ * (OnboardingManager) waits behind this modal, so it is still unseen on the first visit.
+ */
+const selectFirstVisit = (s: GameState) => !s.tutorialsSeen['ruins'];
+
+const Change: React.FC<{ icon: LucideIcon; title: string; detail: string }> = ({ icon: Icon, title, detail }) => (
+  <li className="flex items-start gap-2">
+    <span className="w-7 h-7 shrink-0 border border-gold/50 bg-gold/10 flex items-center justify-center text-gold">
+      <Icon size={14} aria-hidden />
+    </span>
+    <span className="flex flex-col min-w-0">
+      <span className="text-[11px] font-display font-bold text-ink uppercase tracking-wide leading-tight">{title}</span>
+      <span className="text-[10px] font-tech text-dim leading-tight">{detail}</span>
+    </span>
+  </li>
+);
+
+/** Shown once per climb when a world boss falls and the next world opens. */
 export const WorldUnlockModal: React.FC = () => {
-  const { newWorldUnlockedModal, closeWorldModal } = useGame();
+  const dispatch = useDispatch();
+  const worldId = useGameState(selectWorldId);
+  const inRun = useGameState(selectInRun);
+  const firstVisit = useGameState(selectFirstVisit);
+  const close = useCallback(() => {
+    dispatch({ type: 'CLOSE_WORLD_MODAL' });
+  }, [dispatch]);
 
-  if (!newWorldUnlockedModal) return null;
+  if (!worldId || inRun) return null;
 
-  const world = WORLDS.find((w) => w.id === newWorldUnlockedModal) || WORLDS[1];
+  const world = WORLDS.find((w) => w.id === worldId);
+  const name = world?.displayName ?? worldId.replace(/_/g, ' ');
+  // Companions and relics awaken with the second world (see unlockFrozenRuins in the reducer).
+  const awakens = world?.firstLevel === WORLD_TWO_FIRST_LEVEL;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
-      <div className="bg-[#101426] border-2 border-[#36D9FF] p-3.5 max-w-sm w-full rounded-none flex flex-col items-center text-center gap-2.5 shadow-[0_0_20px_rgba(155,81,111,0.2)]">
-        <div className="w-12 h-12 bg-[#36D9FF]/10 border border-[#36D9FF] flex items-center justify-center animate-pulse">
-          <Trophy size={24} className="text-[#36D9FF]" />
-        </div>
-
-        <div className="flex flex-col">
-          <span className="text-[9px] text-[#36D9FF] font-display font-bold tracking-widest uppercase">
-            NEW SECTOR BREACHED
-          </span>
-          <span className="text-sm font-display font-black text-[#FFFFFF] uppercase tracking-wider mt-0.5">
-            {world.displayName}
-          </span>
-          <span className="text-[10px] font-tech text-[#8993B2] mt-0.5">{world.description}</span>
-        </div>
-
-        <div className="bg-[#171D35] border border-white/15 p-2 w-full text-left flex flex-col gap-1 text-[11px] text-[#FFFFFF] font-mono-code">
-          <span className="text-[#36D9FF] font-display font-bold uppercase text-[9px]">SYSTEMS UNLOCKED:</span>
-          <span>&gt; COMPANION BEAST PROTOCOL AWAKENED</span>
-          <span>&gt; QUANTUM RELIC DROPS AUTHORIZED</span>
-          <span>&gt; +{((world.essenceMultiplier - 1) * 100).toFixed(0)}% ESSENCE MULTIPLIER</span>
-        </div>
-
-        <button
-          onClick={closeWorldModal}
-          className="w-full py-1.5 hud-btn text-xs font-display font-bold"
-        >
-          ENGAGE SECTOR
-        </button>
+    <Modal
+      open
+      onClose={close}
+      tone="gold"
+      title="WORLD UNLOCKED"
+      icon={<Mountain size={16} className="text-gold" aria-hidden />}
+    >
+      <div className="flex flex-col items-center text-center gap-0.5">
+        <span className="text-[10px] font-display font-bold text-dim tracking-widest uppercase">You have reached</span>
+        <span className="text-xl font-display font-black text-gold uppercase tracking-wider">{name}</span>
+        {world && (
+          <span className="text-[10px] font-tech text-dim">From level {formatNumber(world.firstLevel)} onward</span>
+        )}
+        {world?.description && <span className="text-[10px] font-tech text-dim mt-1">{world.description}</span>}
       </div>
-    </div>
+
+      <ul className="bg-panel2 border border-line p-2 flex flex-col gap-2" aria-label="What changes">
+        {world && (
+          <Change
+            icon={TrendingUp}
+            title={`Essence ×${formatNumber(world.essenceMultiplier)}`}
+            detail="Every kill in this world pays more essence."
+          />
+        )}
+        <Change icon={Skull} title="New enemies" detail="A new set of enemies and bosses to fight." />
+        {awakens && (
+          <>
+            <Change
+              icon={PawPrint}
+              title={firstVisit ? 'Companions awaken' : 'Companions'}
+              detail={
+                firstVisit
+                  ? 'Ember joins you and grows stronger from your kills. See the BEAST tab.'
+                  : 'Your companions keep growing from your kills. See the BEAST tab.'
+              }
+            />
+            <Change icon={Gem} title="Relics" detail="Relics now drop from bosses. Attune one in the RELICS tab." />
+          </>
+        )}
+      </ul>
+
+      <Button variant="gold" size="lg" block onClick={close}>
+        CONTINUE
+      </Button>
+    </Modal>
   );
 };

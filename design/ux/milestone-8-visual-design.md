@@ -1,5 +1,7 @@
 # Milestone 8 — Visual Design: Eclipse & Ascendant Powers
 
+> Engine-agnostic behaviour spec. Written for an earlier engine; node and file names in bold are historical. The live implementation is the React build — see `docs/ARCHITECTURE.md`.
+
 Transcribes the M8 UX spec into concrete visual language. Reuses the
 established chrome (void background, PrimaryButton, BadgePanel, Result
 Banner, Two-Tap Arm, slide-up/segmented patterns); the only new identity is
@@ -25,10 +27,10 @@ ally-violet (purple), boss ember (orange), the frostling periwinkle
 currency reads by shape as well as color.
 
 ## 2. Assets (SVGs, gradients only, no filters, read at 64px)
-- `sprites/ui/void_crystal_icon.svg` — a faceted upright gem: crystal-core
+- **sprites/ui/void_crystal_icon.svg** — a faceted upright gem: crystal-core
   top facet, crystal body, crystal-deep base, a thin bright edge. The
   header + cost rows + celebration use it.
-- `sprites/ui/eclipse_icon.svg` — the eclipse motif: a near-black disc with
+- **sprites/ui/eclipse_icon.svg** — the eclipse motif: a near-black disc with
   a crystal-teal corona ring (the ASCEND panel header + the ECLIPSE gameplay
   button + the celebration banner). Corona is a soft radial, no `<filter>`.
 

@@ -194,6 +194,11 @@
   transition: all 0.08s ease;
   border-radius: 0px !important;
 }
+.hud-btn-gold:disabled,
+.hud-btn-alert:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
 .hud-btn-gold:hover:not(:disabled) {
   background: #FFC857;
   color: #080A12;

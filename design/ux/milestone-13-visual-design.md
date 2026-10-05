@@ -1,5 +1,7 @@
 # Milestone 13 — Visual Design: The Journal
 
+> Engine-agnostic behaviour spec. Written for an earlier engine; node and file names in bold are historical. The live implementation is the React build — see `docs/ARCHITECTURE.md`.
+
 ## 1. The Journal introduces NO new accent — deliberately
 
 Six signature families are already spoken for: relic gold
@@ -24,7 +26,7 @@ in arcade lime is correct attribution, and the player learns "lime = Arcade"
 one more time. The Journal itself claims nothing.
 
 ## 2. Asset
-`sprites/ui/journal_icon.svg` — a closed tome: a muted violet-grey cover with
+**sprites/ui/journal_icon.svg** — a closed tome: a muted violet-grey cover with
 an ivory page edge and a single embossed rule. Deliberately quiet, in chrome
 tones, so it does not read as a sixth power system competing for attention.
 

@@ -1,398 +1,488 @@
-import React, { useState, useEffect } from 'react';
-import { useGame } from '../context/GameContext';
-import { sound } from '../utils/audio';
+import React, { useEffect, useId, useRef, useState } from 'react';
+import {
+  BarChart2,
+  Check,
+  Download,
+  ExternalLink,
+  Info,
+  Loader2,
+  Music,
+  RotateCcw,
+  Save,
+  Settings,
+  ShieldCheck,
+  SlidersHorizontal,
+  Trash2,
+  Upload,
+  Volume2,
+  VolumeX,
+} from 'lucide-react';
+import { useControls, useDispatch, useGameState } from '../hooks/useGame';
+import { usePrivacyOptionsRequired, useRestorePurchases, useStore } from '../hooks/useMonetization';
+import { ads } from '../services/ads';
+import { audio } from '../services/audio';
+import type { GameSettings } from '../types/game';
 import { formatNumber } from '../utils/numberFormat';
-import { Settings, Volume2, VolumeX, Music, ShieldAlert, Download, Upload, Trash2, X, BarChart2, Trophy } from 'lucide-react';
-import { PlayGamesAchievementsModal } from './PlayGamesAchievementsModal';
-import { playGamesService, PlayGamesAuthStatus } from '../services/playGamesService';
+import { Button, Modal, TwoTapButton } from './ui';
 
-interface SettingsModalProps {
-  onClose: () => void;
+const PRIVACY_URL = 'https://kidriqrif.github.io/Vanta-Eclipse/privacy-policy.html';
+
+type Tab = 'SETTINGS' | 'STATS';
+type Message = { text: string; tone: 'ok' | 'warn' };
+
+function useMountedRef() {
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+  return mounted;
 }
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
-  const {
-    settings,
-    updateSettings,
-    questCounters,
-    lifetimePeakLevel,
-    eclipseCount,
-    resetGameSave,
-    exportSave,
-    importSave,
-  } = useGame();
+const Section: React.FC<{ title: string; icon: React.ReactNode; danger?: boolean; children: React.ReactNode }> = ({
+  title,
+  icon,
+  danger,
+  children,
+}) => (
+  <section className={`bg-panel2 border p-2.5 flex flex-col gap-2 ${danger ? 'border-crimson/60' : 'border-line'}`}>
+    <h3
+      className={`text-[11px] font-display font-bold uppercase tracking-wider flex items-center gap-1.5 ${danger ? 'text-crimson' : 'text-ink'}`}
+    >
+      {icon}
+      {title}
+    </h3>
+    {children}
+  </section>
+);
 
-  const [importStr, setImportStr] = useState<string>('');
-  const [copied, setCopied] = useState<boolean>(false);
-  const [confirmReset, setConfirmReset] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'SETTINGS' | 'STATS'>('SETTINGS');
-  const [showAchievements, setShowAchievements] = useState<boolean>(false);
-  const [gpgsStatus, setGpgsStatus] = useState<PlayGamesAuthStatus>(playGamesService.getStatus());
+const Hint: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <p className="text-[10px] font-tech text-dim leading-tight">{children}</p>
+);
 
-  useEffect(() => {
-    const unsub = playGamesService.subscribe((status) => {
-      setGpgsStatus(status);
-    });
-    return unsub;
-  }, []);
+const StatusLine: React.FC<{ message: Message | null }> = ({ message }) =>
+  message ? (
+    <p
+      role="status"
+      aria-live="polite"
+      className={`text-[10px] font-tech leading-tight flex items-start gap-1 ${message.tone === 'warn' ? 'text-gold' : 'text-toxic'}`}
+    >
+      {message.tone === 'warn' ? (
+        <Info size={11} className="shrink-0 mt-px" aria-hidden />
+      ) : (
+        <Check size={11} className="shrink-0 mt-px" aria-hidden />
+      )}
+      {message.text}
+    </p>
+  ) : null;
 
-  const handleExport = () => {
-    const data = exportSave();
-    navigator.clipboard.writeText(data);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+// ---------------------------------------------------------------- audio & feedback
+
+const VolumeRow: React.FC<{
+  label: string;
+  icon: React.ReactNode;
+  volume: number;
+  muted: boolean;
+  onVolume: (v: number) => void;
+  onToggleMute: () => void;
+  extra?: React.ReactNode;
+}> = ({ label, icon, volume, muted, onVolume, onToggleMute, extra }) => {
+  const id = useId();
+  const pct = `${formatNumber(Math.round(volume * 100))}%`;
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center justify-between gap-2">
+        <label htmlFor={id} className="text-[11px] font-tech text-ink flex items-center gap-1.5">
+          {icon}
+          {label}
+        </label>
+        <span className={`text-[10px] font-mono-code font-bold ${muted ? 'text-crimson' : 'text-dim'}`}>{muted ? `MUTED · ${pct}` : pct}</span>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <input
+          id={id}
+          type="range"
+          min={0}
+          max={1}
+          step={0.05}
+          value={volume}
+          aria-valuetext={muted ? `${pct}, muted` : pct}
+          onChange={(e) => onVolume(Number(e.target.value))}
+          className="flex-1 min-w-0 h-8 accent-neon cursor-pointer"
+        />
+        {extra}
+        <Button size="sm" variant={muted ? 'danger' : 'ghost'} className="min-w-[84px]" onClick={onToggleMute}>
+          {muted ? <VolumeX size={11} aria-hidden /> : <Volume2 size={11} aria-hidden />}
+          {muted ? 'UNMUTE' : 'MUTE'}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+const ToggleRow: React.FC<{ label: string; detail: string; on: boolean; onToggle: () => void }> = ({ label, detail, on, onToggle }) => (
+  <div className="flex items-center justify-between gap-2">
+    <div className="flex flex-col min-w-0">
+      <span className="text-[11px] font-tech text-ink">{label}</span>
+      <span className="text-[10px] font-tech text-dim leading-tight">{detail}</span>
+    </div>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
+      onClick={onToggle}
+      className={`shrink-0 min-h-[32px] min-w-[64px] px-2 border text-[10px] font-display font-bold uppercase flex items-center justify-center gap-1 transition-colors ${
+        on ? 'bg-active border-neon text-neon' : 'bg-void border-line text-dim hover:text-ink'
+      }`}
+    >
+      {on && <Check size={11} aria-hidden />}
+      {on ? 'ON' : 'OFF'}
+    </button>
+  </div>
+);
+
+const AudioSection: React.FC = () => {
+  const dispatch = useDispatch();
+  const settings = useGameState((s) => s.settings);
+  const update = (partial: Partial<GameSettings>) => dispatch({ type: 'UPDATE_SETTINGS', partial });
+  const sfxSilent = settings.sfxMuted || settings.sfxVolume <= 0;
+
+  return (
+    <>
+      <Section title="Sound" icon={<Volume2 size={13} className="text-neon" aria-hidden />}>
+        <VolumeRow
+          label="Sound effects"
+          icon={<Volume2 size={12} className="text-dim" aria-hidden />}
+          volume={settings.sfxVolume}
+          muted={settings.sfxMuted}
+          // Dragging the slider up while muted means "I want to hear this": unmute too.
+          onVolume={(v) => update(settings.sfxMuted && v > 0 ? { sfxVolume: v, sfxMuted: false } : { sfxVolume: v })}
+          onToggleMute={() => update({ sfxMuted: !settings.sfxMuted })}
+          extra={
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={sfxSilent}
+              aria-label="Test sound effects"
+              onClick={() => {
+                audio.unlock();
+                audio.play('crit_hit');
+              }}
+            >
+              TEST
+            </Button>
+          }
+        />
+        <VolumeRow
+          label="Music"
+          icon={<Music size={12} className="text-dim" aria-hidden />}
+          volume={settings.bgmVolume}
+          muted={settings.bgmMuted}
+          onVolume={(v) => update(settings.bgmMuted && v > 0 ? { bgmVolume: v, bgmMuted: false } : { bgmVolume: v })}
+          onToggleMute={() => update({ bgmMuted: !settings.bgmMuted })}
+        />
+      </Section>
+
+      <Section title="Feedback" icon={<SlidersHorizontal size={13} className="text-neon" aria-hidden />}>
+        <ToggleRow
+          label="Damage numbers"
+          detail="Floating numbers when you hit."
+          on={settings.damageNumbers}
+          onToggle={() => update({ damageNumbers: !settings.damageNumbers })}
+        />
+        <ToggleRow
+          label="Screen shake"
+          detail="A short shake on your critical hits."
+          on={settings.screenShake}
+          onToggle={() => update({ screenShake: !settings.screenShake })}
+        />
+        <ToggleRow
+          label="Vibration"
+          detail="A buzz on critical hits, bosses and rare drops."
+          on={settings.hapticsEnabled}
+          onToggle={() => update({ hapticsEnabled: !settings.hapticsEnabled })}
+        />
+      </Section>
+    </>
+  );
+};
+
+// ---------------------------------------------------------------- ads privacy & purchases
+
+const PrivacySection: React.FC = () => {
+  const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
+  const mounted = useMountedRef();
+  const open = async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setBusy(true);
+    try {
+      await ads.showPrivacyOptions();
+    } finally {
+      busyRef.current = false;
+      if (mounted.current) setBusy(false);
+    }
+  };
+  return (
+    <Section title="Ad privacy" icon={<ShieldCheck size={13} className="text-neon" aria-hidden />}>
+      <Hint>Review or change the choices you made about ads and your data.</Hint>
+      <Button size="md" variant="primary" block disabled={busy} aria-busy={busy} onClick={() => void open()}>
+        {busy && <Loader2 size={12} className="animate-spin" aria-hidden />}
+        AD PRIVACY OPTIONS
+      </Button>
+    </Section>
+  );
+};
+
+const PurchasesSection: React.FC = () => {
+  const restorePurchases = useRestorePurchases();
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<Message | null>(null);
+  const busyRef = useRef(false);
+  const mounted = useMountedRef();
+
+  const restore = async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setBusy(true);
+    setMessage(null);
+    let next: Message;
+    try {
+      const n = await restorePurchases();
+      next =
+        n > 0
+          ? { text: `Restored ${formatNumber(n)} purchase${n === 1 ? '' : 's'}`, tone: 'ok' }
+          : { text: 'Nothing to restore', tone: 'warn' };
+    } catch {
+      next = { text: 'Could not reach Google Play. Please try again later.', tone: 'warn' };
+    } finally {
+      busyRef.current = false;
+    }
+    if (!mounted.current) return;
+    setBusy(false);
+    setMessage(next);
   };
 
-  const handleImport = () => {
-    if (importStr.trim()) {
-      importSave(importStr.trim());
+  return (
+    <Section title="Purchases" icon={<RotateCcw size={13} className="text-gold" aria-hidden />}>
+      <Hint>New phone, or reinstalled? Restore what you bought with this Google Play account.</Hint>
+      <Button size="md" variant="gold" block disabled={busy} aria-busy={busy} className="disabled:opacity-40" onClick={() => void restore()}>
+        {busy ? <Loader2 size={12} className="animate-spin" aria-hidden /> : <RotateCcw size={12} aria-hidden />}
+        {busy ? 'CHECKING…' : 'RESTORE PURCHASES'}
+      </Button>
+      <StatusLine message={message} />
+    </Section>
+  );
+};
+
+// ---------------------------------------------------------------- save data
+
+const SaveSection: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const controls = useControls();
+  const mounted = useMountedRef();
+  const [manualExport, setManualExport] = useState<string | null>(null);
+  const [importText, setImportText] = useState('');
+  const [message, setMessage] = useState<Message | null>(null);
+  const importId = useId();
+
+  const exportSave = async () => {
+    const text = controls.exportSave();
+    let copied = false;
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(text);
+        copied = true;
+      }
+    } catch {
+      copied = false;
+    }
+    if (!mounted.current) return;
+    if (copied) {
+      setManualExport(null);
+      setMessage({ text: 'Save copied to the clipboard. Paste it somewhere safe.', tone: 'ok' });
+    } else {
+      setManualExport(text);
+      setMessage({ text: 'Could not copy automatically. Select the text below and copy it.', tone: 'warn' });
+    }
+  };
+
+  const importSave = () => {
+    const ok = controls.importSave(importText);
+    if (ok) {
+      setImportText('');
+      setManualExport(null);
+      setMessage({ text: 'Save loaded.', tone: 'ok' });
+    } else {
+      setMessage({ text: 'That is not a valid save', tone: 'warn' });
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
-      <div className="bg-[#101426] border-2 border-[#30395C] max-w-sm w-full rounded-none flex flex-col overflow-hidden max-h-[90vh] shadow-[0_0_30px_rgba(0,0,0,0.9)]">
-        {/* Modal Header */}
-        <div className="p-3 border-b border-[#30395C] flex items-center justify-between bg-[#171D35]">
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 bg-[#101426] border border-[#36D9FF] flex items-center justify-center shadow-[0_0_6px_rgba(54,217,255,0.3)]">
-              <Settings size={12} className="text-[#36D9FF]" />
-            </div>
-            <span className="text-xs font-display font-bold text-[#E8EDF7] uppercase tracking-wider">
-              SYS://CONFIGURATION_HUB
-            </span>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-5 h-5 bg-[#101426] hover:bg-[#FF4268] hover:text-[#080A12] text-[#8993B2] border border-[#30395C] flex items-center justify-center transition-all"
-          >
-            <X size={12} />
-          </button>
-        </div>
+    <>
+      <Section title="Save data" icon={<Save size={13} className="text-neon" aria-hidden />}>
+        <Hint>Your progress is saved on this device. Export it to keep a copy, or to move it to another device.</Hint>
+        <Button size="md" variant="primary" block onClick={() => void exportSave()}>
+          <Download size={12} aria-hidden /> EXPORT SAVE
+        </Button>
+        {manualExport !== null && (
+          <textarea
+            readOnly
+            value={manualExport}
+            rows={3}
+            aria-label="Your save. Select all and copy it."
+            onFocus={(e) => e.currentTarget.select()}
+            className="w-full bg-void border border-line text-[10px] font-mono-code text-ink p-1.5 break-all resize-none select-text outline-none focus:border-neon"
+          />
+        )}
 
-        {/* Tab Toggle */}
-        <div className="grid grid-cols-2 border-b border-[#30395C] bg-[#171D35]">
-          <button
-            onClick={() => setActiveTab('SETTINGS')}
-            className={`py-2 text-xs font-display font-bold tracking-wider transition-all rounded-none ${
-              activeTab === 'SETTINGS'
-                ? 'bg-[#36D9FF] text-[#080A12] shadow-[0_0_8px_rgba(54,217,255,0.4)]'
-                : 'text-[#8993B2] hover:text-[#E8EDF7]'
-            }`}
-          >
-            PREFERENCES
-          </button>
-          <button
-            onClick={() => setActiveTab('STATS')}
-            className={`py-2 text-xs font-display font-bold tracking-wider transition-all rounded-none ${
-              activeTab === 'STATS'
-                ? 'bg-[#36D9FF] text-[#080A12] shadow-[0_0_8px_rgba(54,217,255,0.4)]'
-                : 'text-[#8993B2] hover:text-[#E8EDF7]'
-            }`}
-          >
-            LIFETIME STATS
-          </button>
-        </div>
-
-        <div className="p-3 overflow-y-auto flex flex-col gap-2.5 bg-[#101426]">
-          {activeTab === 'SETTINGS' ? (
+        <label htmlFor={importId} className="text-[11px] font-tech text-ink pt-1">
+          Load a save
+        </label>
+        <textarea
+          id={importId}
+          value={importText}
+          rows={3}
+          placeholder="Paste an exported save here"
+          spellCheck={false}
+          autoCapitalize="off"
+          autoCorrect="off"
+          onChange={(e) => setImportText(e.target.value)}
+          className="w-full bg-void border border-line text-[10px] font-mono-code text-ink p-1.5 break-all resize-none select-text outline-none placeholder:text-faint focus:border-neon"
+        />
+        <TwoTapButton
+          size="md"
+          block
+          variant="primary"
+          armedVariant="danger"
+          disabled={!importText.trim()}
+          label={
             <>
-              {/* Volume Sliders & Master Control */}
-              <div className="flex flex-col gap-2.5 bg-[#171D35] border border-[#30395C] p-2.5 rounded-none">
-                {/* Audio Matrix Header & Master Switch */}
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-display font-bold text-[#E8EDF7] uppercase flex items-center gap-1.5">
-                    <Volume2 size={13} className="text-[#36D9FF]" /> AUDIO MATRIX
-                  </span>
-
-                  {/* Master Mute / Active Button */}
-                  <button
-                    id="btn-settings-master-mute"
-                    onClick={() => {
-                      const isAllMuted = settings.sfxMuted && settings.bgmMuted;
-                      updateSettings({ sfxMuted: !isAllMuted, bgmMuted: !isAllMuted });
-                    }}
-                    className={`px-2 py-0.5 text-[9px] font-mono-code font-bold uppercase border transition-all flex items-center gap-1 cursor-pointer select-none ${
-                      settings.sfxMuted && settings.bgmMuted
-                        ? 'bg-[#101426] border-[#FF4268] text-[#FF4268] hover:bg-[#FF4268] hover:text-[#080A12]'
-                        : 'bg-[#101426] border-[#36D9FF]/60 text-[#36D9FF] hover:border-[#36D9FF]'
-                    }`}
-                    title={settings.sfxMuted && settings.bgmMuted ? 'Unmute Master Audio' : 'Mute All Audio'}
-                  >
-                    {settings.sfxMuted && settings.bgmMuted ? (
-                      <>
-                        <VolumeX size={11} className="text-[#FF4268]" />
-                        <span>MASTER MUTED</span>
-                      </>
-                    ) : (
-                      <>
-                        <Volume2 size={11} className="text-[#36D9FF]" />
-                        <span>MASTER ONLINE</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                {/* Tactical SFX Channel */}
-                <div className="flex flex-col gap-1 bg-[#101426] border border-[#30395C]/60 p-2">
-                  <div className="flex items-center justify-between text-[9px] font-mono-code">
-                    <span className="text-[#8993B2] font-bold">SOUND EFFECTS (SFX)</span>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => sound.play('crit_hit')}
-                        disabled={settings.sfxMuted || settings.sfxVolume <= 0}
-                        className="px-1.5 py-0.5 bg-[#171D35] hover:bg-[#36D9FF] hover:text-[#080A12] border border-[#30395C] text-[#8993B2] text-[8px] font-bold uppercase transition-all disabled:opacity-30 disabled:pointer-events-none"
-                        title="Test Sound Effect"
-                      >
-                        TEST
-                      </button>
-                      <button
-                        onClick={() => updateSettings({ sfxMuted: !settings.sfxMuted })}
-                        className={`flex items-center gap-1 font-bold ${
-                          settings.sfxMuted ? 'text-[#FF4268]' : 'text-[#36D9FF]'
-                        }`}
-                        title={settings.sfxMuted ? 'Enable Sound Effects' : 'Mute Sound Effects'}
-                      >
-                        {settings.sfxMuted ? <VolumeX size={11} /> : <Volume2 size={11} />}
-                        <span>{settings.sfxMuted ? 'MUTED' : `${Math.round(settings.sfxVolume * 100)}%`}</span>
-                      </button>
-                    </div>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.05"
-                    value={settings.sfxVolume}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      updateSettings({ sfxVolume: val, sfxMuted: val === 0 ? true : settings.sfxMuted && val > 0 ? false : settings.sfxMuted });
-                    }}
-                    className="accent-[#36D9FF] cursor-pointer w-full"
-                  />
-                </div>
-
-                {/* Ambient BGM Channel */}
-                <div className="flex flex-col gap-1 bg-[#101426] border border-[#30395C]/60 p-2">
-                  <div className="flex items-center justify-between text-[9px] font-mono-code">
-                    <span className="text-[#8993B2] font-bold">BACKGROUND MUSIC (BGM)</span>
-                    <button
-                      onClick={() => updateSettings({ bgmMuted: !settings.bgmMuted })}
-                      className={`flex items-center gap-1 font-bold ${
-                        settings.bgmMuted ? 'text-[#FF4268]' : 'text-[#36D9FF]'
-                      }`}
-                      title={settings.bgmMuted ? 'Enable Background Music' : 'Mute Background Music'}
-                    >
-                      {settings.bgmMuted ? <VolumeX size={11} /> : <Music size={11} />}
-                      <span>{settings.bgmMuted ? 'MUTED' : `${Math.round(settings.bgmVolume * 100)}%`}</span>
-                    </button>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.05"
-                    value={settings.bgmVolume}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      updateSettings({ bgmVolume: val, bgmMuted: val === 0 ? true : settings.bgmMuted && val > 0 ? false : settings.bgmMuted });
-                    }}
-                    className="accent-[#36D9FF] cursor-pointer w-full"
-                  />
-                </div>
-              </div>
-
-              {/* Visual Toggles */}
-              <div className="flex flex-col gap-1.5 bg-[#171D35] border border-[#30395C] p-2.5 rounded-none">
-                <span className="text-xs font-display font-bold text-[#E8EDF7] uppercase">
-                  FEEDBACK TELEMETRY
-                </span>
-
-                <label className="flex items-center justify-between text-xs text-[#E8EDF7] font-tech cursor-pointer py-0.5">
-                  <span>FLOATING DAMAGE NUMBERS</span>
-                  <input
-                    type="checkbox"
-                    checked={settings.damageNumbers}
-                    onChange={(e) =>
-                      updateSettings({ damageNumbers: e.target.checked })
-                    }
-                    className="accent-[#36D9FF] w-4 h-4 cursor-pointer"
-                  />
-                </label>
-
-                <label className="flex items-center justify-between text-xs text-[#E8EDF7] font-tech cursor-pointer py-0.5">
-                  <span>IMPACT CAMERA SHAKE</span>
-                  <input
-                    type="checkbox"
-                    checked={settings.screenShake}
-                    onChange={(e) =>
-                      updateSettings({ screenShake: e.target.checked })
-                    }
-                    className="accent-[#36D9FF] w-4 h-4 cursor-pointer"
-                  />
-                </label>
-              </div>
-
-              {/* Google Play Games Services */}
-              <div className="flex flex-col gap-2 bg-[#171D35] border border-[#30395C] p-2.5 rounded-none">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-display font-bold text-[#E8EDF7] uppercase flex items-center gap-1.5">
-                    <Trophy size={13} className="text-[#FFC857]" /> GOOGLE PLAY GAMES
-                  </span>
-                  {gpgsStatus.isConnected ? (
-                    <span className="text-[8px] font-mono-code text-[#36D9FF] bg-[#17283A] border border-[#36D9FF]/40 px-1.5 py-0.5 font-bold">
-                      {gpgsStatus.isSandboxMode ? 'SANDBOX' : 'CONNECTED'}
-                    </span>
-                  ) : (
-                    <span className="text-[8px] font-mono-code text-[#8993B2]">
-                      DISCONNECTED
-                    </span>
-                  )}
-                </div>
-
-                <p className="text-[10px] font-tech text-[#8993B2] leading-tight">
-                  Synchronize milestones, earn official Play Games XP, and view global game achievements.
-                </p>
-
-                <button
-                  id="btn-settings-achievements"
-                  onClick={() => setShowAchievements(true)}
-                  className="w-full py-2 bg-[#101426] hover:bg-[#36D9FF] hover:text-[#080A12] border border-[#36D9FF] text-xs font-display font-bold text-[#36D9FF] flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_12px_rgba(54,217,255,0.25)] active:scale-98"
-                >
-                  <Trophy size={14} className="text-[#FFC857]" />
-                  <span>ACHIEVEMENTS</span>
-                </button>
-              </div>
-
-              {/* Save Export / Import */}
-              <div className="flex flex-col gap-2 bg-[#171D35] border border-[#30395C] p-2.5 rounded-none">
-                <span className="text-xs font-display font-bold text-[#E8EDF7] uppercase">
-                  ARCHIVE PERSISTENCE
-                </span>
-
-                <button
-                  onClick={handleExport}
-                  className="w-full py-1.5 bg-[#101426] hover:bg-[#17283A] border border-[#30395C] text-[#E8EDF7] text-xs font-display font-bold flex items-center justify-center gap-1 transition-all"
-                >
-                  <Download size={12} className="text-[#36D9FF]" /> {copied ? 'ENCRYPTED SAVE COPIED' : 'EXPORT SAVE STRING'}
-                </button>
-
-                <div className="flex flex-col gap-1 mt-0.5">
-                  <input
-                    type="text"
-                    placeholder="PASTE SAVE STRING..."
-                    value={importStr}
-                    onChange={(e) => setImportStr(e.target.value)}
-                    className="bg-[#101426] border border-[#30395C] text-xs text-[#E8EDF7] px-2 py-1 outline-none font-mono-code focus:border-[#36D9FF]"
-                  />
-                  <button
-                    onClick={handleImport}
-                    disabled={!importStr.trim()}
-                    className="py-1 bg-[#101426] hover:bg-[#17283A] border border-[#30395C] text-[#E8EDF7] text-xs font-display font-bold flex items-center justify-center gap-1 disabled:opacity-40 transition-all"
-                  >
-                    <Upload size={12} className="text-[#FFC857]" /> RESTORE ARCHIVE
-                  </button>
-                </div>
-              </div>
-
-              {/* Hard Reset */}
-              <div className="flex flex-col gap-1.5 bg-[#171D35] border border-[#FF4268]/50 p-2.5 rounded-none">
-                <span className="text-xs font-display font-bold text-[#FF4268] uppercase flex items-center gap-1">
-                  <ShieldAlert size={12} /> DANGER PROTOCOL
-                </span>
-                <span className="text-[9px] font-tech text-[#8993B2]">
-                  Permanently wipe all progress, unlocked gear, cards, and prestige matrix.
-                </span>
-
-                {confirmReset ? (
-                  <div className="flex gap-2 mt-1">
-                    <button
-                      onClick={resetGameSave}
-                      className="flex-1 py-1 bg-[#FF4268] text-[#080A12] text-xs font-display font-bold hover:brightness-110"
-                    >
-                      CONFIRM PURGE
-                    </button>
-                    <button
-                      onClick={() => setConfirmReset(false)}
-                      className="flex-1 py-1 bg-[#101426] border border-[#30395C] text-xs font-display font-bold text-[#E8EDF7]"
-                    >
-                      CANCEL
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setConfirmReset(true)}
-                    className="py-1 bg-[#101426] hover:bg-[#FF4268] hover:text-[#080A12] border border-[#FF4268] text-xs font-display font-bold text-[#FF4268] flex items-center justify-center gap-1 mt-0.5 transition-all"
-                  >
-                    <Trash2 size={12} /> PURGE SAVE DATA
-                  </button>
-                )}
-              </div>
-
-              {/* Legal Links */}
-              <div className="flex justify-center pt-0.5">
-                <a
-                  href="/privacy-policy.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[10px] font-tech text-[#8993B2] hover:text-[#36D9FF] transition-colors underline"
-                >
-                  PRIVACY POLICY & TERMS
-                </a>
-              </div>
+              <Upload size={12} aria-hidden /> LOAD SAVE
             </>
-          ) : (
-            /* Stats Screen */
-            <div className="flex flex-col gap-2">
-              <div className="bg-[#171D35] border border-[#30395C] p-2.5 rounded-none flex flex-col gap-2">
-                <span className="text-xs font-display font-bold text-[#E8EDF7] uppercase flex items-center gap-1">
-                  <BarChart2 size={12} className="text-[#36D9FF]" /> LIFETIME COMBAT TELEMETRY
-                </span>
+          }
+          armedLabel="TAP AGAIN: REPLACES CURRENT PROGRESS"
+          onConfirm={importSave}
+        />
+        <StatusLine message={message} />
+      </Section>
 
-                <div className="flex flex-col gap-1.5 text-xs">
-                  <div className="flex justify-between items-center text-[#E8EDF7] border-b border-[#30395C]/40 pb-1">
-                    <span className="text-[10px] font-tech text-[#8993B2]">PEAK FLOOR LEVEL:</span>
-                    <span className="font-mono-code font-bold text-[#36D9FF]">FLOOR {lifetimePeakLevel}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-[#E8EDF7] border-b border-[#30395C]/40 pb-1">
-                    <span className="text-[10px] font-tech text-[#8993B2]">TARGETS VAPORIZED:</span>
-                    <span className="font-mono-code font-bold text-[#E8EDF7]">
-                      {formatNumber(questCounters.kills || 0)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-[#E8EDF7] border-b border-[#30395C]/40 pb-1">
-                    <span className="text-[10px] font-tech text-[#8993B2]">BOSS GATES BREACHED:</span>
-                    <span className="font-mono-code font-bold text-[#FFC857]">
-                      {formatNumber(questCounters.boss_wins || 0)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-[#E8EDF7] border-b border-[#30395C]/40 pb-1">
-                    <span className="text-[10px] font-tech text-[#8993B2]">ECLIPSES EXECUTED:</span>
-                    <span className="font-mono-code font-bold text-[#36D9FF]">{eclipseCount}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-[#E8EDF7] border-b border-[#30395C]/40 pb-1">
-                    <span className="text-[10px] font-tech text-[#8993B2]">SUBSYSTEM UPGRADES:</span>
-                    <span className="font-mono-code font-bold text-[#E8EDF7]">
-                      {formatNumber(questCounters.upgrades_bought || 0)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-[#E8EDF7]">
-                    <span className="text-[10px] font-tech text-[#8993B2]">ARCADE TRIALS:</span>
-                    <span className="font-mono-code font-bold text-[#FFC857]">
-                      {questCounters.minigame_played || 0} ({questCounters.minigame_wins || 0} WINS)
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+      <Section title="Reset" icon={<Trash2 size={13} className="text-crimson" aria-hidden />} danger>
+        <Hint>Erases all progress on this device and starts a new game. This cannot be undone. Export your save first if you might want it back.</Hint>
+        <TwoTapButton
+          size="md"
+          block
+          variant="danger"
+          armedVariant="danger"
+          label={
+            <>
+              <Trash2 size={12} aria-hidden /> RESET ALL PROGRESS
+            </>
+          }
+          armedLabel="TAP AGAIN: ERASE EVERYTHING"
+          onConfirm={() => {
+            controls.resetSave();
+            onClose();
+          }}
+        />
+      </Section>
+    </>
+  );
+};
+
+// ---------------------------------------------------------------- tabs
+
+const SettingsTab: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const privacyRequired = usePrivacyOptionsRequired();
+  const store = useStore();
+  return (
+    <>
+      <AudioSection />
+      {privacyRequired && <PrivacySection />}
+      {store.available && <PurchasesSection />}
+      <SaveSection onClose={onClose} />
+    </>
+  );
+};
+
+const StatsTab: React.FC = () => {
+  const counters = useGameState((s) => s.quests.counters);
+  const peak = useGameState((s) => s.lifetimePeakLevel);
+  const eclipses = useGameState((s) => s.eclipseCount);
+  const rows: [string, number][] = [
+    ['Highest level reached', peak],
+    ['Enemies defeated', counters.kills || 0],
+    ['Bosses defeated', counters.boss_wins || 0],
+    ['Eclipses', eclipses],
+    ['Upgrades bought', counters.upgrades_bought || 0],
+    ['Taps', counters.taps || 0],
+    ['Arcade games played', counters.minigame_played || 0],
+    ['Arcade games won', counters.minigame_wins || 0],
+    ['Cards absorbed', counters.cards_absorbed || 0],
+  ];
+  return (
+    <Section title="Lifetime" icon={<BarChart2 size={13} className="text-neon" aria-hidden />}>
+      <dl className="flex flex-col">
+        {rows.map(([label, value]) => (
+          <div key={label} className="flex items-center justify-between gap-2 py-1.5 border-b border-line/50 last:border-b-0">
+            <dt className="text-[11px] font-tech text-dim">{label}</dt>
+            <dd className="text-xs font-mono-code font-bold text-ink">{formatNumber(value)}</dd>
+          </div>
+        ))}
+      </dl>
+    </Section>
+  );
+};
+
+const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
+  { id: 'SETTINGS', label: 'Settings', icon: <SlidersHorizontal size={12} aria-hidden /> },
+  { id: 'STATS', label: 'Stats', icon: <BarChart2 size={12} aria-hidden /> },
+];
+
+/** Sound, feedback, ad privacy, purchases, save data, and lifetime stats. Rendered only while open. */
+export const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const [tab, setTab] = useState<Tab>('SETTINGS');
+  return (
+    <Modal open onClose={onClose} title="Settings" icon={<Settings size={14} className="text-neon" aria-hidden />}>
+      <div role="tablist" aria-label="Settings sections" className="grid grid-cols-2 border border-line shrink-0">
+        {TABS.map((t) => {
+          const selected = tab === t.id;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={selected}
+              onClick={() => setTab(t.id)}
+              className={`min-h-[36px] text-[11px] font-display font-bold tracking-wider uppercase flex items-center justify-center gap-1.5 transition-colors ${
+                selected ? 'bg-neon text-void' : 'bg-void text-dim hover:text-ink'
+              }`}
+            >
+              {t.icon}
+              {t.label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Google Play Games Achievements Modal */}
-      {showAchievements && (
-        <PlayGamesAchievementsModal onClose={() => setShowAchievements(false)} />
-      )}
-    </div>
+      <div role="tabpanel" aria-label={tab === 'SETTINGS' ? 'Settings' : 'Stats'} className="flex flex-col gap-2.5">
+        {tab === 'SETTINGS' ? <SettingsTab onClose={onClose} /> : <StatsTab />}
+      </div>
+
+      <footer className="flex flex-col items-center gap-0.5 pt-1">
+        <a
+          href={PRIVACY_URL}
+          target="_blank"
+          rel="noopener"
+          className="min-h-[32px] inline-flex items-center gap-1 text-[10px] font-tech text-dim underline hover:text-neon"
+        >
+          Privacy policy <ExternalLink size={10} aria-hidden />
+        </a>
+        <span className="text-[9px] font-mono-code text-faint">{'Version ' + __APP_VERSION__}</span>
+      </footer>
+    </Modal>
   );
 };

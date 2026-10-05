@@ -1,14 +1,16 @@
 # Milestone 4 Visual Design — Auto-Attack Unlock & Offline Rewards
 
+> Engine-agnostic behaviour spec. Written for an earlier engine; node and file names in bold are historical. The live implementation is the React build — see `docs/ARCHITECTURE.md`.
+
 Author: art-director · Phase 2 of the UI pipeline
 Gives visual treatment to the approved UX spec
 `design/ux/milestone-4-idle-offline.md` (§3B badge, §3C toast, §3D/§3E/§7
-modal). All values are stated in `ui/theme/main_theme.tres` vocabulary
+modal). All values are stated in **ui/theme/main_theme.tres** vocabulary
 (StyleBoxFlat parameters, `Color()` constructors, theme-variation names) so
 they can be transcribed directly. No code, scenes, or SVGs ship with this
 document — the asset manifest in §3 is the artist's work order.
 
-Reference canvas: 1080×1920, matching `Assets/Scenes/Gameplay.unity`.
+Reference canvas: 1080×1920, matching **Assets/Scenes/Gameplay.unity**.
 
 ---
 
@@ -16,7 +18,7 @@ Reference canvas: 1080×1920, matching `Assets/Scenes/Gameplay.unity`.
 
 The UX spec requires the auto-attack elements to sit in a teal/cyan family
 "distinct from the violet `PrimaryButton` family." The existing violet ramp
-(from `sprites/ui/essence_icon.svg` and `main_theme.tres`) is:
+(from **sprites/ui/essence_icon.svg** and **main_theme.tres**) is:
 
 | role | violet | where it lives today |
 |---|---|---|
@@ -48,7 +50,7 @@ what `Color(0.13, 0.09, 0.22, 0.9)` is to the violet button family):
 
 **Collision check.** Teal stays clear of every accent already in play: the
 violet UI family, the crit gold `Color(1.0, 0.8, 0.25)`
-(`Assets/Scripts/UI/DamageNumber.cs`), and the health-bar crimson `Color(0.73, 0.2, 0.34)`
+(**Assets/Scripts/UI/DamageNumber.cs**), and the health-bar crimson `Color(0.73, 0.2, 0.34)`
 (`StyleBoxFlat_pb_fill`). It also survives the two CVD cases the Enhanced
 tier names: under red-green deficiency teal vs violet separates on the
 blue axis; under blue-yellow deficiency they separate on lightness
@@ -94,7 +96,7 @@ equals half the element height — the only fully-round shape in the HUD,
 which is itself a recognition cue.
 
 **Contents** — HBox, separation 10:
-- Icon: `sprites/ui/auto_attack_icon.svg` (§3, new) in a `TextureRect`,
+- Icon: **sprites/ui/auto_attack_icon.svg** (§3, new) in a `TextureRect`,
   28×28, `stretch_mode` keep-aspect-centered. Its baked-in glow disc reads
   correctly at this size; no modulate.
 - Label: plain `Label` (default font — deliberately **not** Cinzel, see
@@ -134,7 +136,7 @@ hover (22): celebratory, but never brighter than a pressed-state glow. The
 compromising text contrast (verified §4).
 
 **Contents** — VBox, separation 6, all centered:
-1. **Icon slot:** `TextureRect`, 56×56, `sprites/ui/auto_attack_icon.svg`
+1. **Icon slot:** `TextureRect`, 56×56, **sprites/ui/auto_attack_icon.svg**
    (the same asset as the badge — one icon, one meaning). The SVG's own
    radial glow disc supplies the halo; no additional styling, no modulate.
    The ⚡ in the UX wireframe is a placeholder for this texture, **not** a
@@ -163,7 +165,7 @@ Vertical budget: 16 + 56 + 6 + ~46 + 6 + ~34 + 16 ≈ 180px. ✓
 color = Color(0.016, 0.008, 0.031, 0.72)
 ```
 
-That is `SceneFlow.FadeColor` (`Assets/Scripts/Core/SceneFlow.cs`) with alpha 0.72
+That is `SceneFlow.FadeColor` (**Assets/Scripts/Core/SceneFlow.cs**) with alpha 0.72
 — literally the same void the scene fade uses, so "the world dims" is one
 consistent color everywhere. 0.72 keeps the HUD faintly legible behind the
 card (context, not competition) while killing enough background luminance
@@ -193,7 +195,7 @@ in this language, and the card is not a button.
 **Contents** — VBox, separation 12, all centered:
 
 1. **Headline row** — HBox, separation 20, centered:
-   `star_flourish.svg` 36×36 · headline · `star_flourish.svg` 36×36.
+   **star_flourish.svg** 36×36 · headline · **star_flourish.svg** 36×36.
    - The ✦ flourishes are **SVG textures, not text** (decision + risk in
      §3). The 4-point star is symmetric; the same asset flanks both sides.
    - Headline "WELCOME BACK": Cinzel, `font_size = 44`, exact `TitleLabel`
@@ -206,7 +208,7 @@ in this language, and the card is not a button.
 2. **Body:** "Your hero kept fighting while you were away." — default
    font, `font_size = 30`, `font_color = Color(0.906, 0.886, 0.973, 1)`.
 3. **Essence figure row** — HBox, separation 12, centered:
-   `essence_icon.svg` (existing) 52×52 + Label "+1.24K Essence", default
+   **essence_icon.svg** (existing) 52×52 + Label "+1.24K Essence", default
    font (matches the HUD `EssenceLabel`, which is default-font 42px —
    numbers are never Cinzel in this game), `font_size = 48`,
    `font_color = Color(0.769, 0.71, 0.992, 1)` (`#C4B5FD`, the essence
@@ -240,10 +242,10 @@ in this language, and the card is not a button.
 
 ### New assets (2)
 
-**1. `sprites/ui/auto_attack_icon.svg`** — folder `sprites/ui/`,
-canvas **128×128** (matches `essence_icon.svg`).
+**1. sprites/ui/auto_attack_icon.svg** — folder **sprites/ui/**,
+canvas **128×128** (matches **essence_icon.svg**).
 Used by: AutoAttackBadge @ 28×28, Celebration Toast @ 56×56.
-Must harmonize with: `essence_icon.svg` — same construction, hue-swapped.
+Must harmonize with: **essence_icon.svg** — same construction, hue-swapped.
 Construction (established idiom, gradients only, **no SVG filters** — the
 rasterizer does not support `feGaussianBlur`; every glow is a radial
 gradient disc):
@@ -264,12 +266,12 @@ gradient disc):
 Silhouette note: keep the bolt's outline readable at 28px — bold zigzag,
 no thin spurs; the badge is this icon's smallest and most important use.
 
-**2. `sprites/ui/star_flourish.svg`** — folder `sprites/ui/`,
+**2. sprites/ui/star_flourish.svg** — folder **sprites/ui/**,
 canvas **64×64**.
 Used by: Offline modal headline row @ 36×36, one per side (symmetric —
 one asset, no mirrored variant). Future reuse: any Centered Modal Dialog
 headline (UX §7 names prestige/delete-save confirmations).
-Must harmonize with: the four star accents in `eclipse_emblem.svg`
+Must harmonize with: the four star accents in **eclipse_emblem.svg**
 (`#C4B5FD`/`#A78BFA` dots) and the essence icon's facet language.
 Construction:
 - Faint radial glow disc, r=30 centered: `#8B5CF6` stops 0.4→0.35,
@@ -284,11 +286,11 @@ Violet family, **not** teal: it decorates the Essence-centric modal.
 ### Explicitly NOT needed (and why)
 
 - **⚡ as a text glyph (U+26A1) in the toast/badge** — replaced by
-  `auto_attack_icon.svg` in both places. An emoji codepoint would rasterize
+  **auto_attack_icon.svg** in both places. An emoji codepoint would rasterize
   from whatever fallback the platform provides: unstyled, un-themed, and
   inconsistent across Android vendors.
 - **✦ as text glyphs (U+2726 BLACK FOUR-POINTED STAR) in "✦ WELCOME BACK ✦"**
-  — replaced by `star_flourish.svg`. The font file is
+  — replaced by **star_flourish.svg**. The font file is
   `cinzel-latin-700-normal.woff2` — a *latin-subset titling face*; U+2726
   is not in it. An engine silently falls back to its default font for
   missing glyphs, which means a thin generic sans star butted against
@@ -297,11 +299,11 @@ Violet family, **not** teal: it decorates the Essence-centric modal.
   flourish as an SVG removes the font-fallback risk entirely and gives the
   flourish the same lit-facet materiality as every other icon.
 - **A separate toast icon** — badge and toast share
-  `auto_attack_icon.svg`. One glyph = one concept; the toast teaches the
+  **auto_attack_icon.svg**. One glyph = one concept; the toast teaches the
   symbol the badge then wears forever.
 - **Scrim/pill/card textures** — the scrim is a `ColorRect`, the pill and
   cards are StyleBoxFlats. No bitmap or SVG needed for any surface.
-- **Essence icon for the modal** — `sprites/ui/essence_icon.svg` already
+- **Essence icon for the modal** — **sprites/ui/essence_icon.svg** already
   exists and is used as-is at 52×52.
 
 ---
@@ -311,7 +313,7 @@ Violet family, **not** teal: it decorates the Essence-centric modal.
 Ratios computed per WCAG 2.x relative luminance, with translucent fills
 composited over their real backgrounds first (worst case: the *brightest*
 plausible nebula patch `≈ Color(0.06, 0.03, 0.13)` under the top bar;
-`nebula_background.gdshader` peaks around its `nebula_color` with the
+**nebula_background.gdshader** peaks around its `nebula_color` with the
 vignette applied). Requirement: ≥ 4.5:1 for body-size text; ≥ 3:1 for
 large text (I apply 4.5:1 everywhere — at 1080px reference width even
 28px text is physically small on a phone).
