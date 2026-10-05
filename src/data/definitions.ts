@@ -13,6 +13,8 @@ import {
   ShopProductDefinition,
   CosmeticDefinition,
   AdPlacementDefinition,
+  RarityDefinition,
+  ItemRarity,
 } from '../types/game';
 
 export const WORLDS: WorldDefinition[] = [
@@ -242,6 +244,33 @@ export const AFFIXES: AffixDefinition[] = [
   { id: 'essence', stat: 'essence', displayName: 'Essence Gain', displayTemplate: 'Essence Gain +{value}', isPercent: true, minValue: 0.05, maxValue: 0.15 },
   { id: 'boss', stat: 'boss', displayName: 'Boss Damage', displayTemplate: 'Boss Damage +{value}', isPercent: true, minValue: 0.1, maxValue: 0.3 },
 ];
+
+/** Item rarities. The pip count (affixes) is rarity + 1, so the word and the pips agree. */
+export const RARITIES: RarityDefinition[] = [
+  { id: 0, displayName: 'Common', color: '#C8CDD8', salvageYield: 2 },
+  { id: 1, displayName: 'Rare', color: '#36D9FF', salvageYield: 5 },
+  { id: 2, displayName: 'Epic', color: '#A78BFA', salvageYield: 12 },
+  { id: 3, displayName: 'Legendary', color: '#FFC857', salvageYield: 30 },
+  { id: 4, displayName: 'Mythic', color: '#FF4268', salvageYield: 75 },
+];
+
+/** Affix values are multiplied by this per rarity tier. */
+export const RARITY_AFFIX_MULT: Record<ItemRarity, number> = { 0: 1.0, 1: 1.15, 2: 1.3, 3: 1.5, 4: 1.75 };
+
+/** Cumulative-free rarity weights per loot source, indexed by rarity. Each row sums to 1. */
+export const LOOT_TABLES: Record<'enemy' | 'boss' | 'forge', number[]> = {
+  enemy: [0.74, 0.2, 0.05, 0.01, 0],
+  boss: [0.3, 0.4, 0.22, 0.07, 0.01],
+  forge: [0.7, 0.22, 0.06, 0.019, 0.001],
+};
+
+/** Chance that a normal (non-boss) kill drops an item. Bosses always drop one. */
+export const ENEMY_DROP_CHANCE = 0.03;
+
+/** Forge cost in Void Scraps; rises gently with the level the item is forged at. */
+export function getForgeCost(level: number): number {
+  return 20 + 5 * Math.floor(Math.max(1, level) / 10);
+}
 
 export const CARD_RARITIES: CardRarityDefinition[] = [
   { id: 'common', displayName: 'Common', tierColor: '#C8C8DA', potency: 1.0, dropWeight: 0.65 },
@@ -473,6 +502,8 @@ export const MINIGAMES: MinigameDefinition[] = [
     unlockLevel: 20,
     rewardSeconds: 240.0,
     tokenCost: 1,
+    lowerIsBetter: true,
+    scoreUnit: 'ms',
     sortOrder: 0,
   },
   {
@@ -484,6 +515,7 @@ export const MINIGAMES: MinigameDefinition[] = [
     rewardSeconds: 420.0,
     tokenCost: 1,
     lowerIsBetter: true,
+    scoreUnit: 'attempts',
     sortOrder: 1,
   },
   {
@@ -495,6 +527,7 @@ export const MINIGAMES: MinigameDefinition[] = [
     rewardSeconds: 520.0,
     tokenCost: 1,
     lowerIsBetter: true,
+    scoreUnit: 'moves',
     sortOrder: 2,
   },
   {
@@ -506,6 +539,7 @@ export const MINIGAMES: MinigameDefinition[] = [
     rewardSeconds: 520.0,
     tokenCost: 1,
     lowerIsBetter: true,
+    scoreUnit: 'shots',
     sortOrder: 3,
   },
   {
@@ -516,7 +550,8 @@ export const MINIGAMES: MinigameDefinition[] = [
     unlockLevel: 30,
     rewardSeconds: 260.0,
     tokenCost: 1,
-    lowerIsBetter: false,
+    lowerIsBetter: true,
+    scoreUnit: 'moves',
     sortOrder: 4,
   },
   {
@@ -528,17 +563,19 @@ export const MINIGAMES: MinigameDefinition[] = [
     rewardSeconds: 300.0,
     tokenCost: 1,
     lowerIsBetter: false,
+    scoreUnit: 'rounds',
     sortOrder: 5,
   },
   {
     id: 'rune_sweeper',
     displayName: 'Rune Sweeper',
-    description: 'Clear the ancient runic field without triggering void mines.',
+    description: 'Clear the runic field without waking a void mine. Your first tap is always safe.',
     icon: '/art/ui/minigame_sweeper_icon.png',
     unlockLevel: 50,
     rewardSeconds: 450.0,
     tokenCost: 1,
-    lowerIsBetter: false,
+    lowerIsBetter: true,
+    scoreUnit: 'sec',
     sortOrder: 6,
   },
 ];
@@ -929,9 +966,9 @@ export const PRODUCTS: ShopProductDefinition[] = [
     id: 'remove_ads',
     storeId: 'vanta_remove_ads',
     displayName: 'Remove Ads',
-    description: 'Every bonus offer becomes free and instant, forever. Daily limits still apply.',
+    description: 'Removes the banner, and every bonus offer becomes instant: no video. Daily limits still apply.',
     kind: 'REMOVE_ADS',
-    priceText: '$4.99',
+    consumable: false,
     sortOrder: 0,
   },
   {
@@ -940,7 +977,7 @@ export const PRODUCTS: ShopProductDefinition[] = [
     displayName: 'Starter Pack',
     description: '25 Void Crystals, 5 Arcade Tokens, and the Ember Trail.',
     kind: 'STARTER_PACK',
-    priceText: '$2.99',
+    consumable: false,
     crystals: 25.0,
     tokens: 5,
     cosmeticId: 'trail_ember',
@@ -952,7 +989,7 @@ export const PRODUCTS: ShopProductDefinition[] = [
     displayName: 'Astral Shards Pouch',
     description: '200 Astral Shards for cosmetics.',
     kind: 'SHARDS',
-    priceText: '$1.99',
+    consumable: true,
     shards: 200.0,
     sortOrder: 2,
   },

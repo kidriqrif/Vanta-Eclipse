@@ -43,35 +43,19 @@
 </header>
 
 <h2>What it is</h2>
-<p>An idle RPG for Android, built in Unity 6000.5.7f1. Tap to strike, or unlock
-the auto-attacker and let your hero fight without you. two
-worlds, a boss on every tenth gate, seven equipment slots,
-five relics, two pets, an arcade of
-seven real minigames, and a prestige reset that makes the next
+<p>An idle RPG for Android. Tap to strike, or unlock auto-attack at level 15
+and let your hero fight without you. Two worlds, a timed boss on every tenth
+level, six equipment slots, five relics, two companions, an arcade of seven
+minigames, daily quests, and the Eclipse: a prestige reset that makes the next
 run faster than the last.</p>
-<p>No paywall, no energy meter, no timer blocking a door. Plays in portrait,
-one-handed, offline.</p>
+<p>No paywall, no energy meter. Video adverts are optional and only ever offered
+for a bonus. Plays in portrait, one-handed, and keeps earning while you're
+away.</p>
 
-<h2>The art is generated</h2>
-<p>Every sprite, the bitmap font, the icons and all 16 sounds are
-produced by programs in <code>tools/</code> rather than drawn or recorded. A
-palette change is one edit and one command, not 57 files reopened by
-hand. The palette is closed at 16 colours and the validation sweep
-fails on any pixel outside it — and on any asset that no longer matches the
-program that draws it.</p>
-<div class="swatches"><i style="background:#08080C" title="void #08080C"></i><i style="background:#171722" title="abyss #171722"></i><i style="background:#2C2C3C" title="slate #2C2C3C"></i><i style="background:#4E4E66" title="iron #4E4E66"></i><i style="background:#8686A2" title="ash #8686A2"></i><i style="background:#C8C8DA" title="bone #C8C8DA"></i><i style="background:#F6F6FC" title="ivory #F6F6FC"></i><i style="background:#B01228" title="blood #B01228"></i><i style="background:#FF3A46" title="crimson #FF3A46"></i><i style="background:#FF8A28" title="ember #FF8A28"></i><i style="background:#FFD23C" title="gold #FFD23C"></i><i style="background:#6ADC3E" title="moss #6ADC3E"></i><i style="background:#3EDCFA" title="frost #3EDCFA"></i><i style="background:#3E82FF" title="azure #3E82FF"></i><i style="background:#A85CFF" title="violet #A85CFF"></i><i style="background:#FF6EC0" title="rose #FF6EC0"></i></div>
-
-<h2>By the numbers</h2>
-<table>
-<tr><td>Screens</td><td class="n">11</td></tr>
-<tr><td>Managers</td><td class="n">22</td></tr>
-<tr><td>Content definitions</td><td class="n">101</td></tr>
-<tr><td>Generated sprites</td><td class="n">57</td></tr>
-<tr><td>Generated sounds</td><td class="n">16</td></tr>
-<tr><td>Palette colours</td><td class="n">16</td></tr>
-<tr><td>Font glyphs</td><td class="n">106</td></tr>
-<tr><td>Validation stages</td><td class="n">8</td></tr>
-</table>
+<h2>How it's built</h2>
+<p>React 18, TypeScript and Vite, wrapped for Android with Capacitor. The whole
+game ruleset is a pure, unit-tested reducer in <code>src/game/</code>; the
+screens only read state and dispatch actions.</p>
 
 <h2>Links</h2>
 <ul>

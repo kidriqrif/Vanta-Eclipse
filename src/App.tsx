@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { AdMob } from '@capacitor-community/admob';
-import { GameProvider, useGame } from './context/GameContext';
+import React, { useCallback, useState } from 'react';
+import { GameProvider } from './context/GameProvider';
+import { useBackHandler } from './hooks/useBackHandler';
 import { Header } from './components/Header';
 import { CombatArena } from './components/CombatArena';
 import { UpgradeShop } from './components/UpgradeShop';
@@ -12,102 +12,71 @@ import { EclipsePanel } from './components/EclipsePanel';
 import { ArcadeHub } from './components/ArcadeHub';
 import { JournalPanel } from './components/JournalPanel';
 import { ShopPanel } from './components/ShopPanel';
-import { NavigationTabs, TabType } from './components/NavigationTabs';
-import { AdBanner } from './components/AdBanner';
+import { NavigationTabs, type TabType } from './components/NavigationTabs';
+import { BannerSlot } from './components/BannerSlot';
 import { SettingsModal } from './components/SettingsModal';
 import { NoAdsModal } from './components/NoAdsModal';
 import { OfflineRewardsModal } from './components/OfflineRewardsModal';
 import { WorldUnlockModal } from './components/WorldUnlockModal';
 import { OnboardingManager } from './components/OnboardingManager';
+import { ToastHost } from './components/ToastHost';
+import { EclipseOverlay } from './components/EclipseOverlay';
 
-const EclipseOverlay: React.FC = () => {
-  const { eclipsePhase } = useGame();
+const HOME_TAB: TabType = 'UPGRADES';
 
-  return (
-    <div className={`fixed inset-0 z-[100] transition-all ${
-      eclipsePhase === 'fading' ? 'bg-black opacity-100 duration-[2500ms]' : 
-      eclipsePhase === 'flashing' ? 'bg-[#FFC857] opacity-100 duration-150 mix-blend-screen' : 
-      eclipsePhase === 'recovering' ? 'bg-black opacity-0 duration-[1500ms] pointer-events-none' :
-      'bg-black opacity-0 duration-0 pointer-events-none'
-    }`} />
-  );
+const TABS: Record<TabType, React.FC> = {
+  UPGRADES: UpgradeShop,
+  GEAR: GearPanel,
+  JOURNAL: JournalPanel,
+  CARDS: CardsCollection,
+  PETS: PetsPanel,
+  RELICS: RelicsPanel,
+  ECLIPSE: EclipsePanel,
+  ARCADE: ArcadeHub,
+  SHOP: ShopPanel,
 };
 
-const GameApp: React.FC = () => {
-  const { hasRemovedAds } = useGame();
-  const [activeTab, setActiveTab] = useState<TabType>('UPGRADES');
-  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
-  const [isNoAdsOpen, setIsNoAdsOpen] = useState<boolean>(false);
+const GameShell: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<TabType>(HOME_TAB);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [noAdsOpen, setNoAdsOpen] = useState(false);
+  const openShop = useCallback(() => {
+    setNoAdsOpen(false);
+    setActiveTab('SHOP');
+  }, []);
+
+  // Android back: from any other tab, back returns home; from home it minimizes the app.
+  useBackHandler(activeTab !== HOME_TAB, () => setActiveTab(HOME_TAB));
+
+  const ActivePanel = TABS[activeTab];
 
   return (
-    <div className="w-full h-screen bg-[#040509] text-[#E8EDF7] flex items-center justify-center overflow-hidden font-mono-code select-none pt-[env(safe-area-inset-top,24px)] pb-[env(safe-area-inset-bottom,0px)]">
-      {/* Centered Tactical HUD Shell */}
-      <div className="w-full max-w-md h-full flex flex-col bg-[#080A12] bg-grid-pattern sm:border-x sm:border-[#30395C] relative shadow-[0_0_50px_rgba(0,0,0,0.95)]">
-        <EclipseOverlay />
-
-        {/* Header HUD */}
-        <Header 
-          onOpenSettings={() => setIsSettingsOpen(true)} 
-          onOpenNoAds={() => setIsNoAdsOpen(true)} 
-        />
-
-        {/* Combat Tap Arena */}
+    <div className="w-full h-[100dvh] bg-abyss text-ink flex justify-center overflow-hidden font-mono-code select-none pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+      <div className="relative w-full max-w-md h-full flex flex-col bg-void bg-grid-pattern sm:border-x sm:border-line">
+        <Header onOpenSettings={() => setSettingsOpen(true)} onOpenNoAds={() => setNoAdsOpen(true)} />
         <CombatArena />
-
-        {/* Dynamic Navigation Tab Panel */}
-        <main className="flex-1 flex flex-col min-h-0 overflow-hidden bg-[#080A12]">
-          {activeTab === 'UPGRADES' && <UpgradeShop />}
-          {activeTab === 'GEAR' && <GearPanel />}
-          {activeTab === 'JOURNAL' && <JournalPanel />}
-          {activeTab === 'CARDS' && <CardsCollection />}
-          {activeTab === 'PETS' && <PetsPanel />}
-          {activeTab === 'RELICS' && <RelicsPanel />}
-          {activeTab === 'ECLIPSE' && <EclipsePanel />}
-          {activeTab === 'ARCADE' && <ArcadeHub />}
-          {activeTab === 'SHOP' && <ShopPanel />}
+        <main className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          <ActivePanel key={activeTab} />
         </main>
-
-        {/* Bottom Navigation */}
         <NavigationTabs activeTab={activeTab} onSelectTab={setActiveTab} />
+        <BannerSlot />
 
-        {/* Non-Intrusive Tactical Telemetry Banner (Eliminated for Pro) */}
-        {!hasRemovedAds && (
-          <AdBanner 
-            onNavigateToShop={() => setActiveTab('SHOP')} 
-            onNavigateToJournal={() => setActiveTab('JOURNAL')} 
-            onNavigateToGear={() => setActiveTab('GEAR')}
-          />
-        )}
-
-        {/* Overlay Modals */}
-        {isSettingsOpen && (
-          <SettingsModal onClose={() => setIsSettingsOpen(false)} />
-        )}
-        <NoAdsModal isOpen={isNoAdsOpen} onClose={() => setIsNoAdsOpen(false)} />
+        <ToastHost />
         <OfflineRewardsModal />
         <WorldUnlockModal />
         <OnboardingManager />
+        {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
+        <NoAdsModal isOpen={noAdsOpen} onClose={() => setNoAdsOpen(false)} onOpenShop={openShop} />
+        <EclipseOverlay />
       </div>
     </div>
   );
 };
 
 export default function App() {
-  useEffect(() => {
-    const initAds = async () => {
-      try {
-        await AdMob.initialize({});
-        console.log('AdMob initialized successfully');
-      } catch (err) {
-        console.warn('AdMob initialization failed (expected on web):', err);
-      }
-    };
-    initAds();
-  }, []);
-
   return (
     <GameProvider>
-      <GameApp />
+      <GameShell />
     </GameProvider>
   );
 }

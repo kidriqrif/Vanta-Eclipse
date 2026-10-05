@@ -27,7 +27,7 @@ export interface UpgradeDefinition {
   displayName: string;
   description: string;
   stat: string;
-  modifierType: 'ADDITIVE' | 'PERCENT'; // 0 = ADDITIVE, 1 = PERCENT
+  modifierType: 'ADDITIVE' | 'PERCENT';
   valuePerLevel: number;
   displayAsPercent: boolean;
   baseCost: number;
@@ -36,7 +36,8 @@ export interface UpgradeDefinition {
   sortOrder: number;
 }
 
-export type ItemRarity = 0 | 1 | 2 | 3 | 4; // Common, Rare, Epic, Legendary, Mythic
+/** 0 Common, 1 Rare, 2 Epic, 3 Legendary, 4 Mythic. The affix count is rarity + 1. */
+export type ItemRarity = 0 | 1 | 2 | 3 | 4;
 
 export interface SlotDefinition {
   id: string;
@@ -100,6 +101,13 @@ export interface OwnedRelic {
   seen: boolean;
 }
 
+export interface RarityDefinition {
+  id: ItemRarity;
+  displayName: string;
+  color: string;
+  salvageYield: number;
+}
+
 export interface PetDefinition {
   id: string;
   stageNames: string[];
@@ -121,7 +129,8 @@ export interface SkillNodeDefinition {
   branch: 'Fortune' | 'Ascendance' | 'Automation' | 'Might';
   displayName: string;
   description: string;
-  effectKind: number; // 0 = stat, 1 = flag
+  /** 0 = additive stat, 1 = flag (unlocks a behaviour). */
+  effectKind: number;
   effectStat: string;
   valuePerLevel: number;
   displayAsPercent: boolean;
@@ -141,11 +150,14 @@ export interface MinigameDefinition {
   unlockLevel: number;
   rewardSeconds: number;
   tokenCost: number;
-  lowerIsBetter?: boolean;
+  /** Direction of the best-score record: true when a smaller score is better (moves, ms). */
+  lowerIsBetter: boolean;
+  /** What the score measures, shown next to the record ("moves", "ms"). */
+  scoreUnit: string;
   sortOrder: number;
 }
 
-export type QuestKind = 'CHAIN' | 'DAILY' | 'ACHIEVEMENT'; // 0 = chain, 1 = daily, 2 = achievement
+export type QuestKind = 'CHAIN' | 'DAILY' | 'ACHIEVEMENT';
 
 export interface QuestDefinition {
   id: string;
@@ -154,7 +166,7 @@ export interface QuestDefinition {
   kind: QuestKind;
   metric: string;
   targetValue: number;
-  rewardKind: 'ESSENCE' | 'TOKENS' | 'CRYSTALS' | 'SHARDS'; // 0 = essence, 1 = tokens, 2 = crystals, 3 = shards
+  rewardKind: 'ESSENCE' | 'TOKENS' | 'CRYSTALS' | 'SHARDS';
   rewardAmount: number;
   sortOrder: number;
   prereqId?: string;
@@ -163,11 +175,13 @@ export interface QuestDefinition {
 
 export interface ShopProductDefinition {
   id: string;
+  /** Google Play product id. Prices come from the store at runtime, never from here. */
   storeId: string;
   displayName: string;
   description: string;
   kind: 'REMOVE_ADS' | 'STARTER_PACK' | 'SHARDS';
-  priceText: string;
+  /** Consumables (shard packs) can be bought repeatedly; entitlements cannot. */
+  consumable: boolean;
   crystals?: number;
   tokens?: number;
   cosmeticId?: string;
@@ -189,7 +203,7 @@ export interface AdPlacementDefinition {
   id: string;
   displayName: string;
   description: string;
-  rewardKind: 'ESSENCE' | 'TOKEN' | 'OFFLINE_DOUBLE'; // 0 = essence, 1 = token, 2 = offline double
+  rewardKind: 'ESSENCE' | 'TOKEN' | 'OFFLINE_DOUBLE';
   rewardAmount: number;
   dailyCap: number;
   contextual?: boolean;
@@ -206,16 +220,4 @@ export interface GameSettings {
   screenShake: boolean;
 }
 
-export interface OfflineRewardData {
-  amount: number;
-  secondsAway: number;
-  wasCapped: boolean;
-}
 
-export interface DamageNumberData {
-  id: string;
-  amount: number;
-  isCrit: boolean;
-  x: number;
-  y: number;
-}

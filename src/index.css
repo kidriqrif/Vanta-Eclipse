@@ -1,33 +1,42 @@
 @import "tailwindcss";
 
-@layer base {
-  :root {
-    --color-void: #080A12;
-    --color-abyss: #040509;
-    --color-surface: #101426;
-    --color-panel: #101426;
-    --color-panel-secondary: #171D35;
-    --color-border: #30395C;
-    --color-text: #E8EDF7;
-    --color-text-dim: #8993B2;
-    --color-neon: #36D9FF;
-    --color-neon-bright: #7CF2FF;
-    --color-neon-dim: rgba(54, 217, 255, 0.2);
-    --color-neon-glow: rgba(54, 217, 255, 0.12);
-    --color-gold: #FFC857;
-    --color-crimson: #FF4268;
-    --color-disabled: #414866;
-    --color-green: #39FF14;
-    --color-purple: #A78BFA;
-  }
+/*
+ * The palette. Use these as Tailwind classes (bg-panel, text-neon, border-line, text-gold/60 …)
+ * rather than hex literals, so the theme lives in one place.
+ */
+@theme {
+  --color-void: #080a12;
+  --color-abyss: #040509;
+  --color-panel: #101426;
+  --color-panel2: #171d35;
+  --color-active: #17283a;
+  --color-line: #30395c;
+  --color-ink: #e8edf7;
+  --color-dim: #8993b2;
+  --color-faint: #414866;
+  --color-neon: #36d9ff;
+  --color-neon-bright: #7cf2ff;
+  --color-gold: #ffc857;
+  --color-crimson: #ff4268;
+  --color-purple: #a78bfa;
+  --color-toxic: #39ff14;
+}
 
+@layer base {
   body {
-    background-color: #080A12;
-    color: #E8EDF7;
+    background-color: var(--color-void);
+    color: var(--color-ink);
     font-family: 'JetBrains Mono', 'Share Tech Mono', 'Space Mono', monospace;
     user-select: none;
     -webkit-user-select: none;
     touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:focus-visible,
+  input:focus-visible,
+  a:focus-visible {
+    outline: 2px solid var(--color-neon);
+    outline-offset: 2px;
   }
 }
 
@@ -294,9 +303,72 @@
   }
 }
 
-@keyframes crtScanline {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 100%; }
+@keyframes screenShake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-3px, 2px); }
+  40% { transform: translate(3px, -2px); }
+  60% { transform: translate(-2px, -1px); }
+  80% { transform: translate(2px, 1px); }
+}
+
+@keyframes tapRipple {
+  0% { opacity: 0.9; transform: translate(-50%, -50%) scale(0.3); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.6); }
+}
+
+@keyframes toastIn {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes eclipseFlash {
+  0% { opacity: 0; background: #000; }
+  30% { opacity: 1; background: #000; }
+  45% { opacity: 1; background: #ffc857; }
+  100% { opacity: 0; background: #000; }
+}
+
+.anim-shake {
+  animation: screenShake 0.22s ease-out;
+}
+
+.anim-ripple {
+  animation: tapRipple 0.45s ease-out forwards;
+}
+
+.anim-toast {
+  animation: toastIn 0.18s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.15s ease-out;
+}
+
+.anim-eclipse {
+  animation: eclipseFlash 2.4s ease-in-out forwards;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-shake,
+  .anim-enemy-idle,
+  .anim-boss-idle,
+  .anim-enemy-hit,
+  .anim-boss-hit,
+  .anim-enemy-crit {
+    animation: none !important;
+  }
 }
 
 .anim-damage {
