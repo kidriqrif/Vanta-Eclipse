@@ -1,8 +1,10 @@
 import { test } from '@playwright/test';
 import { freshGame, openTab, patchState } from './helpers';
+import { enemyHpFor } from '../src/game/stats';
 
 /**
- * Not a test: captures every screen for a visual review or store screenshots.
+ * Not a test: captures every screen for a visual layout review. The Play Store set comes from
+ * e2e/store-shots.spec.ts (1080x1920, no alpha); this one uses the Pixel 7 profile.
  * Skipped unless CAPTURE=1:  CAPTURE=1 npx playwright test e2e/screens.spec.ts
  * Writes PNGs to $SHOTS_DIR (default ./test-results/screens).
  */
@@ -12,9 +14,12 @@ test('capture screens', async ({ page }) => {
   test.skip(!process.env.CAPTURE, 'set CAPTURE=1 to capture screenshots');
   test.setTimeout(180_000);
   await freshGame(page);
+  // Seed a level-64 enemy too, or the first kill climbs on from freshGame's level-1 enemy.
+  const enemyHp = enemyHpFor(64, 'rime_fiend', false);
   await patchState(
     page,
     `s.lifetimePeakLevel = 72; s.peakRunLevel = 64; s.combat.level = 64; s.combat.mode = 'NORMAL';
+     s.combat.enemy = { defId: 'rime_fiend', level: 64, maxHp: ${enemyHp}, hp: ${enemyHp}, isBoss: false };
      s.currencies = { essence: 1234567, void_crystals: 42, astral_shards: 180, void_scraps: 260 };
      s.upgrades = { void_claws: 40, eclipse_fangs: 12, dark_focus: 18, blood_moon: 6, essence_siphon: 9 };
      s.relicsAwakened = true; s.unlockedWorlds = ['dark_forest','frozen_ruins'];

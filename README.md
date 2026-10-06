@@ -76,7 +76,13 @@ viewport:
 - v1 save migration and doubled offline earnings;
 - billing being off;
 - ad caps;
-- every arcade game paying exactly once.
+- every arcade game paying exactly once, and a boss held while one is open;
+- a second browser tab taking over the save.
+
+Two capture scripts are skipped unless `CAPTURE=1` is set:
+`e2e/store-shots.spec.ts` writes the eight Play Store screenshots to
+`production/screenshots/` (1080×1920, no alpha), and `e2e/screens.spec.ts`
+captures every screen for a layout review.
 
 To use a browser that is already installed instead of
 `npx playwright install chromium`, point `PW_CHROMIUM` at it:
@@ -105,6 +111,28 @@ It builds with compileSdk 36, targetSdk 36 and minSdk 24.
    with your upload key, and upload the app bundle to a Play Console track.
 
    Keystores and key.properties files are gitignored; keep them out of the repo.
+
+### Command-line build
+
+The same build runs without Android Studio, which is how it was checked on
+2026-10-06. You need JDK 21 and an Android SDK with `platform-tools`,
+`platforms;android-36` and `build-tools;36.0.0`, with `ANDROID_HOME` pointing at
+it (or `sdk.dir` in android/local.properties, which is gitignored):
+
+```bash
+npm run android:sync
+cd android
+./gradlew assembleDebug      # debug APK, signed with the local debug key
+./gradlew bundleRelease      # unsigned release bundle; sign it before upload
+./gradlew lintDebug          # Android lint
+```
+
+The outputs are under android/app/build/outputs/. The release bundle has no
+signing config on purpose: sign it with your upload key (Android Studio, or
+jarsigner), which stays outside the repo. If Maven Central answers with HTTP
+429 on a cold build, add
+`-Dorg.gradle.internal.network.retry.max.attempts=6 -Dorg.gradle.internal.network.retry.initial.backOff=5000`
+and rerun; downloads are cached, so each run gets further.
 
 To release a new version, bump `versionCode` and `versionName` in
 `android/app/build.gradle` and `version` in `package.json`. `vite.config.ts`

@@ -44,9 +44,15 @@ Pack" that v1 granted without payment (their crystals, tokens and trail stay).
   to a natural outcome with exactly one payout, a boss held while a minigame is open,
   quit/forfeit, and a second web tab taking over the save.
 - `npm run build` — production bundle builds.
-- Not verifiable here (no Android SDK or device in this environment): the Gradle build,
-  real AdMob ads and the consent form, Play Billing, haptics, the back button on a
-  device. `design/TESTING-GUIDE.md` has the device checklist.
+- Android, from the command line (2026-10-06): `./gradlew assembleDebug bundleRelease
+  lintDebug` succeeds with no lint errors. The merged manifest has package
+  com.vantrexagames.vantaeclipse, versionCode 5, targetSdk 36, portrait,
+  `appCategory="game"`, the 11 permissions listed in `design/RELEASE-CHECKLIST.md`, and
+  no native libraries (so no 16 KB page-size issue). The APK carries the current web
+  bundle. See "Command-line build" in `README.md`.
+- Not verifiable here (no device or emulator in this environment): the app running on a
+  phone, real AdMob ads and the consent form, Play Billing, haptics, the back button.
+  `design/TESTING-GUIDE.md` has the device checklist.
 
 ## The two switches for launch
 
@@ -68,15 +74,18 @@ Full runbook: `production/monetisation-switch.md`. Full checklist:
 - [x] Merged to `main` (2026-10-06). GitHub Pages now serves the current privacy policy
       (`docs/privacy-policy.html`, last updated 2026-10-06), which covers AdMob and Play
       Billing.
-- [ ] Play Console: Data safety (advertising ID and app interactions via the AdMob SDK;
-      purchase history once billing is on), Contains ads: Yes, target audience, content
-      rating, privacy policy URL.
-- [ ] Replace the store screenshots in `production/screenshots/` — they show the Unity
-      build. `CAPTURE=1 npx playwright test e2e/screens.spec.ts` captures every screen.
+- [ ] Play Console "App content": every answer (Data safety, content rating, target
+      audience, ads, advertising ID, sign-in details, the other declarations), the 1.4.0
+      release notes and a message for the closed testers are drafted in
+      `production/play-console.md`. Answers marked "Owner's call" need your decision.
+- [x] Store screenshots: eight 1080×1920 PNGs of the current build in
+      `production/screenshots/` (`CAPTURE=1 npx playwright test e2e/store-shots.spec.ts`
+      regenerates them).
 - [ ] Build and sign: `npm run android:sync`, then Android Studio → Generate Signed
-      Bundle with your existing upload key (kept outside the repo). Commit the
-      regenerated `android/capacitor.settings.gradle` and
-      `android/app/capacitor.build.gradle` that `cap sync` writes.
+      Bundle with your existing upload key (kept outside the repo). The unsigned build
+      is proven to work; only the signing is left. If `cap sync` changes
+      `android/capacitor.settings.gradle` or `android/app/capacitor.build.gradle`,
+      commit them.
 - [ ] Run the device checklist in `design/TESTING-GUIDE.md`.
 
 ## Known limits and deliberate choices
@@ -106,4 +115,4 @@ Full runbook: `production/monetisation-switch.md`. Full checklist:
 | `src/components/` | Screens; `minigames/` holds the host, contract and the seven games; `ui/` the primitives |
 | `src/data/definitions.ts` | All content: enemies, upgrades, gear, relics, pets, skills, minigames, quests, products, ads |
 | `e2e/` | Playwright tests (`PW_CHROMIUM=/path/to/chrome` to use a pre-installed browser) |
-| `design/`, `production/` | Specs, checklists, store listing, monetization runbook |
+| `design/`, `production/` | Specs, checklists, store listing and screenshots, Play Console answers, monetization runbook |

@@ -123,7 +123,7 @@ may restore it on a new phone. The AdMob SDK does collect data, so the form has
 to declare what the SDK collects, taken from Google's disclosure page
 (https://developers.google.com/admob/android/privacy/play-data-disclosure):
 
-- **Device or other IDs**: the advertising ID.
+- **Device or other IDs**: the advertising ID and the app set ID.
 - **App interactions** and **diagnostics**: ad requests, impressions and
   taps, plus SDK performance data.
 - **Approximate location**: derived from the IP address. The privacy policy
@@ -131,8 +131,8 @@ to declare what the SDK collects, taken from Google's disclosure page
 - **Purchase history**: once billing is enabled.
 
 The data is collected for advertising, analytics and fraud prevention, and it
-is encrypted in transit. The full list is in
-`design/RELEASE-CHECKLIST.md`.
+is encrypted in transit. The question-by-question answers are in
+`production/play-console.md`.
 
 ## Required assets
 
@@ -140,6 +140,6 @@ is encrypted in transit. The full list is in
 |---|---|---|
 | App icon | 512×512 PNG, no alpha | ✅ `production/icons/store_icon_512.png` |
 | Feature graphic | 1024×500 PNG/JPG, no alpha | ✅ `production/icons/feature_graphic_1024x500.png` |
-| Phone screenshots | 2–8; each side 320–3840 px, long side at most twice the short side | ❌ The six 1080×1920 PNGs in `production/screenshots/` come from the old Unity build (SHOP / MENU / GEAR layout, "Development build" banner). Recapture the current UI at 9:16. |
+| Phone screenshots | 2–8; each side 320–3840 px, long side at most twice the short side | ✅ Eight 1080×1920 24-bit PNGs (no alpha) of the current build in `production/screenshots/`, `01-combat.png` to `08-relics.png`, in upload order. Regenerate with `CAPTURE=1 npx playwright test e2e/store-shots.spec.ts`. |
 | Privacy policy URL | public, reachable | ✅ https://kidriqrif.github.io/Vanta-Eclipse/privacy-policy.html serves the current version (2026-10-06, covers AdMob and Play Billing), published from `docs/privacy-policy.html` on `main`. |
 | Signed AAB | current target API | Built in Android Studio from `npm run android:sync` (versionCode 5, targetSdk 36). Bundles are gitignored, so none is kept in the repo. |

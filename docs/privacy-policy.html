@@ -82,10 +82,11 @@
 <table>
   <tr><th>Data</th><th>Why</th></tr>
   <tr>
-    <td>Advertising ID</td>
-    <td>To select adverts, cap how often you see the same one, and measure
-        whether an advert was watched. This is a resettable identifier, not a
-        permanent one.</td>
+    <td>Advertising ID and app set ID</td>
+    <td>To select adverts, cap how often you see the same one, measure
+        whether an advert was watched, and prevent fraud. Both are resettable
+        identifiers, not permanent ones; the app set ID is shared only between
+        apps from the same developer on your device.</td>
   </tr>
   <tr>
     <td>Approximate location, derived from your IP address</td>
@@ -95,8 +96,10 @@
   </tr>
   <tr>
     <td>Device and app information</td>
-    <td>Device model, operating system version, language, and the identity of
-        this app. Used for advert compatibility and fraud prevention.</td>
+    <td>Device model, operating system version, language, the identity of
+        this app, and performance diagnostics such as app launch time, hang
+        rate and energy use. Used for advert compatibility, analytics and
+        fraud prevention.</td>
   </tr>
   <tr>
     <td>Advert interaction events</td>
@@ -160,15 +163,34 @@
   <li><code>VIBRATE</code> &mdash; haptic feedback on critical hits and boss
       kills, which you can turn off in Settings.</li>
 </ul>
+<p>
+  The advert SDK and the Android libraries it depends on add a few more, which
+  the game itself does not use:
+</p>
+<ul>
+  <li><code>ACCESS_ADSERVICES_AD_ID</code>,
+      <code>ACCESS_ADSERVICES_ATTRIBUTION</code> and
+      <code>ACCESS_ADSERVICES_TOPICS</code> &mdash; Android's Privacy Sandbox
+      advertising APIs, which the advert SDK may use instead of the Advertising
+      ID where available.</li>
+  <li><code>WAKE_LOCK</code> and <code>FOREGROUND_SERVICE</code> &mdash; from
+      Android's WorkManager library, which the advert SDK uses to schedule its
+      background tasks.</li>
+  <li><code>com.vantrexagames.vantaeclipse.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION</code>
+      &mdash; an internal permission that only this app holds, which Android's
+      support library uses to keep the app's own messages private to it.</li>
+</ul>
 
 <h2>Children</h2>
 <p>
   Vanta Eclipse is not directed at children under 13, is not listed in Google
   Play's Designed for Families programme, and we do not knowingly collect
-  personal information from anyone. The advert SDK is configured to treat this
-  app as a general-audience app. If you believe a child has provided personal
-  information through this app, contact us at the address below and we will
-  delete it.
+  personal information from anyone. Advert requests are not marked as directed
+  at children. We hold no personal information, so there is nothing on our side
+  to delete. If you believe a child has used this app, clearing its data on the
+  device removes everything the game stored, and the device's Advertising ID
+  can be reset in Android's settings. You can also contact us at the address
+  below.
 </p>
 
 <h2>Your rights</h2>
@@ -181,8 +203,8 @@
 <p>
   If you are in the EEA, the UK, or a US state with its own privacy law, the
   advert SDK will ask for your consent, or offer you a way to refuse, before any
-  personalised advert is shown. Refusing means you see non-personalised adverts
-  rather than none.
+  personalised advert is shown. Refusing means you see non-personalised or
+  limited adverts rather than none.
 </p>
 
 <h2>If this app changes</h2>

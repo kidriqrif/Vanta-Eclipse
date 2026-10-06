@@ -81,6 +81,10 @@ to the same account, therefore gets Remove Ads back without a tap.
       which is served by a separate repository named kidriqrif.github.io.
       A file in this repo's `docs/` would end up under /Vanta-Eclipse/, where
       AdMob would not find it.
+- [ ] Blocking controls → **Maximum ad content rating**: set it to match the
+      lowest rating Play issues for the game (G for 3+ / Everyone / PEGI 3, PG
+      for 7+ / E10+ / PEGI 7). Play's Ads policy requires the ads to suit the
+      app's rating, and `src/services/ads.ts` sets no rating of its own.
 - [ ] Settings → Test devices: register every phone you will run the release
       build on.
 

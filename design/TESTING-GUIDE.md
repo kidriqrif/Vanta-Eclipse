@@ -65,8 +65,14 @@ handle that `src/context/GameProvider.tsx` sets.
   once; an open minigame holds a boss fight (no damage, no timer drain);
   quitting forfeits the token and pays nothing.
 - `e2e/screens.spec.ts`: skipped unless `CAPTURE=1`; then it saves a
-  screenshot of every screen, for the store listing and for eyeballing
-  layout.
+  screenshot of every screen in the Pixel 7 profile, for eyeballing layout.
+  Its files are not valid store art (2:1 aspect is exceeded, and they have
+  alpha).
+- `e2e/store-shots.spec.ts`: skipped unless `CAPTURE=1`; then it writes the
+  eight Play phone screenshots to `production/screenshots/` at 1080×1920,
+  24-bit RGB. The fight shots tap until a frame passes its checks (no
+  overlapping numbers, no toast), so a run takes a couple of minutes. Run it
+  with no other Vite or Playwright session active.
 
 The dev build fakes a rewarded watch (about a second, then "rewarded"), which
 is why ad flows can run here at all. It proves the game's side of the flow and
@@ -95,7 +101,9 @@ npm run android:sync          # npm run build, then npx cap sync android
 npx cap run android           # build and install on a connected device
 ```
 
-Or `npx cap open android` and Run from Android Studio. The sync copies
+Or `npx cap open android` and Run from Android Studio, or build without the
+IDE (`./gradlew assembleDebug` in android/, see "Command-line build" in
+`README.md`) and install the APK with `adb install`. The sync copies
 the web bundle into the Android assets folder, which is generated and
 untracked, so run it before every Android build or the phone gets an old
 bundle.
