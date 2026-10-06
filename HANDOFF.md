@@ -65,8 +65,9 @@ Full runbook: `production/monetisation-switch.md`. Full checklist:
 
 ## Before the production release (owner actions)
 
-- [ ] Merge this branch to `main` so GitHub Pages serves the updated privacy policy
-      (`docs/privacy-policy.html`); the live page still says "no ads".
+- [x] Merged to `main` (2026-10-06). GitHub Pages now serves the current privacy policy
+      (`docs/privacy-policy.html`, last updated 2026-10-06), which covers AdMob and Play
+      Billing.
 - [ ] Play Console: Data safety (advertising ID and app interactions via the AdMob SDK;
       purchase history once billing is on), Contains ads: Yes, target audience, content
       rating, privacy policy URL.

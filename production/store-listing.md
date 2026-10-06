@@ -141,5 +141,5 @@ is encrypted in transit. The full list is in
 | App icon | 512×512 PNG, no alpha | ✅ `production/icons/store_icon_512.png` |
 | Feature graphic | 1024×500 PNG/JPG, no alpha | ✅ `production/icons/feature_graphic_1024x500.png` |
 | Phone screenshots | 2–8; each side 320–3840 px, long side at most twice the short side | ❌ The six 1080×1920 PNGs in `production/screenshots/` come from the old Unity build (SHOP / MENU / GEAR layout, "Development build" banner). Recapture the current UI at 9:16. |
-| Privacy policy URL | public, reachable | ⚠️ https://kidriqrif.github.io/Vanta-Eclipse/privacy-policy.html is reachable, but it still serves the 2026-08-10 no-ads version. `docs/privacy-policy.html` has the AdMob and Play Billing version and needs to reach the branch GitHub Pages publishes from. |
+| Privacy policy URL | public, reachable | ✅ https://kidriqrif.github.io/Vanta-Eclipse/privacy-policy.html serves the current version (2026-10-06, covers AdMob and Play Billing), published from `docs/privacy-policy.html` on `main`. |
 | Signed AAB | current target API | Built in Android Studio from `npm run android:sync` (versionCode 5, targetSdk 36). Bundles are gitignored, so none is kept in the repo. |

@@ -105,13 +105,13 @@ Today the build serves Google's **sample** ads and sells nothing.
 ## Play Console declarations
 
 - [ ] **Privacy policy URL**:
-      https://kidriqrif.github.io/Vanta-Eclipse/privacy-policy.html.
-      `docs/privacy-policy.html`, with an identical in-app copy at
-      `public/privacy-policy.html`, now describes AdMob, the banner, rewarded
-      videos, Play Billing and the permissions. **The live page does not yet:**
-      it is the 2026-08-10 version, which says the app has no ads. It updates
-      when the file reaches the branch GitHub Pages publishes from. After that,
-      check that the live page shows the new date.
+      https://kidriqrif.github.io/Vanta-Eclipse/privacy-policy.html. Paste it
+      into Play Console. The live page is the current version (last updated
+      2026-10-06): it describes AdMob, the banner, rewarded videos, Play
+      Billing, the permissions and Android backup. GitHub Pages publishes
+      `docs/privacy-policy.html` from `main`; keep the in-app copy at
+      `public/privacy-policy.html` identical, and bump the date when either
+      changes.
 - [ ] **Ads**: Contains ads, **Yes**. Every build from this codebase includes
       AdMob.
 - [ ] **Advertising ID**: Yes. The AdMob SDK adds the AD_ID permission, and
