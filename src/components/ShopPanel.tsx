@@ -240,6 +240,7 @@ const ProductsSection: React.FC = () => {
     try {
       const outcome = await store.buy(def.id);
       if (outcome.status === 'purchased') show(`${def.displayName}: purchased. Thank you!`);
+      else if (outcome.status === 'owned') show(`${def.displayName}: you already own this. It has been restored.`);
       else if (outcome.status === 'failed') show(outcome.message, 'warn');
       else if (outcome.status === 'unavailable') show('The store is not available right now.', 'warn');
       // 'cancelled': the player backed out; say nothing.

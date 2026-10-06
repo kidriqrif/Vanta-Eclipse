@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { MINIGAMES } from '../src/data/definitions';
-import { freshGame, getState, openTab, patchState, watchErrors } from './helpers';
+import { dispatch, freshGame, getState, openTab, patchState, watchErrors } from './helpers';
 
 async function unlockArcade(page: Page) {
   await patchState(
@@ -60,6 +60,28 @@ test.describe('arcade', () => {
       expect(errors).toEqual([]);
     });
   }
+
+  test('an open minigame holds a boss fight: auto-attack never touches the boss', async ({ page }) => {
+    const errors = watchErrors(page);
+    await freshGame(page);
+    await unlockArcade(page);
+    await patchState(
+      page,
+      `s.peakRunLevel = 39; s.combat.level = 39; s.combat.mode = 'FARM_MODE';
+       s.combat.enemy = { ...s.combat.enemy, level: 39 }; s.skills = { eternal_reflex: 1 }; return s;`,
+    );
+    await dispatch(page, { type: 'CHALLENGE_BOSS' });
+    await page.getByTestId('minigame-card-memory_match').getByRole('button', { name: /play/i }).click();
+    await expect(page.getByTestId('minigame-host')).toBeVisible();
+    const start = await getState(page);
+    expect(start.combat.mode).toBe('BOSS_FIGHT');
+    expect(start.ui.activeRun).not.toBeNull();
+    await page.waitForTimeout(3000);
+    const held = await getState(page);
+    expect(held.combat.enemy.hp).toBe(start.combat.enemy.hp);
+    expect(held.combat.bossTimeLeft).toBe(start.combat.bossTimeLeft);
+    expect(errors).toEqual([]);
+  });
 
   test('quitting forfeits the token, pays nothing and unpauses the boss timer', async ({ page }) => {
     const errors = watchErrors(page);

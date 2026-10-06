@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { setArcadeOverlay } from '../../hooks/useArcadeOverlay';
+import { useBannerHeight } from '../../hooks/useMonetization';
 import { Trophy } from 'lucide-react';
 import { minigameDef } from '../../game/arcade';
 import { useDispatch, useGameState } from '../../hooks/useGame';
@@ -43,6 +45,13 @@ export const MinigameHost: React.FC<{ gameId: string; runId: number; onClose: ()
 
   /** Set by the first finish or quit; nothing pays after it. */
   const latched = useRef(false);
+  const bannerHeight = useBannerHeight();
+
+  // While this overlay is up the app shell is inert and game dialogs wait (see useArcadeOverlay).
+  useEffect(() => {
+    setArcadeOverlay(true);
+    return () => setArcadeOverlay(false);
+  }, []);
   const [banner, setBanner] = useState<Banner | null>(null);
   const [armed, setArmed] = useState(false);
 
@@ -106,7 +115,9 @@ export const MinigameHost: React.FC<{ gameId: string; runId: number; onClose: ()
       aria-modal="true"
       aria-label={name}
       data-testid="minigame-host"
-      className="fixed inset-0 z-[70] bg-void text-ink font-mono-code select-none outline-none flex justify-center pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]"
+      className="fixed inset-0 z-[70] bg-void text-ink font-mono-code select-none outline-none flex justify-center pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]"
+      // Keep every game control clear of the native banner, which is drawn above the WebView.
+      style={{ paddingBottom: `calc(env(safe-area-inset-bottom) + ${bannerHeight}px)` }}
     >
       <div className="w-full max-w-md h-full flex flex-col bg-void bg-grid-pattern">
         <header className="shrink-0 grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-2.5 py-2 bg-panel border-b border-line">

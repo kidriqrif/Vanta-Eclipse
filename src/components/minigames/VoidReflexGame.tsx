@@ -7,7 +7,7 @@ const ROUNDS = 5;
 const SIGILS = 5;
 const WIN_HITS = 3;
 const MIN_WAIT_MS = 800;
-const MAX_WAIT_MS = 2500;
+const MAX_WAIT_MS = 2200;
 /** A flare left untapped this long is a miss, so an interrupted run still reaches its end. */
 const FLARE_TIMEOUT_MS = 2500;
 const FEEDBACK_MS = 700;
@@ -76,12 +76,12 @@ function hitTimes(outcomes: Outcome[]): number[] {
 
 function summarize(outcomes: Outcome[]): MinigameResult {
   const hits = hitTimes(outcomes);
-  // 150ms or faster is a perfect round; slower hits taper to a floor of 0.2; a miss is 0.
-  const total = hits.reduce((sum, ms) => sum + clamp(1 - (ms - 150) / 850, 0.2, 1), 0);
+  // M9 §6: a 250 ms reaction scores 1.0, tapering to 0 at 900 ms; performance is the mean over hits.
+  const total = hits.reduce((sum, ms) => sum + clamp((900 - ms) / 650, 0, 1), 0);
   const avg = hits.length > 0 ? Math.round(hits.reduce((a, b) => a + b, 0) / hits.length) : 0;
   return {
     won: hits.length >= WIN_HITS,
-    performance: total / ROUNDS,
+    performance: hits.length > 0 ? total / hits.length : 0,
     score: avg,
     detail:
       hits.length > 0
@@ -121,7 +121,7 @@ function statusLine(s: RoundState): { text: string; tone: string } {
 }
 
 /**
- * Void Reflex (spec M9 §6): five rounds; after a random 0.8–2.5s one of five sigils flares and
+ * Void Reflex (spec M9 §6): five rounds; after a random 0.8–2.2s one of five sigils flares and
  * the player taps it on press. Win = 3+ hits. Score = mean hit reaction in ms (lower is better).
  */
 export const VoidReflexGame: React.FC<MinigameProps> = ({ onFinish }) => {

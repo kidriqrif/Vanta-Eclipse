@@ -1,6 +1,7 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { GameProvider } from './context/GameProvider';
 import { useBackHandler } from './hooks/useBackHandler';
+import { useArcadeOverlayOpen } from './hooks/useArcadeOverlay';
 import { Header } from './components/Header';
 import { CombatArena } from './components/CombatArena';
 import { UpgradeShop } from './components/UpgradeShop';
@@ -48,10 +49,18 @@ const GameShell: React.FC = () => {
   // Android back: from any other tab, back returns home; from home it minimizes the app.
   useBackHandler(activeTab !== HOME_TAB, () => setActiveTab(HOME_TAB));
 
+  // While a minigame covers the screen, nothing underneath can be focused or clicked, so keyboard
+  // focus can never wander into the nav and switch tabs out from under a running game.
+  const arcadeOpen = useArcadeOverlayOpen();
+  const shellRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (shellRef.current) shellRef.current.inert = arcadeOpen;
+  }, [arcadeOpen]);
+
   const ActivePanel = TABS[activeTab];
 
   return (
-    <div className="w-full h-[100dvh] bg-abyss text-ink flex justify-center overflow-hidden font-mono-code select-none pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+    <div ref={shellRef} className="w-full h-[100dvh] bg-abyss text-ink flex justify-center overflow-hidden font-mono-code select-none pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       <div className="relative w-full max-w-md h-full flex flex-col bg-void bg-grid-pattern sm:border-x sm:border-line">
         <Header onOpenSettings={() => setSettingsOpen(true)} onOpenNoAds={() => setNoAdsOpen(true)} />
         <CombatArena />
@@ -62,11 +71,13 @@ const GameShell: React.FC = () => {
         <BannerSlot />
 
         <ToastHost />
+        {/* Player-opened dialogs first, game-triggered ones after: a dialog the game opens later
+            then draws on top AND is the one the Android back button closes. */}
+        {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
+        <NoAdsModal isOpen={noAdsOpen} onClose={() => setNoAdsOpen(false)} onOpenShop={openShop} />
         <OfflineRewardsModal />
         <WorldUnlockModal />
         <OnboardingManager />
-        {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
-        <NoAdsModal isOpen={noAdsOpen} onClose={() => setNoAdsOpen(false)} onOpenShop={openShop} />
         <EclipseOverlay />
       </div>
     </div>

@@ -1,6 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { ToastTone } from '../game/actions';
-import { useFx } from '../hooks/useGame';
+import { selectHasRemovedAds } from '../game/selectors';
+import { useFx, useGameState } from '../hooks/useGame';
+import { useBannerHeight } from '../hooks/useMonetization';
+import { BANNER_GAP_PX } from './BannerSlot';
 
 interface Toast {
   id: number;
@@ -16,6 +19,8 @@ const TONE: Record<ToastTone, string> = {
 };
 const MAX_VISIBLE = 3;
 const LIFETIME_MS = 2600;
+/** Height of the bottom nav bar plus a little air. */
+const NAV_OFFSET_PX = 76;
 
 /** Short, non-blocking notices from the game (loot, unlocks, boss results). Never steals input. */
 export const ToastHost: React.FC = () => {
@@ -42,9 +47,14 @@ export const ToastHost: React.FC = () => {
     if (fx.type === 'toast') push(fx.text, fx.tone);
   });
 
+  // Toasts sit above the nav bar, and above the banner strip when one is showing.
+  const removed = useGameState(selectHasRemovedAds);
+  const banner = useBannerHeight();
+  const bottom = NAV_OFFSET_PX + (removed || banner <= 0 ? 0 : banner + BANNER_GAP_PX);
+
   if (toasts.length === 0) return null;
   return (
-    <div className="pointer-events-none absolute left-2 right-2 bottom-[76px] z-[55] flex flex-col items-center gap-1" aria-live="polite">
+    <div className="pointer-events-none absolute left-2 right-2 z-[55] flex flex-col items-center gap-1" style={{ bottom }} aria-live="polite">
       {toasts.map((t) => (
         <div key={t.id} className={`anim-toast max-w-full bg-panel/95 border px-2.5 py-1 text-[10px] font-display font-bold uppercase tracking-wide ${TONE[t.tone]}`}>
           {t.text}

@@ -406,14 +406,18 @@ const ForgeSection: React.FC<{ onForged: (item: Item) => void; onNotice: (text: 
 
   const forge = () => {
     if (timer.current || !canForge) return;
+    // Charge now, at the price and level on the button; only the reveal waits for the beat.
+    const res = dispatch({ type: 'FORGE_ITEM', slot });
+    if (!res.ok || !res.item) {
+      onNotice(res.reason === 'not_enough' ? 'Not enough scraps to forge.' : 'That slot cannot be forged.');
+      return;
+    }
+    const item = res.item;
     setForging(true);
-    const chosen = slot;
     timer.current = setTimeout(() => {
       timer.current = null;
       setForging(false);
-      const res = dispatch({ type: 'FORGE_ITEM', slot: chosen });
-      if (res.ok && res.item) onForged(res.item);
-      else onNotice(res.reason === 'not_enough' ? 'Not enough scraps to forge.' : 'That slot cannot be forged.');
+      onForged(item);
     }, FORGE_BEAT_MS);
   };
 

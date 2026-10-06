@@ -129,7 +129,7 @@ function cleanCard(v: unknown, nextId: () => number, now: number): Card | null {
  */
 function fromV1(v1: Loose, now: number, today: string): Loose {
   const purchased = strArr(v1.purchasedProducts);
-  const sameDay = v1.lastDailyDate === today;
+  const sameDay = typeof v1.lastDailyDate === 'string' && v1.lastDailyDate >= today;
   return {
     version: SAVE_VERSION,
     currencies: v1.currencies,
@@ -154,7 +154,7 @@ function fromV1(v1: Loose, now: number, today: string): Loose {
       claimed: v1.claimedQuests,
       daily: sameDay
         ? {
-            date: today,
+            date: v1.lastDailyDate,
             ids: v1.activeDailyIds,
             counters: v1.dailyQuestCounters,
             claimed: v1.dailyClaimedQuests,
@@ -237,13 +237,16 @@ export function sanitize(raw: Loose, now: number, rng: Rng, legacyTutorials?: Lo
 
   const questsRaw = isObj(raw.quests) ? raw.quests : {};
   const dailyRaw = isObj(questsRaw.daily) ? questsRaw.daily : null;
+  // A saved day that is today, or "later" because the clock was set back, is kept as is: only a
+  // forward date change starts a fresh set (M13 §5).
+  const savedDate = dailyRaw && typeof dailyRaw.date === 'string' ? dailyRaw.date : '';
   const daily =
-    dailyRaw && dailyRaw.date === today
+    dailyRaw && savedDate >= today
       ? {
-          date: today,
+          date: savedDate,
           ids: (() => {
             const ids = strArr(dailyRaw.ids).filter((id) => DAILY_QUESTS.has(id));
-            return ids.length > 0 ? ids : freshDaily(today).ids;
+            return ids.length > 0 ? ids : freshDaily(savedDate).ids;
           })(),
           counters: cleanCounters(dailyRaw.counters),
           claimed: uniq(strArr(dailyRaw.claimed).filter((id) => DAILY_QUESTS.has(id))),

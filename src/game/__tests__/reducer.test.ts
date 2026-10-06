@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { QUESTS, getForgeCost } from '../../data/definitions';
+import { ADS, QUESTS, getForgeCost } from '../../data/definitions';
 import { minigamePayout } from '../arcade';
 import { eclipsePayout } from '../reducer';
 import { BOSS_FIGHT_SECONDS, TOKEN_CAP, TOKEN_REGEN_MS } from '../state';
@@ -416,5 +416,106 @@ describe('ads, purchases and offline', () => {
     expect(h.dispatch({ type: 'PURCHASE_GRANTED', productId: 'shards_small', transactionId: 'GPA.1' })).toMatchObject({ ok: false, reason: 'already_granted' });
     expect(h.dispatch({ type: 'PURCHASE_GRANTED', productId: 'shards_small', transactionId: 'GPA.2' }).ok).toBe(true);
     expect(h.state.currencies.astral_shards).toBe(400);
+  });
+});
+
+describe('review fixes', () => {
+  const weakAtGate = () =>
+    newGame((d) => {
+      d.peakRunLevel = 39;
+      d.lifetimePeakLevel = 60;
+      d.combat.level = 39;
+      d.combat.mode = 'FARM_MODE';
+    });
+
+  it('a minigame holds the whole boss fight: no timer, no auto-attack damage, no win', () => {
+    const h = harness(weakAtGate());
+    expect(h.dispatch({ type: 'CHALLENGE_BOSS' }).ok).toBe(true);
+    const hp = h.state.combat.enemy.hp;
+    h.dispatch({ type: 'ARCADE_START', gameId: 'memory_match' });
+    for (let i = 0; i < 20_000; i++) h.dispatch({ type: 'TICK', dtMs: 100 });
+    expect(h.state.combat).toMatchObject({ mode: 'BOSS_FIGHT', level: 40, bossTimeLeft: BOSS_FIGHT_SECONDS });
+    expect(h.state.combat.enemy.hp).toBe(hp);
+    expect(h.state.quests.counters.boss_wins || 0).toBe(0);
+    expect(h.dispatch({ type: 'TAP', x: 1, y: 1, touch: true })).toMatchObject({ ok: false, reason: 'busy' });
+  });
+
+  it('the Welcome-back report and the world-unlock celebration hold the boss fight too', () => {
+    for (const block of ['offline', 'world'] as const) {
+      const h = harness(weakAtGate());
+      h.dispatch({ type: 'CHALLENGE_BOSS' });
+      const hp = h.state.combat.enemy.hp;
+      if (block === 'offline') expect(h.dispatch({ type: 'APPLY_OFFLINE', secondsAway: 3600 }).ok).toBe(true);
+      else h.state = { ...h.state, ui: { ...h.state.ui, worldUnlockModal: 'frozen_ruins' } };
+      for (let i = 0; i < 1000; i++) h.dispatch({ type: 'TICK', dtMs: 100 });
+      expect(h.state.combat.bossTimeLeft).toBe(BOSS_FIGHT_SECONDS);
+      expect(h.state.combat.enemy.hp).toBe(hp);
+      h.dispatch(block === 'offline' ? { type: 'DISMISS_OFFLINE' } : { type: 'CLOSE_WORLD_MODAL' });
+      for (let i = 0; i < 20; i++) h.dispatch({ type: 'TICK', dtMs: 100 });
+      expect(h.state.combat.bossTimeLeft).toBeLessThan(BOSS_FIGHT_SECONDS);
+    }
+  });
+
+  it('auto-attack still farms normal enemies while a minigame is open', () => {
+    const h = harness(newGame((d) => { d.peakRunLevel = 20; d.lifetimePeakLevel = 60; d.combat.level = 20; d.combat.mode = 'FARM_MODE'; d.upgrades.void_claws = 5000; }));
+    h.dispatch({ type: 'ARCADE_START', gameId: 'memory_match' });
+    const kills = h.state.quests.counters.kills || 0;
+    for (let i = 0; i < 50; i++) h.dispatch({ type: 'TICK', dtMs: 100 });
+    expect(h.state.quests.counters.kills).toBeGreaterThan(kills);
+  });
+
+  it('setting the clock back never re-rolls dailies or resets ad caps', () => {
+    const h = harness(newGame());
+    const [first] = h.state.quests.daily.ids;
+    const q = QUESTS.find((x) => x.id === first)!;
+    h.state = { ...h.state, quests: { ...h.state.quests, daily: { ...h.state.quests.daily, counters: { [q.metric]: q.targetValue } } } };
+    expect(h.dispatch({ type: 'CLAIM_QUEST', id: first }).ok).toBe(true);
+    for (let i = 0; i < 3; i++) h.dispatch({ type: 'AD_REWARD', placementId: 'arcade_token' });
+    const day = h.state.quests.daily.date;
+
+    h.setNow(T0 - 24 * 3600 * 1000);
+    h.dispatch({ type: 'TICK', dtMs: 100 });
+    expect(h.state.quests.daily.date).toBe(day);
+    expect(h.state.quests.daily.claimed).toContain(first);
+    expect(h.dispatch({ type: 'AD_REWARD', placementId: 'arcade_token' })).toMatchObject({ ok: false, reason: 'capped' });
+
+    h.setNow(T0 + 24 * 3600 * 1000);
+    h.dispatch({ type: 'TICK', dtMs: 100 });
+    expect(h.state.quests.daily.date).not.toBe(day);
+    expect(h.state.quests.daily.claimed).toEqual([]);
+    expect(h.dispatch({ type: 'AD_REWARD', placementId: 'arcade_token' }).ok).toBe(true);
+  });
+
+  it('offline essence earned across midnight counts toward the new day', () => {
+    const h = harness(newGame((d) => { d.peakRunLevel = 20; d.combat.level = 20; }));
+    h.setNow(T0 + 20 * 3600 * 1000); // 08:00 the next day
+    const r = h.dispatch({ type: 'APPLY_OFFLINE', secondsAway: 9 * 3600 });
+    expect(r.ok).toBe(true);
+    expect(h.state.quests.daily.date).not.toBe(newGame().quests.daily.date);
+    expect(h.state.quests.daily.counters.daily_essence_earned).toBe(r.value);
+  });
+
+  it('world bosses always drop Epic or better', () => {
+    for (let seed = 1; seed <= 60; seed++) {
+      const h = harness(newGame((d) => { overpowered(d); d.combat.level = 49; d.peakRunLevel = 49; }, seed), seed);
+      h.killEnemy();
+      const before = h.state.inventory.length;
+      h.killEnemy();
+      const dropped = h.state.inventory.slice(0, h.state.inventory.length - before);
+      expect(dropped.length).toBeGreaterThanOrEqual(1);
+      expect(dropped[0].rarity).toBeGreaterThanOrEqual(2);
+    }
+  });
+
+  it('challenging the level-50 boss from farm counts as reaching 50 (the Eclipse unlocks)', () => {
+    const h = harness(newGame((d) => { d.combat.level = 49; d.peakRunLevel = 49; d.combat.mode = 'FARM_MODE'; }));
+    expect(eclipsePayout(h.state)).toBe(0);
+    h.dispatch({ type: 'CHALLENGE_BOSS' });
+    expect(h.state.peakRunLevel).toBe(50);
+    expect(eclipsePayout(h.state)).toBeGreaterThan(0);
+  });
+
+  it('the Bazaar does not list the arcade token offer', () => {
+    expect(ADS.find((a) => a.id === 'arcade_token')?.contextual).toBe(true);
   });
 });

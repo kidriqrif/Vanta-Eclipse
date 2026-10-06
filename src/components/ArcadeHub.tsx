@@ -6,7 +6,7 @@ import { isMinigameUnlocked } from '../game/arcade';
 import { selectNextTokenMs } from '../game/selectors';
 import { ARCADE_UNLOCK_LEVEL, TOKEN_CAP, type GameState } from '../game/state';
 import { selectStats } from '../game/stats';
-import { shallowEqual, useDispatch, useGameState, useNow } from '../hooks/useGame';
+import { shallowEqual, useDispatch, useGameState, useGameStore, useNow } from '../hooks/useGame';
 import { useAdOffer } from '../hooks/useMonetization';
 import { formatDuration, formatNumber } from '../utils/numberFormat';
 import { Button, Panel, PanelHeader, TabBody } from './ui';
@@ -136,6 +136,7 @@ const GameCard: React.FC<{
 /** The ARCADE tab (spec M9 §5): the token meter and one card per minigame. */
 export const ArcadeHub: React.FC = () => {
   const dispatch = useDispatch();
+  const store = useGameStore();
   const now = useNow(1000);
   const peak = useGameState(selectPeak);
   const tokens = useGameState(selectTokens);
@@ -163,10 +164,19 @@ export const ArcadeHub: React.FC = () => {
     return () => clearTimeout(t);
   }, [notice]);
 
-  // A run with no host on screen (a hot reload, a remount) would pause the boss timer forever.
+  // A run with no host on screen (a hot reload, a remount) would hold the boss fight forever.
   useEffect(() => {
     if (activeRun && activeRun.runId !== open?.runId) dispatch({ type: 'ARCADE_QUIT', runId: activeRun.runId });
   }, [activeRun, open, dispatch]);
+
+  // Leaving the Arcade with a run still open (the host lives inside this tab) forfeits it.
+  // The run is read from the store at cleanup time, never from a stale render.
+  useEffect(() => {
+    return () => {
+      const run = store.getState().ui.activeRun;
+      if (run) store.dispatch({ type: 'ARCADE_QUIT', runId: run.runId });
+    };
+  }, [store]);
 
   const play = (def: MinigameDefinition) => {
     if (open) return;

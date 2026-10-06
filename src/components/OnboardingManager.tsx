@@ -11,6 +11,7 @@ import {
   type GameState,
 } from '../game/state';
 import { useDispatch, useGameState } from '../hooks/useGame';
+import { useArcadeOverlayOpen } from '../hooks/useArcadeOverlay';
 import { formatNumber } from '../utils/numberFormat';
 import { Button, Modal } from './ui';
 
@@ -117,7 +118,10 @@ const selectBlocked = (s: GameState) =>
 export const OnboardingManager: React.FC = () => {
   const dispatch = useDispatch();
   const tipId = useGameState(selectTipId);
-  const blocked = useGameState(selectBlocked);
+  // The minigame overlay (including its result banner) also holds tips back.
+  const stateBlocked = useGameState(selectBlocked);
+  const arcadeOpen = useArcadeOverlayOpen();
+  const blocked = stateBlocked || arcadeOpen;
   const [resting, setResting] = useState(false);
 
   useEffect(() => {

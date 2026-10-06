@@ -21,8 +21,12 @@ export interface PaidPurchase {
 export type PurchaseOutcome =
   | { status: 'purchased'; purchase: PaidPurchase }
   | { status: 'cancelled' }
+  /** Google says this account already owns it; the caller restores it instead. */
+  | { status: 'owned' }
   | { status: 'failed'; message: string }
   | { status: 'unavailable' };
+
+const PENDING_MESSAGE = 'Payment is pending. Your item arrives automatically once Google confirms it.';
 
 const PURCHASED = '1';
 
@@ -46,6 +50,8 @@ class BillingService {
   private products = new Map<string, StoreProduct>();
   private loaded: Promise<void> | null = null;
   private available = false;
+  /** Set when start-up failed for a reason that may pass (offline); the next init() retries. */
+  private failed = false;
   private listeners = new Set<() => void>();
 
   subscribe(l: () => void): () => void {
@@ -66,7 +72,11 @@ class BillingService {
   }
 
   init(): Promise<void> {
-    if (!this.loaded) this.loaded = this.doInit();
+    if (!this.loaded) {
+      this.loaded = this.doInit().then(() => {
+        if (this.failed) this.loaded = null;
+      });
+    }
     return this.loaded;
   }
 
@@ -76,10 +86,14 @@ class BillingService {
 
   private async doInit() {
     if (!BILLING_ENABLED || !Capacitor.isNativePlatform()) return;
+    this.failed = false;
     try {
       const { NativePurchases, PURCHASE_TYPE } = await this.plugin();
       const supported = await NativePurchases.isBillingSupported();
-      if (!supported.isBillingSupported) return;
+      if (!supported.isBillingSupported) {
+        this.failed = true;
+        return;
+      }
       const { products } = await NativePurchases.getProducts({
         productIdentifiers: PRODUCTS.map((p) => p.storeId),
         productType: PURCHASE_TYPE.INAPP,
@@ -89,9 +103,11 @@ class BillingService {
         if (def) this.products.set(def.id, { id: def.id, price: sp.priceString });
       }
       this.available = this.products.size > 0;
+      if (!this.available) this.failed = true;
     } catch (err) {
-      console.warn('Billing unavailable', err);
+      console.warn('Billing unavailable; it will be retried', err);
       this.available = false;
+      this.failed = true;
     }
     this.notify();
   }
@@ -109,7 +125,7 @@ class BillingService {
         autoAcknowledgePurchases: false,
       });
       if (tx.purchaseState !== undefined && String(tx.purchaseState) !== PURCHASED) {
-        return { status: 'failed', message: 'Payment is pending. Your item arrives automatically once Google confirms it.' };
+        return { status: 'failed', message: PENDING_MESSAGE };
       }
       if (!tx.purchaseToken) return { status: 'failed', message: 'Google Play did not return a purchase token.' };
       return {
@@ -123,8 +139,12 @@ class BillingService {
         },
       };
     } catch (err) {
+      // The plugin puts Play's response code in err.code (USER_CANCELED, ITEM_ALREADY_OWNED, ...).
       const message = err instanceof Error ? err.message : String(err);
-      if (/cancel/i.test(message)) return { status: 'cancelled' };
+      const code = (err as { code?: unknown } | null)?.code;
+      if (code === 'USER_CANCELED' || /cancel/i.test(message)) return { status: 'cancelled' };
+      if (code === 'ITEM_ALREADY_OWNED') return { status: 'owned' };
+      if (/pending/i.test(message)) return { status: 'failed', message: PENDING_MESSAGE };
       return { status: 'failed', message };
     }
   }
@@ -136,6 +156,7 @@ class BillingService {
    */
   async reconcile(): Promise<PaidPurchase[]> {
     await this.init();
+    if (this.failed) throw new Error('Google Play could not be reached');
     if (!this.available) return [];
     const { NativePurchases, PURCHASE_TYPE } = await this.plugin();
     const { purchases } = await NativePurchases.getPurchases({ productType: PURCHASE_TYPE.INAPP });

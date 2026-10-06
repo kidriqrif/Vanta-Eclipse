@@ -29,6 +29,7 @@ import {
   CARD_COLLECTION_CAP,
   ECLIPSE_UNLOCK_LEVEL,
   TOKEN_CAP,
+  WORLD_BOSS_EVERY,
   WORLD_TWO_FIRST_LEVEL,
   freshDaily,
   freshTapGuard,
@@ -148,7 +149,20 @@ export function skillBlocker(state: GameState, id: string): string | null {
 /** Ad offers keep their daily cap even with Remove Ads; Remove Ads only skips the video. */
 export function adWatchesToday(state: GameState, placementId: string, today: string): number {
   const w = state.shop.adWatches[placementId];
-  return w && w.date === today ? w.count : 0;
+  // A watch dated today, or "later" because the clock was set back, still counts (M13 §5).
+  return w && w.date >= today ? w.count : 0;
+}
+
+/**
+ * The boss fight is held while something covers the arena: a minigame, the Welcome-back report
+ * or the world-unlock celebration. Held means the timer stops AND nothing hits the boss, so the
+ * fight can be neither lost nor won behind a screen (M5 §3, §6; M9 §10).
+ */
+export function isBossHeld(state: Pick<GameState, 'combat' | 'ui'>): boolean {
+  return (
+    state.combat.mode === 'BOSS_FIGHT' &&
+    (state.ui.activeRun !== null || state.ui.pendingOffline !== null || state.ui.worldUnlockModal !== null)
+  );
 }
 
 // ---------------------------------------------------------------- currency
@@ -205,6 +219,8 @@ function spawnEnemy(d: D, c: Ctx, level: number, isBoss: boolean) {
 function startBoss(d: D, c: Ctx, gateLevel: number) {
   d.combat.mode = 'BOSS_FIGHT';
   d.combat.level = gateLevel;
+  d.peakRunLevel = Math.max(d.peakRunLevel, gateLevel);
+  d.lifetimePeakLevel = Math.max(d.lifetimePeakLevel, gateLevel);
   spawnEnemy(d, c, gateLevel, true);
   sound(c, 'boss_warn');
   haptic(d, c, 'medium');
@@ -241,7 +257,7 @@ function leaveBoss(d: D, c: Ctx, timedOut: boolean) {
   toast(c, timedOut ? 'THE BOSS ENDURES: farm, grow stronger, then challenge it again' : 'RETREATED: farming below the gate', 'warn');
 }
 
-function dropItem(d: D, c: Ctx, source: 'enemy' | 'boss', level: number) {
+function dropItem(d: D, c: Ctx, source: 'enemy' | 'boss' | 'world_boss', level: number) {
   const item = rollItem(c.rng, { id: d.nextId++, level, source });
   d.inventory.unshift(item);
   bumpCounter(d as GameState, 'items_dropped', 1);
@@ -315,7 +331,7 @@ function onKill(d: D, c: Ctx) {
       sound(c, 'fanfare');
     }
     if (c.rng() < BOSS_TOKEN_CHANCE) grantTokens(d, 1, true);
-    dropItem(d, c, 'boss', level);
+    dropItem(d, c, level % WORLD_BOSS_EVERY === 0 ? 'world_boss' : 'boss', level);
 
     if (level + 1 >= WORLD_TWO_FIRST_LEVEL) unlockFrozenRuins(d, c);
     d.combat.mode = 'NORMAL';
@@ -354,30 +370,39 @@ function applyHit(d: D, c: Ctx, opts: { auto: boolean; x?: number; y?: number; c
 // ---------------------------------------------------------------- handlers
 
 function handle(d: D, a: Action, c: Ctx, base: GameState): ActionResult {
+  // Dailies roll over when the local date moves FORWARD, before any action is applied, so
+  // essence earned offline after midnight counts toward today. A clock set backwards never
+  // re-rolls a fresh set (M13 §5).
+  if (c.today > d.quests.daily.date) d.quests.daily = freshDaily(c.today);
   switch (a.type) {
     case 'TICK': {
       const dt = Math.min(1, Math.max(0, a.dtMs / 1000));
-      if (d.quests.daily.date !== c.today) d.quests.daily = freshDaily(c.today);
       applyTokenRegen(d.arcade, c.now);
       if (d.ui.combo.count > 0 && c.now - d.ui.combo.lastAt > COMBO_WINDOW_MS) d.ui.combo = { count: 0, lastAt: 0 };
 
-      // The boss timer pauses while a minigame is open: the arcade is its own screen.
-      if (d.combat.mode === 'BOSS_FIGHT' && !d.ui.activeRun) {
+      if (d.combat.mode === 'BOSS_FIGHT' && !isBossHeld(d as GameState)) {
         d.combat.bossTimeLeft = Math.max(0, d.combat.bossTimeLeft - dt);
         if (d.combat.bossTimeLeft <= 0) {
           leaveBoss(d, c, true);
           return OK;
         }
       }
-      if (c.stats.autoAttackUnlocked) {
+      // Auto-attack keeps farming normal enemies behind any screen, but never touches a held boss.
+      if (c.stats.autoAttackUnlocked && !isBossHeld(d as GameState)) {
         d.combat.autoAcc += dt;
         let hits = 0;
-        while (d.combat.autoAcc >= c.stats.autoAttackInterval && hits < MAX_AUTO_HITS_PER_TICK) {
+        while (
+          d.combat.autoAcc >= c.stats.autoAttackInterval &&
+          hits < MAX_AUTO_HITS_PER_TICK &&
+          !isBossHeld(d as GameState)
+        ) {
           d.combat.autoAcc -= c.stats.autoAttackInterval;
           applyHit(d, c, { auto: true });
           hits++;
         }
         if (hits >= MAX_AUTO_HITS_PER_TICK) d.combat.autoAcc = 0;
+        // A gate reached mid-tick behind a blocking screen holds from the next hit on.
+        if (isBossHeld(d as GameState)) d.combat.autoAcc = 0;
       } else if (d.combat.autoAcc !== 0) {
         d.combat.autoAcc = 0;
       }
@@ -385,6 +410,7 @@ function handle(d: D, a: Action, c: Ctx, base: GameState): ActionResult {
     }
 
     case 'TAP': {
+      if (isBossHeld(d as GameState)) return fail('busy');
       const r = registerTap(d.ui.tapGuard as GameState['ui']['tapGuard'], c.now, a.x, a.y, a.touch);
       d.ui.tapGuard = r.guard;
       if (r.verdict === 'locked') return fail('locked');

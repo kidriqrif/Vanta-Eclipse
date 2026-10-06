@@ -258,9 +258,11 @@ export const RARITIES: RarityDefinition[] = [
 export const RARITY_AFFIX_MULT: Record<ItemRarity, number> = { 0: 1.0, 1: 1.15, 2: 1.3, 3: 1.5, 4: 1.75 };
 
 /** Cumulative-free rarity weights per loot source, indexed by rarity. Each row sums to 1. */
-export const LOOT_TABLES: Record<'enemy' | 'boss' | 'forge', number[]> = {
+export const LOOT_TABLES: Record<'enemy' | 'boss' | 'world_boss' | 'forge', number[]> = {
   enemy: [0.74, 0.2, 0.05, 0.01, 0],
   boss: [0.3, 0.4, 0.22, 0.07, 0.01],
+  /** World bosses always drop high rarity (M6): Epic or better. */
+  world_boss: [0, 0, 0.6, 0.32, 0.08],
   forge: [0.7, 0.22, 0.06, 0.019, 0.001],
 };
 
@@ -1064,6 +1066,8 @@ export const ADS: AdPlacementDefinition[] = [
     rewardKind: 'TOKEN',
     rewardAmount: 1.0,
     dailyCap: 3,
+    // Offered only in the Arcade, when the player cannot afford a game (M14 §2).
+    contextual: true,
     sortOrder: 1,
   },
   {

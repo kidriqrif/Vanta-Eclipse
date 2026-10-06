@@ -3,12 +3,14 @@ import { Gem, Mountain, PawPrint, Skull, TrendingUp, type LucideIcon } from 'luc
 import { WORLDS } from '../data/definitions';
 import { WORLD_TWO_FIRST_LEVEL, type GameState } from '../game/state';
 import { useDispatch, useGameState } from '../hooks/useGame';
+import { useArcadeOverlayOpen } from '../hooks/useArcadeOverlay';
 import { formatNumber } from '../utils/numberFormat';
 import { Button, Modal } from './ui';
 
 const selectWorldId = (s: GameState) => s.ui.worldUnlockModal;
 /** A minigame is its own screen; the celebration waits until the player is back. */
-const selectInRun = (s: GameState) => s.ui.activeRun !== null;
+/** Waits behind a minigame, and behind the Welcome-back report (offline first, M5 §6). */
+const selectWaiting = (s: GameState) => s.ui.activeRun !== null || s.ui.pendingOffline !== null;
 /**
  * The world can reopen after an Eclipse; Ember only joins the first time. The 'ruins' tip
  * (OnboardingManager) waits behind this modal, so it is still unseen on the first visit.
@@ -31,13 +33,15 @@ const Change: React.FC<{ icon: LucideIcon; title: string; detail: string }> = ({
 export const WorldUnlockModal: React.FC = () => {
   const dispatch = useDispatch();
   const worldId = useGameState(selectWorldId);
-  const inRun = useGameState(selectInRun);
+  const stateWaiting = useGameState(selectWaiting);
+  const arcadeOpen = useArcadeOverlayOpen();
+  const waiting = stateWaiting || arcadeOpen;
   const firstVisit = useGameState(selectFirstVisit);
   const close = useCallback(() => {
     dispatch({ type: 'CLOSE_WORLD_MODAL' });
   }, [dispatch]);
 
-  if (!worldId || inRun) return null;
+  if (!worldId || waiting) return null;
 
   const world = WORLDS.find((w) => w.id === worldId);
   const name = world?.displayName ?? worldId.replace(/_/g, ' ');

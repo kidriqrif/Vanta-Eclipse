@@ -12,6 +12,8 @@ export const ARCADE_UNLOCK_LEVEL = 20;
 export const MIN_OFFLINE_SECONDS = 60;
 export const CARD_COLLECTION_CAP = 200;
 export const WORLD_TWO_FIRST_LEVEL = 51;
+/** Every 50th level is a world boss (M5): it unlocks the next world and drops better gear. */
+export const WORLD_BOSS_EVERY = 50;
 
 /**
  * NORMAL: climbing; each kill advances a level.

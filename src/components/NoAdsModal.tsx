@@ -50,7 +50,8 @@ const NoAdsBody: React.FC<{ onOpenShop: () => void }> = ({ onOpenShop }) => {
     try {
       const outcome = await store.buy(PRODUCT_ID);
       // 'purchased': the owned banner above confirms it.
-      if (outcome.status === 'failed') next = { text: outcome.message, tone: 'warn' };
+      if (outcome.status === 'owned') next = { text: 'You already own Remove Ads. It has been restored.', tone: 'ok' };
+      else if (outcome.status === 'failed') next = { text: outcome.message, tone: 'warn' };
       else if (outcome.status === 'unavailable') next = { text: 'The store is not available right now.', tone: 'warn' };
       // 'cancelled': the player backed out; say nothing.
     } catch {

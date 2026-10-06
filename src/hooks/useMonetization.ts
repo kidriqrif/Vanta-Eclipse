@@ -100,6 +100,9 @@ export function useStore(): StoreState {
         // Grant (and save) first, finalize second — see src/services/billing.ts.
         dispatch({ type: 'PURCHASE_GRANTED', productId: p.productId, transactionId: p.transactionId });
         await billing.finalize(p);
+      } else if (outcome.status === 'owned') {
+        // Already bought on this Google account (e.g. a reinstall): restore it instead.
+        await syncPurchases(dispatch).catch(() => 0);
       }
       return outcome;
     },

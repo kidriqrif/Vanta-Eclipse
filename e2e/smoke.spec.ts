@@ -130,3 +130,21 @@ test.describe('shop honesty', () => {
     expect((await getState(page)).shop.adWatches.arcade_token.count).toBe(3);
   });
 });
+
+test.describe('web build', () => {
+  test('a second tab takes over the save; the first stops instead of overwriting it', async ({ page, context }) => {
+    await freshGame(page);
+    await patchState(page, `s.currencies.essence = 111; return s;`);
+    const second = await context.newPage();
+    await second.goto('/');
+    await waitForStore(second);
+    await expect(page.getByText(/open in another tab/i)).toBeVisible();
+    // The old tab can no longer write: progress made in the new tab survives.
+    await patchState(second, `s.currencies.essence = 999999; return s;`);
+    await second.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+    await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
+    await second.reload();
+    await waitForStore(second);
+    expect((await getState(second)).currencies.essence).toBeGreaterThanOrEqual(999999);
+  });
+});

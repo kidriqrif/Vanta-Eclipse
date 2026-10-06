@@ -5,6 +5,7 @@ import { BASE_OFFLINE_CAP_HOURS } from '../game/offline';
 import type { GameState, PendingOffline } from '../game/state';
 import { skillStat } from '../game/stats';
 import { useDispatch, useGameState } from '../hooks/useGame';
+import { useArcadeOverlayOpen } from '../hooks/useArcadeOverlay';
 import { useAdOffer } from '../hooks/useMonetization';
 import { formatDuration, formatNumber } from '../utils/numberFormat';
 import { Button, Modal } from './ui';
@@ -123,7 +124,9 @@ const OfflineBody: React.FC<{ pending: PendingOffline; onDismiss: () => void }> 
 export const OfflineRewardsModal: React.FC = () => {
   const pending = useGameState((s) => s.ui.pendingOffline);
   // The reward is already granted; the modal just waits until no minigame covers the screen.
-  const inRun = useGameState((s) => s.ui.activeRun !== null);
+  const runOpen = useGameState((s) => s.ui.activeRun !== null);
+  const arcadeOpen = useArcadeOverlayOpen();
+  const inRun = runOpen || arcadeOpen;
   const dispatch = useDispatch();
   const dismiss = useCallback(() => {
     dispatch({ type: 'DISMISS_OFFLINE' });

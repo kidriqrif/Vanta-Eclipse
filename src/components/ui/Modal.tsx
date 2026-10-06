@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { useBackHandler } from '../../hooks/useBackHandler';
+import { useBannerHeight } from '../../hooks/useMonetization';
 
 /**
  * A centered dialog over the game. The Android back button and the ✕ both close it when
@@ -17,19 +18,25 @@ export const Modal: React.FC<{
 }> = ({ open, onClose, title, icon, tone = 'neon', children, className = '' }) => {
   useBackHandler(open && !!onClose, () => onClose?.());
   const panelRef = useRef<HTMLDivElement>(null);
+  const bannerHeight = useBannerHeight();
   useEffect(() => {
     if (open) panelRef.current?.focus();
   }, [open]);
   if (!open) return null;
   const border = tone === 'gold' ? 'border-gold' : tone === 'crimson' ? 'border-crimson' : 'border-neon';
   return (
-    <div className="fixed inset-0 z-[60] bg-black/85 flex items-center justify-center p-4 animate-fade-in" role="presentation">
+    <div
+      className="fixed inset-0 z-[60] bg-black/85 flex items-center justify-center p-4 animate-fade-in"
+      role="presentation"
+      // The native banner is drawn above the WebView; no dialog content may sit under it.
+      style={{ paddingBottom: `calc(1rem + env(safe-area-inset-bottom) + ${bannerHeight}px)` }}
+    >
       <div
         ref={panelRef}
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
-        className={`bg-panel border-2 ${border} w-full max-w-sm max-h-[88vh] flex flex-col outline-none shadow-[0_0_30px_rgba(0,0,0,0.8)] ${className}`}
+        className={`bg-panel border-2 ${border} w-full max-w-sm max-h-full flex flex-col outline-none shadow-[0_0_30px_rgba(0,0,0,0.8)] ${className}`}
       >
         <div className="flex items-center justify-between gap-2 px-3 py-2 bg-panel2 border-b border-line">
           <div className="flex items-center gap-2 min-w-0">
