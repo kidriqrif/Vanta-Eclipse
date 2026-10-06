@@ -17,10 +17,8 @@
   and `src/main.tsx` (platform check) import Capacitor directly.
 - **Tooling:** Node 22 or newer. Vitest for unit tests, Playwright for
   end-to-end tests.
-- **TypeScript strictness:** `tsconfig.json` still has `strict: false`, because
-  the older screens are not strict-clean. Everything in `src/game/`,
-  `src/context/`, `src/hooks/`, `src/services/` and `src/config/` passes
-  `npx tsc --noEmit --strict`. New code must pass it too.
+- **TypeScript strictness:** `tsconfig.json` has `strict: true`, and the whole
+  project is strict-clean. `npm run typecheck` must stay clean.
 
 Read `docs/ARCHITECTURE.md` before making an architectural decision. It
 describes the reducer, store and fx flow, the tick, saving, offline earnings,

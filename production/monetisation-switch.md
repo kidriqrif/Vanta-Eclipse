@@ -52,11 +52,14 @@ still apply.
 | Starter Pack | `vanta_starter_pack` | non-consumable | 25 Void Crystals, 5 Arcade Tokens, the Ember Trail |
 | Astral Shards Pouch | `vanta_shards_small` | consumable | 200 Astral Shards |
 
-Purchases are granted in `src/game/reducer.ts` (`PURCHASE_GRANTED`,
-`RESTORE_ENTITLEMENTS`). While billing is on, `src/context/GameProvider.tsx`
-asks Play on every launch which non-consumables the Google account owns, and
-re-grants any that are missing. A reinstall, or a new phone signed in to the
-same account, therefore gets Remove Ads back without a tap.
+Purchases are granted by `PURCHASE_GRANTED` in `src/game/reducer.ts`, once
+per Play transaction id. The game saves the grant before it acknowledges an
+entitlement or consumes a shard pack, so a crash in between re-grants nothing
+and loses nothing. While billing is on, `syncPurchases()`
+(`src/hooks/useMonetization.ts`) asks Play at launch and on resume (at most
+once a minute) for every paid purchase the account still holds, and grants
+and finalizes any the save is missing. A reinstall, or a new phone signed in
+to the same account, therefore gets Remove Ads back without a tap.
 
 ---
 
@@ -154,8 +157,12 @@ Test purchases with a license-tester account:
       the same on demand. Shards are not restored, which is expected for a
       consumable.
 - [ ] Pending payment (the license tester's "slow" test card): the game says
-      the purchase is pending and grants nothing. See the known gaps below for
-      what happens when the payment clears.
+      the purchase is pending and grants nothing. Once the payment clears,
+      bring the app back to the foreground (or relaunch it): the item arrives,
+      including a Shards Pouch, and the order shows as acknowledged in Play
+      Console (Order management).
+- [ ] Buy Remove Ads on one device, then tap it again on a second device with
+      the same account: the game says it is already owned and restores it.
 
 ### 6. Release
 
@@ -199,11 +206,10 @@ Test purchases with a license-tester account:
 - **Refunds are not revoked.** Entitlements are only ever added (purchase,
   restore). A refunded Remove Ads stays in the save.
 - **Pending purchases.** `src/services/billing.ts` grants nothing while a
-  payment is pending. When the payment clears, the next launch's restore
-  re-grants a non-consumable, but nothing in `src/` grants a Shards Pouch
-  that cleared later. Run the slow-card test above, then look at the order in
-  Play Console (Order management) a few days later. Play refunds purchases
-  that are never acknowledged.
+  payment is pending. Once it clears, the purchase sync at the next launch or
+  resume grants it (a Shards Pouch included) and then acknowledges or
+  consumes it. A player who never reopens the game within three days is
+  refunded by Play, because the purchase is never acknowledged.
 - **Saves from the AI Studio build.** That build granted Remove Ads and the
   Starter Pack without payment. The v1 → v2 migration in `src/game/save.ts`
   drops those entitlements and keeps what the pack contained. Closed testers

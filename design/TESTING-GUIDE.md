@@ -6,8 +6,8 @@ What has to be **proven**, in order, before a build goes to Google Play.
 Work top to bottom. A later step never stands in for an earlier one, and
 nothing in steps 1–4 stands in for a phone.
 
-**Where things stand:** the 47 unit tests (step 2) pass as of this edit. The
-device checklist (step 6) has to be done again for 1.4.0, because the game
+**Where things stand:** the unit tests (step 2) and the end-to-end suite
+(step 3) pass on this branch. The device checklist (step 6) has to be done again for 1.4.0, because the game
 core and every screen changed after the last closed-testing build.
 
 The Unity-era guide (the **tools/validate_all.sh** sweep, headless
@@ -31,13 +31,13 @@ there is no ESLint. This is a gate, not a check of behaviour.
 npm test
 ```
 
-Vitest in Node, no browser. 47 tests in `src/game/__tests__/`:
+Vitest in Node, no browser. The tests are in `src/game/__tests__/`:
 
 | File | Covers |
 |---|---|
-| `src/game/__tests__/reducer.test.ts` (34) | combat and boss gates, spending, gear, pets, the Eclipse, the arcade latch and payout, token regen, quests, ad caps, purchases, offline |
-| `src/game/__tests__/save.test.ts` (7) | v1 → v2 migration, backup fallback, corrupt saves, round-trips |
-| `src/game/__tests__/tapGuard.test.ts` (6) | the autoclicker signals, lockout escalation, forgiveness |
+| `src/game/__tests__/reducer.test.ts` | combat and boss gates, spending, gear, pets, the Eclipse, the arcade latch and payout, token regen, quests, ad caps, purchases, offline |
+| `src/game/__tests__/save.test.ts` | v1 → v2 migration, backup fallback, corrupt saves, round-trips |
+| `src/game/__tests__/tapGuard.test.ts` | the autoclicker signals, lockout escalation, forgiveness |
 
 `src/game/__tests__/helpers.ts` gives a fixed clock you can advance and a
 seeded RNG, so every rule is tested deterministically. A change to a rule in
@@ -59,10 +59,14 @@ handle that `src/context/GameProvider.tsx` sets.
   opens without a console error; boss gate retreat and challenge; a metronome
   autoclicker is locked out while human-paced tapping is not; a v1 save
   migrates and its offline reward can be doubled once; paid items grant
-  nothing while billing is off; an ad offer stops at its daily cap.
+  nothing while billing is off; an ad offer stops at its daily cap; a second
+  browser tab takes over the save and the first stops writing.
 - `e2e/arcade.spec.ts`: every minigame plays to an outcome and pays exactly
-  once; quitting forfeits the token, pays nothing and lets the paused boss
-  timer run again.
+  once; an open minigame holds a boss fight (no damage, no timer drain);
+  quitting forfeits the token and pays nothing.
+- `e2e/screens.spec.ts`: skipped unless `CAPTURE=1`; then it saves a
+  screenshot of every screen, for the store listing and for eyeballing
+  layout.
 
 The dev build fakes a rewarded watch (about a second, then "rewarded"), which
 is why ad flows can run here at all. It proves the game's side of the flow and
@@ -141,18 +145,23 @@ the WebView. The app reserves a strip of its height at the bottom of the
 layout. Check:
 
 - every tab, the MORE sheet and the bottom navigation bar are fully tappable
-  above it;
-- the bottom edge of every modal and of the minigame screen is clear of it;
+  above it, with a visible gap (12 px) between the banner and the nav, so a
+  thumb aimed at a tab does not land on the ad;
+- the bottom edge of every modal, of the minigame screen and of toasts is
+  clear of it: no overlay (Settings, offline rewards, world unlock, a
+  minigame's result banner) has buttons under the banner;
 - the banner sits above the system navigation bar with both gesture
-  navigation and three-button navigation.
+  navigation and three-button navigation;
+- in airplane mode the strip collapses (no empty band), and the banner comes
+  back on its own within a few minutes of reconnecting.
 
 **Back button.** Handlers stack in `src/hooks/useBackHandler.ts`, and the most
 recent one wins. Back should do the following, in this order:
 
 1. close the open modal;
 2. leave a minigame (a run in progress is forfeited like QUIT, per
-   `design/ux/milestone-9-minigame-framework.md`, and the boss timer runs
-   again);
+   `design/ux/milestone-9-minigame-framework.md`, and a held boss fight
+   resumes);
 3. from any other tab, go to the home tab (the upgrades, labelled UPGRADES);
 4. from the home tab, minimize the app (`src/context/GameProvider.tsx`).
 
@@ -308,6 +317,7 @@ then uninstall, reinstall and look.
   on displays 600dp and wider for apps targeting SDK 36. A tablet, an unfolded
   foldable or a large split-screen window can show the game in landscape. The
   layout is a single centred column at most 448 CSS px wide, so it should
-  strand rather than break. Nobody has looked yet. Android 16 exempts games
-  that declare `android:appCategory="game"` in the manifest, and this one
-  does not declare it.
+  strand rather than break. Android 16 exempts games that declare
+  `android:appCategory="game"`, and `android/app/src/main/AndroidManifest.xml`
+  declares it, so the portrait lock should hold. Check it once on a tablet
+  or an unfolded foldable anyway.

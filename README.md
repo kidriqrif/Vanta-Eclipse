@@ -149,7 +149,7 @@ the save as a string and import one (`exportSave` and `importSave` from
 | `src/config/monetization.ts` | Ad unit IDs, `isTesting`, `BILLING_ENABLED` |
 | `src/data/definitions.ts` | All content: worlds, enemies, upgrades, gear, relics, pets, skills, minigames, quests, products, cosmetics and ad placements |
 | `src/types/game.ts` | Types for the content definitions |
-| `src/components/` | Header, combat arena, the tab screens (FORGE upgrades, ARMOR gear, CODEX journal, cards, BEAST companions, relics, Eclipse, Arcade, BAZAAR shop), the modals (settings, Remove Ads, offline rewards, world unlock, onboarding), toasts, the Eclipse overlay and the banner slot. A five-slot nav bar plus a MORE sheet reaches every tab. |
+| `src/components/` | Header, combat arena, the tab screens (UPGRADES, ARMOR gear, CODEX journal, cards, BEAST companions, relics, Eclipse, Arcade, BAZAAR shop), the modals (settings, Remove Ads, offline rewards, world unlock, onboarding), toasts, the Eclipse overlay and the banner slot. A five-slot nav bar plus a MORE sheet reaches every tab. |
 | `src/components/minigames/` | The seven arcade games, their contract (`src/components/minigames/types.ts`) and `src/components/minigames/registry.ts` |
 | `src/components/ui/` | Shared primitives: `Panel`, `PanelHeader`, `TabBody`, `Button`, `TwoTapButton`, `Modal` |
 | `src/utils/numberFormat.ts` | Every player-facing number goes through this |

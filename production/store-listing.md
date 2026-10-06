@@ -66,15 +66,17 @@ everything from FAIR BY DESIGN to the end with this:
 
 ```
 FAIR BY DESIGN
-No mechanic is behind a paywall, and there is no way to buy power. A small banner sits at the bottom of the screen. Video ads are only ever offered, in exchange for a bonus on top of something you have already earned. They are never forced, each has a daily limit so watching more is never the best way to play, and saying no costs you nothing.
+No mechanic is behind a paywall. A small banner sits at the bottom of the screen. Video ads are only ever offered, in exchange for a bonus on top of something you have already earned. They are never forced, each has a daily limit so watching more is never the best way to play, and saying no costs you nothing.
 
 Remove Ads takes the banner away and makes every bonus instant, with no video. The daily limits stay, so it removes the chore, not the balance.
+
+The Starter Pack is a one-time head start: 25 Void Crystals, 5 Arcade Tokens and the Ember Trail. Everything in it can also be earned by playing, and nothing else for sale affects your power.
 
 Every cosmetic can be earned by playing.
 
 Plays in portrait, one-handed, and offline.
 ```
-`[2243 with the rest of the description]`
+`[2402 with the rest of the description]`
 
 ### What the copy claims, and where it comes from
 

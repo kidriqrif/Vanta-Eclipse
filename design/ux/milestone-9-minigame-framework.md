@@ -199,8 +199,11 @@ enforced in `src/components/minigames/MinigameHost.tsx` and `src/game/reducer.ts
   pays nothing.
 - **Records come from wins only**, compared in the game's own direction
   (`lowerIsBetter`). A loss still pays 25% of its scaled value (§2).
-- **The boss timer pauses while a game is open**, so a boss fight is not lost
-  to time spent in the Arcade.
+- **A boss fight is held while a game is open**, so it is not won or lost
+  off-screen: the timer stops, auto-attack does not touch the boss, and taps
+  are refused (`isBossHeld` in `src/game/reducer.ts`). Ordinary enemies keep
+  being farmed. The offline-rewards and world-unlock dialogs hold a boss the
+  same way.
 - **Unlock levels are checked against the lifetime peak level**, so an
   Eclipse never re-locks a game.
 

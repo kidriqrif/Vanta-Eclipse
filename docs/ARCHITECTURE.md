@@ -258,12 +258,16 @@ unlocks against the lifetime peak, so an Eclipse never re-locks one.
   backwards grants nothing. Rewards from quests, ads and the Starter Pack may
   overflow the cap. Regen and boss drops may not.
 - **The run lifecycle:**
-  1. `ARCADE_START` spends the token, opens `ui.activeRun` with a fresh
-     `runId`, and saves.
-  2. While a run is open, the boss timer is paused.
+  1. `ARCADE_START` (dispatched by `ArcadeHub` when PLAY is tapped) spends
+     the token, opens `ui.activeRun` with a fresh `runId`, and saves.
+  2. While a run is open, a boss fight is held (`isBossHeld`): the timer
+     stops, auto-attack skips the boss, and taps fail. Ordinary enemies keep
+     being farmed. The offline and world-unlock dialogs hold a boss the same
+     way.
   3. `ARCADE_FINISH` pays only if its `runId` matches the open run, and only
      once. That is the latch.
   4. `ARCADE_QUIT` closes the run, pays nothing and forfeits the token.
+     Leaving the Arcade tab with a run open quits it too.
 - **Payout** is `rewardRate × rewardSeconds × performance`. A loss pays 25% of
   that, and every result pays at least 1 (M9 §2). `rewardRate` uses the same
   formula as the live essence rate, but exists before auto-attack unlocks.
@@ -292,9 +296,14 @@ only code to change.
   `usePrivacyOptionsRequired()` tells Settings when UMP requires that entry
   point.
 - **Banner.** An adaptive banner sits at the bottom. `BannerSlot` reserves its
-  height so no UI sits under it, and removes it once Remove Ads is owned.
+  height plus a 12 px gap above the nav, and `Modal`, `MinigameHost` and
+  `ToastHost` pad by the same height, so the banner never covers the game.
+  A banner that fails to load is retried with backoff (30 s up to 5 min). It
+  is removed once Remove Ads is owned.
 - **Rewarded.** Rewarded videos are opt-in. `showRewarded()` resolves
-  `'rewarded'` only after AdMob's reward event, and gives up after 2 minutes.
+  `'rewarded'` only after AdMob's reward event. It gives up if the video has
+  not started within 60 s; once it is on screen, only a dismiss or a failure
+  ends it.
   There are no interstitials.
 - **On the web** there is no ad network, so offers are unavailable. A dev build
   (`npm run dev`) simulates a 1.2 s watch so the flows can be tested in a
@@ -320,12 +329,25 @@ the bot, and AdMob treats that as invalid traffic.
 - **Availability.** While `BILLING_ENABLED` is false, or off-device, the store
   reports unavailable and paid items read "COMING SOON". Prices come from Google
   Play (`priceOf`) and are never hard-coded.
-- **Buying.** `purchase()` returns `'purchased'` only for a purchased state. The
-  hook then dispatches `PURCHASE_GRANTED`. A non-consumable (`remove_ads`,
-  `starter_pack`) is granted once. A consumable (`shards_small`) is granted
-  every time.
-- **Restoring.** At start-up, and from Settings, `ownedEntitlements()` feeds
-  `RESTORE_ENTITLEMENTS`, which skips consumables.
+- **Buying.** `purchase()` returns `'purchased'` only for a purchased state.
+  The order is fixed so a crash never loses or duplicates a purchase: the hook
+  dispatches `PURCHASE_GRANTED` with the transaction id, the game saves, and
+  only then does `finalize()` acknowledge an entitlement (`remove_ads`,
+  `starter_pack`) or consume a shard pack (`shards_small`). `PURCHASE_GRANTED`
+  is idempotent: the last 200 transaction ids are kept in
+  `shop.processedTransactions`, and a repeat grants nothing. Play's "already
+  owned" answer (`'owned'`) runs a restore instead.
+- **Restoring.** `syncPurchases()` in `src/hooks/useMonetization.ts` asks
+  `reconcile()` for every paid purchase Play still holds, grants each through
+  `PURCHASE_GRANTED`, then finalizes it. It runs at launch, on resume (at most
+  once a minute), after a save import or reset, and from Settings → Restore
+  purchases. That is also how a pending payment that cleared later, or a
+  purchase that was never finalized, gets granted. `reconcile()` throws when
+  Play cannot be reached, so Settings never says "nothing to restore" for a
+  network error.
+- **Imports keep this device's purchases.** Importing a save, or resetting,
+  keeps `entitlements`, `processedTransactions` and `adWatches` from the
+  current device, so a save file cannot carry purchases or reset the ad caps.
 - **Validation.** There is no server-side receipt validation (the game has no
   server).
 
@@ -333,7 +355,14 @@ the bot, and AdMob treats that as invalid traffic.
 
 - **Lifecycle.** GameProvider listens to `visibilitychange`, `pagehide` and, on
   Android, @capacitor/app `pause` and `resume`. On pause it saves and
-  suspends audio. On resume it restarts audio and applies offline time.
+  suspends audio. On resume it restarts audio, applies offline time, retries
+  any ads or billing start-up that failed (offline at launch, say), and syncs
+  purchases at most once a minute.
+- **One tab owns the save (web).** Each mount writes its own id to
+  `vanta_eclipse_owner`, and only the owner saves. A second tab of the web
+  build takes over: the first stops ticking and saving and shows "OPEN IN
+  ANOTHER TAB" with a PLAY HERE INSTEAD button, so two tabs never overwrite
+  each other's progress. On Android there is only ever one WebView.
 - **Back button.** `useBackHandler(active, handler)` in
   `src/hooks/useBackHandler.ts` keeps a stack, and the newest active handler
   wins. `Modal` registers itself. App registers "go back to the home tab". With
@@ -406,9 +435,12 @@ Any new rule goes in `src/game/` with a test, never in a component.
      label;
    - `sortOrder`.
 
-The minigame host (in `src/components/minigames/`) owns everything else:
-`ARCADE_START`, the latch on the first result, `ARCADE_FINISH` or
-`ARCADE_QUIT`, and the result banner. `e2e/arcade.spec.ts` plays every
+`ArcadeHub` dispatches `ARCADE_START`. The minigame host
+(`src/components/minigames/MinigameHost.tsx`) owns everything after that: the
+latch on the first result, `ARCADE_FINISH` or `ARCADE_QUIT`, and the result
+banner. While it is open it marks the rest of the app `inert`
+(`src/hooks/useArcadeOverlay.ts`), and the offline, world-unlock and tutorial
+dialogs wait until it closes. `e2e/arcade.spec.ts` plays every
 `MINIGAMES` entry by tapping random points until a result appears. A new game
 is covered automatically, as long as random taps (or its own timer) can bring
 it to an outcome.

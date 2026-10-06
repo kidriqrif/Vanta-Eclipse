@@ -83,7 +83,7 @@ test.describe('arcade', () => {
     expect(errors).toEqual([]);
   });
 
-  test('quitting forfeits the token, pays nothing and unpauses the boss timer', async ({ page }) => {
+  test('quitting forfeits the token and pays nothing', async ({ page }) => {
     const errors = watchErrors(page);
     await freshGame(page);
     await unlockArcade(page);

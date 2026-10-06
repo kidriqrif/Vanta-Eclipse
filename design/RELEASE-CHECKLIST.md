@@ -30,13 +30,11 @@ and stubbed monetisation, is in git history. None of it applies to this build.
       service-account JSON files and built .aab/.apk files. The web bundle
       that cap sync copies into the Android project is generated and is
       gitignored too.
-- [ ] **Replace the stock Capacitor launcher icon and splash.** The mipmap
-      launcher icons and the splash images under `android/app/src/main/res/`
-      are still Capacitor's default blue "X" on white, and the adaptive icon
-      background colour is #FFFFFF. The game's own icon art is in
-      `public/icons/` (`adaptive_foreground_432.png`,
-      `adaptive_background_432.png`, `launcher_192.png`). Android Studio's
-      Image Asset tool will regenerate the mipmaps from it.
+- [x] **Launcher icon and splash are the game's own.** The mipmaps and splash
+      images under `android/app/src/main/res/` were regenerated in 1.4.0 from
+      the crescent art in `public/icons/`, on the game's #080A12 background
+      (the adaptive icon background colour too). Check them on a device:
+      round, squircle and themed-icon launchers crop differently.
 - [ ] **Bump versionCode for every upload**, including closed-testing ones.
       Play rejects a versionCode it has already seen.
 - [ ] **Build the bundle:**
@@ -56,12 +54,14 @@ and stubbed monetisation, is in git history. None of it applies to this build.
 - [ ] In Play Console's App bundle explorer, check the new bundle: the
       versionCode, no 16 KB page-size warning (required for apps targeting
       Android 15+), and the permissions you expect: INTERNET,
-      ACCESS_NETWORK_STATE and AD_ID from AdMob, and BILLING from the Play
-      Billing library. `npm run android:sync` regenerates the Capacitor plugin
-      list (`android/capacitor.settings.gradle`,
-      `android/app/capacitor.build.gradle`) so that it includes
-      @capgo/native-purchases, which means the billing library ships even
-      while billing is switched off. Commit the regenerated files.
+      ACCESS_NETWORK_STATE and AD_ID from AdMob, BILLING from the Play Billing
+      library, and VIBRATE from @capacitor/haptics. Anything else needs a
+      reason before upload. The Capacitor plugin list
+      (`android/capacitor.settings.gradle`,
+      `android/app/capacitor.build.gradle`) already includes all four plugins
+      (AdMob, App, Haptics and @capgo/native-purchases), so the billing
+      library ships even while billing is switched off. `npm run android:sync`
+      regenerates those files; commit them if they change.
 
 ## Monetization go-live
 
@@ -178,8 +178,8 @@ Listing copy and field values are in `production/store-listing.md`.
       the current UI. Capture the React build at a 9:16 size such as
       1080×1920, because Play rejects a screenshot whose long side is more
       than twice its short side, and that includes 20:9 phone captures.
-- [ ] Decide whether the store icon (a crescent) should match the launcher art
-      in `public/icons/` (a dark disc with a crescent), and make the Android
-      launcher icon match whichever you choose.
+- [ ] Compare the store icon (`production/icons/store_icon_512.png`) with the
+      launcher icon on a device. Both are the crescent now; Play shows them
+      side by side, so they should read as the same mark.
 - [ ] Paste the listing copy and check the Play preview against the build
       testers actually installed.

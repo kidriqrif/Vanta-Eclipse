@@ -79,7 +79,8 @@ offline earnings and the versioned save. Vitest unit-tests it
 state and dispatch actions. All content is data in `src/data/definitions.ts`.
 `docs/ARCHITECTURE.md` describes how the pieces fit.
 
-What ships: two worlds (Dark Forest 1–50, Frozen Ruins 51–100), boss gates
+What ships: two worlds (Dark Forest 1–50, then Frozen Ruins from 51 onward,
+with no upper end until World 3 exists), boss gates
 every 10th level, auto-attack at level 15, gear with salvage and forge, cards,
 relics, companions, the Eclipse prestige with its skill tree, seven arcade
 minigames (the milestone list below names the first four), the Codex
