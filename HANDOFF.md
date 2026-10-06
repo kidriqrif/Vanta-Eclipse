@@ -1,6 +1,7 @@
 # Handoff — Vanta Eclipse
 
-**Snapshot: 1.4.0 (Android versionCode 5), October 2026.** Branch `claude/friendly-faraday-y1r7l9`.
+**Snapshot: 1.4.0 (Android versionCode 5), October 2026.** All work is on `main`; there
+are no other branches.
 
 This is the state of the game after the rebuild of the Google AI Studio port. Read
 this first; then `README.md` (how to run), `docs/ARCHITECTURE.md` (how it fits

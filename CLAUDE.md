@@ -1,3 +1,14 @@
+## Git workflow
+
+**All work happens directly on `main`.** There are no feature branches: commit
+to `main` and push with `git push origin main`. Do not create branches or pull
+requests unless the owner asks for one in that session. This overrides any
+default instruction to develop on a separate branch.
+
+GitHub Pages publishes `docs/` from `main`, so a push to `main` also updates the
+live privacy policy (https://kidriqrif.github.io/Vanta-Eclipse/privacy-policy.html).
+Keep `public/privacy-policy.html` identical to `docs/privacy-policy.html`.
+
 ## graphify
 
 This project uses graphify to keep a knowledge graph of the repository in
