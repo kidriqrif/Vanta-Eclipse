@@ -1,8 +1,8 @@
 # Play Console answers — Vanta Eclipse 1.4.0
 
 Ready-to-paste answers for every declaration on Play Console's **App content**
-page, the Store settings, the 1.4.0 release notes and a message for the closed
-testers. Checked on 2026-10-06 against the code on the main branch and against Google's
+page, the Store settings, the store listing copy, the 1.4.0 release notes and a
+message for the closed testers. Checked on 2026-10-06 against the code on the main branch and against Google's
 own pages, which were fetched the same day (listed under Sources at the end).
 
 The build in question: package com.vantrexagames.vantaeclipse, versionName
@@ -114,8 +114,7 @@ and app information with the SDK's performance diagnostics, advert interactions,
 all eleven permissions in the bundle with where each comes from, and the
 Android backup. It says the developer holds no personal data, matching the
 deletion answer in section 8. If an answer below changes, change the policy in
-the same commit (keep `docs/privacy-policy.html` and `public/privacy-policy.html`
-identical and bump the date).
+the same commit (edit `docs/privacy-policy.html` and bump its date).
 
 ## 2. App access (now titled "Sign-in details")
 
@@ -307,14 +306,14 @@ Swapping the sample AdMob IDs for real ones changes nothing in this form.
 
 Do this in the **same release** that ships BILLING_ENABLED set to true to any
 track other than internal testing. Closed testing counts. The products are
-created first, as described in `production/monetisation-switch.md`.
+created first, as described in `production/release-checklist.md`.
 
 | Where | Change |
 |---|---|
 | Data safety, data types | Tick **Financial info → Purchase history**. Nothing else changes. |
 | Data safety, Purchase history handling | Collected **Yes**, shared **No**; ephemeral **No**; **Users can choose whether this data is collected** (data exists only for someone who buys); purpose **App functionality**. Why: the app reads the purchases from Google Play, then grants, acknowledges and restores them, and keeps product IDs and transaction IDs in the local save (`src/services/billing.ts`, `src/game/reducer.ts`). Nothing goes to the developer. |
 | Content rating | Retake the questionnaire. Digital purchases **Yes**; random items **No**. |
-| Store listing | Use the "once billing is on" description in `production/store-listing.md`. |
+| Store listing | Use the "once billing is on" ending in [Store listing](#store-listing). |
 | Privacy policy | No billing-related change. It already describes Google Play Billing and the local purchase record. |
 
 **Owner's call on Purchase history.** Strictly, Google defines "collect" as
@@ -345,6 +344,100 @@ the Billing Library.
 
 ---
 
+## Store listing
+
+Copy for the listing fields. The limits are Play's; the bracketed counts are the
+current lengths. Each paragraph inside a block is one line, because Play keeps
+line breaks.
+
+### App name  *(30 max)*
+
+```
+Vanta Eclipse
+```
+`[13]`
+
+### Short description  *(80 max)*
+
+```
+An idle RPG in the dark. Your hero fights on while you're away.
+```
+`[63]`
+
+### Full description  *(4000 max)*
+
+Use this version while `BILLING_ENABLED` in `src/config/monetization.ts` is
+`false`: the build shows ads but sells nothing.
+
+```
+The light went out a long time ago. Something still hunts in the dark, and it is yours.
+
+Vanta Eclipse is an idle RPG built for short visits and long absences. Tap to strike, or reach level 15 and let auto-attack fight for you. Come back later and the essence will be waiting.
+
+DESCEND
+Fifty levels of the Dark Forest, then the Frozen Ruins from level 51 on, with a boss guarding every tenth gate. Bosses fight on a 30-second timer. Lose, and you farm the level below until you are ready to challenge again.
+
+BUILD
+• Five upgrade lines, from tap damage and crits to essence gain
+• Six gear slots, five rarities, and affixes that stack
+• Salvage what you don't want into Void Scraps and forge what you do
+• Five relics, one attuned at a time: Twin Fang doubles your auto-attack speed, Eclipse Heart triples what you earn while away
+• Two companions that level up as you fight and evolve at level 10. Feed them cards to speed it up.
+
+COLLAPSE
+Once a run reaches level 50, trigger an Eclipse. The run resets; you keep your Void Crystals, gear, relics and companions, and spend crystals on Ascendant Powers that make the next run faster. Long Slumber extends how long you earn while away. Eternal Reflex gives you auto-attack from level one.
+
+THE ARCADE
+Seven minigames, unlocking from level 20: Void Reflex, Memory Match, Lights Out, Connect Four, Sequence Echo, Rune Sweeper and Void Salvo. Tokens refill on their own, even while the game is closed. Winnings are paid in essence priced against your current rate, so they never go stale.
+
+EVERY DAY
+Four daily quests and a bonus for clearing all of them, plus quest chains and achievements in the Codex.
+
+FAIR BY DESIGN
+No mechanic is behind a paywall, and there is no way to buy power. A small banner sits at the bottom of the screen. Video ads are only ever offered, in exchange for a bonus on top of something you have already earned. They are never forced, each has a daily limit so watching more is never the best way to play, and saying no costs you nothing. Every cosmetic is earned by playing.
+
+Plays in portrait, one-handed, and offline.
+```
+`[2093]`
+
+#### FAIR BY DESIGN, once billing is on
+
+When `BILLING_ENABLED` is `true` and the products are active, replace
+everything from FAIR BY DESIGN to the end with this:
+
+```
+FAIR BY DESIGN
+No mechanic is behind a paywall. A small banner sits at the bottom of the screen. Video ads are only ever offered, in exchange for a bonus on top of something you have already earned. They are never forced, each has a daily limit so watching more is never the best way to play, and saying no costs you nothing.
+
+Remove Ads takes the banner away and makes every bonus instant, with no video. The daily limits stay, so it removes the chore, not the balance.
+
+The Starter Pack is a one-time head start: 25 Void Crystals, 5 Arcade Tokens and the Ember Trail. Everything in it can also be earned by playing, and nothing else for sale affects your power.
+
+Every cosmetic can be earned by playing.
+
+Plays in portrait, one-handed, and offline.
+```
+`[2402 with the rest of the description]`
+
+#### What the copy claims, and where it comes from
+
+Every number above comes from the code. Check this list again if the content
+changes.
+
+| Claim | Source |
+|---|---|
+| auto-attack at level 15; Eternal Reflex from level one | `src/game/state.ts`, `src/game/stats.ts` |
+| Dark Forest 1–50, Frozen Ruins from 51; boss every 10th level, 30 s timer | `src/data/definitions.ts` (`WORLDS`), `src/game/state.ts` |
+| 5 upgrade lines, 6 gear slots (the 7th, Relic, is sealed), 5 rarities | `src/data/definitions.ts` (`UPGRADES`, `SLOTS`, `RARITIES`) |
+| 5 relics, one active; Twin Fang ×2 auto-attack speed; Eclipse Heart ×3 offline | `src/data/definitions.ts` (`RELICS`) |
+| 2 companions (Ember → Blaze, Frostling → Frostwyrm), evolve at level 10 | `src/data/definitions.ts` (`PETS`) |
+| Eclipse from run level 50; keeps crystals, gear, relics, companions | `src/game/reducer.ts` (`PERFORM_ECLIPSE`) |
+| 7 minigames, Arcade from level 20, tokens regenerate while closed | `src/data/definitions.ts` (`MINIGAMES`), `src/game/state.ts`, `src/game/arcade.ts` |
+| 4 daily quests plus an all-clear bonus; chains and achievements | `src/data/definitions.ts` (`QUESTS`, `getDailyQuestIdsForDate`) |
+| banner, opt-in rewarded offers with daily caps; Remove Ads keeps the caps | `src/data/definitions.ts` (`ADS`, `PRODUCTS`), `src/hooks/useMonetization.ts` |
+
+---
+
 ## 10. Release notes for 1.4.0 ("What's new", en-US)
 
 For the closed-testing release. **477 characters** including the 8 line breaks
@@ -367,7 +460,7 @@ Rebuilt so the rules work as described.
 Each line comes from the code: the 30-second timer (BOSS_FIGHT_SECONDS in
 `src/game/state.ts`) and farming below the gate (`src/game/reducer.ts`); one
 payout per run and records from wins only (`src/game/reducer.ts`); the quest,
-forge, audio, save and Play Games fixes listed in `HANDOFF.md`; COMING SOON
+forge, audio, save and Play Games fixes from the 1.4.0 rebuild; COMING SOON
 (`src/components/ShopPanel.tsx`, `src/components/NoAdsModal.tsx`, gated by
 `src/services/billing.ts`).
 

@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { Action, ActionResult, FxEvent } from '../game/actions';
 import type { GameState } from '../game/state';
 import { localDateKey } from '../game/state';
@@ -96,12 +96,4 @@ export function useFx(handler: (fx: FxEvent) => void): void {
   const ref = useRef(handler);
   ref.current = handler;
   useEffect(() => store.onFx((fx) => ref.current(fx)), [store]);
-}
-
-/** A stable callback that dispatches a fixed action shape. */
-export function useAction<A extends unknown[]>(build: (...args: A) => Action): (...args: A) => ActionResult {
-  const dispatch = useDispatch();
-  const ref = useRef(build);
-  ref.current = build;
-  return useCallback((...args: A) => dispatch(ref.current(...args)), [dispatch]);
 }

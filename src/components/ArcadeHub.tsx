@@ -133,7 +133,7 @@ const GameCard: React.FC<{
   );
 };
 
-/** The ARCADE tab (spec M9 §5): the token meter and one card per minigame. */
+/** The ARCADE tab: the token meter and one card per minigame. */
 export const ArcadeHub: React.FC = () => {
   const dispatch = useDispatch();
   const store = useGameStore();

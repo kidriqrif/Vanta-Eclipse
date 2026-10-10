@@ -7,74 +7,64 @@ default instruction to develop on a separate branch.
 
 GitHub Pages publishes `docs/` from `main`, so a push to `main` also updates the
 live privacy policy (https://kidriqrif.github.io/Vanta-Eclipse/privacy-policy.html).
-Keep `public/privacy-policy.html` identical to `docs/privacy-policy.html`.
+`docs/privacy-policy.html` is the only copy; the game links to the live page.
 
-## graphify
+Before pushing, run `npm run typecheck`, `npm test` and `npm run e2e` (CI runs
+them too, plus `npm run build`).
 
-This project uses graphify to keep a knowledge graph of the repository in
-graphify-out/. It is the real graphify CLI, the `graphifyy` package on PyPI.
-Install it once with `uv tool install graphifyy`.
+## Where things are written down
 
-**Build it before you query it.** graphify-out/ is gitignored, so a fresh clone
-has no graph. `npm run graphify` (which runs `graphify update .`) builds or
-refreshes it. The build is AST extraction only: no LLM, no API cost, and it
-finishes in seconds. It writes graph.json, graph.html and GRAPH_REPORT.md.
+| File | Purpose |
+| --- | --- |
+| `README.md` | What the game is, how to run, test, build and release it |
+| `docs/ARCHITECTURE.md` | How the code fits together; how to add content or a minigame |
+| `design/game-design.md` | Design intent, player journey, the accessibility bar |
+| `production/release-checklist.md` | What is missing for production, the ads/billing switch, the device test checklist |
+| `production/play-console.md` | Paste-ready Play Console answers, store listing and release notes |
 
-**Coverage.** The graph covers:
+Keep it to these. Add to the right one instead of starting a new document.
 
-- the TypeScript and TSX source: `src/`, `e2e/` and the root config files;
-- the Android project's Java;
-- the markdown in `design/`, `docs/` and the root files.
+## Code rules
 
-Markdown is indexed by its headings (section structure), not its prose. To see
-what a spec actually says, read the spec. `.graphifyignore` keeps out the
-lockfile, build output, and the audio and image binaries. The Gradle files are
-only partly parsed.
+- **Components never mutate game state.** Read with `useGameState(selector)` or
+  `useStats()` from `src/hooks/useGame.ts`; act with `useDispatch()` and use the
+  `ActionResult` it returns. Local `useState` is for UI only (open, selection,
+  animation). Selectors return stable values or pass `shallowEqual`, so the
+  100 ms tick does not re-render screens.
+- **Rules live in `src/game/`** and get a unit test in `src/game/__tests__/`
+  (`harness()` in `src/game/__tests__/helpers.ts` gives a fixed clock and a
+  seeded RNG). Nothing in `src/game/` calls `Date.now()` or `Math.random()` or
+  imports React or a plugin. Side effects leave the reducer as `FxEvent`s;
+  `src/context/GameProvider.tsx` plays sounds and haptics.
+- **Content is data** in `src/data/definitions.ts` (types in `src/types/game.ts`).
+  Never hard-code a list of upgrades, quests or products in a component. Store
+  prices come from Google Play only.
+- **Player-facing numbers** go through `src/utils/numberFormat.ts`.
+- **Colours** are the theme tokens in `src/index.css` as Tailwind classes
+  (`bg-panel`, `text-neon`, `border-line` ...), never hex in a component.
+  Content colours (rarities, trails) are data.
+- **UI primitives** in `src/components/ui/`: `Panel`, `PanelHeader`, `TabBody`,
+  `Button`, `TwoTapButton` (destructive or expensive actions) and `Modal` (wires
+  the Android back button). Any other overlay registers its own back handler
+  with `useBackHandler`.
+- **Touch targets** are at least 32 CSS px; never show state by colour alone
+  (`design/game-design.md`).
+- **Timers** are cleared in effect cleanups; minigames unmount mid-play.
+- **Monetization switches** live only in `src/config/monetization.ts`, plus the
+  AdMob app ID in `android/app/src/main/AndroidManifest.xml`. Ads are opt-in
+  rewarded offers with daily caps plus one banner; never interstitials, never a
+  penalty.
 
-Rules:
-- For codebase questions, first run `graphify query "<question>"` when
-  graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for
-  relationships and `graphify explain "<concept>"` for focused concepts. These
-  return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw
-  grep output.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of
-  raw source browsing. `npm run graphify` does not create it; the full
-  /graphify pipeline with --wiki does.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review, or when
-  query, path and explain do not surface enough context.
-- After modifying code, run `npm run graphify` to keep the graph current
-  (AST-only, no API cost). The /graphify skill
-  (`.claude/skills/graphify/SKILL.md`) runs the full pipeline, which adds LLM
-  extraction of documents. It is not needed for code changes.
+## History
 
-## The design archive
+The game was written in Godot, ported to Unity, then to React. To recover old
+code: Godot is the `godot-final` tag on origin (`git fetch origin tag
+godot-final`, then `git show godot-final:<path>`); the Unity C# was deleted by
+commit 35935fb (`git show 35935fb^:<path>`). The milestone UX specs that the
+1.4.0 rebuild followed were removed later; `git log --all -- design/ux`
+finds them.
 
-`design/` holds the GDD (`design/gdd/game-concept.md`), the per-milestone UX
-specs in `design/ux/`, `design/player-journey.md` and
-`design/accessibility-requirements.md`. The React source cites the specs by
-milestone and section. For example, "M5 §2C" in `src/game/reducer.ts` means §2C
-of `design/ux/milestone-5-bosses-worlds.md`. The rules the specs state are
-binding, including the accessibility tiers.
-
-`design/RELEASE-CHECKLIST.md` (what must be true before production) and
-`design/TESTING-GUIDE.md` (what must be proven, and in what order) are the two
-process documents, and `production/monetisation-switch.md` is the runbook for
-turning on ads and billing. The automated checks are `npm run typecheck`,
-`npm test` and `npm run e2e`; the Android build steps are in `README.md`.
-
-**The specs predate the React build, and many still name Godot or Unity files
-in backticks** (**Assets/Scripts/...**, **Assets/Resources/Prefabs/...**,
-**tools/...**). Those paths no longer exist. Read them as history: the rule a
-spec states binds, the file it names does not. To recover the old code:
-
-- Godot: the `godot-final` tag exists on origin only. Run
-  `git fetch origin tag godot-final`, then `git show godot-final:<path>`.
-- Unity: the C# was deleted by commit 35935fb, so
-  `git show 35935fb^:<path>` recovers it.
-
-The convention for anything written from now on: **backticks mean a live
-path**, one that exists in the repo now, and a file or tool described
-historically goes in bold instead. Generated output (graphify-out/, dist/, the
-web bundle that `npx cap sync` copies into the Android project) is named in
-plain text. Nothing enforces the convention, so it is on whoever edits. Check
-backticked paths with `ls` or `git ls-files` before committing.
+**Backticks mean a live path**, one that exists in the repo now. Name a
+historical file in bold and generated output (dist/, the synced Android web
+bundle) in plain text. Check backticked paths with `git ls-files` before
+committing.

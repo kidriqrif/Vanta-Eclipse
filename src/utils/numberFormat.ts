@@ -28,20 +28,23 @@ export function formatNumber(value: number, decimals: number = 2): string {
   if (!isFinite(value)) return '∞';
   if (value < 0) return '-' + formatNumber(-value, decimals);
   if (value < 1000) {
-    if (Number.isInteger(value)) return value.toString();
-    return value.toFixed(value < 10 ? 1 : 0);
+    const small = Number.isInteger(value) ? value.toString() : value.toFixed(value < 10 ? 1 : 0);
+    // 999.6 rounds to "1000"; let it read "1.00K" like every other four-digit figure.
+    if (Number(small) < 1000) return small;
   }
 
-  const tier = Math.floor(Math.log10(value) / 3);
+  let tier = Math.max(1, Math.floor(Math.log10(value) / 3));
+  let scaled = value / Math.pow(10, tier * 3);
+  // Rounding can carry into the next tier (999,999.9 would read "1000.00K"): step up instead.
+  if (Number(scaled.toFixed(decimals)) >= 1000) {
+    tier += 1;
+    scaled /= 1000;
+  }
   if (tier >= SUFFIXES.length) {
     return value.toExponential(2);
   }
 
-  const suffix = SUFFIXES[tier];
-  const scale = Math.pow(10, tier * 3);
-  const scaled = value / scale;
-
-  return scaled.toFixed(decimals) + suffix;
+  return scaled.toFixed(decimals) + SUFFIXES[tier];
 }
 
 export function formatPercent(value: number, decimals: number = 1): string {

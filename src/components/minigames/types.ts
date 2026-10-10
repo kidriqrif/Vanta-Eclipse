@@ -1,5 +1,5 @@
 /**
- * The contract between the Arcade host and a minigame (design/ux/milestone-9-minigame-framework.md §3).
+ * The contract between the Arcade host and a minigame.
  *
  * A game never touches currency, tokens or saves. It plays, then calls `onFinish` exactly
  * once. The host latches on the first call and ignores any later one, unmounts the game (so

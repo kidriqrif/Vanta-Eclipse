@@ -3,7 +3,7 @@ import { Anchor, ChevronsUp, CirclePause, Gem, Ghost, Skull, Swords, Timer, Undo
 import { ENEMIES, RELICS } from '../data/definitions';
 import { comboBonus } from '../game/reducer';
 import { rgbaFromUnit, selectActiveCosmetic } from '../game/selectors';
-import { AUTO_ATTACK_UNLOCK_LEVEL, BOSS_FIGHT_SECONDS } from '../game/state';
+import { AUTO_ATTACK_UNLOCK_LEVEL, BOSS_FIGHT_SECONDS, WORLD_BOSS_EVERY } from '../game/state';
 import { petDisplayName, petLevel, petSprite, worldForLevel } from '../game/stats';
 import { useDispatch, useFx, useGameState, useNow, useStats } from '../hooks/useGame';
 import { formatDuration, formatNumber, formatPercent } from '../utils/numberFormat';
@@ -17,7 +17,6 @@ const HIT_FLASH_MS = 240;
 const HP_GHOST_DELAY_MS = 150;
 const URGENT_SECONDS = 10;
 const COMBO_MIN = 3;
-const WORLD_BOSS_EVERY = 50;
 
 interface DamageNumber {
   id: number;

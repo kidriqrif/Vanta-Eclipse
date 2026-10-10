@@ -1,14 +1,13 @@
 import { ADS, COSMETICS, getForgeCost } from '../data/definitions';
 import { msUntilNextToken } from './arcade';
 import { hasClaimableQuest } from './quests';
-import { adWatchesToday, eclipsePayout } from './reducer';
+import { adWatchesToday } from './reducer';
 import type { GameState } from './state';
 
 export const selectUnseenItemCount = (s: GameState) => s.inventory.reduce((n, i) => n + (i.seen ? 0 : 1), 0);
 export const selectUnseenRelicCount = (s: GameState) => s.relics.reduce((n, r) => n + (r.seen ? 0 : 1), 0);
 export const selectUnseenPetCount = (s: GameState) => Object.values(s.pets).reduce((n, p) => n + (p.seen ? 0 : 1), 0);
 export const selectHasClaimableQuest = hasClaimableQuest;
-export const selectEclipsePayout = eclipsePayout;
 export const selectForgeCost = (s: GameState) => getForgeCost(s.combat.level);
 export const selectHasRemovedAds = (s: GameState) => s.shop.entitlements.includes('remove_ads');
 export const selectNextTokenMs = (s: GameState, now: number) => msUntilNextToken(s.arcade, now);

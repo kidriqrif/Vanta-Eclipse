@@ -5,15 +5,14 @@ import { readFileSync } from 'node:fs';
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8')) as { version: string };
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
   server: {
-    host: '0.0.0.0',
+    // Reachable from a phone on the same network for testing.
+    host: true,
     port: 3000,
-    allowedHosts: true,
   },
 });

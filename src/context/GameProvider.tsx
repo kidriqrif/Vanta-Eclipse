@@ -34,7 +34,7 @@ function createStore(): GameStore {
   const now = Date.now();
   const loaded = loadGame(localStorageAdapter, now, Math.random);
   const store = createGameStore(loaded.state, { now: Date.now, rng: Math.random });
-  // Offline earnings are granted at load, before the player can act (M4 §2B, M14 §2).
+  // Offline earnings are granted at load, before the player can act.
   const away = (now - loaded.state.savedAt) / 1000;
   store.dispatch({ type: 'APPLY_OFFLINE', secondsAway: away });
   return store;

@@ -227,13 +227,13 @@ export const UPGRADES: UpgradeDefinition[] = [
 ];
 
 export const SLOTS: SlotDefinition[] = [
-  { id: 'weapon', displayName: 'Weapon', icon: '/art/ui/slot_weapon.png', sealed: false, sortOrder: 0 },
-  { id: 'helmet', displayName: 'Helmet', icon: '/art/ui/slot_helmet.png', sealed: false, sortOrder: 1 },
-  { id: 'armor', displayName: 'Armor', icon: '/art/ui/slot_armor.png', sealed: false, sortOrder: 2 },
-  { id: 'boots', displayName: 'Boots', icon: '/art/ui/slot_boots.png', sealed: false, sortOrder: 3 },
-  { id: 'gloves', displayName: 'Gloves', icon: '/art/ui/slot_gloves.png', sealed: false, sortOrder: 4 },
-  { id: 'ring', displayName: 'Ring', icon: '/art/ui/slot_ring.png', sealed: false, sortOrder: 5 },
-  { id: 'relic', displayName: 'Relic', icon: '/art/ui/slot_relic.png', sealed: true, sortOrder: 6 },
+  { id: 'weapon', displayName: 'Weapon', sealed: false, sortOrder: 0 },
+  { id: 'helmet', displayName: 'Helmet', sealed: false, sortOrder: 1 },
+  { id: 'armor', displayName: 'Armor', sealed: false, sortOrder: 2 },
+  { id: 'boots', displayName: 'Boots', sealed: false, sortOrder: 3 },
+  { id: 'gloves', displayName: 'Gloves', sealed: false, sortOrder: 4 },
+  { id: 'ring', displayName: 'Ring', sealed: false, sortOrder: 5 },
+  { id: 'relic', displayName: 'Relic', sealed: true, sortOrder: 6 },
 ];
 
 export const AFFIXES: AffixDefinition[] = [
@@ -1066,7 +1066,7 @@ export const ADS: AdPlacementDefinition[] = [
     rewardKind: 'TOKEN',
     rewardAmount: 1.0,
     dailyCap: 3,
-    // Offered only in the Arcade, when the player cannot afford a game (M14 §2).
+    // Offered only in the Arcade, when the player cannot afford a game.
     contextual: true,
     sortOrder: 1,
   },

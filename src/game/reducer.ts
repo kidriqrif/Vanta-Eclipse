@@ -149,14 +149,14 @@ export function skillBlocker(state: GameState, id: string): string | null {
 /** Ad offers keep their daily cap even with Remove Ads; Remove Ads only skips the video. */
 export function adWatchesToday(state: GameState, placementId: string, today: string): number {
   const w = state.shop.adWatches[placementId];
-  // A watch dated today, or "later" because the clock was set back, still counts (M13 §5).
+  // A watch dated today, or "later" because the clock was set back, still counts.
   return w && w.date >= today ? w.count : 0;
 }
 
 /**
  * The boss fight is held while something covers the arena: a minigame, the Welcome-back report
  * or the world-unlock celebration. Held means the timer stops AND nothing hits the boss, so the
- * fight can be neither lost nor won behind a screen (M5 §3, §6; M9 §10).
+ * fight can be neither lost nor won behind a screen.
  */
 export function isBossHeld(state: Pick<GameState, 'combat' | 'ui'>): boolean {
   return (
@@ -246,7 +246,7 @@ function enterLevel(d: D, c: Ctx, level: number) {
   }
 }
 
-/** A failed or abandoned boss drops the player to farm the level below the gate (M5 §2C). */
+/** A failed or abandoned boss drops the player to farm the level below the gate. */
 function leaveBoss(d: D, c: Ctx, timedOut: boolean) {
   const gate = d.combat.level;
   const farmLevel = Math.max(1, gate - 1);
@@ -372,7 +372,7 @@ function applyHit(d: D, c: Ctx, opts: { auto: boolean; x?: number; y?: number; c
 function handle(d: D, a: Action, c: Ctx, base: GameState): ActionResult {
   // Dailies roll over when the local date moves FORWARD, before any action is applied, so
   // essence earned offline after midnight counts toward today. A clock set backwards never
-  // re-rolls a fresh set (M13 §5).
+  // re-rolls a fresh set.
   if (c.today > d.quests.daily.date) d.quests.daily = freshDaily(c.today);
   switch (a.type) {
     case 'TICK': {
@@ -576,7 +576,7 @@ function handle(d: D, a: Action, c: Ctx, base: GameState): ActionResult {
       addCurrency(d, 'void_crystals', payout);
       d.eclipseCount += 1;
       bumpCounter(d as GameState, 'eclipses', 1);
-      // RESET (M8 §1): the run economy. Everything else is kept.
+      // RESET: the run economy. Everything else is kept.
       d.currencies.essence = 0;
       d.upgrades = {};
       d.peakRunLevel = 1;
@@ -677,7 +677,7 @@ function handle(d: D, a: Action, c: Ctx, base: GameState): ActionResult {
       } else {
         addCurrency(d, 'essence', Math.round(c.stats.rewardRate * def.rewardAmount));
       }
-      // Counted after the grant: a watch that yields nothing never costs an offer (M14 §2).
+      // Counted after the grant: a watch that yields nothing never costs an offer.
       d.shop.adWatches[def.id] = { date: c.today, count: watched + 1 };
       sound(c, 'claim');
       c.fx.push({ type: 'save' });

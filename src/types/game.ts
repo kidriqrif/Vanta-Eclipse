@@ -1,14 +1,11 @@
 export type CurrencyType = 'essence' | 'void_crystals' | 'astral_shards' | 'void_scraps';
 
-export type CombatState = 'NORMAL' | 'BOSS_FIGHT' | 'FARM_MODE';
-
 export interface EnemyDefinition {
   id: string;
   displayName: string;
   texture: string;
   hpMultiplier: number;
   isBoss?: boolean;
-  glowColor?: { r: number; g: number; b: number; a: number };
   viewScale?: number;
 }
 
@@ -42,7 +39,6 @@ export type ItemRarity = 0 | 1 | 2 | 3 | 4;
 export interface SlotDefinition {
   id: string;
   displayName: string;
-  icon: string;
   sealed: boolean;
   sortOrder: number;
 }

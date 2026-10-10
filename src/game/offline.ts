@@ -13,7 +13,7 @@ export interface OfflineReward {
 /**
  * Essence earned while away. Only accrues once auto-attack is running (at level 15, or from
  * the start with Eternal Reflex), at the rate of whatever the player was doing — farming a
- * walled boss pays the farm rate, honestly (M5 §6).
+ * walled boss pays the farm rate, honestly.
  *  - cap: 8 h + Long Slumber
  *  - efficiency: 50% + Deep Rest
  *  - multiplier: the Eclipse Heart relic, when attuned

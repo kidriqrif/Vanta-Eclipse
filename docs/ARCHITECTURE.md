@@ -161,7 +161,7 @@ Two clocks therefore exist:
 `FARM_MODE` (kills repeat the level).
 
 - `LEAVE_BOSS` (RETREAT) and a timeout both drop the player to farm the level
-  below the gate (M5 §2C).
+  below the gate.
 - `CHALLENGE_BOSS` re-fights the gate. It only works from farm mode on the
   level just below a gate.
 - `SET_FARM` (HOLD LEVEL) farms by choice. It is refused during a boss fight.
@@ -177,7 +177,7 @@ start with the Eternal Reflex skill.
 The Eclipse (`PERFORM_ECLIPSE`) needs a run peak of at least 50. It pays
 floor((peak ÷ 10) ^ 1.6) × (1 + Crystalline) void crystals, rounded, at least
 1. It resets essence, upgrades, level, run peak, world unlocks and auto-attack,
-and keeps everything else (M8 §1). It saves immediately.
+and keeps everything else. It saves immediately.
 
 ## Saving and migration
 
@@ -238,11 +238,11 @@ on a reinstall or a new device. Google decides when that happens.
 
 - It pays nothing under 60 s, and nothing until auto-attack is running.
 - It pays `liveEssenceRate × seconds × efficiency`, at the level the player
-  left on. Farming a walled boss pays the farm rate (M5 §6).
+  left on. Farming a walled boss pays the farm rate.
 - The cap is 8 h plus Long Slumber. Efficiency is 50% plus Deep Rest. The
   Eclipse Heart relic, when attuned, triples the amount.
 
-It is applied at launch, measured from `savedAt` (M4 §2B). It is also applied
+It is applied at launch, measured from `savedAt`. It is also applied
 on resume after at least 60 s in the background, measured from the moment the
 app paused. `APPLY_OFFLINE` adds the essence straight away and records
 `ui.pendingOffline` for the modal. The `offline_double` ad pays the same amount
@@ -269,14 +269,14 @@ unlocks against the lifetime peak, so an Eclipse never re-locks one.
   4. `ARCADE_QUIT` closes the run, pays nothing and forfeits the token.
      Leaving the Arcade tab with a run open quits it too.
 - **Payout** is `rewardRate × rewardSeconds × performance`. A loss pays 25% of
-  that, and every result pays at least 1 (M9 §2). `rewardRate` uses the same
+  that, and every result pays at least 1. `rewardRate` uses the same
   formula as the live essence rate, but exists before auto-attack unlocks.
 - **Records** count only from wins, in each game's direction (`lowerIsBetter`).
 
 ## Monetization layer
 
-The spec is `design/ux/milestone-14-monetization.md`. The code is in three
-places.
+The code is in three places; the go-live steps are in
+`production/release-checklist.md`.
 
 **`src/config/monetization.ts`** holds every switch:
 
@@ -382,8 +382,7 @@ the bot, and AdMob treats that as invalid traffic.
 - The layout is a single portrait column (max width `max-w-md`) that respects
   the safe-area insets. The Android activity is locked to portrait.
 - Touch targets are at least 32 CSS px tall. `Button` sizes are 32, 40 and 48
-  px. 32 CSS px is the 96 px of the 1080-wide reference canvas in
-  `design/accessibility-requirements.md`, on a 360 px-wide screen.
+  px. The full accessibility bar is in `design/game-design.md`.
 - No state is conveyed by colour alone.
 - Every overlay closes with the back button.
 - Destructive or expensive actions use `TwoTapButton`: the first tap arms it,
@@ -447,8 +446,9 @@ it to an outcome.
 
 ## Testing
 
-- **`npm test`** runs Vitest on every .test.ts file under `src/`, in Node. The
-  tests are in `src/game/__tests__/`:
+- **`npm test`** runs Vitest on every .test.ts file under `src/`, in Node.
+  `src/utils/numberFormat.test.ts` covers number formatting; the game tests
+  are in `src/game/__tests__/`:
   - `src/game/__tests__/reducer.test.ts`: combat and gates, spending, gear,
     pets, the Eclipse, the arcade latch and payout, token regen, quests, ad
     caps, purchases and offline;
@@ -465,7 +465,8 @@ it to an outcome.
   and reads and patches state through `window.__vanta`. To use an installed
   browser instead of `npx playwright install chromium`, set the `PW_CHROMIUM`
   environment variable to its executable.
-- **`npm run typecheck`** runs `tsc --noEmit`. `npm run lint` is the same
-  command; there is no ESLint.
+- **`npm run typecheck`** runs `tsc --noEmit` (there is no ESLint).
+- **CI** (`.github/workflows/ci.yml`) runs typecheck, unit tests, the build and
+  the end-to-end suite on every push to `main` and every pull request.
 - **Device-only behaviour** must be checked on a phone: AdMob and consent,
   billing, the back button, haptics, pause and resume, and Auto Backup.

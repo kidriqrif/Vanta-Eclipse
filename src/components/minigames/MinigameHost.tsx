@@ -28,7 +28,7 @@ interface Banner {
 }
 
 /**
- * The frame around a minigame (spec M9 §4): the header with a two-tap QUIT, the game itself,
+ * The frame around a minigame: the header with a two-tap QUIT, the game itself,
  * and the result banner. The host owns the payout: the first `onFinish` wins and dispatches
  * ARCADE_FINISH; anything after that (or after QUIT) is ignored.
  */

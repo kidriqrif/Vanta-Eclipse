@@ -8,8 +8,7 @@ import { formatNumber } from '../utils/numberFormat';
 import { Button, Modal } from './ui';
 
 const selectWorldId = (s: GameState) => s.ui.worldUnlockModal;
-/** A minigame is its own screen; the celebration waits until the player is back. */
-/** Waits behind a minigame, and behind the Welcome-back report (offline first, M5 §6). */
+/** Waits behind a minigame, and behind the Welcome-back report (offline first). */
 const selectWaiting = (s: GameState) => s.ui.activeRun !== null || s.ui.pendingOffline !== null;
 /**
  * The world can reopen after an Eclipse; Ember only joins the first time. The 'ruins' tip

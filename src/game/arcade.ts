@@ -6,7 +6,7 @@ import { TOKEN_CAP, TOKEN_REGEN_MS, type ArcadeSlice, type GameState } from './s
 export const LOSS_FLOOR = 0.25;
 
 /**
- * Brings the token meter up to date with wall-clock time (spec M9 §1, §9). Tokens accrue
+ * Brings the token meter up to date with wall-clock time. Tokens accrue
  * while the app is closed; time beyond a full meter is discarded; a clock set backwards
  * grants nothing.
  */
@@ -48,7 +48,7 @@ export function isMinigameUnlocked(state: GameState, def: MinigameDefinition): b
   return state.lifetimePeakLevel >= def.unlockLevel;
 }
 
-/** payout = rate × reward_seconds × performance, a loss pays LOSS_FLOOR of that, minimum 1 (M9 §2). */
+/** payout = rate × reward_seconds × performance, a loss pays LOSS_FLOOR of that, minimum 1. */
 export function minigamePayout(rewardRate: number, def: MinigameDefinition, won: boolean, performance: number): number {
   const perf = Math.min(1, Math.max(0, Number.isFinite(performance) ? performance : 0));
   const value = rewardRate * def.rewardSeconds * perf * (won ? 1 : LOSS_FLOOR);

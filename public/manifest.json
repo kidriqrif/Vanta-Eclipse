@@ -27,8 +27,8 @@
       "purpose": "any"
     },
     {
-      "src": "/icons/adaptive_foreground_432.png",
-      "sizes": "432x432",
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     }

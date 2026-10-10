@@ -11,11 +11,6 @@ build/
 coverage/
 playwright-report/
 test-results/
-__pycache__/
-*.pyc
-
-# graphify knowledge-graph output: generated and rebuilt on demand (npm run graphify).
-graphify-out/
 
 # Signing keys and credentials must NEVER be committed.
 *.keystore

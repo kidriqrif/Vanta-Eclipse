@@ -238,7 +238,7 @@ export function sanitize(raw: Loose, now: number, rng: Rng, legacyTutorials?: Lo
   const questsRaw = isObj(raw.quests) ? raw.quests : {};
   const dailyRaw = isObj(questsRaw.daily) ? questsRaw.daily : null;
   // A saved day that is today, or "later" because the clock was set back, is kept as is: only a
-  // forward date change starts a fresh set (M13 §5).
+  // forward date change starts a fresh set.
   const savedDate = dailyRaw && typeof dailyRaw.date === 'string' ? dailyRaw.date : '';
   const daily =
     dailyRaw && savedDate >= today

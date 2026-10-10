@@ -76,7 +76,7 @@ function hitTimes(outcomes: Outcome[]): number[] {
 
 function summarize(outcomes: Outcome[]): MinigameResult {
   const hits = hitTimes(outcomes);
-  // M9 §6: a 250 ms reaction scores 1.0, tapering to 0 at 900 ms; performance is the mean over hits.
+  // A 250 ms reaction scores 1.0, tapering to 0 at 900 ms; performance is the mean over hits.
   const total = hits.reduce((sum, ms) => sum + clamp((900 - ms) / 650, 0, 1), 0);
   const avg = hits.length > 0 ? Math.round(hits.reduce((a, b) => a + b, 0) / hits.length) : 0;
   return {
@@ -121,7 +121,7 @@ function statusLine(s: RoundState): { text: string; tone: string } {
 }
 
 /**
- * Void Reflex (spec M9 §6): five rounds; after a random 0.8–2.2s one of five sigils flares and
+ * Void Reflex: five rounds; after a random 0.8–2.2s one of five sigils flares and
  * the player taps it on press. Win = 3+ hits. Score = mean hit reaction in ms (lower is better).
  */
 export const VoidReflexGame: React.FC<MinigameProps> = ({ onFinish }) => {

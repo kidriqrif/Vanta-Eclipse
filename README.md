@@ -11,7 +11,7 @@ trades the run for permanent crystals. Seven arcade minigames run on a token
 meter, and quests and offline earnings fill the time between sessions. The game
 plays offline and keeps its progress on the device.
 
-[Architecture](docs/ARCHITECTURE.md) · [Handoff](HANDOFF.md) ·
+[Architecture](docs/ARCHITECTURE.md) · [Release checklist](production/release-checklist.md) ·
 [Project page](https://kidriqrif.github.io/Vanta-Eclipse/)
 
 **History.** The game was written in Godot, ported to Unity, then ported to
@@ -53,16 +53,15 @@ debugging.
 | `npm run dev` | Vite dev server on port 3000 |
 | `npm run build` | `tsc --noEmit`, then `vite build` into dist/ |
 | `npm run preview` | Serves the production build |
-| `npm run typecheck` | `tsc --noEmit` (`npm run lint` is the same command; there is no ESLint) |
+| `npm run typecheck` | `tsc --noEmit` (there is no ESLint) |
 | `npm test` | Vitest unit tests |
 | `npm run e2e` | Playwright smoke tests |
 | `npm run android:sync` | `npm run build`, then `npx cap sync android` |
-| `npm run graphify` | Rebuilds the code knowledge graph (see `CLAUDE.md`) |
 
 ## Tests
 
 ```bash
-npm test           # Vitest: src/game/__tests__ (reducer, tap guard, save migration)
+npm test           # Vitest: the reducer, tap guard, save migration, number formatting
 npm run e2e        # Playwright: e2e/, against a dev server it starts on port 5173
 ```
 
@@ -79,10 +78,12 @@ viewport:
 - every arcade game paying exactly once, and a boss held while one is open;
 - a second browser tab taking over the save.
 
-Two capture scripts are skipped unless `CAPTURE=1` is set:
-`e2e/store-shots.spec.ts` writes the eight Play Store screenshots to
-`production/screenshots/` (1080×1920, no alpha), and `e2e/screens.spec.ts`
-captures every screen for a layout review.
+`e2e/store-shots.spec.ts` is skipped unless `CAPTURE=1` is set; then it writes
+the eight Play Store screenshots to `production/screenshots/` (1080×1920, no
+alpha).
+
+CI (`.github/workflows/ci.yml`) runs the typecheck, the unit tests, the build
+and the end-to-end suite on every push to `main` and every pull request.
 
 To use a browser that is already installed instead of
 `npx playwright install chromium`, point `PW_CHROMIUM` at it:
@@ -138,16 +139,9 @@ To release a new version, bump `versionCode` and `versionName` in
 `android/app/build.gradle` and `version` in `package.json`. `vite.config.ts`
 exposes the `package.json` version to the app as `__APP_VERSION__`.
 
-**Before the production release:**
-
-- Put your AdMob ad unit IDs into `src/config/monetization.ts` and set
-  `isTesting: false` there.
-- Put your AdMob app ID into the `APPLICATION_ID` meta-data in
-  `android/app/src/main/AndroidManifest.xml`.
-- Both currently hold Google's public sample IDs, which serve test ads only.
-- `BILLING_ENABLED` in the same config file turns the paid items on. Until it
-  is true they read "COMING SOON". The products must exist in Play Console with
-  the `storeId`s from `PRODUCTS` in `src/data/definitions.ts`.
+**Before the production release** the AdMob IDs, `isTesting` and
+`BILLING_ENABLED` change; all of it is in
+[production/release-checklist.md](production/release-checklist.md).
 
 ## Where the save lives
 
@@ -183,15 +177,15 @@ the save as a string and import one (`exportSave` and `importSave` from
 | `src/utils/numberFormat.ts` | Every player-facing number goes through this |
 | `src/index.css` | Tailwind import and the colour tokens |
 | `src/assets/gear/` | Gear slot artwork, bundled by Vite |
-| `public/` | Sprites (`public/art/`), sounds and music (`public/audio/`), icons, the web manifest, the web-only service worker, the privacy policy pages |
+| `public/` | Sprites (`public/art/`), sounds and music (`public/audio/`), icons, the web manifest and the web-only service worker |
 | `e2e/` | Playwright tests |
 | `android/` | The Capacitor Android project |
-| `design/` | GDD, UX specs per milestone, accessibility requirements |
-| `docs/` | `docs/ARCHITECTURE.md`, and the published project page and privacy policy |
-| `production/` | Play Store material: listing text, icons, screenshots |
+| `design/game-design.md` | Design intent, player journey, accessibility bar |
+| `docs/` | `docs/ARCHITECTURE.md`, and the GitHub Pages site: project page and the privacy policy the game links to |
+| `production/` | `production/release-checklist.md` (gaps, go-live, device tests), `production/play-console.md` (Play Console answers and listing copy), store icons and screenshots |
 | `capacitor.config.ts`, `vite.config.ts`, `vitest.config.ts`, `playwright.config.ts`, `tsconfig.json` | Tool configuration |
-| `.claude/` | Claude Code project files: the graphify skill and the technical preferences |
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the pieces fit
-together and how to add content or a minigame. See [HANDOFF.md](HANDOFF.md) for
-the current state and what is left before launch.
+together and how to add content or a minigame, and
+[production/release-checklist.md](production/release-checklist.md) for what is
+left before launch.
