@@ -19,21 +19,13 @@ import {
   selectUnseenPetCount,
   selectUnseenRelicCount,
 } from '../game/selectors';
+import { isEclipseTabOpen, isTabNew, type GuideTab } from '../game/guide';
 import { ARCADE_UNLOCK_LEVEL, ECLIPSE_UNLOCK_LEVEL, WORLD_TWO_FIRST_LEVEL, type GameState } from '../game/state';
 import { useBackHandler } from '../hooks/useBackHandler';
 import { shallowEqual, useGameState } from '../hooks/useGame';
 import { formatNumber } from '../utils/numberFormat';
 
-export type TabType =
-  | 'UPGRADES'
-  | 'GEAR'
-  | 'JOURNAL'
-  | 'CARDS'
-  | 'PETS'
-  | 'RELICS'
-  | 'ECLIPSE'
-  | 'ARCADE'
-  | 'SHOP';
+export type TabType = GuideTab;
 
 interface NavigationTabsProps {
   activeTab: TabType;
@@ -76,7 +68,13 @@ const selectNav = (s: GameState) => ({
   arcadeOpen: s.lifetimePeakLevel >= ARCADE_UNLOCK_LEVEL,
   cards: s.cards.length,
   relicsAwakened: s.relicsAwakened,
-  eclipseOpen: s.peakRunLevel >= ECLIPSE_UNLOCK_LEVEL,
+  eclipseOpen: isEclipseTabOpen(s),
+  newArcade: isTabNew(s, 'ARCADE'),
+  newCards: isTabNew(s, 'CARDS'),
+  newPets: isTabNew(s, 'PETS'),
+  newRelics: isTabNew(s, 'RELICS'),
+  newEclipse: isTabNew(s, 'ECLIPSE'),
+  newShop: isTabNew(s, 'SHOP'),
 });
 type NavState = ReturnType<typeof selectNav>;
 
@@ -86,6 +84,10 @@ const short = (n: number) => (n > 99 ? '99+' : formatNumber(n));
 function countBadge(n: number, noun: string, tone: BadgeTone): Badge | null {
   return n > 0 ? { text: short(n), spoken: `${formatNumber(n)} ${noun}${n === 1 ? '' : 's'}`, tone } : null;
 }
+
+/** A tab that just started to matter and has not been opened since (src/game/guide.ts). */
+const NEW_BADGE: Badge = { text: 'NEW', spoken: 'new, not opened yet', tone: 'gold' };
+const withNew = (isNew: boolean, other: Badge | null): Badge | null => (isNew ? NEW_BADGE : other);
 
 const RUINS_LOCK = {
   short: `LV ${formatNumber(WORLD_TWO_FIRST_LEVEL)}`,
@@ -99,7 +101,7 @@ function buildTabs(n: NavState): Record<TabType, TabSpec> {
     ARCADE: {
       label: 'ARCADE',
       icon: Gamepad2,
-      badge: n.arcadeOpen ? countBadge(n.tokens, 'token', 'gold') : null,
+      badge: withNew(n.newArcade, n.arcadeOpen ? countBadge(n.tokens, 'token', 'info') : null),
       locked: n.arcadeOpen
         ? null
         : { short: `LV ${formatNumber(ARCADE_UNLOCK_LEVEL)}`, long: `unlocks at level ${formatNumber(ARCADE_UNLOCK_LEVEL)}` },
@@ -110,23 +112,23 @@ function buildTabs(n: NavState): Record<TabType, TabSpec> {
       badge: n.claimable ? { text: '!', spoken: 'rewards ready to claim', tone: 'gold' } : null,
       locked: null,
     },
-    CARDS: { label: 'CARDS', icon: Layers, badge: countBadge(n.cards, 'card', 'info'), locked: null },
+    CARDS: { label: 'CARDS', icon: Layers, badge: withNew(n.newCards, countBadge(n.cards, 'card', 'info')), locked: null },
     PETS: {
       label: 'BEAST',
       icon: PawPrint,
-      badge: countBadge(n.unseenPets, 'new companion', 'neon'),
+      badge: withNew(n.newPets, countBadge(n.unseenPets, 'new companion', 'neon')),
       locked: n.relicsAwakened ? null : RUINS_LOCK,
     },
     RELICS: {
       label: 'RELICS',
       icon: Gem,
-      badge: countBadge(n.unseenRelics, 'new relic', 'neon'),
+      badge: withNew(n.newRelics, countBadge(n.unseenRelics, 'new relic', 'neon')),
       locked: n.relicsAwakened ? null : RUINS_LOCK,
     },
     ECLIPSE: {
       label: 'ECLIPSE',
       icon: Moon,
-      badge: null,
+      badge: withNew(n.newEclipse, null),
       locked: n.eclipseOpen
         ? null
         : {
@@ -134,7 +136,7 @@ function buildTabs(n: NavState): Record<TabType, TabSpec> {
             long: `unlocks when a run reaches level ${formatNumber(ECLIPSE_UNLOCK_LEVEL)}`,
           },
     },
-    SHOP: { label: 'BAZAAR', icon: ShoppingBag, badge: null, locked: null },
+    SHOP: { label: 'BAZAAR', icon: ShoppingBag, badge: withNew(n.newShop, null), locked: null },
   };
 }
 

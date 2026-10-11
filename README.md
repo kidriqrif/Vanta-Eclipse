@@ -61,7 +61,7 @@ debugging.
 ## Tests
 
 ```bash
-npm test           # Vitest: the reducer, tap guard, save migration, number formatting
+npm test           # Vitest: the reducer, guide, tap guard, save migration, number formatting
 npm run e2e        # Playwright: e2e/, against a dev server it starts on port 5173
 ```
 
@@ -76,7 +76,9 @@ viewport:
 - billing being off;
 - ad caps;
 - every arcade game paying exactly once, and a boss held while one is open;
-- a second browser tab taking over the save.
+- a second browser tab taking over the save;
+- the onboarding guide: tips, opening the tab a tip names, the double-tap
+  guard, NEW markers, Escape, and reading and replaying tips in Settings.
 
 `e2e/store-shots.spec.ts` is skipped unless `CAPTURE=1` is set; then it writes
 the eight Play Store screenshots to `production/screenshots/` (1080×1920, no

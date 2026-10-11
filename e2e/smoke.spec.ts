@@ -1,13 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { arena, dispatch, freshGame, getState, humanTaps, openTab, patchState, waitForStore, watchErrors } from './helpers';
+import { SKIP_GUIDE, arena, dispatch, freshGame, getState, humanTaps, openTab, patchState, waitForStore, watchErrors } from './helpers';
 
 test.describe('core loop', () => {
   test('a new game taps, earns, climbs, and every tab opens cleanly', async ({ page }) => {
     const errors = watchErrors(page);
     await freshGame(page);
-    // Dismiss the welcome tip if it is up.
-    const ack = page.getByRole('button', { name: /acknowledge/i });
-    if (await ack.isVisible().catch(() => false)) await ack.click();
+    // The guide has its own test (e2e/onboarding.spec.ts); here no tip may cover the tabs.
+    await patchState(page, `${SKIP_GUIDE} return s;`);
 
     await humanTaps(page, 40);
     const s = await getState(page);
@@ -25,7 +24,7 @@ test.describe('core loop', () => {
   test('boss gate: retreat farms below the gate, challenge re-fights it', async ({ page }) => {
     const errors = watchErrors(page);
     await freshGame(page);
-    await patchState(page, `s.upgrades.void_claws = 1000000; s.combat.level = 9; s.combat.enemy = { ...s.combat.enemy, level: 9, hp: 1, maxHp: 1 }; s.tutorialsSeen = { welcome: true, forge: true, bosses: true }; return s;`);
+    await patchState(page, `s.upgrades.void_claws = 1000000; s.combat.level = 9; s.combat.enemy = { ...s.combat.enemy, level: 9, hp: 1, maxHp: 1 }; ${SKIP_GUIDE} return s;`);
     await humanTaps(page, 1);
     await expect.poll(async () => (await getState(page)).combat.mode).toBe('BOSS_FIGHT');
     // RETREAT is a two-tap confirm because it sits inside the tap field.
@@ -45,7 +44,7 @@ test.describe('core loop', () => {
   test('a metronome autoclicker is locked out; human tapping is not', async ({ page }) => {
     const errors = watchErrors(page);
     await freshGame(page);
-    await patchState(page, `s.tutorialsSeen = { welcome: true }; s.combat.enemy = { ...s.combat.enemy, hp: 1e12, maxHp: 1e12 }; return s;`);
+    await patchState(page, `${SKIP_GUIDE} s.combat.enemy = { ...s.combat.enemy, hp: 1e12, maxHp: 1e12 }; return s;`);
     await humanTaps(page, 30, 7);
     await expect(page.getByText(/tapping paused/i)).toHaveCount(0);
 
@@ -111,7 +110,7 @@ test.describe('shop honesty', () => {
   test('paid items never grant anything while billing is off', async ({ page }) => {
     const errors = watchErrors(page);
     await freshGame(page);
-    await patchState(page, `s.tutorialsSeen = { welcome: true }; return s;`);
+    await patchState(page, `${SKIP_GUIDE} return s;`);
     await openTab(page, /bazaar/i);
     await expect(page.getByText(/coming soon/i).first()).toBeVisible();
     const buttons = page.getByRole('button', { name: /coming soon/i });

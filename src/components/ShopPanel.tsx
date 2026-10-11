@@ -361,7 +361,7 @@ const CosmeticsSection: React.FC = () => {
         }
       />
       <p className="text-[10px] font-tech text-dim leading-tight">
-        Colours your tap trail and damage numbers. Looks only: no effect on stats. Earn Astral Shards from Journal quests.
+        Colours your tap trail and damage numbers. Looks only: no effect on stats. Earn Astral Shards from CODEX goals.
       </p>
       <div className="grid grid-cols-2 gap-1.5">
         {SORTED_COSMETICS.map((def) => (

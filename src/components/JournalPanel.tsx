@@ -19,8 +19,16 @@ type Section = 'DAILY' | 'CHAIN' | 'FEATS';
 type RewardKind = QuestDefinition['rewardKind'];
 type QuestStatus = 'ready' | 'progress' | 'locked' | 'done';
 
-/** The open section survives tab switches for the session. */
-let lastSection: Section = 'DAILY';
+/**
+ * The open section survives tab switches for the session. It starts on CHAIN: the story goals are
+ * the path through the game, and the goal strip above the tabs points here.
+ */
+let lastSection: Section = 'CHAIN';
+
+/** Opens CODEX on this section next time (the goal strip uses it). */
+export function preferCodexSection(section: Section): void {
+  lastSection = section;
+}
 
 const byOrder = (a: QuestDefinition, b: QuestDefinition) => a.sortOrder - b.sortOrder;
 const CHAIN = QUESTS.filter((q) => q.kind === 'CHAIN').sort(byOrder);
@@ -94,9 +102,10 @@ const selectFeatsDone = (s: GameState) => FEATS.reduce((n, q) => n + (isQuestCla
 const selectChainKey = (s: GameState) =>
   CHAIN.map((q) => (isQuestClaimed(s, q) ? 'd' : isQuestLocked(s, q) ? 'l' : 'o')).join('');
 /** Rewards ready to claim per section: [daily (incl. the all-clear), chain, feats]. */
+/** Claimable counts, in SECTIONS order (CHAIN, DAILY, FEATS). */
 const selectReady = (s: GameState): number[] => [
-  activeDailies(s).reduce((n, q) => n + (canClaimQuest(s, q) ? 1 : 0), 0) + (canClaimAllClear(s) ? 1 : 0),
   CHAIN.reduce((n, q) => n + (canClaimQuest(s, q) ? 1 : 0), 0),
+  activeDailies(s).reduce((n, q) => n + (canClaimQuest(s, q) ? 1 : 0), 0) + (canClaimAllClear(s) ? 1 : 0),
   FEATS.reduce((n, q) => n + (canClaimQuest(s, q) ? 1 : 0), 0),
 ];
 
@@ -358,8 +367,8 @@ const FeatsSection: React.FC = () => {
 };
 
 const SECTIONS: { id: Section; label: string; icon: LucideIcon }[] = [
-  { id: 'DAILY', label: 'DAILY', icon: Calendar },
   { id: 'CHAIN', label: 'CHAIN', icon: Link },
+  { id: 'DAILY', label: 'DAILY', icon: Calendar },
   { id: 'FEATS', label: 'FEATS', icon: Trophy },
 ];
 

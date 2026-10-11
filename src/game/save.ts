@@ -314,7 +314,15 @@ export function sanitize(raw: Loose, now: number, rng: Rng, legacyTutorials?: Lo
     tutorialsSeen,
     nextId: counter,
     savedAt: Math.min(num(raw.savedAt, now), now),
-    ui: freshUi(),
+    ui: {
+      ...freshUi(),
+      // A world unlocked but never celebrated (the app closed before CONTINUE) is celebrated now.
+      // Saves from before this flag existed count it as celebrated once its tip was seen.
+      worldUnlockModal:
+        unlockedWorlds.includes('frozen_ruins') && !tutorialsSeen['world:frozen_ruins'] && !tutorialsSeen['ruins']
+          ? 'frozen_ruins'
+          : null,
+    },
   };
   return withFreshEnemy(state, rng);
 }

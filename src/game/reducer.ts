@@ -154,14 +154,17 @@ export function adWatchesToday(state: GameState, placementId: string, today: str
 }
 
 /**
- * The boss fight is held while something covers the arena: a minigame, the Welcome-back report
- * or the world-unlock celebration. Held means the timer stops AND nothing hits the boss, so the
+ * The boss fight is held while something covers the arena: a minigame, the Welcome-back report,
+ * the world-unlock celebration or a guide tip. Held means the timer stops AND nothing hits the boss, so the
  * fight can be neither lost nor won behind a screen.
  */
 export function isBossHeld(state: Pick<GameState, 'combat' | 'ui'>): boolean {
   return (
     state.combat.mode === 'BOSS_FIGHT' &&
-    (state.ui.activeRun !== null || state.ui.pendingOffline !== null || state.ui.worldUnlockModal !== null)
+    (state.ui.activeRun !== null ||
+      state.ui.pendingOffline !== null ||
+      state.ui.worldUnlockModal !== null ||
+      state.ui.guideOpen)
   );
 }
 
@@ -231,10 +234,20 @@ function enterLevel(d: D, c: Ctx, level: number) {
   const prevPeak = d.peakRunLevel;
   d.peakRunLevel = Math.max(d.peakRunLevel, level);
   d.lifetimePeakLevel = Math.max(d.lifetimePeakLevel, level);
-  if (prevPeak < AUTO_ATTACK_UNLOCK_LEVEL && d.peakRunLevel >= AUTO_ATTACK_UNLOCK_LEVEL && !(d.skills['eternal_reflex'] > 0)) {
+  // The first time, the guide's AUTO-ATTACK tip says it; the toast covers every later run.
+  if (
+    prevPeak < AUTO_ATTACK_UNLOCK_LEVEL &&
+    d.peakRunLevel >= AUTO_ATTACK_UNLOCK_LEVEL &&
+    !(d.skills['eternal_reflex'] > 0) &&
+    d.tutorialsSeen['auto']
+  ) {
     toast(c, 'AUTO-ATTACK ONLINE: your strikes now continue on their own', 'rare');
   }
-  if (prevPeak < ECLIPSE_UNLOCK_LEVEL && d.peakRunLevel >= ECLIPSE_UNLOCK_LEVEL) {
+  if (
+    prevPeak < ECLIPSE_UNLOCK_LEVEL &&
+    d.peakRunLevel >= ECLIPSE_UNLOCK_LEVEL &&
+    (d.tutorialsSeen['eclipse'] || d.eclipseCount > 0)
+  ) {
     toast(c, 'THE ECLIPSE AWAITS: collapse this run into permanent power', 'rare');
   }
   if (level % 10 === 0) {
@@ -254,7 +267,12 @@ function leaveBoss(d: D, c: Ctx, timedOut: boolean) {
   d.combat.level = farmLevel;
   spawnEnemy(d, c, farmLevel, false);
   sound(c, 'fail');
-  toast(c, timedOut ? 'THE BOSS ENDURES: farm, grow stronger, then challenge it again' : 'RETREATED: farming below the gate', 'warn');
+  // A setback, not a failure: neutral tone, and it says how to get past the wall.
+  toast(
+    c,
+    timedOut ? 'THE BOSS ENDURES: upgrade, equip gear, then CHALLENGE BOSS' : 'RETREATED: farming below the gate',
+    'info',
+  );
 }
 
 function dropItem(d: D, c: Ctx, source: 'enemy' | 'boss' | 'world_boss', level: number) {
@@ -779,11 +797,23 @@ function handle(d: D, a: Action, c: Ctx, base: GameState): ActionResult {
       return OK;
 
     case 'CLOSE_WORLD_MODAL':
+      // Remembered, so a celebration interrupted by closing the app plays again on the next launch.
+      if (d.ui.worldUnlockModal) d.tutorialsSeen[`world:${d.ui.worldUnlockModal}`] = true;
       d.ui.worldUnlockModal = null;
       return OK;
 
     case 'MARK_TUTORIAL_SEEN':
+      if (typeof a.id !== 'string' || a.id.length === 0 || a.id.length > 64) return fail('invalid');
       d.tutorialsSeen[a.id] = true;
+      return OK;
+
+    case 'SET_GUIDE_OPEN':
+      d.ui.guideOpen = a.open === true;
+      return OK;
+
+    case 'RESET_TUTORIALS':
+      // World celebrations stay remembered; everything the guide teaches can play again.
+      for (const k of Object.keys(d.tutorialsSeen)) if (!k.startsWith('world:')) delete d.tutorialsSeen[k];
       return OK;
   }
 }

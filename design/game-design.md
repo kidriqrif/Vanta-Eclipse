@@ -100,6 +100,25 @@ meet its needs.
     and what is kept before a two-tap confirm. Minigames are short, always
     pay something, and can be quit with a two-tap QUIT.
 
+## Teaching
+
+How the guide teaches (`src/game/guide.ts`, `docs/ARCHITECTURE.md`):
+
+- **At the moment of need.** A tip appears when the player first meets the
+  thing it explains (the first gear drop, the first card, the first boss that
+  held), not at a fixed level. Tips about something the player has clearly
+  done already are skipped, so a veteran or imported save is never buried.
+- **One new thing at a time.** One tip on screen, a few seconds of play between
+  tips, never during a running boss timer; an open tip holds a boss fight.
+- **Two lines, one obvious exit.** A tip has at most two short lines. A tip
+  about a tab names where it is (including "under MORE") and opens it in one
+  tap. A double tap on the dialog before it cannot skip it.
+- **Durable breadcrumbs.** Badges, NEW markers and the goal strip come from
+  state, so a missed tip is never a lost lesson.
+- **Always re-readable.** Every screen has a ? with how it works, opened by
+  itself on the first visit; Settings → GUIDE lists every tip reached and can
+  replay them.
+
 ## Accessibility
 
 The committed tier is **Enhanced**. Every UI change is reviewed against it.

@@ -228,8 +228,8 @@ Answers, with sources, are in `production/play-console.md`.
 | Command | What it proves |
 | --- | --- |
 | `npm run typecheck` | `tsc --noEmit`, strict. |
-| `npm test` | Vitest: the reducer, tap guard, save migration and number formatting, with a fixed clock and a seeded RNG. |
-| `npm run e2e` | Playwright on a Pixel 7 viewport against the dev server: the core loop and every tab, boss retreat and challenge, the autoclicker lockout, v1 save migration and the offline double, billing off, ad caps, all seven minigames paying exactly once, a boss held behind a minigame, and a second tab taking over the save. |
+| `npm test` | Vitest: the reducer, the onboarding guide, tap guard, save migration and number formatting, with a fixed clock and a seeded RNG. |
+| `npm run e2e` | Playwright on a Pixel 7 viewport against the dev server: the core loop and every tab, boss retreat and challenge, the autoclicker lockout, v1 save migration and the offline double, billing off, ad caps, all seven minigames paying exactly once, a boss held behind a minigame, a second tab taking over the save, and the onboarding guide. |
 | `npm run build` | The production web bundle. |
 
 CI runs all four on every push and pull request. Locally, set `PW_CHROMIUM`

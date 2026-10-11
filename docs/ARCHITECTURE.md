@@ -36,6 +36,7 @@ It never keeps its own copy of game state and never changes it.
 | `src/game/offline.ts` | The offline reward. |
 | `src/game/save.ts` | Load, save, the v1 → v2 migration, `sanitize`, backups, and the storage adapter. |
 | `src/game/store.ts` | A small external store: `getState`, `dispatch`, `subscribe`, `onFx`, `replace`. |
+| `src/game/guide.ts` | The onboarding guide: every tip with the state that makes it due and the state that shows it is already learned (`nextGuideStep`, `isGuideBlocked`), the NEW markers on tabs (`isTabNew`) and each tab's "how it works" card (`TAB_HELP`). Seen flags live in `state.tutorialsSeen`. |
 | `src/game/selectors.ts` | Derived values for screens (unseen counts, ad offer availability, forge cost, next token). |
 | `src/game/rng.ts` | The `Rng` type, `seededRng` for tests, and `pick`, `weightedIndex`, `shuffled`. |
 
@@ -376,6 +377,31 @@ the bot, and AdMob treats that as invalid traffic.
   app.
 - **Dev handle.** Dev builds put the store on `window.__vanta`, for the
   Playwright tests and for console debugging.
+
+## The onboarding guide
+
+`src/game/guide.ts` decides what to teach; three components show it.
+
+- **Tips** (`src/components/OnboardingManager.tsx`): one dialog at a time, for
+  the first tip in `GUIDE` that is due, unseen and not already learned (a
+  veteran save skips what it has clearly done). A tip waits while a boss fight,
+  a minigame, the Welcome-back report or the world unlock owns the screen. Once
+  shown it stays until acknowledged, and `ui.guideOpen` holds a boss fight
+  behind it. Dismissing is ignored for the first 650 ms, so a double tap on
+  whatever was underneath never skips a tip, and the next tip waits
+  `GUIDE_GAP_MS`. A tip about a tab offers to open it.
+- **The guide strip** (`src/components/GuideBar.tsx`) above every tab: the
+  current story goal (tap it to open CODEX on CHAIN) and a ? that opens the
+  tab's "how it works" card. The card also opens by itself on a tab's first
+  visit (`help:<TAB>` in `tutorialsSeen`).
+- **NEW markers** in the nav (`isTabNew`): a tab that just started to matter
+  and has not been opened since (`tab:<TAB>`), and the MORE dot when one is
+  inside.
+
+Settings → GUIDE lists every tip reached and every screen's card, and REPLAY
+TIPS clears the flags (`RESET_TUTORIALS`, which keeps the `world:` flags that
+stop a world celebration from replaying). Adding a tip is one entry in `GUIDE`
+plus an icon in `OnboardingManager`; give it a `known` test so veterans skip it.
 
 ## Mobile-first conventions
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useId, useRef } from 'react';
 import { X } from 'lucide-react';
 import { useBackHandler } from '../../hooks/useBackHandler';
 import { useBannerHeight } from '../../hooks/useMonetization';
@@ -18,6 +18,7 @@ export const Modal: React.FC<{
 }> = ({ open, onClose, title, icon, tone = 'neon', children, className = '' }) => {
   useBackHandler(open && !!onClose, () => onClose?.());
   const panelRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
   const bannerHeight = useBannerHeight();
   useEffect(() => {
     if (open) panelRef.current?.focus();
@@ -36,12 +37,15 @@ export const Modal: React.FC<{
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
+        aria-labelledby={titleId}
         className={`bg-panel border-2 ${border} w-full max-w-sm max-h-full flex flex-col outline-none shadow-[0_0_30px_rgba(0,0,0,0.8)] ${className}`}
       >
         <div className="flex items-center justify-between gap-2 px-3 py-2 bg-panel2 border-b border-line">
           <div className="flex items-center gap-2 min-w-0">
             {icon}
-            <h2 className="text-xs font-display font-bold text-ink uppercase tracking-wider truncate">{title}</h2>
+            <h2 id={titleId} className="text-xs font-display font-bold text-ink uppercase tracking-wider truncate">
+              {title}
+            </h2>
           </div>
           {onClose && (
             <button

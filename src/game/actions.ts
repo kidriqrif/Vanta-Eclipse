@@ -70,7 +70,11 @@ export type Action =
   | { type: 'APPLY_OFFLINE'; secondsAway: number }
   | { type: 'DISMISS_OFFLINE' }
   | { type: 'CLOSE_WORLD_MODAL' }
-  | { type: 'MARK_TUTORIAL_SEEN'; id: string };
+  | { type: 'MARK_TUTORIAL_SEEN'; id: string }
+  /** The guide shows or closes a tip (session-only; holds a boss fight while open). */
+  | { type: 'SET_GUIDE_OPEN'; open: boolean }
+  /** Settings → Guide → REPLAY TIPS: every tip and tab card can show again. */
+  | { type: 'RESET_TUTORIALS' };
 
 export interface ActionResult {
   ok: boolean;

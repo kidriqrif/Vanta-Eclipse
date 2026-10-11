@@ -3,7 +3,7 @@ import { deflateSync, inflateSync } from 'node:zlib';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { ENEMIES } from '../src/data/definitions';
 import { enemyHpFor } from '../src/game/stats';
-import { arena, dispatch, freshGame, openTab, patchState } from './helpers';
+import { GUIDE_ALL_SEEN, arena, dispatch, freshGame, openTab, patchState } from './helpers';
 
 /**
  * Not a test: captures the Google Play phone screenshots into production/screenshots/, in store
@@ -24,7 +24,7 @@ const H = 720;
 
 test.use({ viewport: { width: W, height: H }, deviceScaleFactor: 1080 / W, isMobile: true, hasTouch: true });
 
-const TUTORIALS_SEEN = { welcome: true, forge: true, bosses: true, auto: true, arcade: true, eclipse: true, ruins: true };
+const TUTORIALS_SEEN = { ...GUIDE_ALL_SEEN, 'world:frozen_ruins': true };
 
 /** A plausible mid-game save: two Eclipses in, Frozen Ruins open, a run in the sixties. */
 function midGame(now: number) {

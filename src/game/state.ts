@@ -110,6 +110,8 @@ export interface UiSlice {
   nextRunId: number;
   /** Set when an Eclipse commits, so the overlay can play its flash. */
   eclipseAt: number;
+  /** A guide tip is on screen: a boss fight is held behind it, like behind any other dialog. */
+  guideOpen: boolean;
 }
 
 export interface GameState {
@@ -182,6 +184,7 @@ export function freshUi(): UiSlice {
     activeRun: null,
     nextRunId: 1,
     eclipseAt: 0,
+    guideOpen: false,
   };
 }
 

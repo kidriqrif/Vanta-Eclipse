@@ -1,5 +1,17 @@
 import { expect, type Page } from '@playwright/test';
+import { GUIDE_IDS, TAB_LABEL, tabHelpKey, tabVisitKey, type GuideTab } from '../src/game/guide';
 import type { GameState } from '../src/game/state';
+
+/**
+ * Every tip, tab marker and first-visit help card already seen, for tests about something else:
+ * patch it into state.tutorialsSeen so no guide dialog covers what the test clicks.
+ */
+export const GUIDE_ALL_SEEN: Record<string, true> = Object.fromEntries([
+  ...GUIDE_IDS,
+  ...(Object.keys(TAB_LABEL) as GuideTab[]).flatMap((t) => [tabVisitKey(t), tabHelpKey(t)]),
+].map((k) => [k, true]));
+
+export const SKIP_GUIDE = `s.tutorialsSeen = ${JSON.stringify(GUIDE_ALL_SEEN)};`;
 
 /** Fails the test on any uncaught page error or console error. */
 export function watchErrors(page: Page): string[] {

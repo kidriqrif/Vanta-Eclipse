@@ -1,6 +1,8 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import {
   BarChart2,
+  BookOpen,
+  ChevronDown,
   Check,
   Download,
   ExternalLink,
@@ -17,7 +19,9 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
-import { useControls, useDispatch, useGameState } from '../hooks/useGame';
+import { GUIDE, TAB_HELP, TAB_LABEL, reachedGuideSteps, type GuideTab } from '../game/guide';
+import type { GameState } from '../game/state';
+import { shallowEqual, useControls, useDispatch, useGameState } from '../hooks/useGame';
 import { usePrivacyOptionsRequired, useRestorePurchases, useStore } from '../hooks/useMonetization';
 import { ads } from '../services/ads';
 import { audio } from '../services/audio';
@@ -27,7 +31,7 @@ import { Button, Modal, TwoTapButton } from './ui';
 
 const PRIVACY_URL = 'https://kidriqrif.github.io/Vanta-Eclipse/privacy-policy.html';
 
-type Tab = 'SETTINGS' | 'STATS';
+type Tab = 'SETTINGS' | 'GUIDE' | 'STATS';
 type Message = { text: string; tone: 'ok' | 'warn' };
 
 function useMountedRef() {
@@ -437,8 +441,83 @@ const StatsTab: React.FC = () => {
   );
 };
 
+// ---------------------------------------------------------------- guide
+
+const selectReachedIds = (s: GameState) => reachedGuideSteps(s).map((g) => g.id);
+
+/** One collapsible entry: a title that opens to its lines. */
+const GuideEntry: React.FC<{ title: string; lines: string[] }> = ({ title, lines }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-b border-line/50 last:border-b-0">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="w-full min-h-[36px] flex items-center justify-between gap-2 text-left text-[11px] font-display font-bold text-ink tracking-wide hover:text-neon"
+      >
+        {title}
+        <ChevronDown size={13} aria-hidden className={`shrink-0 text-dim transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <ul className="pb-2 flex flex-col gap-1">
+          {lines.map((line) => (
+            <li key={line} className="text-[11px] font-tech text-dim leading-snug">
+              {line}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
+
+const SCREENS: GuideTab[] = ['UPGRADES', 'GEAR', 'ARCADE', 'JOURNAL', 'CARDS', 'PETS', 'RELICS', 'ECLIPSE', 'SHOP'];
+
+/** Every tip reached so far and every screen's "how it works", to read again; and a replay. */
+const GuidePanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const dispatch = useDispatch();
+  const reached = useGameState(selectReachedIds, shallowEqual);
+  return (
+    <>
+      <Section title="Tips so far" icon={<BookOpen size={13} className="text-neon" aria-hidden />}>
+        <Hint>Each tip appeared when you first met what it explains. Tap one to read it again.</Hint>
+        <div>
+          {GUIDE.filter((g) => reached.includes(g.id)).map((g) => (
+            <GuideEntry key={g.id} title={g.title} lines={g.lines} />
+          ))}
+        </div>
+      </Section>
+      <Section title="How each screen works" icon={<Info size={13} className="text-neon" aria-hidden />}>
+        <Hint>The same cards open with the ? above every tab.</Hint>
+        <div>
+          {SCREENS.map((t) => (
+            <GuideEntry key={t} title={TAB_LABEL[t]} lines={TAB_HELP[t].lines} />
+          ))}
+        </div>
+      </Section>
+      <Section title="Replay" icon={<RotateCcw size={13} className="text-neon" aria-hidden />}>
+        <Hint>Shows every tip and screen card again as you reach them. Your progress is not touched.</Hint>
+        <TwoTapButton
+          size="md"
+          block
+          variant="primary"
+          armedVariant="danger"
+          label="REPLAY TIPS"
+          armedLabel="TAP AGAIN: SHOW TIPS AGAIN"
+          onConfirm={() => {
+            dispatch({ type: 'RESET_TUTORIALS' });
+            onClose();
+          }}
+        />
+      </Section>
+    </>
+  );
+};
+
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'SETTINGS', label: 'Settings', icon: <SlidersHorizontal size={12} aria-hidden /> },
+  { id: 'GUIDE', label: 'Guide', icon: <BookOpen size={12} aria-hidden /> },
   { id: 'STATS', label: 'Stats', icon: <BarChart2 size={12} aria-hidden /> },
 ];
 
@@ -447,7 +526,7 @@ export const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) =>
   const [tab, setTab] = useState<Tab>('SETTINGS');
   return (
     <Modal open onClose={onClose} title="Settings" icon={<Settings size={14} className="text-neon" aria-hidden />}>
-      <div role="tablist" aria-label="Settings sections" className="grid grid-cols-2 border border-line shrink-0">
+      <div role="tablist" aria-label="Settings sections" className="grid grid-cols-3 border border-line shrink-0">
         {TABS.map((t) => {
           const selected = tab === t.id;
           return (
@@ -468,8 +547,8 @@ export const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) =>
         })}
       </div>
 
-      <div role="tabpanel" aria-label={tab === 'SETTINGS' ? 'Settings' : 'Stats'} className="flex flex-col gap-2.5">
-        {tab === 'SETTINGS' ? <SettingsTab onClose={onClose} /> : <StatsTab />}
+      <div role="tabpanel" aria-label={TABS.find((t) => t.id === tab)?.label} className="flex flex-col gap-2.5">
+        {tab === 'SETTINGS' ? <SettingsTab onClose={onClose} /> : tab === 'GUIDE' ? <GuidePanel onClose={onClose} /> : <StatsTab />}
       </div>
 
       <footer className="flex flex-col items-center gap-0.5 pt-1">

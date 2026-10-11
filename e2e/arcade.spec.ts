@@ -1,11 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
 import { MINIGAMES } from '../src/data/definitions';
-import { dispatch, freshGame, getState, openTab, patchState, watchErrors } from './helpers';
+import { SKIP_GUIDE, dispatch, freshGame, getState, openTab, patchState, watchErrors } from './helpers';
 
 async function unlockArcade(page: Page) {
   await patchState(
     page,
-    `s.lifetimePeakLevel = 100; s.arcade.tokens = 50; s.tutorialsSeen = { welcome: true, forge: true, bosses: true, auto: true, arcade: true, eclipse: true, ruins: true }; return s;`,
+    `s.lifetimePeakLevel = 100; s.arcade.tokens = 50; ${SKIP_GUIDE} return s;`,
   );
   await openTab(page, /arcade/i);
 }

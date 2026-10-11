@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { GameProvider } from './context/GameProvider';
+import { tabVisitKey } from './game/guide';
+import { useDispatch, useGameStore } from './hooks/useGame';
 import { useBackHandler } from './hooks/useBackHandler';
 import { useArcadeOverlayOpen } from './hooks/useArcadeOverlay';
 import { Header } from './components/Header';
@@ -22,6 +24,7 @@ import { WorldUnlockModal } from './components/WorldUnlockModal';
 import { OnboardingManager } from './components/OnboardingManager';
 import { ToastHost } from './components/ToastHost';
 import { EclipseOverlay } from './components/EclipseOverlay';
+import { GuideBar } from './components/GuideBar';
 
 const HOME_TAB: TabType = 'UPGRADES';
 
@@ -49,6 +52,14 @@ const GameShell: React.FC = () => {
   // Android back: from any other tab, back returns home; from home it minimizes the app.
   useBackHandler(activeTab !== HOME_TAB, () => setActiveTab(HOME_TAB));
 
+  // Opening a tab clears its NEW marker in the nav.
+  const store = useGameStore();
+  const dispatch = useDispatch();
+  useEffect(() => {
+    const key = tabVisitKey(activeTab);
+    if (!store.getState().tutorialsSeen[key]) dispatch({ type: 'MARK_TUTORIAL_SEEN', id: key });
+  }, [activeTab, store, dispatch]);
+
   // While a minigame covers the screen, nothing underneath can be focused or clicked, so keyboard
   // focus can never wander into the nav and switch tabs out from under a running game.
   const arcadeOpen = useArcadeOverlayOpen();
@@ -65,6 +76,7 @@ const GameShell: React.FC = () => {
         <Header onOpenSettings={() => setSettingsOpen(true)} onOpenNoAds={() => setNoAdsOpen(true)} />
         <CombatArena />
         <main className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          <GuideBar tab={activeTab} onOpenTab={setActiveTab} />
           <ActivePanel key={activeTab} />
         </main>
         <NavigationTabs activeTab={activeTab} onSelectTab={setActiveTab} />
@@ -77,7 +89,7 @@ const GameShell: React.FC = () => {
         <NoAdsModal isOpen={noAdsOpen} onClose={() => setNoAdsOpen(false)} onOpenShop={openShop} />
         <OfflineRewardsModal />
         <WorldUnlockModal />
-        <OnboardingManager />
+        <OnboardingManager onOpenTab={setActiveTab} />
         <EclipseOverlay />
       </div>
     </div>

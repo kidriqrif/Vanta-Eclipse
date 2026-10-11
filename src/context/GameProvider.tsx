@@ -222,6 +222,16 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [store, controls]);
 
+  // On the web, Escape does what Android back does: closes the top dialog, leaves a minigame, goes home.
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !e.defaultPrevented) runBackHandler();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   // Audio may only start after a gesture.
   useEffect(() => {
     const unlock = () => audio.unlock();

@@ -610,7 +610,7 @@ export const QUESTS: QuestDefinition[] = [
   {
     id: 'q_first_power',
     displayName: 'Empowerment',
-    description: 'Purchase 5 upgrades from the Forge shop.',
+    description: 'Buy 5 upgrades in the UPGRADES tab.',
     kind: 'CHAIN',
     metric: 'upgrades_bought',
     targetValue: 5,
