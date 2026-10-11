@@ -63,7 +63,7 @@ export const GuideBar: React.FC<{ tab: GuideTab; onOpenTab: (tab: GuideTab) => v
             ) : (
               <Flag size={12} className="shrink-0 text-neon" aria-hidden />
             )}
-            <span className={`shrink-0 text-[9px] font-display font-bold tracking-wider ${goal.ready ? 'text-gold' : 'text-neon'}`}>
+            <span className={`shrink-0 text-[9px] font-tech font-bold tracking-wider ${goal.ready ? 'text-gold' : 'text-neon'}`}>
               {goal.ready ? 'GOAL DONE' : 'GOAL'}
             </span>
             <span className="flex-1 min-w-0 truncate text-[10px] font-tech text-ink">
@@ -121,7 +121,7 @@ export const GuideBar: React.FC<{ tab: GuideTab; onOpenTab: (tab: GuideTab) => v
             <button
               type="button"
               onClick={closeHelp}
-              className="self-end min-h-[32px] px-3 border border-neon text-neon text-[10px] font-display font-bold tracking-wider hover:bg-active"
+              className="self-end min-h-[32px] px-3 border border-neon text-neon text-[10px] font-tech font-bold tracking-wider hover:bg-active"
             >
               GOT IT
             </button>

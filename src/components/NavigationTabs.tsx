@@ -54,8 +54,8 @@ const PRIMARY: TabType[] = ['UPGRADES', 'GEAR', 'ARCADE', 'JOURNAL'];
 const SECONDARY: TabType[] = ['CARDS', 'PETS', 'RELICS', 'ECLIPSE', 'SHOP'];
 
 const BADGE_TONE: Record<BadgeTone, string> = {
-  neon: 'bg-neon text-void',
-  gold: 'bg-gold text-void',
+  neon: 'bg-neon text-abyss border border-abyss',
+  gold: 'bg-gold text-abyss border border-abyss',
   info: 'bg-panel2 text-ink border border-line',
 };
 
@@ -147,19 +147,19 @@ function spokenLabel(t: TabSpec): string {
 const BadgeChip: React.FC<{ badge: Badge; className?: string }> = ({ badge, className = '' }) => (
   <span
     aria-hidden
-    className={`min-w-[16px] h-4 px-1 text-[9px] font-mono-code font-black leading-none flex items-center justify-center ${BADGE_TONE[badge.tone]} ${className}`}
+    className={`min-w-[16px] h-4 px-1 text-[9px] font-mono-code font-black leading-none flex items-center justify-center shadow-hard ${BADGE_TONE[badge.tone]} ${className}`}
   >
     {badge.text}
   </span>
 );
 
 const slotClass = (lit: boolean) =>
-  `relative min-h-[56px] px-1 py-2 flex flex-col items-center justify-center gap-1.5 border-t-2 transition-colors ${
-    lit ? 'text-neon bg-panel border-t-neon font-bold' : 'text-dim border-t-transparent hover:text-ink hover:bg-panel/60'
+  `relative min-h-[50px] px-1 py-1.5 flex flex-col items-center justify-center gap-1 border-t-2 border-r border-r-line last:border-r-0 transition-colors active:translate-y-0.5 active:scale-[0.98] ${
+    lit ? 'text-neon bg-abyss border-t-amber' : 'text-dim bg-panel border-t-transparent hover:text-ink'
   }`;
 
 const SlotLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <span className="text-[10px] font-display uppercase tracking-wider leading-none">{children}</span>
+  <span className="text-[10px] font-tech font-bold uppercase tracking-wider leading-none">{children}</span>
 );
 
 /**
@@ -225,7 +225,7 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({ activeTab, onSel
           id={sheetId}
           role="group"
           aria-label="More tabs"
-          className="absolute bottom-full right-0 z-[58] w-60 max-w-full bg-panel border border-neon/50 border-b-0 shadow-[0_-8px_24px_rgba(0,0,0,0.6)] flex flex-col animate-fade-in"
+          className="absolute bottom-full right-0 z-[58] w-60 max-w-full bg-panel border-2 border-line border-b-0 shadow-hard-lg flex flex-col animate-fade-in"
         >
           {SECONDARY.map((id) => {
             const t = tabs[id];
@@ -238,12 +238,12 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({ activeTab, onSel
                 onClick={() => select(id)}
                 aria-label={spokenLabel(t)}
                 aria-current={active ? 'page' : undefined}
-                className={`min-h-[48px] px-3 flex items-center gap-2.5 border-b border-line text-left transition-colors ${
-                  active ? 'bg-active text-neon' : 'text-ink hover:bg-panel2'
+                className={`min-h-[48px] px-3 flex items-center gap-2.5 border-b border-line border-l-2 text-left transition-colors active:bg-abyss ${
+                  active ? 'bg-abyss text-neon border-l-amber' : 'text-ink border-l-transparent hover:bg-panel2'
                 }`}
               >
                 <Icon size={16} aria-hidden className={active ? 'text-neon' : 'text-dim'} />
-                <span className="flex-1 text-[11px] font-display font-bold uppercase tracking-wider">{t.label}</span>
+                <span className="flex-1 text-xs font-tech font-bold uppercase tracking-wider">{t.label}</span>
                 {t.locked && (
                   <span aria-hidden className="flex items-center gap-1 text-[9px] font-mono-code text-dim">
                     <Lock size={10} />
@@ -257,7 +257,7 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({ activeTab, onSel
         </div>
       )}
 
-      <nav aria-label="Game sections" className="w-full grid grid-cols-5 bg-void border-t border-line">
+      <nav aria-label="Game sections" className="w-full grid grid-cols-5 bg-panel border-t-2 border-line">
         {PRIMARY.map((id) => {
           const t = tabs[id];
           const Icon = t.icon;
@@ -296,7 +296,7 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({ activeTab, onSel
           <span className="relative">
             <Ellipsis size={18} aria-hidden />
             {moreNews && (
-              <span aria-hidden className="absolute -top-1 -right-1.5 w-2 h-2 rounded-full bg-gold ring-2 ring-void" />
+              <span aria-hidden className="absolute -top-1 -right-1.5 w-2.5 h-2.5 bg-gold border border-abyss" />
             )}
           </span>
           <SlotLabel>MORE</SlotLabel>

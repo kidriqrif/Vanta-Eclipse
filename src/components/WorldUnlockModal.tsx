@@ -22,7 +22,7 @@ const Change: React.FC<{ icon: LucideIcon; title: string; detail: string }> = ({
       <Icon size={14} aria-hidden />
     </span>
     <span className="flex flex-col min-w-0">
-      <span className="text-[11px] font-display font-bold text-ink uppercase tracking-wide leading-tight">{title}</span>
+      <span className="text-[11px] font-tech font-bold text-ink uppercase tracking-wide leading-tight">{title}</span>
       <span className="text-[10px] font-tech text-dim leading-tight">{detail}</span>
     </span>
   </li>

@@ -115,38 +115,67 @@ export const MinigameHost: React.FC<{ gameId: string; runId: number; onClose: ()
       aria-modal="true"
       aria-label={name}
       data-testid="minigame-host"
-      className="fixed inset-0 z-[70] bg-void text-ink font-mono-code select-none outline-none flex justify-center pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]"
+      className="fixed inset-0 z-[70] bg-abyss text-ink font-tech select-none outline-none flex justify-center safe-top safe-x"
       // Keep every game control clear of the native banner, which is drawn above the WebView.
       style={{ paddingBottom: `calc(env(safe-area-inset-bottom) + ${bannerHeight}px)` }}
     >
-      <div className="w-full max-w-md h-full flex flex-col bg-void bg-grid-pattern">
-        <header className="shrink-0 grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-2.5 py-2 bg-panel border-b border-line">
-          <div className="justify-self-start">
-            {!banner && (
-              <Button variant={armed ? 'danger' : 'ghost'} size="md" onClick={pressQuit} aria-live="polite" className="max-w-[132px]">
-                <span className="text-[10px] leading-tight">{armed ? 'TAP AGAIN: FORFEIT RUN' : 'QUIT'}</span>
-              </Button>
+      {/* The handheld: a heavy bezel around a CRT screen. */}
+      <div className="w-full max-w-md h-full p-2 flex flex-col">
+        <div className="flex-1 min-h-0 flex flex-col bg-panel2 border-4 border-line shadow-hard-lg">
+          <header className="shrink-0 h-14 px-2 flex items-center gap-2 border-b-4 border-abyss">
+            {!banner ? (
+              <button
+                type="button"
+                onClick={pressQuit}
+                aria-live="polite"
+                className={`h-11 min-w-[96px] px-3 border-2 shadow-hard font-tech font-black uppercase tracking-wider active:translate-y-0.5 active:border-amber-500 active:scale-[0.98] ${
+                  armed ? 'bg-crimson border-crimson text-abyss text-[11px] leading-tight' : 'bg-abyss border-crimson text-crimson text-sm'
+                }`}
+              >
+                {armed ? 'TAP AGAIN: FORFEIT' : '✕ QUIT'}
+              </button>
+            ) : (
+              <span className="h-11 min-w-[96px]" aria-hidden />
             )}
-          </div>
-          <h2 className="text-sm font-display font-bold uppercase tracking-wider text-ink truncate text-center">{name}</h2>
-          <div className="justify-self-end text-right">
-            {armed && !banner && <span className="text-[9px] font-tech text-crimson leading-tight block">Token is not refunded</span>}
-          </div>
-        </header>
-
-        <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
-          {banner ? (
-            <ResultBanner banner={banner} isRecord={isRecord} onContinue={onClose} />
-          ) : Game ? (
-            <Game key={runId} onFinish={handleFinish} />
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center gap-3 p-4 text-center">
-              <p className="text-xs font-tech text-dim">This game could not be loaded.</p>
-              <Button variant="primary" size="md" onClick={forfeit}>
-                LEAVE
-              </Button>
+            <div className="flex-1 min-w-0 flex flex-col items-center">
+              <h2 className="max-w-full truncate text-sm font-display font-black uppercase tracking-wider text-ink">{name}</h2>
+              <span className={`text-[10px] font-tech ${armed && !banner ? 'text-crimson' : 'text-dim'}`}>
+                {armed && !banner ? 'Token is not refunded' : 'VANTA ARCADE'}
+              </span>
             </div>
-          )}
+            {/* Power light: lit while a run is live. */}
+            <span className="w-[96px] flex justify-end" aria-hidden>
+              <span className={`w-3 h-3 border-2 border-abyss ${banner ? 'bg-faint' : 'bg-toxic'}`} />
+            </span>
+          </header>
+
+          <div className="relative flex-1 min-h-0 m-2 bg-void border-4 border-abyss shadow-[inset_3px_3px_0_0_rgba(0,0,0,0.7)] flex flex-col overflow-hidden">
+            <div className="relative z-0 flex-1 min-h-0 flex flex-col overflow-y-auto overscroll-contain">
+              {banner ? (
+                <ResultBanner banner={banner} isRecord={isRecord} onContinue={onClose} />
+              ) : Game ? (
+                <Game key={runId} onFinish={handleFinish} />
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center gap-3 p-4 text-center">
+                  <p className="text-xs font-tech text-dim">This game could not be loaded.</p>
+                  <Button variant="primary" size="lg" onClick={forfeit}>
+                    LEAVE
+                  </Button>
+                </div>
+              )}
+            </div>
+            {/* CRT scanlines over the screen; taps pass straight through. */}
+            <div className="pointer-events-none absolute inset-0 z-10 bg-scanlines opacity-50" aria-hidden />
+          </div>
+
+          <footer className="shrink-0 h-6 px-3 flex items-center justify-between border-t-4 border-abyss" aria-hidden>
+            <span className="flex gap-1">
+              {[0, 1, 2, 3].map((i) => (
+                <span key={i} className="w-4 h-1 bg-abyss" />
+              ))}
+            </span>
+            <span className="text-[8px] font-display font-bold tracking-[0.3em] text-faint">V-ECLIPSE</span>
+          </footer>
         </div>
       </div>
     </div>
@@ -166,8 +195,8 @@ const ResultBanner: React.FC<{ banner: Banner; isRecord: boolean; onContinue: ()
   return (
     <div className="flex-1 flex items-center justify-center p-4">
       <div
-        className={`w-full max-w-xs bg-panel border-2 p-4 flex flex-col items-center gap-3 text-center animate-fade-in ${
-          banner.won && banner.paid ? 'border-neon shadow-[0_0_24px] shadow-neon/25' : 'border-line'
+        className={`w-full max-w-xs bg-panel border-2 shadow-hard-lg p-4 flex flex-col items-center gap-3 text-center animate-fade-in ${
+          banner.won && banner.paid ? 'border-neon' : 'border-line'
         }`}
       >
         <div role="status" className="w-full flex flex-col items-center gap-3">
@@ -178,7 +207,7 @@ const ResultBanner: React.FC<{ banner: Banner; isRecord: boolean; onContinue: ()
           <p className="text-xs font-mono-code text-ink">{banner.detail}</p>
 
           {isRecord && (
-            <span className="flex items-center gap-1.5 px-2 py-1 border border-gold text-gold bg-gold/10 text-[11px] font-display font-bold tracking-wider">
+            <span className="flex items-center gap-1.5 px-2 py-1 border border-gold text-abyss bg-gold shadow-hard text-[11px] font-display font-bold tracking-wider">
               <Trophy size={13} aria-hidden /> NEW RECORD
             </span>
           )}

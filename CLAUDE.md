@@ -42,7 +42,18 @@ Keep it to these. Add to the right one instead of starting a new document.
 - **Player-facing numbers** go through `src/utils/numberFormat.ts`.
 - **Colours** are the theme tokens in `src/index.css` as Tailwind classes
   (`bg-panel`, `text-neon`, `border-line` ...), never hex in a component.
-  Content colours (rarities, trails) are data.
+  Item rarity uses the `r0`–`r4` tokens (`border-r3`, `bg-r3/15`); trail
+  colours are data.
+- **The look is a native game, not a web page:** flat fills, one-pixel borders
+  and hard offset shadows (`shadow-hard`, `shadow-hard-lg`). No gradients,
+  glows, blur or rounded pills. Buttons are sharp rectangles that sink when
+  pressed (the `Button` primitive and the `.hud-btn*` classes).
+- **Type:** `font-display` (Orbitron) for headers, the stage track and alerts;
+  `font-mono-code` (JetBrains Mono) for every number; `font-tech` (Share Tech
+  Mono) for copy, labels and button text. No sans-serif.
+- **Layout:** `src/App.tsx` is a fixed, unscrollable frame of three zones: the
+  arena (45%), the data ticker (5%) and the tab deck (50%), inside the
+  safe-area insets. Only a tab's `TabBody` scrolls.
 - **UI primitives** in `src/components/ui/`: `Panel`, `PanelHeader`, `TabBody`,
   `Button`, `TwoTapButton` (destructive or expensive actions) and `Modal` (wires
   the Android back button). Any other overlay registers its own back handler

@@ -57,7 +57,7 @@ const CardRow: React.FC<{ card: Card; block: Block; noun: string; onAbsorb: (car
             >
               {rarityName}
             </span>
-            <span className="text-[11px] font-display font-bold text-ink truncate">{card.bossName}</span>
+            <span className="text-[11px] font-tech font-bold text-ink truncate">{card.bossName}</span>
           </div>
           <span className="text-[10px] font-mono-code text-dim leading-tight">
             Boss Lv {formatNumber(card.level)} · Power {formatNumber(card.power)} · Vigor {formatNumber(card.vigor)}
@@ -177,7 +177,7 @@ export const CardsCollection: React.FC = () => {
             <div className="flex-1 min-w-0 flex flex-col gap-0.5">
               <span className="text-[9px] font-tech text-dim uppercase tracking-wider">Cards go into</span>
               <div className="flex flex-wrap items-center gap-x-1.5">
-                <span className="text-xs font-display font-bold text-ink uppercase tracking-wide">
+                <span className="text-xs font-tech font-bold text-ink uppercase tracking-wide">
                   {petDisplayName(activePetId, petLevel)}
                 </span>
                 <span className="text-[10px] font-mono-code font-bold text-dim border border-line px-1 leading-4">

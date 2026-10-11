@@ -116,7 +116,7 @@ const StateChip: React.FC<{ icon: LucideIcon; label: string; tone: string; class
   className = '',
 }) => (
   <span
-    className={`min-h-[32px] w-full px-1.5 flex items-center justify-center gap-1 border border-line bg-panel2 text-[10px] font-display font-bold ${tone} ${className}`}
+    className={`min-h-[32px] w-full px-1.5 flex items-center justify-center gap-1 border border-line bg-panel2 text-[10px] font-tech font-bold ${tone} ${className}`}
   >
     <Icon size={12} aria-hidden />
     {label}
@@ -153,7 +153,7 @@ const QuestRow: React.FC<{ quest: QuestDefinition }> = React.memo(({ quest }) =>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex flex-col gap-0.5">
           <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-            <span className="text-xs font-display font-bold text-ink uppercase tracking-wide leading-tight">
+            <span className="text-xs font-tech font-bold text-ink uppercase tracking-wide leading-tight">
               {quest.displayName}
             </span>
             {tag && (
@@ -391,7 +391,7 @@ export const JournalPanel: React.FC = () => {
         subtitle="Goals and their rewards. Claim each one when it is done."
         right={
           totalReady > 0 ? (
-            <span className="px-1.5 py-1 border border-gold/60 text-[10px] font-display font-bold text-gold">
+            <span className="px-1.5 py-1 border border-gold/60 text-[10px] font-tech font-bold text-gold">
               {amount(totalReady)} READY
             </span>
           ) : undefined
@@ -410,7 +410,7 @@ export const JournalPanel: React.FC = () => {
                 role="tab"
                 aria-selected={active}
                 onClick={() => choose(id)}
-                className={`min-h-[40px] px-1 flex items-center justify-center gap-1.5 text-[11px] font-display font-bold tracking-wider border-b-2 transition-colors ${
+                className={`min-h-[40px] px-1 flex items-center justify-center gap-1.5 text-[11px] font-tech font-bold tracking-wider border-b-2 transition-colors ${
                   active ? 'bg-active text-neon border-b-neon' : 'text-dim border-b-transparent hover:text-ink'
                 }`}
               >

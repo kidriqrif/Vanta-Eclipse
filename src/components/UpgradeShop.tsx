@@ -6,7 +6,7 @@ import { affordableUpgrades, upgradeCost } from '../game/reducer';
 import type { GameState } from '../game/state';
 import { shallowEqual, useDispatch, useGameState, useStats } from '../hooks/useGame';
 import { formatNumber, formatPercent } from '../utils/numberFormat';
-import { Button, PanelHeader, TabBody } from './ui';
+import { PanelHeader, TabBody } from './ui';
 
 type Want = 1 | 10 | 25 | 'max';
 
@@ -72,61 +72,68 @@ const UpgradeRow: React.FC<{ def: UpgradeDefinition; want: Want }> = React.memo(
     dispatch({ type: 'BUY_UPGRADE', id: def.id, count: want });
   };
 
+  const per = `${def.modifierType === 'PERCENT' || def.displayAsPercent ? pct(def.valuePerLevel) : `+${formatNumber(def.valuePerLevel)}`} ${
+    STAT_COPY[`${def.stat}:${def.modifierType}`]?.noun ?? def.displayName.toLowerCase()
+  }/lv`;
+
   return (
-    <div className={`bg-panel border p-2 flex items-center gap-2.5 ${maxed ? 'border-line/60' : 'border-line'}`}>
-      <div className={`w-9 h-9 shrink-0 border flex items-center justify-center ${copy?.tone ?? FALLBACK_TONE}`}>
-        <Icon size={16} aria-hidden />
+    <div
+      className={`h-[54px] flex items-stretch bg-panel border shadow-hard ${maxed ? 'border-line/60' : 'border-line'}`}
+      title={effectText(def, level)}
+    >
+      <div className={`w-[54px] shrink-0 border-r flex items-center justify-center ${copy?.tone ?? FALLBACK_TONE}`}>
+        <Icon size={20} aria-hidden />
       </div>
 
-      <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 min-w-0">
-          <span className="text-xs font-display font-bold text-ink uppercase tracking-wide leading-tight">{def.displayName}</span>
-          <span key={level} className="animate-fade-in shrink-0 text-[10px] font-mono-code font-bold text-dim border border-line px-1 leading-4">
+      <div className="flex-1 min-w-0 px-2 flex flex-col justify-center gap-1">
+        <div className="flex items-baseline gap-1.5 min-w-0">
+          <span className="min-w-0 truncate text-xs font-tech font-bold text-ink uppercase tracking-wide leading-none">{def.displayName}</span>
+          <span key={level} className="animate-fade-in shrink-0 text-[10px] font-mono-code font-bold text-dim leading-none">
             LV {formatNumber(level)}
             {def.maxLevel > 0 && `/${formatNumber(def.maxLevel)}`}
           </span>
         </div>
-        <span className="text-[10px] font-tech text-dim leading-tight">{effectText(def, level)}</span>
-        {!maxed && !canBuy && (
-          <span className="text-[10px] font-tech text-crimson leading-tight">Need {formatNumber(shortBy)} more essence</span>
-        )}
+        <div className="flex items-baseline gap-1.5 min-w-0 leading-none">
+          {maxed ? (
+            <span className="text-[11px] font-tech font-bold text-dim">MAXED</span>
+          ) : (
+            <span className={`shrink-0 text-[11px] font-mono-code font-bold ${canBuy ? 'text-neon' : 'text-crimson'}`}>
+              <span aria-hidden>◆ </span>
+              {formatNumber(price)}
+              {!canBuy && <span className="font-tech font-normal"> · need {formatNumber(shortBy)}</span>}
+            </span>
+          )}
+          <span className="min-w-0 truncate text-[10px] font-tech text-dim">{per}</span>
+        </div>
       </div>
 
-      <div className="shrink-0 w-[96px]">
-        {maxed ? (
-          <div className="min-h-[44px] border border-line bg-panel2 flex flex-col items-center justify-center text-[10px] font-display font-bold text-dim">
-            MAXED
-          </div>
-        ) : (
-          <Button
-            variant={canBuy ? 'primary' : 'ghost'}
-            size="md"
-            block
-            disabled={!canBuy}
-            onClick={buy}
-            aria-label={`Buy ${buyCount} ${def.displayName} for ${formatNumber(price)} essence${canBuy ? '' : ', not enough essence'}`}
-          >
-            <span className="flex flex-col items-center leading-tight">
-              <span>BUY {formatNumber(buyCount)}</span>
-              <span className="font-mono-code text-[10px] text-ink">
-                <span className="text-neon" aria-hidden>
-                  ◆{' '}
-                </span>
-                {formatNumber(price)}
-              </span>
-            </span>
-          </Button>
-        )}
-      </div>
+      {maxed ? (
+        <div className="w-[64px] shrink-0 border-l border-line bg-panel2 flex items-center justify-center text-[10px] font-tech font-bold text-dim">
+          MAX
+        </div>
+      ) : (
+        <button
+          type="button"
+          disabled={!canBuy}
+          onClick={buy}
+          aria-label={`Buy ${buyCount} ${def.displayName} for ${formatNumber(price)} essence${canBuy ? '' : ', not enough essence'}`}
+          className={`w-[64px] shrink-0 border-l-2 flex flex-col items-center justify-center gap-0.5 font-tech font-bold uppercase transition-colors active:translate-y-0.5 active:border-amber-500 active:scale-[0.98] disabled:cursor-not-allowed ${
+            canBuy ? 'bg-neon text-abyss border-neon hover:bg-neon-bright' : 'bg-panel2 text-faint border-line'
+          }`}
+        >
+          <span className="text-xs leading-none">BUY</span>
+          <span className="text-[10px] font-mono-code leading-none">×{formatNumber(buyCount)}</span>
+        </button>
+      )}
     </div>
   );
 });
 UpgradeRow.displayName = 'UpgradeRow';
 
 const StatCell: React.FC<{ label: string; value: string; tone: string }> = ({ label, value, tone }) => (
-  <div className="bg-panel border border-line px-1.5 py-1 flex flex-col items-center min-w-0">
-    <span className="text-[9px] font-tech text-dim uppercase tracking-wider">{label}</span>
-    <span className={`text-xs font-mono-code font-bold truncate max-w-full ${tone}`}>{value}</span>
+  <div className="bg-abyss border border-line px-1.5 h-9 flex flex-col items-center justify-center min-w-0">
+    <span className="text-[8px] font-tech text-dim uppercase tracking-wider leading-none">{label}</span>
+    <span className={`text-xs font-mono-code font-bold truncate max-w-full leading-tight ${tone}`}>{value}</span>
   </div>
 );
 
@@ -158,7 +165,7 @@ export const UpgradeShop: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <span className="text-[9px] font-tech text-dim uppercase tracking-wider shrink-0">Buy amount</span>
-          <div className="flex-1 grid grid-cols-4 border border-line bg-panel" role="group" aria-label="Buy amount">
+          <div className="flex-1 grid grid-cols-4 border border-line bg-panel shadow-hard divide-x divide-line" role="group" aria-label="Buy amount">
             {WANTS.map(({ want: w, label }) => {
               const active = w === want;
               return (
@@ -167,8 +174,8 @@ export const UpgradeShop: React.FC = () => {
                   type="button"
                   aria-pressed={active}
                   onClick={() => choose(w)}
-                  className={`min-h-[32px] text-[10px] font-mono-code font-bold transition-colors ${
-                    active ? 'bg-neon text-void' : 'text-dim hover:text-ink'
+                  className={`min-h-[32px] text-[11px] font-mono-code font-bold transition-colors active:translate-y-0.5 ${
+                    active ? 'bg-neon text-abyss' : 'text-dim hover:text-ink'
                   }`}
                 >
                   {label}

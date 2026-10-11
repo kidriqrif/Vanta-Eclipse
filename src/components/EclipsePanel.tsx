@@ -113,7 +113,7 @@ const SkillNode: React.FC<{ def: SkillNodeDefinition; onRefused: (text: string) 
     <div className={`bg-panel border p-2 flex items-center gap-2.5 ${locked ? 'border-dashed border-line' : maxed ? 'border-purple/50' : 'border-line'}`}>
       <div className={`flex-1 min-w-0 flex flex-col gap-0.5 ${locked ? 'opacity-70' : ''}`}>
         <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-          <span className="text-xs font-display font-bold text-ink uppercase tracking-wide leading-tight">{def.displayName}</span>
+          <span className="text-xs font-tech font-bold text-ink uppercase tracking-wide leading-tight">{def.displayName}</span>
           <span key={level} className="animate-fade-in text-[10px] font-mono-code font-bold text-dim border border-line px-1 leading-4">
             LV {formatNumber(level)}/{formatNumber(def.maxLevel)}
           </span>
@@ -133,11 +133,11 @@ const SkillNode: React.FC<{ def: SkillNodeDefinition; onRefused: (text: string) 
 
       <div className="shrink-0 w-[96px]">
         {maxed ? (
-          <div className="min-h-[44px] border border-purple/50 bg-panel2 flex items-center justify-center text-[10px] font-display font-bold text-purple">
+          <div className="min-h-[44px] border border-purple/50 bg-panel2 flex items-center justify-center text-[10px] font-tech font-bold text-purple">
             ● MAXED
           </div>
         ) : locked ? (
-          <div className="min-h-[44px] border border-line bg-panel2 flex items-center justify-center gap-1 text-[10px] font-display font-bold text-dim">
+          <div className="min-h-[44px] border border-line bg-panel2 flex items-center justify-center gap-1 text-[10px] font-tech font-bold text-dim">
             <Lock size={11} aria-hidden /> LOCKED
           </div>
         ) : (
@@ -363,7 +363,7 @@ export const EclipsePanel: React.FC = () => {
         {shownBranches.map((b) => (
           <div key={b.id} className="flex flex-col gap-1.5">
             <div className="flex items-baseline gap-2 px-0.5 pt-1">
-              <span className="text-[11px] font-display font-bold text-neon uppercase tracking-wider">{b.id}</span>
+              <span className="text-[11px] font-tech font-bold text-neon uppercase tracking-wider">{b.id}</span>
               <span className="text-[10px] font-tech text-dim truncate">{b.blurb}</span>
             </div>
             {SKILLS_BY_BRANCH[b.id].map((def) => (

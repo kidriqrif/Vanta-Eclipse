@@ -109,118 +109,94 @@ function keyStat(item: Item): string {
 
 // ------------------------------------------------------------------ pieces
 
+/**
+ * Rarity as theme tokens (--color-r0 … --color-r4 in src/index.css), by RARITIES index. Written out
+ * in full so Tailwind generates every class.
+ */
+const RARITY_TONE: { border: string; fill: string; tint: string; text: string }[] = [
+  { border: 'border-r0', fill: 'bg-r0', tint: 'bg-r0/10', text: 'text-r0' },
+  { border: 'border-r1', fill: 'bg-r1', tint: 'bg-r1/15', text: 'text-r1' },
+  { border: 'border-r2', fill: 'bg-r2', tint: 'bg-r2/15', text: 'text-r2' },
+  { border: 'border-r3', fill: 'bg-r3', tint: 'bg-r3/15', text: 'text-r3' },
+  { border: 'border-r4', fill: 'bg-r4', tint: 'bg-r4/20', text: 'text-r4' },
+];
+const toneOf = (rarity: number) => RARITY_TONE[Math.max(0, Math.min(RARITY_TONE.length - 1, rarity))];
+
 const Pips: React.FC<{ rarity: number; className?: string }> = ({ rarity, className = '' }) => {
-  const color = rarityOf(rarity).color;
+  const tone = toneOf(rarity);
   const filled = Math.min(PIP_COUNT, rarity + 1);
   return (
-    <span className={`inline-flex items-center gap-0.5 ${className}`} role="img" aria-label={`${filled} of ${PIP_COUNT} pips`}>
+    <span className={`inline-flex items-center gap-[2px] ${className}`} role="img" aria-label={`${filled} of ${PIP_COUNT} pips`}>
       {Array.from({ length: PIP_COUNT }, (_, i) => (
-        <span
-          key={i}
-          className={`w-1.5 h-1.5 border ${i < filled ? '' : 'border-line'}`}
-          style={i < filled ? { backgroundColor: color, borderColor: color } : undefined}
-        />
+        <span key={i} className={`w-[5px] h-[5px] border ${i < filled ? `${tone.fill} ${tone.border}` : 'border-faint bg-abyss'}`} />
       ))}
     </span>
   );
 };
 
-const SlotTile: React.FC<{ slot: SlotDefinition; item: Item | undefined; onOpen: (slot: string) => void }> = React.memo(
+/** The level, in the top-left corner of every square. */
+const LevelTag: React.FC<{ level: number }> = ({ level }) => (
+  <span className="absolute left-0 top-0 px-1 bg-abyss/90 text-[9px] font-mono-code font-bold text-ink leading-[14px]">
+    {formatNumber(level)}
+  </span>
+);
+
+/** One equipped slot: a square, empty-dashed when nothing is worn. */
+const EquipSquare: React.FC<{ slot: SlotDefinition; item: Item | undefined; onOpen: (slot: string) => void }> = React.memo(
   ({ slot, item, onOpen }) => {
     const img = GEAR_IMAGES[slot.id];
-    const base = 'relative overflow-hidden min-h-[84px] p-1.5 flex flex-col items-start gap-0.5 text-left transition-colors';
-    const label = <span className="relative text-[9px] font-display font-bold uppercase text-dim truncate max-w-full">{slot.displayName}</span>;
-
-    if (slot.sealed) {
-      return (
-        <button
-          type="button"
-          onClick={() => onOpen(slot.id)}
-          aria-label={`${slot.displayName} slot, sealed`}
-          className={`${base} bg-abyss border border-line hover:border-dim`}
-        >
-          {label}
-          <Lock size={16} className="text-faint self-center my-auto" aria-hidden />
-          <span className="self-center text-[9px] font-mono-code font-bold text-dim">SEALED</span>
-        </button>
-      );
-    }
-
     if (!item) {
       return (
         <button
           type="button"
           onClick={() => onOpen(slot.id)}
           aria-label={`${slot.displayName} slot, empty`}
-          className={`${base} bg-panel border border-dashed border-line hover:border-neon/60`}
+          className="relative w-11 h-11 shrink-0 overflow-hidden bg-abyss border border-dashed border-line flex flex-col items-center justify-end pb-0.5 active:translate-y-0.5 active:border-amber-500 active:scale-[0.98]"
         >
-          {img && <img src={img} alt="" className="absolute inset-0 w-full h-full object-cover opacity-10 grayscale pointer-events-none" />}
-          {label}
-          <span className="relative self-center mt-auto text-[9px] font-mono-code font-bold text-dim">EMPTY</span>
+          {img && <img src={img} alt="" className="absolute inset-1 w-[calc(100%-8px)] h-[calc(100%-8px)] object-cover opacity-15 grayscale" />}
+          <span className="relative text-[7px] font-tech font-bold uppercase text-dim">{slot.displayName}</span>
         </button>
       );
     }
-
+    const tone = toneOf(item.rarity);
     const r = rarityOf(item.rarity);
-    const stat = keyStat(item);
     return (
       <button
         type="button"
         onClick={() => onOpen(slot.id)}
-        aria-label={`${slot.displayName}: ${r.displayName}, item level ${item.itemLevel}, ${stat}`}
-        className={`${base} bg-panel2 border-2 hover:brightness-125`}
-        style={{ borderColor: r.color }}
+        aria-label={`${slot.displayName}: ${r.displayName}, item level ${item.itemLevel}, ${keyStat(item)}`}
+        className={`relative w-11 h-11 shrink-0 overflow-hidden border-2 ${tone.border} ${tone.tint} shadow-hard flex flex-col items-center justify-end pb-0.5 active:translate-y-0.5 active:border-amber-500 active:scale-[0.98]`}
       >
-        {img && <img src={img} alt="" className="absolute inset-0 w-full h-full object-cover opacity-25 pointer-events-none" />}
-        {label}
-        <span className="relative text-[9px] font-tech font-bold uppercase truncate max-w-full" style={{ color: r.color }}>
-          {r.displayName}
-        </span>
+        {img && <img src={img} alt="" className="absolute inset-0.5 w-[calc(100%-4px)] h-[calc(100%-4px)] object-cover opacity-80" />}
+        <LevelTag level={item.itemLevel} />
         <Pips rarity={item.rarity} className="relative" />
-        <span className="relative text-[9px] font-mono-code text-dim">LV {formatNumber(item.itemLevel)}</span>
-        <span className="relative text-[9px] font-tech font-bold text-ink leading-tight break-words max-w-full">{stat}</span>
       </button>
     );
   },
 );
-SlotTile.displayName = 'SlotTile';
+EquipSquare.displayName = 'EquipSquare';
 
-const InventoryRow: React.FC<{ item: Item; isNew: boolean; onOpen: (itemId: number) => void }> = React.memo(
-  ({ item, isNew, onOpen }) => {
-    const r = rarityOf(item.rarity);
-    const img = GEAR_IMAGES[item.slot];
-    return (
-      <button
-        type="button"
-        onClick={() => onOpen(item.id)}
-        className="w-full min-h-[48px] flex items-center gap-2 p-1.5 bg-panel2 border border-line border-l-[3px] hover:border-neon/60 text-left transition-colors"
-        style={{ borderLeftColor: r.color }}
-      >
-        {img ? (
-          <img src={img} alt="" className="w-10 h-10 object-cover border border-line shrink-0" />
-        ) : (
-          <span className="w-10 h-10 border border-line shrink-0" />
-        )}
-        <span className="flex-1 min-w-0 flex flex-col gap-0.5">
-          <span className="flex items-center gap-1.5 min-w-0">
-            <span className="text-[11px] font-display font-bold uppercase truncate" style={{ color: r.color }}>
-              {itemName(item)}
-            </span>
-            {isNew && (
-              <span className="shrink-0 px-1 text-[9px] font-display font-black bg-gold text-void leading-4">NEW</span>
-            )}
-          </span>
-          <span className="flex items-center gap-1.5 text-[10px] font-mono-code text-dim min-w-0">
-            <span className="shrink-0">LV {formatNumber(item.itemLevel)}</span>
-            <Pips rarity={item.rarity} className="shrink-0" />
-            <span className="text-ink truncate">{keyStat(item)}</span>
-          </span>
-        </span>
-      </button>
-    );
-  },
-);
-InventoryRow.displayName = 'InventoryRow';
+/** One stored item: a square tinted and bordered by its rarity, level top-left, pips at the bottom. */
+const ItemSquare: React.FC<{ item: Item; isNew: boolean; onOpen: (itemId: number) => void }> = React.memo(({ item, isNew, onOpen }) => {
+  const tone = toneOf(item.rarity);
+  const img = GEAR_IMAGES[item.slot];
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(item.id)}
+      aria-label={`${itemName(item)}, item level ${item.itemLevel}, ${keyStat(item)}${isNew ? ', new' : ''}`}
+      className={`relative aspect-square overflow-hidden border-2 ${tone.border} ${tone.tint} shadow-hard flex flex-col items-center justify-end pb-1 active:translate-y-0.5 active:border-amber-500 active:scale-[0.98]`}
+    >
+      {img && <img src={img} alt="" className="absolute inset-1 w-[calc(100%-8px)] h-[calc(100%-8px)] object-cover" />}
+      <LevelTag level={item.itemLevel} />
+      {isNew && (
+        <span className="absolute right-0 top-0 px-0.5 bg-gold text-abyss text-[8px] font-tech font-black leading-[12px]">NEW</span>
+      )}
+      <Pips rarity={item.rarity} className="relative bg-abyss/80 px-0.5 py-[2px]" />
+    </button>
+  );
+});
+ItemSquare.displayName = 'ItemSquare';
 
 /** THIS vs EQUIPPED, one row per stat either item has. Arrows and words carry the result, not colour. */
 const CompareTable: React.FC<{ item: Item; equipped: Item }> = ({ item, equipped }) => {
@@ -315,15 +291,15 @@ const Inspector: React.FC<{
   const status = view.kind === 'equipped' ? 'EQUIPPED' : isNew ? 'NEW · IN STORAGE' : 'IN STORAGE';
 
   return (
-    <Modal open onClose={onClose} tone={tone} title={<span style={{ color: r.color }}>{itemName(item)}</span>}>
+    <Modal open onClose={onClose} tone={tone} title={<span className={toneOf(item.rarity).text}>{itemName(item)}</span>}>
       <div className="flex items-center gap-3">
-        {img && <img src={img} alt="" className="w-16 h-16 object-cover border-2 shrink-0" style={{ borderColor: r.color }} />}
+        {img && <img src={img} alt="" className={`w-16 h-16 object-cover border-2 shrink-0 ${toneOf(item.rarity).border}`} />}
         <div className="flex flex-col gap-1 min-w-0">
           <Pips rarity={item.rarity} />
           <span className="text-[10px] font-tech text-dim">
             Item level {formatNumber(item.itemLevel)} · {slotName(item.slot)}
           </span>
-          <span className="text-[10px] font-display font-bold text-ink">{status}</span>
+          <span className="text-[10px] font-tech font-bold text-ink">{status}</span>
         </div>
       </div>
 
@@ -572,8 +548,8 @@ export const GearPanel: React.FC = () => {
         type="button"
         aria-pressed={active}
         onClick={() => setFilter(id)}
-        className={`shrink-0 min-h-[32px] px-2 text-[10px] font-mono-code font-bold uppercase border transition-colors ${
-          active ? 'bg-neon text-void border-neon' : 'bg-panel2 text-dim border-line hover:text-ink'
+        className={`shrink-0 min-h-[32px] px-1.5 text-[10px] font-tech font-bold uppercase border transition-colors active:translate-y-0.5 ${
+          active ? 'bg-neon text-abyss border-neon' : 'bg-panel text-dim border-line hover:text-ink'
         }`}
       >
         {label} ({formatNumber(count)})
@@ -599,58 +575,58 @@ export const GearPanel: React.FC = () => {
         }
       />
 
-      <TabBody>
-        <Panel>
-          <span className="text-[9px] font-tech text-dim uppercase tracking-wider">Equipped</span>
-          <div className="grid grid-cols-4 gap-1.5">
-            {ORDERED_SLOTS.map((slot) => (
-              <SlotTile key={slot.id} slot={slot} item={equipped[slot.id]} onOpen={openSlot} />
-            ))}
-          </div>
-        </Panel>
+      <TabBody className="!gap-1 !p-1.5">
+        {/* Worn gear: six small squares in a row. Relics are not worn; they are attuned in RELICS. */}
+        <section aria-label="Equipped" className="flex items-center justify-between gap-1">
+          {FORGE_SLOTS.map((slot) => (
+            <EquipSquare key={slot.id} slot={slot} item={equipped[slot.id]} onOpen={openSlot} />
+          ))}
+        </section>
 
-        <ForgeSection onForged={onForged} onNotice={flash} />
-
-        <Panel>
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[9px] font-tech text-dim uppercase tracking-wider">
-              Storage ({formatNumber(inventory.length)})
-            </span>
-            <span className="text-[9px] font-tech text-dim">Newest first</span>
-          </div>
-
-          <TwoTapButton
-            variant="ghost"
-            size="sm"
-            block
-            disabled={commons === 0}
-            label={`SALVAGE ALL COMMONS (${formatNumber(commons)}): +${formatNumber(commons * COMMON_YIELD)} SCRAPS`}
-            armedLabel={`TAP AGAIN: ${formatNumber(commons)} ${commons === 1 ? 'ITEM' : 'ITEMS'} → +${formatNumber(commons * COMMON_YIELD)} SCRAPS`}
-            onConfirm={salvageCommons}
-          />
-
-          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-0.5">
+        <div className="flex items-center gap-1">
+          <div className="flex-1 min-w-0 flex items-center gap-1 overflow-x-auto no-scrollbar" role="group" aria-label="Filter storage">
             {chip('ALL', 'All', inventory.length)}
             {FORGE_SLOTS.map((s) => chip(s.id, s.displayName, slotCounts[s.id] || 0))}
           </div>
+          <TwoTapButton
+            variant="ghost"
+            size="sm"
+            className="shrink-0 !px-1.5"
+            disabled={commons === 0}
+            label={
+              <>
+                SALVAGE {formatNumber(commons)}
+                <span className="sr-only"> commons for {formatNumber(commons * COMMON_YIELD)} scraps</span>
+              </>
+            }
+            armedLabel={
+              <>
+                +{formatNumber(commons * COMMON_YIELD)} ⬢ ?<span className="sr-only">, tap again to salvage every common</span>
+              </>
+            }
+            onConfirm={salvageCommons}
+          />
+        </div>
 
-          {shown.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-1 py-6 text-center text-dim">
-              <Package size={20} className="opacity-40" aria-hidden />
-              <span className="text-[10px] font-tech">
-                {inventory.length === 0
-                  ? 'Storage is empty. Enemies sometimes drop gear and bosses always do.'
-                  : `No ${slotName(filter).toLowerCase()} gear in storage.`}
-              </span>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-1">
-              {shown.map((item) => (
-                <InventoryRow key={item.id} item={item} isNew={isNew(item)} onOpen={openItem} />
-              ))}
-            </div>
-          )}
-        </Panel>
+        {/* Storage: a dense five-column grid of squares, newest first. */}
+        {shown.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-1 py-5 text-center text-dim border border-dashed border-line">
+            <Package size={20} className="opacity-40" aria-hidden />
+            <span className="text-[10px] font-tech">
+              {inventory.length === 0
+                ? 'Storage is empty. Enemies sometimes drop gear and bosses always do.'
+                : `No ${slotName(filter).toLowerCase()} gear in storage.`}
+            </span>
+          </div>
+        ) : (
+          <section aria-label={`Storage, ${formatNumber(inventory.length)} items, newest first`} className="grid grid-cols-5 gap-1">
+            {shown.map((item) => (
+              <ItemSquare key={item.id} item={item} isNew={isNew(item)} onOpen={openItem} />
+            ))}
+          </section>
+        )}
+
+        <ForgeSection onForged={onForged} onNotice={flash} />
       </TabBody>
 
       <Inspector

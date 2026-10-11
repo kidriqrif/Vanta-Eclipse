@@ -405,6 +405,16 @@ plus an icon in `OnboardingManager`; give it a `known` test so veterans skip it.
 
 ## Mobile-first conventions
 
+- The app is a fixed frame (`fixed inset-0`, no page scroll or bounce) inside
+  the safe-area insets, split into three zones in `src/App.tsx`: the arena
+  (45%: top bar, stage track and the fight), the data ticker (5%:
+  `src/components/Ticker.tsx`) and the tab deck (50%: guide strip, the active
+  tab and the nav). Only the active tab's `TabBody` scrolls, and the deck is
+  CSS-contained so its redraws stay inside it. The native banner gets its own
+  strip below the frame.
+- The look lives in `src/index.css`: theme tokens, rarity tokens `r0`–`r4`,
+  hard shadows, and the `.hud-btn*` button classes with their sink-on-press.
+  Minigames run inside a handheld frame (`src/components/minigames/MinigameHost.tsx`).
 - The layout is a single portrait column (max width `max-w-md`) that respects
   the safe-area insets. The Android activity is locked to portrait.
 - Touch targets are at least 32 CSS px tall. `Button` sizes are 32, 40 and 48

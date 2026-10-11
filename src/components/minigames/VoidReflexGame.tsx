@@ -263,9 +263,9 @@ export const VoidReflexGame: React.FC<MinigameProps> = ({ onFinish }) => {
                 width: `${SIGIL_SIZE}%`,
                 height: `${SIGIL_SIZE}%`,
               }}
-              className={`absolute rounded-full flex items-center justify-center touch-none select-none transition-transform duration-150 motion-reduce:transition-none ${
+              className={`absolute flex items-center justify-center touch-none select-none shadow-hard transition-transform duration-150 motion-reduce:transition-none ${
                 flared
-                  ? 'scale-125 border-4 border-neon-bright bg-neon/25 ring-4 ring-neon/40 shadow-[0_0_24px] shadow-neon/60 z-10'
+                  ? 'scale-125 border-4 border-neon-bright bg-neon/40 outline-4 outline-offset-2 outline-amber z-10'
                   : hitHere
                     ? 'scale-110 border-4 border-toxic bg-toxic/15'
                     : wrongHere || missedHere
@@ -283,7 +283,7 @@ export const VoidReflexGame: React.FC<MinigameProps> = ({ onFinish }) => {
                 <span
                   aria-hidden
                   className={`absolute inset-0 flex items-center justify-center font-display font-black pointer-events-none ${
-                    flared ? 'text-lg text-ink drop-shadow-[0_0_6px_black]' : hitHere ? 'text-2xl text-toxic' : 'text-2xl text-crimson'
+                    flared ? 'text-lg text-ink [text-shadow:2px_2px_0_#000]' : hitHere ? 'text-2xl text-toxic' : 'text-2xl text-crimson'
                   }`}
                 >
                   {mark}

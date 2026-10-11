@@ -138,7 +138,7 @@ const ToggleRow: React.FC<{ label: string; detail: string; on: boolean; onToggle
       aria-checked={on}
       aria-label={label}
       onClick={onToggle}
-      className={`shrink-0 min-h-[32px] min-w-[64px] px-2 border text-[10px] font-display font-bold uppercase flex items-center justify-center gap-1 transition-colors ${
+      className={`shrink-0 min-h-[32px] min-w-[64px] px-2 border text-[10px] font-tech font-bold uppercase flex items-center justify-center gap-1 transition-colors ${
         on ? 'bg-active border-neon text-neon' : 'bg-void border-line text-dim hover:text-ink'
       }`}
     >
@@ -454,7 +454,7 @@ const GuideEntry: React.FC<{ title: string; lines: string[] }> = ({ title, lines
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="w-full min-h-[36px] flex items-center justify-between gap-2 text-left text-[11px] font-display font-bold text-ink tracking-wide hover:text-neon"
+        className="w-full min-h-[36px] flex items-center justify-between gap-2 text-left text-[11px] font-tech font-bold text-ink tracking-wide hover:text-neon"
       >
         {title}
         <ChevronDown size={13} aria-hidden className={`shrink-0 text-dim transition-transform ${open ? 'rotate-180' : ''}`} />
@@ -536,7 +536,7 @@ export const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) =>
               role="tab"
               aria-selected={selected}
               onClick={() => setTab(t.id)}
-              className={`min-h-[36px] text-[11px] font-display font-bold tracking-wider uppercase flex items-center justify-center gap-1.5 transition-colors ${
+              className={`min-h-[36px] text-[11px] font-tech font-bold tracking-wider uppercase flex items-center justify-center gap-1.5 transition-colors ${
                 selected ? 'bg-neon text-void' : 'bg-void text-dim hover:text-ink'
               }`}
             >

@@ -38,7 +38,7 @@ export const Modal: React.FC<{
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`bg-panel border-2 ${border} w-full max-w-sm max-h-full flex flex-col outline-none shadow-[0_0_30px_rgba(0,0,0,0.8)] ${className}`}
+        className={`bg-panel border-2 ${border} w-full max-w-sm max-h-full flex flex-col outline-none shadow-hard-lg ${className}`}
       >
         <div className="flex items-center justify-between gap-2 px-3 py-2 bg-panel2 border-b border-line">
           <div className="flex items-center gap-2 min-w-0">
@@ -52,7 +52,7 @@ export const Modal: React.FC<{
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="w-8 h-8 shrink-0 flex items-center justify-center border border-line text-dim hover:text-ink hover:border-neon"
+              className="w-9 h-9 shrink-0 flex items-center justify-center bg-panel border border-line text-dim shadow-hard hover:text-ink active:translate-y-0.5 active:border-amber-500 active:scale-[0.98]"
             >
               <X size={14} />
             </button>

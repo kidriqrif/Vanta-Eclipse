@@ -134,7 +134,7 @@ export const LightsOutGame: React.FC<MinigameProps> = ({ onFinish }) => {
             aria-label={`Row ${Math.floor(i / SIZE) + 1}, column ${(i % SIZE) + 1}: ${on ? 'lit' : 'dark'}`}
             className={`aspect-square border-2 flex items-center justify-center transition-colors disabled:cursor-default ${
               on
-                ? 'bg-gold border-gold text-void shadow-[0_0_12px_var(--color-gold)]'
+                ? 'bg-gold border-gold text-abyss shadow-hard'
                 : 'bg-void border-line enabled:hover:border-dim enabled:active:bg-active'
             }`}
           >

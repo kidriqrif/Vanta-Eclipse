@@ -25,6 +25,7 @@ import { OnboardingManager } from './components/OnboardingManager';
 import { ToastHost } from './components/ToastHost';
 import { EclipseOverlay } from './components/EclipseOverlay';
 import { GuideBar } from './components/GuideBar';
+import { Ticker } from './components/Ticker';
 
 const HOME_TAB: TabType = 'UPGRADES';
 
@@ -71,15 +72,25 @@ const GameShell: React.FC = () => {
   const ActivePanel = TABS[activeTab];
 
   return (
-    <div ref={shellRef} className="w-full h-[100dvh] bg-abyss text-ink flex justify-center overflow-hidden font-mono-code select-none pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
-      <div className="relative w-full max-w-md h-full flex flex-col bg-void bg-grid-pattern sm:border-x sm:border-line">
-        <Header onOpenSettings={() => setSettingsOpen(true)} onOpenNoAds={() => setNoAdsOpen(true)} />
-        <CombatArena />
-        <main className="flex-1 min-h-0 flex flex-col overflow-hidden">
-          <GuideBar tab={activeTab} onOpenTab={setActiveTab} />
-          <ActivePanel key={activeTab} />
-        </main>
-        <NavigationTabs activeTab={activeTab} onSelectTab={setActiveTab} />
+    // The native frame: fixed to the screen, never scrolling, inside the cutout and gesture-bar insets.
+    <div ref={shellRef} className="fixed inset-0 overflow-hidden select-none bg-abyss text-ink flex justify-center font-tech safe-top safe-bottom safe-x">
+      <div className="relative w-full max-w-md h-full flex flex-col bg-void sm:border-x-2 sm:border-line">
+        {/* Three fixed zones: the arena (45%), the data ticker (5%) and the tab deck (50%). */}
+        <div className="flex-1 min-h-0 grid grid-cols-1 grid-rows-[minmax(0,45fr)_minmax(36px,5fr)_minmax(0,50fr)]">
+          <section aria-label="Arena" className="min-h-0 flex flex-col">
+            <Header onOpenSettings={() => setSettingsOpen(true)} onOpenNoAds={() => setNoAdsOpen(true)} />
+            <CombatArena />
+          </section>
+          <Ticker />
+          {/* Only the active tab's body scrolls; containment keeps its redraws inside the deck. */}
+          <section aria-label="Tabs" className="min-h-0 flex flex-col bg-void [contain:layout_paint]">
+            <GuideBar tab={activeTab} onOpenTab={setActiveTab} />
+            <main className="flex-1 min-h-0 flex flex-col overflow-hidden">
+              <ActivePanel key={activeTab} />
+            </main>
+            <NavigationTabs activeTab={activeTab} onSelectTab={setActiveTab} />
+          </section>
+        </div>
         <BannerSlot />
 
         <ToastHost />

@@ -57,7 +57,7 @@ export const ToastHost: React.FC = () => {
     // Above dialog backdrops (z-60), so a drop announced while a dialog is up is still seen.
     <div className="pointer-events-none absolute left-2 right-2 z-[65] flex flex-col items-center gap-1" style={{ bottom }} aria-live="polite">
       {toasts.map((t) => (
-        <div key={t.id} className={`anim-toast max-w-full bg-panel/95 border px-2.5 py-1 text-[10px] font-display font-bold uppercase tracking-wide ${TONE[t.tone]}`}>
+        <div key={t.id} className={`anim-toast max-w-full bg-panel/95 border px-2.5 py-1 text-[10px] font-tech font-bold uppercase tracking-wide ${TONE[t.tone]}`}>
           {t.text}
         </div>
       ))}

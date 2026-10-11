@@ -54,7 +54,7 @@ const OwnedPetCard: React.FC<{ def: PetDefinition; pet: OwnedPet; active: boolea
 
         <div className="flex-1 min-w-0 flex flex-col gap-0.5">
           <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-            <span className="text-xs font-display font-bold text-ink uppercase tracking-wide leading-tight">{name}</span>
+            <span className="text-xs font-tech font-bold text-ink uppercase tracking-wide leading-tight">{name}</span>
             <span key={level} className="animate-fade-in text-[10px] font-mono-code font-bold text-dim border border-line px-1 leading-4">
               LV {formatNumber(level)}/{formatNumber(def.maxLevel)}
             </span>
@@ -74,7 +74,7 @@ const OwnedPetCard: React.FC<{ def: PetDefinition; pet: OwnedPet; active: boolea
 
         <div className="shrink-0 w-[92px]">
           {active ? (
-            <div className="min-h-[40px] border border-neon bg-neon/10 text-neon text-[10px] font-display font-bold flex items-center justify-center gap-1">
+            <div className="min-h-[40px] border border-neon bg-neon/10 text-neon text-[10px] font-tech font-bold flex items-center justify-center gap-1">
               <Check size={12} aria-hidden /> ACTIVE
             </div>
           ) : (
@@ -121,7 +121,7 @@ const UnknownPetCard: React.FC<{ def: PetDefinition }> = ({ def }) => (
       <img src={petSprite(def.id, 1)} alt="" className="w-full h-full object-contain pixelated brightness-0 opacity-60" />
     </div>
     <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-      <span className="text-xs font-display font-bold text-dim uppercase tracking-wide flex items-center gap-1">
+      <span className="text-xs font-tech font-bold text-dim uppercase tracking-wide flex items-center gap-1">
         <Lock size={11} aria-hidden /> Not found yet
       </span>
       <span className="text-[10px] font-tech text-ink leading-tight">{HOW_TO_GET[def.id] ?? 'Found in the Frozen Ruins'}</span>
@@ -198,7 +198,7 @@ export const PetsPanel: React.FC = () => {
             })}
 
             <div className="bg-panel border border-line p-2.5 flex flex-col gap-1.5">
-              <span className="text-[10px] font-display font-bold text-ink uppercase tracking-wider flex items-center gap-1.5">
+              <span className="text-[10px] font-tech font-bold text-ink uppercase tracking-wider flex items-center gap-1.5">
                 <Sparkles size={12} className="text-gold" aria-hidden /> How companions grow
               </span>
               <span className="text-[10px] font-tech text-dim leading-snug">

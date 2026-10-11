@@ -24,7 +24,7 @@ const OwnedRelicCard: React.FC<{ def: RelicDefinition; active: boolean; isNew: b
 
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
         <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-          <span className="text-xs font-display font-bold text-ink uppercase tracking-wide leading-tight">{def.displayName}</span>
+          <span className="text-xs font-tech font-bold text-ink uppercase tracking-wide leading-tight">{def.displayName}</span>
           {active && (
             <span className="text-[9px] font-mono-code font-black text-void bg-gold px-1 leading-4 flex items-center gap-0.5">
               <Check size={9} aria-hidden /> ATTUNED
@@ -61,7 +61,7 @@ const UnknownRelicCard: React.FC<{ def: RelicDefinition }> = ({ def }) => (
       <img src={def.sigil} alt="" className="w-full h-full object-contain pixelated brightness-0 opacity-60" />
     </div>
     <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-      <span className="text-xs font-display font-bold text-dim uppercase tracking-wide flex items-center gap-1">
+      <span className="text-xs font-tech font-bold text-dim uppercase tracking-wide flex items-center gap-1">
         <Lock size={11} aria-hidden /> Undiscovered relic
       </span>
       <span className="text-[10px] font-tech text-dim leading-tight">Drops from a Frozen Ruins boss.</span>
@@ -127,7 +127,7 @@ export const RelicsPanel: React.FC = () => {
               <span className="text-[9px] font-tech text-dim uppercase tracking-wider">Attuned now</span>
               {active ? (
                 <span className="text-[11px] font-tech text-ink leading-tight">
-                  <span className="font-display font-bold text-gold uppercase">{active.displayName}</span> — {active.effectDescription}
+                  <span className="font-tech font-bold text-gold uppercase">{active.displayName}</span> — {active.effectDescription}
                 </span>
               ) : (
                 <span className="text-[11px] font-tech text-dim leading-tight">

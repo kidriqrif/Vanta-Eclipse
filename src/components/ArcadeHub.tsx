@@ -110,7 +110,7 @@ const GameCard: React.FC<{
       </div>
 
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-        <h3 className="text-xs font-display font-bold text-ink uppercase tracking-wide leading-tight">{def.displayName}</h3>
+        <h3 className="text-xs font-tech font-bold text-ink uppercase tracking-wide leading-tight">{def.displayName}</h3>
         <p className="text-[10px] font-tech text-dim leading-snug">{def.description}</p>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
           {best !== undefined && (

@@ -3,8 +3,8 @@ import { Anchor, ChevronsUp, CirclePause, Gem, Ghost, Skull, Swords, Timer, Undo
 import { ENEMIES, RELICS } from '../data/definitions';
 import { comboBonus } from '../game/reducer';
 import { rgbaFromUnit, selectActiveCosmetic } from '../game/selectors';
-import { AUTO_ATTACK_UNLOCK_LEVEL, BOSS_FIGHT_SECONDS, WORLD_BOSS_EVERY } from '../game/state';
-import { petDisplayName, petLevel, petSprite, worldForLevel } from '../game/stats';
+import { BOSS_FIGHT_SECONDS, WORLD_BOSS_EVERY } from '../game/state';
+import { petDisplayName, petLevel, petSprite } from '../game/stats';
 import { useDispatch, useFx, useGameState, useNow, useStats } from '../hooks/useGame';
 import { formatDuration, formatNumber, formatPercent } from '../utils/numberFormat';
 import { Button, TwoTapButton } from './ui';
@@ -72,7 +72,7 @@ const TapLockOverlay: React.FC<{ until: number }> = ({ until }) => {
   const now = useNow(250);
   const seconds = Math.max(1, Math.ceil((until - now) / 1000));
   return (
-    <div className="absolute inset-0 z-30 bg-void/85 backdrop-blur-[2px] flex flex-col items-center justify-center gap-1.5 px-6 text-center">
+    <div className="absolute inset-0 z-30 bg-void/90 flex flex-col items-center justify-center gap-1.5 px-6 text-center">
       <div role="status" className="flex flex-col items-center gap-1.5">
         <CirclePause size={26} className="text-gold" aria-hidden />
         <h3 className="font-display font-bold text-sm text-gold tracking-wider">TAPPING PAUSED</h3>
@@ -110,6 +110,45 @@ const BossTimer: React.FC<{ seconds: number }> = ({ seconds }) => {
     </div>
   );
 };
+
+/**
+ * The stage path: the ten levels of the current stage, cleared ones filled, the current one lit,
+ * and the boss gate at the end (gold for a world boss). Reads like a map of where the climb is.
+ */
+const StageTrack: React.FC<{ level: number; bossFight: boolean }> = React.memo(({ level, bossFight }) => {
+  const first = Math.floor((level - 1) / 10) * 10 + 1;
+  const stage = Math.ceil(level / 10);
+  return (
+    <div className="shrink-0 flex items-center gap-1.5 pointer-events-none" aria-label={`Stage ${stage}, level ${level} of ${first + 9}`}>
+      <span className="shrink-0 w-12 flex flex-col leading-none">
+        <span className="text-[8px] font-tech text-dim tracking-widest">STAGE</span>
+        <span className="text-sm font-mono-code font-black text-ink">{formatNumber(stage)}</span>
+      </span>
+      <ol className="flex-1 min-w-0 grid grid-cols-10 gap-[3px]" aria-hidden>
+        {Array.from({ length: 10 }, (_, i) => {
+          const lv = first + i;
+          const gate = lv % 10 === 0;
+          const world = lv % WORLD_BOSS_EVERY === 0;
+          const current = lv === level;
+          const cleared = lv < level;
+          let cls = 'bg-panel border-line text-faint';
+          if (cleared) cls = 'bg-neon/25 border-neon/50 text-neon';
+          if (gate && !current) cls = world ? 'bg-abyss border-gold text-gold' : 'bg-abyss border-crimson text-crimson';
+          if (current) cls = bossFight || gate ? 'bg-crimson border-crimson text-abyss' : 'bg-amber border-amber text-abyss';
+          return (
+            <li
+              key={lv}
+              className={`h-6 border flex items-center justify-center shadow-hard ${cls} ${current ? 'scale-110 z-10' : ''}`}
+            >
+              {gate ? <Skull size={11} /> : <span className="text-[9px] font-mono-code font-bold">{String(lv).slice(-3)}</span>}
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+});
+StageTrack.displayName = 'StageTrack';
 
 /**
  * The fight: enemy, HP, the boss timer and the climb controls. Every pointerdown on the arena is
@@ -226,15 +265,13 @@ export const CombatArena: React.FC = () => {
   const viewScale = def?.viewScale ?? 1;
   const isBossFight = mode === 'BOSS_FIGHT';
   const isBoss = enemy.isBoss;
-  const world = worldForLevel(level);
   const lv = formatNumber(level);
-  const stageLabel = isBossFight ? `${level % WORLD_BOSS_EVERY === 0 ? 'WORLD BOSS' : 'BOSS'} · Lv. ${lv}` : `Lv. ${lv}`;
   const gateNext = (level + 1) % 10 === 0;
   const nextLv = formatNumber(level + 1);
+  const frameTone = isBoss ? 'border-crimson' : 'border-neon';
 
   const numberColor = rgbaFromUnit(cosmetic.numberColor);
   const trailColor = rgbaFromUnit(cosmetic.trailColor);
-  const trailGlow = rgbaFromUnit(cosmetic.trailColor, 0.6);
 
   const relic = relicId ? RELICS.find((r) => r.id === relicId) : undefined;
   const petName = petId ? petDisplayName(petId, petLvl) : '';
@@ -248,98 +285,54 @@ export const CombatArena: React.FC = () => {
       role="region"
       aria-label="Combat. Tap anywhere to attack."
       data-testid="combat-arena"
-      className="relative w-full h-[300px] sm:h-[310px] shrink-0 overflow-hidden bg-void border-b border-line select-none touch-none cursor-crosshair"
+      className="relative w-full flex-1 min-h-0 overflow-hidden bg-void select-none touch-none cursor-crosshair"
     >
       {/* Everything shakes together; the outer box stays still so tap coordinates never jitter. */}
       <div ref={shakeRef} onAnimationEnd={onShakeEnd} className="absolute inset-0 isolate">
-        <div className="absolute inset-0 bg-grid-pattern opacity-60 pointer-events-none" />
+        <div className="absolute inset-0 bg-grid-pattern pointer-events-none" />
 
-        <div className="absolute inset-0 p-3 flex flex-col gap-1.5">
-          {/* Stage and telemetry */}
-          <div className="flex items-start justify-between gap-2 pointer-events-none">
-            <div className="flex flex-col min-w-0">
-              <span className="text-[9px] font-tech text-dim uppercase tracking-[0.2em] truncate">{world.displayName}</span>
-              <span
-                className={`flex items-center gap-1 font-display font-bold text-xs tracking-wider whitespace-nowrap ${
-                  isBossFight ? 'text-crimson' : 'text-ink'
-                }`}
-              >
-                {isBossFight && <Skull size={12} aria-hidden />}
-                {stageLabel}
-              </span>
+        <div className="absolute inset-0 px-2 pt-2 pb-2 flex flex-col gap-1.5">
+          <StageTrack level={level} bossFight={isBossFight} />
+
+          {/* Companion and relic, and the combo meter */}
+          <div className="relative h-6 shrink-0 flex items-start justify-between gap-2 pointer-events-none">
+            <div className="flex items-center gap-1 min-w-0">
+              {petId && (
+                <span className="h-6 flex items-center gap-1 bg-panel border border-line shadow-hard pl-0.5 pr-1.5 min-w-0">
+                  {petImg && <img src={petImg} alt="" draggable={false} className="w-5 h-5 object-contain pixelated" />}
+                  <span className="text-[10px] font-tech font-bold text-neon truncate max-w-[72px]">{petName}</span>
+                </span>
+              )}
+              {relic && (
+                <span className="h-6 flex items-center gap-1 bg-panel border border-line shadow-hard px-1.5 min-w-0">
+                  <Gem size={10} className="text-gold shrink-0" aria-hidden />
+                  <span className="text-[10px] font-tech font-bold text-gold truncate max-w-[72px]">{relic.displayName}</span>
+                </span>
+              )}
             </div>
-
-            <div className="flex flex-col items-end gap-1 shrink-0">
-              <div className="flex items-center gap-2 bg-void/80 border border-line px-2 py-0.5">
-                <span className="flex items-baseline gap-1">
-                  <span className="text-[9px] font-tech text-neon">DPS</span>
-                  {stats.autoAttackUnlocked ? (
-                    <span className="text-[11px] font-mono-code font-bold text-ink">{formatNumber(stats.dps)}</span>
-                  ) : (
-                    <span className="text-[9px] font-tech text-dim">AUTO Lv {formatNumber(AUTO_ATTACK_UNLOCK_LEVEL)}</span>
-                  )}
+            <div className="flex items-center gap-1 shrink-0">
+              {combo >= COMBO_MIN && (
+                <span className="h-6 flex items-center bg-gold text-abyss border border-gold shadow-hard px-1.5">
+                  <span className="text-[10px] font-mono-code font-black whitespace-nowrap">
+                    ×{formatNumber(combo)} · {formatPercent(comboBonus(combo), 0)}
+                  </span>
                 </span>
-                <span className="text-faint" aria-hidden>
-                  |
-                </span>
-                <span className="flex items-baseline gap-1">
-                  <span className="text-[9px] font-tech text-neon">TAP</span>
-                  <span className="text-[11px] font-mono-code font-bold text-ink">{formatNumber(stats.tapDamage)}</span>
-                </span>
-              </div>
-              <div className="flex items-baseline gap-1.5 bg-void/80 border border-crimson/40 px-2 py-0.5">
-                <span className="text-[9px] font-tech text-gold">CRIT</span>
-                <span className="text-[11px] font-mono-code font-bold text-gold">{formatNumber(stats.critChance * 100)}%</span>
-                <span className="text-[11px] font-mono-code font-bold text-crimson">×{formatNumber(stats.critDamage)}</span>
-              </div>
+              )}
+              <span className="h-6 flex items-center gap-1 bg-panel border border-line shadow-hard px-1.5">
+                <span className="text-[9px] font-tech text-dim">CRIT</span>
+                <span className="text-[10px] font-mono-code font-bold text-gold">{formatNumber(stats.critChance * 100)}%</span>
+                <span className="text-[10px] font-mono-code font-bold text-crimson">×{formatNumber(stats.critDamage)}</span>
+              </span>
             </div>
           </div>
 
-          {/* Active pet and relic */}
-          {(petId || relic) && (
-            <div className="absolute left-3 top-[52px] flex flex-col items-start gap-1 pointer-events-none">
-              {petId && (
-                <div className="flex items-center gap-1 bg-panel/90 border border-line pl-0.5 pr-1.5 py-0.5">
-                  {petImg && <img src={petImg} alt="" draggable={false} className="w-5 h-5 object-contain pixelated" />}
-                  <span className="text-[9px] font-tech text-dim">PET</span>
-                  <span className="text-[10px] font-mono-code font-bold text-neon truncate max-w-[76px]">{petName}</span>
-                </div>
-              )}
-              {relic && (
-                <div className="flex items-center gap-1 bg-panel/90 border border-line px-1.5 py-0.5">
-                  <Gem size={10} className="text-gold shrink-0" aria-hidden />
-                  <span className="text-[9px] font-tech text-dim">RELIC</span>
-                  <span className="text-[10px] font-mono-code font-bold text-gold truncate max-w-[76px]">{relic.displayName}</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Combo */}
-          {combo >= COMBO_MIN && (
-            <div className="absolute right-3 top-[70px] pointer-events-none bg-panel border border-gold px-2 py-0.5 shadow-[0_0_8px] shadow-gold/30">
-              <span className="text-[10px] font-display font-black text-gold uppercase tracking-wider whitespace-nowrap">
-                {formatNumber(combo)} STRIKES · {formatPercent(comboBonus(combo), 0)} DMG
-              </span>
-            </div>
-          )}
-
-          {/* Enemy */}
+          {/* The target: a hard bracket frame around the enemy */}
           <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-1 pointer-events-none">
-            <div ref={spriteBoxRef} className="relative w-24 h-24 shrink-0 flex items-center justify-center">
-              <div
-                className={`absolute inset-0 rounded-full blur-md opacity-30 ${
-                  isBoss
-                    ? 'bg-[radial-gradient(circle,var(--color-crimson)_0%,transparent_70%)]'
-                    : 'bg-[radial-gradient(circle,var(--color-neon)_0%,transparent_70%)]'
-                }`}
-              />
-              <div
-                className={`absolute w-[130%] h-[130%] rounded-full border-[1.5px] border-dashed animate-[spin_20s_linear_infinite] motion-reduce:animate-none ${
-                  isBoss ? 'border-crimson/70' : 'border-crimson/40'
-                }`}
-              />
-              <div className="absolute w-[110%] h-[110%] rounded-full border border-neon/40" />
+            <div ref={spriteBoxRef} className="relative w-28 h-28 max-h-full aspect-square shrink flex items-center justify-center">
+              <span className={`absolute left-0 top-0 w-4 h-4 border-l-2 border-t-2 ${frameTone}`} aria-hidden />
+              <span className={`absolute right-0 top-0 w-4 h-4 border-r-2 border-t-2 ${frameTone}`} aria-hidden />
+              <span className={`absolute left-0 bottom-0 w-4 h-4 border-l-2 border-b-2 ${frameTone}`} aria-hidden />
+              <span className={`absolute right-0 bottom-0 w-4 h-4 border-r-2 border-b-2 ${frameTone}`} aria-hidden />
               <div className="relative flex items-center justify-center" style={{ transform: `scale(${viewScale})` }}>
                 {texture && brokenTexture !== texture ? (
                   <img
@@ -358,42 +351,37 @@ export const CombatArena: React.FC = () => {
               </div>
             </div>
             <span
-              className={`shrink-0 max-w-full truncate leading-tight text-sm sm:text-base font-display font-bold uppercase tracking-[0.12em] text-ink text-shadow-[0_0_10px] ${
-                isBoss ? 'text-shadow-crimson/60' : 'text-shadow-neon/50'
+              className={`shrink-0 max-w-full truncate px-2 py-0.5 bg-abyss border shadow-hard text-[11px] font-display font-bold uppercase tracking-[0.12em] ${
+                isBoss ? 'border-crimson text-crimson' : 'border-line text-ink'
               }`}
             >
+              {isBossFight && <Skull size={10} className="inline -mt-0.5 mr-1" aria-hidden />}
               {enemyName}
             </span>
           </div>
 
           {/* HP */}
-          <div className="flex flex-col gap-1 pointer-events-none">
+          <div className="shrink-0 flex flex-col gap-0.5 pointer-events-none">
             <div className="flex items-end justify-between px-0.5">
-              <span className={`text-[10px] font-tech tracking-widest uppercase ${isBoss ? 'text-crimson' : 'text-neon'}`}>
+              <span className={`text-[10px] font-tech font-bold tracking-widest uppercase ${isBoss ? 'text-crimson' : 'text-neon'}`}>
                 {isBoss ? 'Boss HP' : 'HP'}
               </span>
               <span className="text-[10px] font-mono-code text-ink">
-                <span className="font-bold text-neon">{formatNumber(enemy.hp)}</span> / {formatNumber(enemy.maxHp)}{' '}
-                <span className="text-dim">({formatNumber(Math.ceil(hpPct))}%)</span>
+                <span className="font-bold">{formatNumber(enemy.hp)}</span>
+                <span className="text-dim"> / {formatNumber(enemy.maxHp)}</span>
               </span>
             </div>
-            <div
-              className={`relative w-full bg-void border ${isBoss ? 'h-4 border-crimson/70' : 'h-3 border-line'}`}
-              style={{ clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%)' }}
-            >
+            <div className={`relative w-full bg-abyss border-2 shadow-hard ${isBoss ? 'h-4 border-crimson' : 'h-3 border-line'}`}>
+              <div className="absolute left-0 top-0 bottom-0 bg-ink/25 transition-[width] duration-300" style={{ width: `${Math.max(ghostPct, hpPct)}%` }} />
               <div
-                className="absolute left-0 top-0 bottom-0 bg-ink/20 transition-[width] duration-300"
-                style={{ width: `${Math.max(ghostPct, hpPct)}%` }}
-              />
-              <div
-                className="absolute left-0 top-0 bottom-0 bg-linear-to-r from-neon via-purple to-crimson transition-[width] duration-75"
+                className={`absolute left-0 top-0 bottom-0 transition-[width] duration-75 ${isBoss ? 'bg-crimson' : 'bg-neon'}`}
                 style={{ width: `${hpPct}%` }}
               />
             </div>
           </div>
 
           {/* Controls: above the tap-lock overlay, and never counted as taps. */}
-          <div className="relative z-40 flex items-center gap-2 min-h-8">
+          <div className="relative z-40 shrink-0 flex items-center gap-2 min-h-[36px]">
             {mode === 'BOSS_FIGHT' && (
               <>
                 <BossTimer seconds={bossTimeLeft} />
@@ -422,29 +410,17 @@ export const CombatArena: React.FC = () => {
                     <Anchor size={10} aria-hidden />
                     Farming Lv. {lv}
                   </span>
-                  <span className="text-[9px] font-tech text-dim uppercase truncate">
+                  <span className="text-[10px] font-tech text-dim uppercase truncate">
                     {gateNext ? `Boss at Lv. ${nextLv}` : 'Kills repeat this level'}
                   </span>
                 </div>
                 {gateNext ? (
-                  <Button
-                    size="sm"
-                    variant="primary"
-                    className="shrink-0 shadow-[0_0_14px] shadow-neon/50"
-                    onPointerDown={stopTap}
-                    onClick={() => dispatch({ type: 'CHALLENGE_BOSS' })}
-                  >
+                  <Button size="sm" variant="solid" className="shrink-0" onPointerDown={stopTap} onClick={() => dispatch({ type: 'CHALLENGE_BOSS' })}>
                     <Swords size={12} aria-hidden />
                     CHALLENGE BOSS
                   </Button>
                 ) : (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="shrink-0"
-                    onPointerDown={stopTap}
-                    onClick={() => dispatch({ type: 'SET_FARM', on: false })}
-                  >
+                  <Button size="sm" variant="ghost" className="shrink-0" onPointerDown={stopTap} onClick={() => dispatch({ type: 'SET_FARM', on: false })}>
                     <ChevronsUp size={12} aria-hidden />
                     RESUME CLIMB
                   </Button>
@@ -456,17 +432,11 @@ export const CombatArena: React.FC = () => {
               <>
                 <div className="flex-1 min-w-0 flex flex-col leading-tight pointer-events-none">
                   <span className="text-[10px] font-tech font-bold text-dim uppercase tracking-wider">Climbing</span>
-                  <span className="text-[9px] font-tech text-dim uppercase truncate">
+                  <span className="text-[10px] font-tech text-dim uppercase truncate">
                     {gateNext ? `Next kill: boss at Lv. ${nextLv}` : 'Each kill goes up a level'}
                   </span>
                 </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="shrink-0"
-                  onPointerDown={stopTap}
-                  onClick={() => dispatch({ type: 'SET_FARM', on: true })}
-                >
+                <Button size="sm" variant="ghost" className="shrink-0" onPointerDown={stopTap} onClick={() => dispatch({ type: 'SET_FARM', on: true })}>
                   <Anchor size={12} aria-hidden />
                   HOLD LEVEL
                 </Button>
@@ -480,26 +450,18 @@ export const CombatArena: React.FC = () => {
           {ripples.map((r) => (
             <span
               key={r.id}
-              className="absolute w-14 h-14 rounded-full border-2 anim-ripple"
-              style={{ left: r.x, top: r.y, borderColor: trailColor, boxShadow: `0 0 12px ${trailGlow}` }}
+              className="absolute w-12 h-12 border-2 anim-ripple"
+              style={{ left: r.x, top: r.y, borderColor: trailColor }}
               onAnimationEnd={() => removeRipple(r.id)}
             />
           ))}
           {numbers.map((n) => (
             <span
               key={n.id}
-              className={`absolute anim-damage font-display font-bold whitespace-nowrap ${
-                n.crit
-                  ? 'text-lg text-gold text-shadow-[0_0_10px] text-shadow-gold/70'
-                  : n.auto
-                    ? 'text-xs opacity-85'
-                    : 'text-base'
+              className={`absolute anim-damage font-mono-code font-black whitespace-nowrap [text-shadow:2px_2px_0_#000] ${
+                n.crit ? 'text-lg text-gold' : n.auto ? 'text-xs opacity-85' : 'text-base'
               }`}
-              style={{
-                left: n.x,
-                top: n.y - 14,
-                ...(n.crit ? null : { color: numberColor, textShadow: `0 0 8px ${trailGlow}` }),
-              }}
+              style={{ left: n.x, top: n.y - 14, ...(n.crit ? null : { color: numberColor }) }}
               onAnimationEnd={() => removeNumber(n.id)}
             >
               {n.crit ? `CRIT ${formatNumber(n.amount)}` : formatNumber(n.amount)}

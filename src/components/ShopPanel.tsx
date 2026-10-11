@@ -71,7 +71,7 @@ const SectionTitle: React.FC<{ icon: React.ReactNode; title: string; right?: Rea
 /** A state, not an action: shown where a button would be, at the same height. */
 const StateBadge: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
   <span
-    className={`min-h-[32px] px-2 inline-flex items-center justify-center gap-1 border border-neon/60 bg-void text-neon text-[10px] font-display font-bold uppercase ${className}`}
+    className={`min-h-[32px] px-2 inline-flex items-center justify-center gap-1 border border-neon/60 bg-void text-neon text-[10px] font-tech font-bold uppercase ${className}`}
   >
     {children}
   </span>
@@ -116,7 +116,7 @@ const OfferRow: React.FC<{ def: AdPlacementDefinition }> = ({ def }) => {
   return (
     <div className="bg-panel2 border border-line p-2 flex items-center gap-2">
       <div className="flex flex-col min-w-0 flex-1">
-        <span className="text-[11px] font-display font-bold text-ink uppercase truncate">{def.displayName}</span>
+        <span className="text-[11px] font-tech font-bold text-ink uppercase truncate">{def.displayName}</span>
         <span className="text-[10px] font-tech text-dim leading-tight">{def.description}</span>
         <span className="text-[11px] font-mono-code font-bold text-neon">{rewardText(def, rewardRate)}</span>
         <span className="text-[10px] font-tech text-dim">
@@ -155,7 +155,7 @@ const OffersSection: React.FC = () => {
         title="Bonus offers"
         right={
           adsRemoved ? (
-            <span className="text-[9px] font-display font-bold text-neon flex items-center gap-1 uppercase">
+            <span className="text-[9px] font-tech font-bold text-neon flex items-center gap-1 uppercase">
               <ShieldCheck size={11} aria-hidden /> Ads removed
             </span>
           ) : undefined
@@ -201,7 +201,7 @@ const ProductRow: React.FC<{
   return (
     <div className={`bg-panel2 border p-2 flex items-center gap-2 ${owned ? 'border-neon/40' : 'border-line'}`}>
       <div className="flex flex-col min-w-0 flex-1">
-        <span className="text-[11px] font-display font-bold text-ink uppercase truncate">{def.displayName}</span>
+        <span className="text-[11px] font-tech font-bold text-ink uppercase truncate">{def.displayName}</span>
         <span className="text-[10px] font-tech text-dim leading-tight">{def.description}</span>
         {def.consumable && available && <span className="text-[9px] font-tech text-faint">Can be bought more than once.</span>}
       </div>
@@ -289,7 +289,7 @@ const CosmeticCard: React.FC<{
     <div className={`bg-panel2 border p-2 flex flex-col gap-1.5 ${equipped ? 'border-neon' : 'border-line'}`}>
       <div
         className="h-8 border border-line flex items-center justify-end px-2 bg-void"
-        style={{ backgroundImage: `linear-gradient(90deg, transparent, ${rgbaFromUnit(def.trailColor, 0.55)})` }}
+        style={{ backgroundColor: rgbaFromUnit(def.trailColor, 0.18), borderLeft: `6px solid ${trail}` }}
         aria-hidden
       >
         <span
@@ -300,7 +300,7 @@ const CosmeticCard: React.FC<{
         </span>
       </div>
       <div className="flex items-center justify-between gap-1 min-w-0">
-        <span className="text-[10px] font-display font-bold text-ink uppercase truncate">{def.displayName}</span>
+        <span className="text-[10px] font-tech font-bold text-ink uppercase truncate">{def.displayName}</span>
         <span className="text-[9px] font-tech text-dim uppercase shrink-0">{equipped ? 'Equipped' : owned ? 'Owned' : 'Not owned'}</span>
       </div>
       {equipped ? (
