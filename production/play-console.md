@@ -70,9 +70,11 @@ same; re-check the page whenever the SDK version changes.
   see `public/art/enemies/`), and each has a health bar. A hit makes the sprite
   flash and shake (`src/index.css`). A defeated enemy is replaced by the next
   one. There is no player avatar, no human character and no blood on screen.
-  The text says "kill" and "slay" ("Every kill gives you essence"), the first
-  chain quest is called "First Blood" ("Slay 10 enemies in the Dark Forest"),
-  and a skull icon marks boss fights (`src/data/definitions.ts`, QUESTS).
+  The text says "kill" and "slay" ("Every kill pays essence",
+  `src/game/guide.ts`), the first chain quest is called "First Blood" ("Slay
+  10 enemies in the Dark Forest", `src/data/definitions.ts`, QUESTS), and a
+  skull icon marks boss gates and the boss's name plate
+  (`src/components/CombatArena.tsx`).
 - **Words.** There is no swearing, no sexual content, and no drugs, alcohol or
   tobacco.
 - **The seven minigames** (`src/data/definitions.ts`, MINIGAMES): Void Reflex,
@@ -145,7 +147,7 @@ topic, and the wording is (B). Follow-up questions appear only after a Yes.
 | Violence: kind | Is it cartoon or fantasy violence, or realistic? | **Fantasy / cartoon, not realistic** | The enemies are stylised 64×64 pixel creatures (`public/art/enemies/`). A hit is a flash and a shake. |
 | Violence: targets | Is violence directed at human-looking characters or realistic animals? | **No** | The enemies are wisps, fiends, shades, a red four-legged shade stalker (a stylised beast, not a realistic animal), a robot-like sentinel and round sun- or orb-like bosses. There is no player avatar and no human. |
 | Blood and gore | Does the game show blood or gore? | **No** | Neither appears in any sprite or effect (`src/index.css`). The word appears only in the quest name "First Blood", an idiom for a first kill; nothing is shown. |
-| Fear | Does the game contain content that might frighten young children? | **No** | The palette is dark and a boss fight opens with a short warning sound and screen shake, but there are no horror images or jump scares. If IARC treats this as mildly frightening, the result is PEGI 7 / IARC 7+, which the expected result below already allows for. |
+| Fear | Does the game contain content that might frighten young children? | **No** | The palette is dark and a boss fight opens with a short warning sound and a vibration, and the arena turns red (the target frame, name plate and health bar), but there are no horror images or jump scares. If IARC treats this as mildly frightening, the result is PEGI 7 / IARC 7+, which the expected result below already allows for. |
 | Sexuality | Nudity, sexual content or suggestive themes? | **No** | None. |
 | Language | Profanity, crude humour or discriminatory language? | **No** | None in `src/data/definitions.ts` or the UI text. |
 | Controlled substances | References to drugs, alcohol or tobacco? | **No** | None. |

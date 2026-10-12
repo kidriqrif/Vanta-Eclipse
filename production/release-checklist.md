@@ -66,12 +66,14 @@ These are what a long-lived release would normally have. None stops a launch.
       project is generated and untracked.
 - [x] **Launcher icon and splash** are the black sun (the Hollow Sovereign
       sprite) on #080A12, with a monochrome layer for Android 13+ themed icons.
-      The Android 12+ system splash background is set in
-      `android/app/src/main/res/values/styles.xml`; that change has not been
-      through `./gradlew` or a device yet (see the device checklist).
+      The Android 12+ system splash and the running app are pinned to that dark
+      ground (`android/app/src/main/res/values/styles.xml`, `capacitor.config.ts`).
+      Built and linted 2026-10-12; not yet seen on a device (see the device
+      checklist).
 - [x] **The project builds from the command line** (`./gradlew assembleDebug
-      bundleRelease lintDebug`, last checked 2026-10-06, no lint errors). See
-      "Command-line build" in `README.md`.
+      bundleRelease lintDebug`, no lint errors; `assembleDebug lintDebug` last
+      run 2026-10-12, `bundleRelease` 2026-10-06). See "Command-line build" in
+      `README.md`.
 - [ ] **Bump versionCode for every upload**, closed testing included. Play
       rejects a versionCode it has seen.
 - [ ] **Build the bundle:** `npm run android:sync`, then `npx cap open android`
@@ -305,6 +307,12 @@ from forced landscape on large screens, and the manifest declares
 `appCategory="game"`; check once on a tablet or foldable). On an Android 15+
 phone with a camera cutout, nothing sits under the status bar, cutout or
 gesture handle. Text is legible at arm's length and taps land where they look.
+The frame never scrolls or bounces, and a double tap never zooms; only the open
+tab's list scrolls. On the smallest phone you have (about 360x640 dp), with the
+banner showing, the arena still shows the stage track, the whole enemy, its HP
+bar and the boss controls, and the ticker and nav are fully visible. With the
+phone in light mode, the status and navigation bar icons are light on the dark
+game and nothing flashes white at launch.
 
 **One long session from a fresh save:** reach level 15 and see auto-attack
 unlock; lose a boss on the timer, farm, CHALLENGE BOSS and win; equip, salvage

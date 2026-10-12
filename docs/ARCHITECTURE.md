@@ -84,7 +84,6 @@ immediately, and no side effect ever runs inside a React state updater.
   `shallowEqual`.
 - `useStats()` returns the derived stats.
 - `useDispatch()` returns `dispatch`, and with it the `ActionResult`.
-  `useAction` wraps a fixed action shape in a stable callback.
 - `useFx(handler)` listens to reducer side effects for visuals.
 - `useNow(ms)` and `useToday()` give a wall clock for countdowns and daily caps.
 - `useControls()` exposes `saveNow`, `exportSave`, `importSave` and `resetSave`.
@@ -498,7 +497,11 @@ it to an outcome.
   - `src/game/__tests__/save.test.ts`: v1 migration, backups and corrupt
     saves, round-trips;
   - `src/game/__tests__/tapGuard.test.ts`: the autoclicker signals, lockout
-    escalation and forgiveness.
+    escalation and forgiveness;
+  - `src/game/__tests__/guide.test.ts`: which tip is due and when, veterans
+    skipping what they know, waiting behind bosses and dialogs, the NEW tab
+    markers, a tip holding a boss fight, and REPLAY TIPS keeping world
+    celebrations.
 
   `src/game/__tests__/helpers.ts` provides `newGame()` and `harness()`, which
   give a fixed clock you can advance and a seeded RNG. Every change to a rule
