@@ -157,7 +157,7 @@ const QuestRow: React.FC<{ quest: QuestDefinition }> = React.memo(({ quest }) =>
               {quest.displayName}
             </span>
             {tag && (
-              <span className="text-[9px] font-mono-code text-dim border border-line bg-panel2 px-1 leading-4 uppercase">
+              <span className="text-[9px] font-tech text-dim border border-line bg-panel2 px-1 leading-4 uppercase">
                 {tag}
               </span>
             )}
@@ -258,7 +258,7 @@ const AllClearBanner: React.FC<{ total: number; claimed: number }> = ({ total, c
           <Gift size={15} className="text-gold" aria-hidden />
         </div>
         <div className="flex-1 min-w-0 flex flex-col">
-          <span className="text-[11px] font-display font-bold text-gold uppercase tracking-wide">ALL-CLEAR BONUS</span>
+          <span className="text-[11px] font-display font-bold text-gold uppercase">ALL-CLEAR BONUS</span>
           <span className="text-[10px] font-tech text-dim leading-tight">{status}</span>
         </div>
         <div className="shrink-0 w-[88px]" aria-live="polite">
@@ -297,8 +297,11 @@ const DailySection: React.FC = () => {
     <>
       <div className="flex items-center justify-between gap-2 px-0.5">
         <ResetsIn />
-        <span className="text-[10px] font-mono-code text-dim">
-          {amount(claimed)}/{amount(dailies.length)} CLAIMED
+        <span className="text-[10px] font-tech text-dim">
+          <span className="font-mono-code">
+            {amount(claimed)}/{amount(dailies.length)}
+          </span>{' '}
+          CLAIMED
         </span>
       </div>
       <p className="text-[10px] font-tech text-dim leading-tight px-0.5">
@@ -342,7 +345,7 @@ const ChainSection: React.FC = () => {
       )}
       {view.done.length > 0 && (
         <>
-          <h3 className="text-[10px] font-display font-bold text-dim uppercase tracking-wider mt-1 px-0.5">Completed</h3>
+          <h3 className="text-[10px] font-display font-bold text-dim uppercase mt-1 px-0.5">Completed</h3>
           {view.done.map((q) => (
             <QuestRow key={q.id} quest={q} />
           ))}

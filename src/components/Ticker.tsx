@@ -23,7 +23,7 @@ export const Ticker: React.FC = () => {
     <div
       role="group"
       aria-label="Stats"
-      className="min-h-[36px] h-full flex items-center bg-abyss border-y-2 border-line shadow-[inset_0_2px_0_0_rgba(0,0,0,0.6)]"
+      className="min-h-[36px] h-full flex items-center bg-abyss border-y-2 border-line inset-shadow-hard"
     >
       <Cell label="ESSENCE" value={formatNumber(essence)} tone="text-neon" wide />
       {/* Before auto-attack, the cells say when it arrives instead of showing zeros. */}

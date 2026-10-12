@@ -26,12 +26,12 @@ const OwnedRelicCard: React.FC<{ def: RelicDefinition; active: boolean; isNew: b
         <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
           <span className="text-xs font-tech font-bold text-ink uppercase tracking-wide leading-tight">{def.displayName}</span>
           {active && (
-            <span className="text-[9px] font-mono-code font-black text-void bg-gold px-1 leading-4 flex items-center gap-0.5">
+            <span className="text-[9px] font-tech font-black text-void bg-gold px-1 leading-4 flex items-center gap-0.5">
               <Check size={9} aria-hidden /> ATTUNED
             </span>
           )}
           {isNew && (
-            <span className="text-[9px] font-mono-code font-black text-void bg-neon px-1 leading-4">
+            <span className="text-[9px] font-tech font-black text-void bg-neon px-1 leading-4">
               NEW
             </span>
           )}
@@ -113,7 +113,7 @@ export const RelicsPanel: React.FC = () => {
         {!awakened ? (
           <div className="bg-panel border border-line p-4 flex flex-col items-center gap-2 text-center">
             <Lock size={22} className="text-gold" aria-hidden />
-            <p className="text-xs font-display font-bold text-ink uppercase tracking-wide">Locked</p>
+            <p className="text-xs font-display font-bold text-ink uppercase">Locked</p>
             <p className="text-[11px] font-tech text-ink leading-snug">
               Relics awaken when you reach the Frozen Ruins (level {formatNumber(WORLD_TWO_FIRST_LEVEL)}).
             </p>

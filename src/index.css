@@ -33,6 +33,9 @@
   /* Hard offset micro-shadows: depth without blur. */
   --shadow-hard: 2px 2px 0px 0px rgba(0, 0, 0, 0.5);
   --shadow-hard-lg: 3px 3px 0px 0px rgba(0, 0, 0, 0.6);
+  /* Pressed-in edges: the ticker's top lip and the minigame screen's bezel. */
+  --inset-shadow-hard: inset 0 2px 0 0 rgba(0, 0, 0, 0.6);
+  --inset-shadow-hard-lg: inset 3px 3px 0 0 rgba(0, 0, 0, 0.7);
 }
 
 /* Device cutouts and the gesture bar. */
@@ -80,24 +83,67 @@
 /*
  * Type: Orbitron for headers, stage trackers and alerts; JetBrains Mono for every number;
  * Share Tech Mono for copy, labels and button text. No generic sans-serif anywhere.
+ * In the components layer, so a utility on the same element (a tracking-* class) still wins.
  */
-.font-display {
-  font-family: 'Orbitron', 'Share Tech Mono', monospace;
-  letter-spacing: 0.08em;
-}
+@layer components {
+  .font-display {
+    font-family: 'Orbitron', 'Share Tech Mono', monospace;
+    letter-spacing: 0.08em;
+  }
 
-.font-tech {
-  font-family: 'Share Tech Mono', monospace;
-}
+  .font-tech {
+    font-family: 'Share Tech Mono', monospace;
+  }
 
-.font-mono-code {
-  font-family: 'JetBrains Mono', monospace;
-  font-variant-numeric: tabular-nums;
-}
+  .font-mono-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
 
-.pixelated {
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
+  .pixelated {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+
+  /* A range slider in the game's look: a flat sunken track and a square neon block, no pill. */
+  .hud-range {
+    appearance: none;
+    background: transparent;
+  }
+  .hud-range::-webkit-slider-runnable-track {
+    height: 8px;
+    background: var(--color-panel2);
+    border: 1px solid var(--color-line);
+    border-radius: 0;
+  }
+  .hud-range::-moz-range-track {
+    height: 8px;
+    background: var(--color-panel2);
+    border: 1px solid var(--color-line);
+    border-radius: 0;
+  }
+  .hud-range::-webkit-slider-thumb {
+    appearance: none;
+    width: 18px;
+    height: 22px;
+    margin-top: -8px;
+    background: var(--color-neon);
+    border: 1px solid var(--color-abyss);
+    border-radius: 0;
+    box-shadow: var(--shadow-hard);
+  }
+  .hud-range::-moz-range-thumb {
+    width: 18px;
+    height: 22px;
+    background: var(--color-neon);
+    border: 1px solid var(--color-abyss);
+    border-radius: 0;
+    box-shadow: var(--shadow-hard);
+  }
+  .hud-range:focus-visible {
+    outline: 2px solid var(--color-neon);
+    outline-offset: 2px;
+  }
 }
 
 @layer utilities {

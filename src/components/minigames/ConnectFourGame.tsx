@@ -220,7 +220,7 @@ export const ConnectFourGame: React.FC<MinigameProps> = ({ onFinish }) => {
         </span>
       </div>
 
-      <p role="status" aria-live="polite" className={`min-h-[20px] text-xs font-display font-bold uppercase tracking-wider text-center ${status.tone}`}>
+      <p role="status" aria-live="polite" className={`min-h-[20px] text-xs font-display font-bold uppercase text-center ${status.tone}`}>
         {status.text}
       </p>
 
@@ -241,7 +241,7 @@ export const ConnectFourGame: React.FC<MinigameProps> = ({ onFinish }) => {
                 const disc = game.board[cell];
                 const ring = winCells.has(cell) ? 'ring-2 ring-gold' : game.lastCell === cell ? 'ring-1 ring-ink/60' : '';
                 return (
-                  <span key={r} className={`relative block w-full aspect-square rounded-sm ${ring}`}>
+                  <span key={r} className={`relative block w-full aspect-square ${ring}`}>
                     <img src="/art/minigames/cell_empty.png" alt="" draggable={false} className="absolute inset-0 w-full h-full pixelated" />
                     {disc !== EMPTY && <DiscArt side={disc} className="absolute inset-[6%] animate-fade-in" />}
                   </span>

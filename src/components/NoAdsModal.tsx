@@ -111,7 +111,6 @@ const NoAdsBody: React.FC<{ onOpenShop: () => void }> = ({ onOpenShop }) => {
             block
             disabled={!price || buying}
             aria-busy={buying}
-            className="disabled:opacity-40 disabled:cursor-not-allowed"
             onClick={() => void buy()}
           >
             {buying ? (
@@ -128,7 +127,7 @@ const NoAdsBody: React.FC<{ onOpenShop: () => void }> = ({ onOpenShop }) => {
           </Button>
         ) : (
           <div className="flex flex-col gap-1">
-            <Button variant="gold" size="lg" block disabled className="disabled:opacity-40 disabled:cursor-not-allowed">
+            <Button variant="gold" size="lg" block disabled>
               COMING SOON
             </Button>
             <p className="text-[10px] font-tech text-dim text-center">Purchases open when the game launches.</p>

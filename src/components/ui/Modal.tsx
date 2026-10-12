@@ -13,9 +13,11 @@ export const Modal: React.FC<{
   title: React.ReactNode;
   icon?: React.ReactNode;
   tone?: 'neon' | 'gold' | 'crimson';
+  /** A border class in place of `tone`'s, e.g. a rarity token's `border-r3`. */
+  frameClass?: string;
   children: React.ReactNode;
   className?: string;
-}> = ({ open, onClose, title, icon, tone = 'neon', children, className = '' }) => {
+}> = ({ open, onClose, title, icon, tone = 'neon', frameClass, children, className = '' }) => {
   useBackHandler(open && !!onClose, () => onClose?.());
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
@@ -24,10 +26,10 @@ export const Modal: React.FC<{
     if (open) panelRef.current?.focus();
   }, [open]);
   if (!open) return null;
-  const border = tone === 'gold' ? 'border-gold' : tone === 'crimson' ? 'border-crimson' : 'border-neon';
+  const border = frameClass ?? (tone === 'gold' ? 'border-gold' : tone === 'crimson' ? 'border-crimson' : 'border-neon');
   return (
     <div
-      className="fixed inset-0 z-[60] bg-black/85 flex items-center justify-center p-4 animate-fade-in"
+      className="fixed inset-0 z-[60] bg-abyss/85 flex items-center justify-center p-4 animate-fade-in"
       role="presentation"
       // The native banner is drawn above the WebView; no dialog content may sit under it.
       style={{ paddingBottom: `calc(1rem + env(safe-area-inset-bottom) + ${bannerHeight}px)` }}
@@ -43,7 +45,7 @@ export const Modal: React.FC<{
         <div className="flex items-center justify-between gap-2 px-3 py-2 bg-panel2 border-b border-line">
           <div className="flex items-center gap-2 min-w-0">
             {icon}
-            <h2 id={titleId} className="text-xs font-display font-bold text-ink uppercase tracking-wider truncate">
+            <h2 id={titleId} className="text-xs font-display font-bold text-ink uppercase truncate">
               {title}
             </h2>
           </div>
@@ -52,7 +54,7 @@ export const Modal: React.FC<{
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="w-9 h-9 shrink-0 flex items-center justify-center bg-panel border border-line text-dim shadow-hard hover:text-ink active:translate-y-0.5 active:border-amber-500 active:scale-[0.98]"
+              className="w-9 h-9 shrink-0 flex items-center justify-center bg-panel border border-line text-dim shadow-hard hover:text-ink active:translate-y-0.5 active:border-amber active:scale-[0.98]"
             >
               <X size={14} />
             </button>

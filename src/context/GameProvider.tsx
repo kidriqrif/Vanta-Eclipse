@@ -262,7 +262,7 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
             aria-label="Game open elsewhere"
             className="fixed inset-0 z-[200] bg-void/95 flex flex-col items-center justify-center gap-3 p-6 text-center"
           >
-            <p className="font-display font-bold text-sm text-gold tracking-wider">OPEN IN ANOTHER TAB</p>
+            <p className="font-display font-bold text-sm text-gold">OPEN IN ANOTHER TAB</p>
             <p className="font-tech text-xs text-dim max-w-[260px]">
               Vanta Eclipse was opened in another tab or window, so this one has stopped to keep your progress safe.
             </p>

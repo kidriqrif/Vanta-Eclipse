@@ -258,7 +258,7 @@ export const SequenceEchoGame: React.FC<MinigameProps> = ({ onFinish }) => {
           })}
         </div>
         <p role="status" aria-live="polite" className="flex flex-col items-center gap-0.5 text-center">
-          <span className={`font-display text-base font-black uppercase tracking-widest ${headlineClass}`}>{headline}</span>
+          <span className={`font-display text-base font-black uppercase ${headlineClass}`}>{headline}</span>
           <span className="text-[11px] text-dim">{subline}</span>
         </p>
       </div>
@@ -297,7 +297,7 @@ export const SequenceEchoGame: React.FC<MinigameProps> = ({ onFinish }) => {
                 className={`pixelated w-14 h-14 transition-opacity ${look === 'idle' && !inputOpen ? 'opacity-50' : 'opacity-100'}`}
               />
               <span
-                className={`font-display text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 ${
+                className={`font-tech text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 ${
                   look === 'glow' ? rune.chip : look === 'wrong' ? 'bg-crimson text-void' : look === 'needed' ? 'text-gold' : rune.text
                 }`}
               >

@@ -64,11 +64,12 @@ const CardRow: React.FC<{ card: Card; block: Block; noun: string; onAbsorb: (car
       <div className={`bg-panel border border-line border-l-4 ${tone.stripe} p-2 flex items-center gap-2`}>
         <div className="flex-1 min-w-0 flex flex-col gap-0.5">
           <div className="flex items-center gap-1.5 min-w-0">
-            <span className={`shrink-0 text-[9px] font-mono-code font-black uppercase border px-1 leading-4 ${tone.tag}`}>{rarityName}</span>
+            <span className={`shrink-0 text-[9px] font-tech font-black uppercase border px-1 leading-4 ${tone.tag}`}>{rarityName}</span>
             <span className="text-[11px] font-tech font-bold text-ink truncate">{card.bossName}</span>
           </div>
-          <span className="text-[10px] font-mono-code text-dim leading-tight">
-            Boss Lv {formatNumber(card.level)} · Power {formatNumber(card.power)} · Vigor {formatNumber(card.vigor)}
+          <span className="text-[10px] font-tech text-dim leading-tight">
+            Boss Lv <span className="font-mono-code">{formatNumber(card.level)}</span> · Power <span className="font-mono-code">{formatNumber(card.power)}</span> · Vigor{' '}
+            <span className="font-mono-code">{formatNumber(card.vigor)}</span>
           </span>
           <span className="text-[10px] font-tech text-ink leading-tight">
             <span className="text-gold">+{formatNumber(card.power)} XP</span>

@@ -56,8 +56,8 @@ export const WorldUnlockModal: React.FC = () => {
       icon={<Mountain size={16} className="text-gold" aria-hidden />}
     >
       <div className="flex flex-col items-center text-center gap-0.5">
-        <span className="text-[10px] font-display font-bold text-dim tracking-widest uppercase">You have reached</span>
-        <span className="text-xl font-display font-black text-gold uppercase tracking-wider">{name}</span>
+        <span className="text-[10px] font-display font-bold text-dim uppercase">You have reached</span>
+        <span className="text-xl font-display font-black text-gold uppercase">{name}</span>
         {world && (
           <span className="text-[10px] font-tech text-dim">From level {formatNumber(world.firstLevel)} onward</span>
         )}

@@ -16,8 +16,10 @@ export const EclipseOverlay: React.FC = () => {
       onAnimationEnd={() => setFlash(null)}
     >
       <div className="flex flex-col items-center gap-1 text-center">
-        <span className="font-display font-black text-2xl text-gold tracking-[0.2em]">ECLIPSE</span>
-        <span className="font-mono-code text-sm text-ink">+{formatNumber(flash.crystals)} VOID CRYSTALS</span>
+        <span className="font-display font-black text-2xl text-gold">ECLIPSE</span>
+        <span className="font-tech text-sm text-ink">
+          <span className="font-mono-code">+{formatNumber(flash.crystals)}</span> VOID CRYSTALS
+        </span>
       </div>
     </div>
   );

@@ -248,7 +248,7 @@ export const ArcadeHub: React.FC = () => {
             <div className="w-12 h-12 border border-line bg-void flex items-center justify-center text-dim">
               <Lock size={20} aria-hidden />
             </div>
-            <p className="text-sm font-display font-bold text-ink uppercase tracking-wider">
+            <p className="text-sm font-display font-bold text-ink uppercase">
               The Arcade opens at level {formatNumber(ARCADE_UNLOCK_LEVEL)}
             </p>
             <p className="text-[11px] font-tech text-dim">
@@ -274,7 +274,7 @@ export const ArcadeHub: React.FC = () => {
 
             {tokens < 1 && (
               <Panel tone="gold">
-                <p className="text-xs font-display font-bold text-ink uppercase tracking-wider">Out of tokens</p>
+                <p className="text-xs font-display font-bold text-ink uppercase">Out of tokens</p>
                 <p className="text-[11px] font-tech text-dim flex items-center gap-1">
                   <Clock size={11} aria-hidden /> The next token arrives in {untilNext(nextMs)}.
                 </p>

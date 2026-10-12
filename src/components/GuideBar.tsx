@@ -93,7 +93,7 @@ export const GuideBar: React.FC<{ tab: GuideTab; onOpenGoal: () => void }> = ({ 
           className="animate-fade-in mx-2.5 mt-2 max-h-[24dvh] overflow-y-auto overscroll-contain bg-panel border border-neon/50 border-l-4 border-l-neon p-2.5 flex flex-col gap-1.5 shadow-hard"
         >
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-[11px] font-display font-bold text-neon tracking-wider">{help.title}</h3>
+            <h3 className="text-[11px] font-display font-bold text-neon">{help.title}</h3>
             <button
               type="button"
               onClick={closeHelp}

@@ -262,7 +262,7 @@ export const EclipsePanel: React.FC = () => {
             </p>
           ) : (
             <div className="flex flex-col gap-1">
-              <span className="text-[11px] font-display font-bold text-gold uppercase tracking-wide flex items-center gap-1.5">
+              <span className="text-[11px] font-display font-bold text-gold uppercase flex items-center gap-1.5">
                 <Lock size={12} aria-hidden /> Reach level {formatNumber(ECLIPSE_UNLOCK_LEVEL)} in this run
               </span>
               <div
@@ -284,7 +284,7 @@ export const EclipsePanel: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-display font-bold text-crimson uppercase tracking-wider flex items-center gap-1">
+              <span className="text-[10px] font-display font-bold text-crimson uppercase flex items-center gap-1">
                 <RotateCcw size={11} aria-hidden /> Reset
               </span>
               <ul className="flex flex-col gap-1">
@@ -300,7 +300,7 @@ export const EclipsePanel: React.FC = () => {
               </ul>
             </div>
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-display font-bold text-toxic uppercase tracking-wider flex items-center gap-1">
+              <span className="text-[10px] font-display font-bold text-toxic uppercase flex items-center gap-1">
                 <ShieldCheck size={11} aria-hidden /> Kept
               </span>
               <ul className="flex flex-col gap-1">
@@ -337,7 +337,7 @@ export const EclipsePanel: React.FC = () => {
 
         <div className="flex flex-col gap-1.5">
           <div className="flex items-baseline justify-between gap-2 px-0.5">
-            <h3 className="text-xs font-display font-bold text-ink uppercase tracking-wider">Ascendant Powers</h3>
+            <h3 className="text-xs font-display font-bold text-ink uppercase">Ascendant Powers</h3>
             <span className="text-[10px] font-tech text-dim">Permanent. Kept through every Eclipse.</span>
           </div>
           <div className="grid grid-cols-5 border border-line bg-panel" role="group" aria-label="Filter powers by branch">

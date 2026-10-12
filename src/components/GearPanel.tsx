@@ -151,10 +151,10 @@ const EquipSquare: React.FC<{ slot: SlotDefinition; item: Item | undefined; onOp
           type="button"
           onClick={() => onOpen(slot.id)}
           aria-label={`${slot.displayName} slot, empty`}
-          className="relative w-11 h-11 shrink-0 overflow-hidden bg-abyss border border-dashed border-line flex flex-col items-center justify-end pb-0.5 active:translate-y-0.5 active:border-amber-500 active:scale-[0.98]"
+          className="relative w-11 h-11 shrink-0 overflow-hidden bg-abyss border border-dashed border-line flex flex-col items-center justify-end pb-0.5 active:translate-y-0.5 active:border-amber active:scale-[0.98]"
         >
           {img && <img src={img} alt="" className="absolute inset-1 w-[calc(100%-8px)] h-[calc(100%-8px)] object-cover opacity-15 grayscale" />}
-          <span className="relative text-[7px] font-tech font-bold uppercase text-dim">{slot.displayName}</span>
+          <span className="relative text-[8px] font-tech font-bold uppercase text-dim">{slot.displayName}</span>
         </button>
       );
     }
@@ -165,7 +165,7 @@ const EquipSquare: React.FC<{ slot: SlotDefinition; item: Item | undefined; onOp
         type="button"
         onClick={() => onOpen(slot.id)}
         aria-label={`${slot.displayName}: ${r.displayName}, item level ${item.itemLevel}, ${keyStat(item)}`}
-        className={`relative w-11 h-11 shrink-0 overflow-hidden border-2 ${tone.border} ${tone.tint} shadow-hard flex flex-col items-center justify-end pb-0.5 active:translate-y-0.5 active:border-amber-500 active:scale-[0.98]`}
+        className={`relative w-11 h-11 shrink-0 overflow-hidden border-2 ${tone.border} ${tone.tint} shadow-hard flex flex-col items-center justify-end pb-0.5 active:translate-y-0.5 active:border-amber active:scale-[0.98]`}
       >
         {img && <img src={img} alt="" className="absolute inset-0.5 w-[calc(100%-4px)] h-[calc(100%-4px)] object-cover opacity-80" />}
         <LevelTag level={item.itemLevel} />
@@ -185,7 +185,7 @@ const ItemSquare: React.FC<{ item: Item; isNew: boolean; onOpen: (itemId: number
       type="button"
       onClick={() => onOpen(item.id)}
       aria-label={`${itemName(item)}, item level ${item.itemLevel}, ${keyStat(item)}${isNew ? ', new' : ''}`}
-      className={`relative aspect-square overflow-hidden border-2 ${tone.border} ${tone.tint} shadow-hard flex flex-col items-center justify-end pb-1 active:translate-y-0.5 active:border-amber-500 active:scale-[0.98]`}
+      className={`relative aspect-square overflow-hidden border-2 ${tone.border} ${tone.tint} shadow-hard flex flex-col items-center justify-end pb-1 active:translate-y-0.5 active:border-amber active:scale-[0.98]`}
     >
       {img && <img src={img} alt="" className="absolute inset-1 w-[calc(100%-8px)] h-[calc(100%-8px)] object-cover" />}
       <LevelTag level={item.itemLevel} />
@@ -209,7 +209,7 @@ const CompareTable: React.FC<{ item: Item; equipped: Item }> = ({ item, equipped
         Compared with your equipped {rarityOf(equipped.rarity).displayName} {slotName(equipped.slot)} (item level{' '}
         {formatNumber(equipped.itemLevel)})
       </span>
-      <table className="w-full text-[10px] font-mono-code border border-line">
+      <table className="w-full text-[10px] font-tech border border-line">
         <thead className="bg-panel2 text-dim">
           <tr>
             <th className="text-left font-normal px-1.5 py-1">STAT</th>
@@ -232,9 +232,9 @@ const CompareTable: React.FC<{ item: Item; equipped: Item }> = ({ item, equipped
             return (
               <tr key={stat} className="border-t border-line">
                 <td className="px-1.5 py-1 text-dim">{affixLabel(stat)}</td>
-                <td className="px-1.5 py-1 text-right text-ink">{tv === undefined ? '—' : `+${affixValue(stat, tv)}`}</td>
-                <td className="px-1.5 py-1 text-right text-ink">{ev === undefined ? '—' : `+${affixValue(stat, ev)}`}</td>
-                <td className="px-1.5 py-1 text-right whitespace-nowrap">{change}</td>
+                <td className="px-1.5 py-1 text-right font-mono-code text-ink">{tv === undefined ? '—' : `+${affixValue(stat, tv)}`}</td>
+                <td className="px-1.5 py-1 text-right font-mono-code text-ink">{ev === undefined ? '—' : `+${affixValue(stat, ev)}`}</td>
+                <td className="px-1.5 py-1 text-right font-mono-code whitespace-nowrap">{change}</td>
               </tr>
             );
           })}
@@ -287,11 +287,10 @@ const Inspector: React.FC<{
   const r = rarityOf(item.rarity);
   const yieldScraps = r.salvageYield;
   const img = GEAR_IMAGES[item.slot];
-  const tone = item.rarity >= 4 ? 'crimson' : item.rarity >= 3 ? 'gold' : 'neon';
   const status = view.kind === 'equipped' ? 'EQUIPPED' : isNew ? 'NEW · IN STORAGE' : 'IN STORAGE';
 
   return (
-    <Modal open onClose={onClose} tone={tone} title={<span className={toneOf(item.rarity).text}>{itemName(item)}</span>}>
+    <Modal open onClose={onClose} frameClass={toneOf(item.rarity).border} title={<span className={toneOf(item.rarity).text}>{itemName(item)}</span>}>
       <div className="flex items-center gap-3">
         {img && <img src={img} alt="" className={`w-16 h-16 object-cover border-2 shrink-0 ${toneOf(item.rarity).border}`} />}
         <div className="flex flex-col gap-1 min-w-0">
@@ -400,11 +399,11 @@ const ForgeSection: React.FC<{ onForged: (item: Item) => void; onNotice: (text: 
   return (
     <Panel tone="gold">
       <div className="flex items-center justify-between gap-2">
-        <span className="flex items-center gap-1.5 text-[10px] font-display font-bold text-gold uppercase tracking-wider">
+        <span className="flex items-center gap-1.5 text-[10px] font-display font-bold text-gold uppercase">
           <Hammer size={12} aria-hidden /> Gear forge
         </span>
-        <span className="text-[10px] font-mono-code text-dim">
-          Item level <span className="text-ink font-bold">{formatNumber(level)}</span>
+        <span className="text-[10px] font-tech text-dim">
+          Item level <span className="font-mono-code text-ink font-bold">{formatNumber(level)}</span>
         </span>
       </div>
       <p className="text-[10px] font-tech text-dim leading-snug">
@@ -421,7 +420,7 @@ const ForgeSection: React.FC<{ onForged: (item: Item) => void; onNotice: (text: 
               aria-pressed={active}
               disabled={forging}
               onClick={() => pickSlot(s.id)}
-              className={`min-h-[32px] px-1 text-[10px] font-mono-code font-bold uppercase border transition-colors disabled:opacity-50 ${
+              className={`min-h-[32px] px-1 text-[10px] font-tech font-bold uppercase border transition-colors disabled:opacity-50 ${
                 active ? 'bg-gold text-void border-gold' : 'bg-panel2 text-dim border-line hover:text-ink'
               }`}
             >

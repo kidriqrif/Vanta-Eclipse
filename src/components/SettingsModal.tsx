@@ -53,7 +53,7 @@ const Section: React.FC<{ title: string; icon: React.ReactNode; danger?: boolean
 }) => (
   <section className={`bg-panel2 border p-2.5 flex flex-col gap-2 ${danger ? 'border-crimson/60' : 'border-line'}`}>
     <h3
-      className={`text-[11px] font-display font-bold uppercase tracking-wider flex items-center gap-1.5 ${danger ? 'text-crimson' : 'text-ink'}`}
+      className={`text-[11px] font-display font-bold uppercase flex items-center gap-1.5 ${danger ? 'text-crimson' : 'text-ink'}`}
     >
       {icon}
       {title}
@@ -102,7 +102,9 @@ const VolumeRow: React.FC<{
           {icon}
           {label}
         </label>
-        <span className={`text-[10px] font-mono-code font-bold ${muted ? 'text-crimson' : 'text-dim'}`}>{muted ? `MUTED · ${pct}` : pct}</span>
+        <span className={`text-[10px] font-mono-code font-bold ${muted ? 'text-crimson' : 'text-dim'}`}>{muted && <span className="font-tech">MUTED · </span>}
+          {pct}
+        </span>
       </div>
       <div className="flex items-center gap-1.5">
         <input
@@ -114,7 +116,7 @@ const VolumeRow: React.FC<{
           value={volume}
           aria-valuetext={muted ? `${pct}, muted` : pct}
           onChange={(e) => onVolume(Number(e.target.value))}
-          className="flex-1 min-w-0 h-8 accent-neon cursor-pointer"
+          className="hud-range flex-1 min-w-0 h-8 cursor-pointer"
         />
         {extra}
         <Button size="sm" variant={muted ? 'danger' : 'ghost'} className="min-w-[84px]" onClick={onToggleMute}>
@@ -274,7 +276,7 @@ const PurchasesSection: React.FC = () => {
   return (
     <Section title="Purchases" icon={<RotateCcw size={13} className="text-gold" aria-hidden />}>
       <Hint>New phone, or reinstalled? Restore what you bought with this Google Play account.</Hint>
-      <Button size="md" variant="gold" block disabled={busy} aria-busy={busy} className="disabled:opacity-40" onClick={() => void restore()}>
+      <Button size="md" variant="gold" block disabled={busy} aria-busy={busy} onClick={() => void restore()}>
         {busy ? <Loader2 size={12} className="animate-spin" aria-hidden /> : <RotateCcw size={12} aria-hidden />}
         {busy ? 'CHECKING…' : 'RESTORE PURCHASES'}
       </Button>

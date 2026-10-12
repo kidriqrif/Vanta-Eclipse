@@ -294,16 +294,16 @@ export const RuneSweeperGame: React.FC<MinigameProps> = ({ onFinish }) => {
     <div className="flex-1 min-h-0 w-full flex flex-col items-center justify-between gap-3 p-4 bg-void text-ink select-none overflow-y-auto">
       {/* Readouts + mode */}
       <div className="w-full max-w-[340px] flex flex-col gap-2">
-        <div className="grid grid-cols-3 gap-2 font-display text-[10px] uppercase">
+        <div className="grid grid-cols-3 gap-2 font-tech text-[10px] uppercase">
           <div className="border border-line bg-panel px-2 py-1.5 flex flex-col items-center">
             <span className="text-dim">Mines</span>
-            <span className="text-sm font-bold text-crimson">{formatNumber(MINES)}</span>
+            <span className="text-sm font-mono-code font-bold text-crimson">{formatNumber(MINES)}</span>
           </div>
           <div className="border border-line bg-panel px-2 py-1.5 flex flex-col items-center">
             <span className="text-dim flex items-center gap-1">
               <Flag size={10} aria-hidden="true" /> Flags
             </span>
-            <span className="text-sm font-bold text-gold">
+            <span className="text-sm font-mono-code font-bold text-gold">
               {formatNumber(flagsPlaced)} / {formatNumber(MINES)}
             </span>
           </div>
@@ -311,7 +311,7 @@ export const RuneSweeperGame: React.FC<MinigameProps> = ({ onFinish }) => {
             <span className="text-dim flex items-center gap-1">
               <Timer size={10} aria-hidden="true" /> Time
             </span>
-            <span className="text-sm font-bold text-neon">{formatDuration(shownSeconds)}</span>
+            <span className="text-sm font-mono-code font-bold text-neon">{formatDuration(shownSeconds)}</span>
           </div>
         </div>
 
@@ -330,7 +330,7 @@ export const RuneSweeperGame: React.FC<MinigameProps> = ({ onFinish }) => {
                 aria-pressed={active}
                 disabled={ended}
                 onClick={() => setFlagMode(flag)}
-                className={`min-h-[36px] px-2 border font-display text-[11px] font-bold uppercase flex items-center justify-center gap-1.5 transition-colors disabled:opacity-40 ${
+                className={`min-h-[36px] px-2 border font-tech text-[11px] font-bold uppercase flex items-center justify-center gap-1.5 transition-colors disabled:opacity-40 ${
                   active
                     ? flag
                       ? 'bg-gold text-void border-gold'
@@ -340,7 +340,7 @@ export const RuneSweeperGame: React.FC<MinigameProps> = ({ onFinish }) => {
               >
                 <Icon size={14} aria-hidden="true" />
                 {label}
-                {active && <span className="text-[9px] font-mono-code">(on)</span>}
+                {active && <span className="text-[9px] font-tech">(on)</span>}
               </button>
             );
           })}
@@ -394,7 +394,7 @@ export const RuneSweeperGame: React.FC<MinigameProps> = ({ onFinish }) => {
           } else if (open) {
             const n = adjacent[cell];
             look = 'bg-abyss border-line/40';
-            face = n > 0 ? <span className={`font-display text-base font-black ${NUMBER_CLASS[n]}`}>{n}</span> : null;
+            face = n > 0 ? <span className={`font-mono-code text-base font-black ${NUMBER_CLASS[n]}`}>{n}</span> : null;
             label = n > 0 ? `${n} ${n === 1 ? 'mine' : 'mines'} touching` : 'clear';
           } else if (isFlagged) {
             look = 'bg-panel2 border-gold/70';

@@ -58,7 +58,6 @@ const OfflineBody: React.FC<{ pending: PendingOffline; onDismiss: () => void }> 
           block
           disabled={offer.busy}
           aria-busy={offer.busy}
-          className="disabled:opacity-40 disabled:cursor-not-allowed"
           onClick={() => void double()}
         >
           {offer.busy ? (

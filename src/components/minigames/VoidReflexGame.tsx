@@ -201,7 +201,7 @@ export const VoidReflexGame: React.FC<MinigameProps> = ({ onFinish }) => {
   return (
     <div className="flex-1 min-h-0 flex flex-col items-center justify-between gap-3 p-3">
       <div className="w-full flex flex-col items-center gap-1.5">
-        <span className="text-sm font-display font-bold text-ink tracking-wider">
+        <span className="text-sm font-display font-bold text-ink">
           ROUND {formatNumber(Math.min(round + 1, ROUNDS))} OF {formatNumber(ROUNDS)}
         </span>
         <ol className="flex items-center gap-1.5" aria-label="Rounds">
@@ -229,7 +229,7 @@ export const VoidReflexGame: React.FC<MinigameProps> = ({ onFinish }) => {
           })}
         </ol>
         <span className="text-[11px] font-tech text-dim">
-          Hits {formatNumber(hits)} · {formatNumber(WIN_HITS)} to win
+          Hits <span className="font-mono-code">{formatNumber(hits)}</span> · <span className="font-mono-code">{formatNumber(WIN_HITS)}</span> to win
         </span>
       </div>
 
@@ -283,7 +283,7 @@ export const VoidReflexGame: React.FC<MinigameProps> = ({ onFinish }) => {
                 <span
                   aria-hidden
                   className={`absolute inset-0 flex items-center justify-center font-display font-black pointer-events-none ${
-                    flared ? 'text-lg text-ink [text-shadow:2px_2px_0_#000]' : hitHere ? 'text-2xl text-toxic' : 'text-2xl text-crimson'
+                    flared ? 'text-lg text-ink [text-shadow:2px_2px_0_var(--color-abyss)]' : hitHere ? 'text-2xl text-toxic' : 'text-2xl text-crimson'
                   }`}
                 >
                   {mark}
@@ -295,7 +295,7 @@ export const VoidReflexGame: React.FC<MinigameProps> = ({ onFinish }) => {
       </div>
 
       <div className="w-full flex flex-col items-center gap-1 text-center">
-        <p role="status" aria-live="polite" className={`min-h-[18px] text-xs font-display font-bold uppercase tracking-wider ${status.tone}`}>
+        <p role="status" aria-live="polite" className={`min-h-[18px] text-xs font-display font-bold uppercase ${status.tone}`}>
           {status.text}
         </p>
         <p className="text-[10px] font-tech text-dim">Tap the sigil that flares, the moment it flares. Tapping early is a miss.</p>

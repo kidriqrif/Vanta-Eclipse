@@ -2,7 +2,7 @@ import React from 'react';
 
 type Variant = 'primary' | 'gold' | 'danger' | 'ghost' | 'solid';
 
-/** The look of each variant lives in src/index.css (.hud-btn*): sharp, bordered, hard-shadowed. */
+/** The look of each variant lives in src/index.css (.hud-btn*): sharp, bordered, hard-shadowed, and the press that sinks it. */
 const VARIANTS: Record<Variant, string> = {
   primary: 'hud-btn',
   gold: 'hud-btn-gold',
@@ -16,9 +16,6 @@ const SIZES = {
   md: 'px-3 py-1.5 text-xs min-h-[40px]',
   lg: 'px-4 py-2.5 text-sm min-h-[48px]',
 } as const;
-
-/** The press: the button sinks half a step, shrinks a hair and lights its edge amber. */
-const PRESS = 'active:translate-y-0.5 active:border-amber-500 active:scale-[0.98]';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
@@ -35,7 +32,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
     <button
       ref={ref}
       type={type}
-      className={`${VARIANTS[variant]} ${SIZES[size]} ${PRESS} ${block ? 'w-full' : ''} inline-flex items-center justify-center gap-1.5 select-none ${className}`}
+      className={`${VARIANTS[variant]} ${SIZES[size]} ${block ? 'w-full' : ''} inline-flex items-center justify-center gap-1.5 select-none ${className}`}
       {...rest}
     />
   );

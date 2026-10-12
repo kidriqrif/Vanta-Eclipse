@@ -112,15 +112,15 @@ export const LightsOutGame: React.FC<MinigameProps> = ({ onFinish }) => {
           <span className={`text-xs font-mono-code font-bold ${movesLeft <= 5 ? 'text-crimson' : 'text-ink'}`}>
             {formatNumber(movesLeft)}
           </span>{' '}
-          / {formatNumber(MOVE_CAP)}
+          / <span className="font-mono-code">{formatNumber(MOVE_CAP)}</span>
         </span>
         <span className="text-[10px] font-tech text-dim uppercase">
           Lit <span className="text-xs font-mono-code font-bold text-gold">{formatNumber(litCount)}</span> /{' '}
-          {formatNumber(PANES)}
+          <span className="font-mono-code">{formatNumber(PANES)}</span>
         </span>
       </div>
 
-      <p role="status" aria-live="polite" className={`min-h-[20px] text-xs font-display font-bold uppercase tracking-wider text-center ${status.tone}`}>
+      <p role="status" aria-live="polite" className={`min-h-[20px] text-xs font-display font-bold uppercase text-center ${status.tone}`}>
         {status.text}
       </p>
 

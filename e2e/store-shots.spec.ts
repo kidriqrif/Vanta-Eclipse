@@ -419,34 +419,33 @@ function checkAndFreeze(page: Page, want: Want): Promise<{ overshot: boolean; fr
     }
     const fixed = [stageTrack, ...chips, ...corners, namePlate, hpRow];
     const obstacles = fixed.filter((el): el is Element => !!el).map((el) => el.getBoundingClientRect());
-    const visible = nums.filter((n) => Number(getComputedStyle(n).opacity) > 0.12);
+    // Any number still faintly on screen counts: a fading ghost behind a fresh number reads as a smudge.
+    const visible = nums.filter((n) => Number(getComputedStyle(n).opacity) > 0.04);
     const boxes = visible.map((n) => n.getBoundingClientRect());
     type Box = { left: number; right: number; top: number; bottom: number };
     const apart = (a: Box, b: Box) => a.right < b.left || b.right < a.left || a.bottom < b.top || b.bottom < a.top;
     const clear =
       !!namePlate &&
       boxes.every((a, i) => obstacles.every((o) => apart(a, o)) && boxes.every((b, j) => i === j || apart(a, b)));
-    // Crits are the numbers the shot is about, so their glyphs (the line box less the leading)
-    // must also stay off the body of the sprite: the middle 30% of the enemy image, where the
-    // bright core is. A tendril behind one is fine; the core makes it unreadable. That holds for
-    // an older crit still rising through the enemy, not only the newest.
+    // Every number's glyphs (the line box less the leading) must also stay off the body of the
+    // sprite: the middle 30% of the enemy image, where the bright core is. A tendril behind one is
+    // fine; the core makes it unreadable. That holds for the auto-attack numbers that pop near the
+    // enemy and for older numbers still rising, not only the newest crit.
     const sprite = [...arenaEl.querySelectorAll('img')].find((img) => img.alt === w.name)?.getBoundingClientRect();
-    let critsReadable = false;
+    let numbersReadable = false;
     if (crit && sprite) {
       const ix = sprite.width * 0.35;
       const iy = sprite.height * 0.35;
       const core = { left: sprite.left + ix, right: sprite.right - ix, top: sprite.top + iy, bottom: sprite.bottom - iy };
-      critsReadable = visible
-        .filter((n) => (n.textContent ?? '').startsWith('CRIT'))
-        .every((n) => {
-          const r = n.getBoundingClientRect();
-          const lead = Math.max(0, (r.height - parseFloat(getComputedStyle(n).fontSize)) / 2);
-          return apart({ left: r.left, right: r.right, top: r.top + lead, bottom: r.bottom - lead }, core);
-        });
+      numbersReadable = visible.every((n) => {
+        const r = n.getBoundingClientRect();
+        const lead = Math.max(0, (r.height - parseFloat(getComputedStyle(n).fontSize)) / 2);
+        return apart({ left: r.left, right: r.right, top: r.top + lead, bottom: r.bottom - lead }, core);
+      });
     }
     const toasts = document.querySelectorAll('.anim-toast').length;
     const overshot = s.combat.level !== w.level || s.combat.enemy.isBoss !== w.boss || pct < w.lo;
-    const frozen = !overshot && pct <= w.hi && s.ui.combo.count >= w.combo && critsReadable && clear && toasts === 0;
+    const frozen = !overshot && pct <= w.hi && s.ui.combo.count >= w.combo && numbersReadable && clear && toasts === 0;
     // The first reason a frame was turned down, tallied by fightUntil for its error message.
     const why = overshot
       ? 'overshot'
@@ -456,8 +455,8 @@ function checkAndFreeze(page: Page, want: Want): Promise<{ overshot: boolean; fr
           ? 'combo too low'
           : !crit
             ? 'newest number not a crit'
-            : !critsReadable
-              ? 'crit on the sprite'
+            : !numbersReadable
+              ? 'a number on the sprite'
               : !clear
                 ? 'a number covers the UI or another number'
                 : toasts > 0

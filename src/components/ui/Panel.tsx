@@ -29,7 +29,7 @@ export const PanelHeader: React.FC<{
         <span className="shrink-0 flex items-center justify-center" aria-hidden>
           {icon}
         </span>
-        <h2 className="shrink-0 text-[13px] font-display font-bold text-ink uppercase tracking-wider leading-none">{title}</h2>
+        <h2 className="shrink-0 text-[13px] font-display font-bold text-ink uppercase leading-none">{title}</h2>
         {subtitle && <p className="min-w-0 text-[10px] font-tech text-dim leading-tight truncate">{subtitle}</p>}
       </div>
       {right && <div className="shrink-0">{right}</div>}

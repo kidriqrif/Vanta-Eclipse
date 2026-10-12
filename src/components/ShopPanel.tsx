@@ -60,7 +60,7 @@ const NoteLine: React.FC<{ note: Note | null }> = ({ note }) => (
 
 const SectionTitle: React.FC<{ icon: React.ReactNode; title: string; right?: React.ReactNode }> = ({ icon, title, right }) => (
   <div className="flex items-center justify-between gap-2">
-    <h3 className="text-[11px] font-display font-bold text-ink uppercase tracking-wider flex items-center gap-1.5">
+    <h3 className="text-[11px] font-display font-bold text-ink uppercase flex items-center gap-1.5">
       {icon}
       {title}
     </h3>
@@ -128,7 +128,7 @@ const OfferRow: React.FC<{ def: AdPlacementDefinition }> = ({ def }) => {
       <Button
         size="sm"
         variant={offer.instant ? 'gold' : 'primary'}
-        className="shrink-0 min-w-[104px] disabled:opacity-40 disabled:cursor-not-allowed"
+        className="shrink-0 min-w-[104px]"
         disabled={blocked || offer.busy}
         aria-busy={offer.busy}
         onClick={() => void onClaim()}
@@ -213,7 +213,7 @@ const ProductRow: React.FC<{
         <Button
           size="sm"
           variant="gold"
-          className="shrink-0 min-w-[104px] disabled:opacity-40 disabled:cursor-not-allowed"
+          className="shrink-0 min-w-[104px]"
           disabled={!available || !price || locked}
           aria-busy={buying}
           onClick={onBuy}
@@ -293,8 +293,8 @@ const CosmeticCard: React.FC<{
         aria-hidden
       >
         <span
-          className="text-xs font-mono-code font-bold"
-          style={{ color: rgbaFromUnit(def.numberColor), textShadow: `0 0 6px ${trail}` }}
+          className="text-xs font-mono-code font-bold [text-shadow:2px_2px_0_var(--color-abyss)]"
+          style={{ color: rgbaFromUnit(def.numberColor) }}
         >
           128
         </span>
@@ -317,7 +317,6 @@ const CosmeticCard: React.FC<{
           variant="gold"
           block
           disabled={short > 0}
-          className="disabled:opacity-40 disabled:cursor-not-allowed"
           onClick={onBuy}
           aria-label={short > 0 ? `${def.displayName}: costs ${formatNumber(def.shardPrice)} shards, need ${formatNumber(short)} more` : undefined}
         >

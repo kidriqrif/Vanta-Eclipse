@@ -128,7 +128,7 @@ export const MinigameHost: React.FC<{ gameId: string; runId: number; onClose: ()
                 type="button"
                 onClick={pressQuit}
                 aria-live="polite"
-                className={`h-11 min-w-[96px] px-3 border-2 shadow-hard font-tech font-black uppercase tracking-wider active:translate-y-0.5 active:border-amber-500 active:scale-[0.98] ${
+                className={`h-11 min-w-[96px] px-3 border-2 shadow-hard font-tech font-black uppercase tracking-wider active:translate-y-0.5 active:border-amber active:scale-[0.98] ${
                   armed ? 'bg-crimson border-crimson text-abyss text-[11px] leading-tight' : 'bg-abyss border-crimson text-crimson text-sm'
                 }`}
               >
@@ -138,7 +138,7 @@ export const MinigameHost: React.FC<{ gameId: string; runId: number; onClose: ()
               <span className="h-11 min-w-[96px]" aria-hidden />
             )}
             <div className="flex-1 min-w-0 flex flex-col items-center">
-              <h2 className="max-w-full truncate text-sm font-display font-black uppercase tracking-wider text-ink">{name}</h2>
+              <h2 className="max-w-full truncate text-sm font-display font-black uppercase text-ink">{name}</h2>
               <span className={`text-[10px] font-tech ${armed && !banner ? 'text-crimson' : 'text-dim'}`}>
                 {armed && !banner ? 'Token is not refunded' : 'VANTA ARCADE'}
               </span>
@@ -148,7 +148,7 @@ export const MinigameHost: React.FC<{ gameId: string; runId: number; onClose: ()
             <span className={`shrink-0 mr-1 w-3 h-3 border-2 border-abyss ${banner ? 'bg-faint' : 'bg-toxic'}`} aria-hidden />
           </header>
 
-          <div className="relative flex-1 min-h-0 m-2 bg-void border-4 border-abyss shadow-[inset_3px_3px_0_0_rgba(0,0,0,0.7)] flex flex-col overflow-hidden">
+          <div className="relative flex-1 min-h-0 m-2 bg-void border-4 border-abyss inset-shadow-hard-lg flex flex-col overflow-hidden">
             <div className="relative z-0 flex-1 min-h-0 flex flex-col overflow-y-auto overscroll-contain">
               {banner ? (
                 <ResultBanner banner={banner} isRecord={isRecord} onContinue={onClose} />
@@ -173,7 +173,7 @@ export const MinigameHost: React.FC<{ gameId: string; runId: number; onClose: ()
                 <span key={i} className="w-4 h-1 bg-abyss" />
               ))}
             </span>
-            <span className="text-[8px] font-display font-bold tracking-[0.3em] text-faint">V-ECLIPSE</span>
+            <span className="text-[8px] font-display font-bold text-faint">V-ECLIPSE</span>
           </footer>
         </div>
       </div>
@@ -199,14 +199,14 @@ const ResultBanner: React.FC<{ banner: Banner; isRecord: boolean; onContinue: ()
         }`}
       >
         <div role="status" className="w-full flex flex-col items-center gap-3">
-          <h3 className={`text-xl font-display font-black tracking-wider ${banner.won && banner.paid ? 'text-neon' : 'text-ink'}`}>
+          <h3 className={`text-xl font-display font-black ${banner.won && banner.paid ? 'text-neon' : 'text-ink'}`}>
             {banner.won && banner.paid ? '✓ ' : ''}
             {title}
           </h3>
-          <p className="text-xs font-mono-code text-ink">{banner.detail}</p>
+          <p className="text-xs font-tech text-ink">{banner.detail}</p>
 
           {isRecord && (
-            <span className="flex items-center gap-1.5 px-2 py-1 border border-gold text-abyss bg-gold shadow-hard text-[11px] font-display font-bold tracking-wider">
+            <span className="flex items-center gap-1.5 px-2 py-1 border border-gold text-abyss bg-gold shadow-hard text-[11px] font-display font-bold">
               <Trophy size={13} aria-hidden /> NEW RECORD
             </span>
           )}
@@ -215,7 +215,7 @@ const ResultBanner: React.FC<{ banner: Banner; isRecord: boolean; onContinue: ()
             <div className="w-full bg-panel2 border border-line p-2 flex flex-col items-center gap-0.5">
               <span className="text-[9px] font-tech text-dim uppercase tracking-wider">Essence earned</span>
               <span className="text-base font-mono-code font-bold text-neon">
-                <span aria-hidden>● </span>+{formatNumber(banner.essence)} essence
+                <span aria-hidden>● </span>+{formatNumber(banner.essence)} <span className="font-tech">essence</span>
               </span>
               {!banner.won && <span className="text-[10px] font-tech text-dim">A loss still pays part of a win.</span>}
             </div>

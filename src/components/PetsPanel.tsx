@@ -54,7 +54,7 @@ const OwnedPetCard: React.FC<{ def: PetDefinition; pet: OwnedPet; active: boolea
         <div className="relative w-14 h-14 shrink-0 bg-panel2 border border-line flex items-center justify-center p-1">
           <img src={petSprite(def.id, level)} alt={name} className="w-full h-full object-contain pixelated" />
           {stage > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 bg-purple text-void text-[9px] font-mono-code font-black px-1 leading-4">EVO</span>
+            <span className="absolute -top-1.5 -right-1.5 bg-purple text-void text-[9px] font-tech font-black px-1 leading-4">EVO</span>
           )}
         </div>
 
@@ -65,7 +65,7 @@ const OwnedPetCard: React.FC<{ def: PetDefinition; pet: OwnedPet; active: boolea
               LV {formatNumber(level)}/{formatNumber(def.maxLevel)}
             </span>
             {isNew && (
-              <span className="text-[9px] font-mono-code font-black text-void bg-gold px-1 leading-4">
+              <span className="text-[9px] font-tech font-black text-void bg-gold px-1 leading-4">
                 NEW
               </span>
             )}
@@ -184,7 +184,7 @@ export const PetsPanel: React.FC = () => {
         {!awakened ? (
           <div className="bg-panel border border-line p-4 flex flex-col items-center gap-2 text-center">
             <Lock size={22} className="text-gold" aria-hidden />
-            <p className="text-xs font-display font-bold text-ink uppercase tracking-wide">Locked</p>
+            <p className="text-xs font-display font-bold text-ink uppercase">Locked</p>
             <p className="text-[11px] font-tech text-ink leading-snug">
               Companions awaken when you reach the Frozen Ruins (level {formatNumber(WORLD_TWO_FIRST_LEVEL)}).
             </p>

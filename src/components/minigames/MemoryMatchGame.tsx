@@ -156,7 +156,7 @@ export const MemoryMatchGame: React.FC<MinigameProps> = ({ onFinish }) => {
           <span className={`text-sm font-mono-code font-bold ${left <= 3 && phase !== 'done' ? 'text-crimson' : 'text-ink'}`}>
             {formatNumber(attempts)} / {formatNumber(MAX_ATTEMPTS)}
           </span>
-          <span className="text-[9px] font-tech text-dim">{formatNumber(left)} left</span>
+          <span className="text-[9px] font-tech text-dim"><span className="font-mono-code">{formatNumber(left)}</span> left</span>
         </div>
         <div className="bg-panel border border-line px-2 py-1 flex flex-col items-center">
           <span className="text-[9px] font-tech text-dim uppercase tracking-wider">Pairs</span>
@@ -229,7 +229,7 @@ export const MemoryMatchGame: React.FC<MinigameProps> = ({ onFinish }) => {
       </div>
 
       <div className="w-full flex flex-col items-center gap-1 text-center">
-        <p role="status" aria-live="polite" className={`min-h-[18px] text-xs font-display font-bold uppercase tracking-wider ${status.tone}`}>
+        <p role="status" aria-live="polite" className={`min-h-[18px] text-xs font-display font-bold uppercase ${status.tone}`}>
           {status.text}
         </p>
         <p className="text-[10px] font-tech text-dim">

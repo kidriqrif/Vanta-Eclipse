@@ -75,13 +75,13 @@ const TapLockOverlay: React.FC<{ until: number }> = ({ until }) => {
     <div className="absolute inset-0 z-30 bg-void/90 flex flex-col items-center justify-center gap-1.5 px-6 text-center">
       <div role="status" className="flex flex-col items-center gap-1.5">
         <CirclePause size={26} className="text-gold" aria-hidden />
-        <h3 className="font-display font-bold text-sm text-gold tracking-wider">TAPPING PAUSED</h3>
+        <h3 className="font-display font-bold text-sm text-gold">TAPPING PAUSED</h3>
         <p className="font-tech text-[11px] text-dim leading-snug max-w-[260px]">
           Machine-like tapping was detected, so manual taps are paused. Auto-attack keeps running.
         </p>
       </div>
-      <p className="font-mono-code text-xs text-ink">
-        Taps resume in <span className="font-bold text-gold">{formatDuration(seconds)}</span>
+      <p className="font-tech text-xs text-ink">
+        Taps resume in <span className="font-mono-code font-bold text-gold">{formatDuration(seconds)}</span>
       </p>
     </div>
   );
@@ -353,7 +353,7 @@ export const CombatArena: React.FC = () => {
               </div>
             </div>
             <span
-              className={`shrink-0 max-w-full truncate px-2 py-0.5 bg-abyss border shadow-hard text-[11px] font-display font-bold uppercase tracking-[0.12em] ${
+              className={`shrink-0 max-w-full truncate px-2 py-0.5 bg-abyss border shadow-hard text-[11px] font-display font-bold uppercase ${
                 isBoss ? 'border-crimson text-crimson' : 'border-line text-ink'
               }`}
             >
@@ -460,7 +460,7 @@ export const CombatArena: React.FC = () => {
           {numbers.map((n) => (
             <span
               key={n.id}
-              className={`absolute anim-damage font-mono-code font-black whitespace-nowrap [text-shadow:2px_2px_0_#000] ${
+              className={`absolute anim-damage font-mono-code font-black whitespace-nowrap [text-shadow:2px_2px_0_var(--color-abyss)] ${
                 n.crit ? 'text-lg text-gold' : n.auto ? 'text-xs opacity-85' : 'text-base'
               }`}
               style={{ left: n.x, top: n.y - 14, ...(n.crit ? null : { color: numberColor }) }}

@@ -166,11 +166,11 @@ export const BattleshipGame: React.FC<MinigameProps> = ({ onFinish }) => {
           <span className={`text-xs font-mono-code font-bold ${shotsLeft <= 5 ? 'text-crimson' : 'text-ink'}`}>
             {formatNumber(shotsLeft)}
           </span>{' '}
-          / {formatNumber(MAX_SHOTS)}
+          / <span className="font-mono-code">{formatNumber(MAX_SHOTS)}</span>
         </span>
         <span className="text-[10px] font-tech text-dim uppercase">
           Hull hit <span className="text-xs font-mono-code font-bold text-ink">{formatNumber(hullHit)}</span> /{' '}
-          {formatNumber(HULL_CELLS)}
+          <span className="font-mono-code">{formatNumber(HULL_CELLS)}</span>
         </span>
       </div>
 
@@ -192,7 +192,7 @@ export const BattleshipGame: React.FC<MinigameProps> = ({ onFinish }) => {
         ))}
       </ul>
 
-      <p role="status" aria-live="polite" className={`min-h-[20px] text-xs font-display font-bold uppercase tracking-wider text-center ${status.tone}`}>
+      <p role="status" aria-live="polite" className={`min-h-[20px] text-xs font-display font-bold uppercase text-center ${status.tone}`}>
         {status.text}
       </p>
 

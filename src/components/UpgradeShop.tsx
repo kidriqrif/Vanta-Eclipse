@@ -118,7 +118,7 @@ const UpgradeRow: React.FC<{ def: UpgradeDefinition; want: Want }> = React.memo(
           disabled={!canBuy}
           onClick={buy}
           aria-label={`Buy ${buyCount} ${def.displayName} for ${formatNumber(price)} essence${canBuy ? '' : ', not enough essence'}`}
-          className={`w-[64px] shrink-0 border-l-2 flex flex-col items-center justify-center gap-0.5 font-tech font-bold uppercase transition-colors active:translate-y-0.5 active:border-amber-500 active:scale-[0.98] disabled:cursor-not-allowed ${
+          className={`w-[64px] shrink-0 border-l-2 flex flex-col items-center justify-center gap-0.5 font-tech font-bold uppercase transition-colors active:translate-y-0.5 active:border-amber active:scale-[0.98] disabled:cursor-not-allowed ${
             canBuy ? 'bg-neon text-abyss border-neon hover:bg-neon-bright' : 'bg-panel2 text-faint border-line'
           }`}
         >

@@ -39,7 +39,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSettings, onOpenNoAds }) =
   return (
     <header className="relative z-30 shrink-0 h-11 bg-panel border-b-2 border-line px-2 flex items-center justify-between gap-1.5">
       <div className="flex items-stretch h-8 min-w-0 border border-neon/70 shadow-hard bg-abyss">
-        <span className="min-w-0 px-2 self-center text-[10px] font-display font-bold tracking-wider text-neon uppercase truncate">
+        <span className="min-w-0 px-2 self-center text-[10px] font-display font-bold text-neon uppercase truncate">
           {world.displayName}
         </span>
         <span className="shrink-0 flex items-center gap-1 px-1.5 bg-neon text-abyss">
@@ -64,7 +64,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSettings, onOpenNoAds }) =
               type="button"
               onClick={onOpenNoAds}
               aria-label={price ? `Remove ads, ${price}` : 'Remove ads'}
-              className="hud-btn-gold h-8 px-1.5 flex items-center gap-1 active:translate-y-0.5 active:border-amber-500 active:scale-[0.98]"
+              className="hud-btn-gold h-8 px-1.5 flex items-center gap-1"
             >
               <ShieldOff size={12} className="shrink-0" aria-hidden />
               <span className="text-[9px] tracking-wider whitespace-nowrap">NO ADS</span>
@@ -75,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSettings, onOpenNoAds }) =
           onClick={onOpenSettings}
           aria-label="Settings"
           title="Settings"
-          className="hud-btn-ghost w-8 h-8 shrink-0 flex items-center justify-center active:translate-y-0.5 active:border-amber-500 active:scale-[0.98]"
+          className="hud-btn-ghost w-8 h-8 shrink-0 flex items-center justify-center"
         >
           <Settings size={14} aria-hidden />
         </button>
