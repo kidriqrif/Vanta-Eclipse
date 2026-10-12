@@ -64,8 +64,11 @@ These are what a long-lived release would normally have. None stops a launch.
       key.properties, google-services.json, service-account JSON and built
       bundles. The web bundle that `npx cap sync` copies into the Android
       project is generated and untracked.
-- [x] **Launcher icon and splash** are the game's crescent on #080A12, with a
-      monochrome layer for Android 13+ themed icons.
+- [x] **Launcher icon and splash** are the black sun (the Hollow Sovereign
+      sprite) on #080A12, with a monochrome layer for Android 13+ themed icons.
+      The Android 12+ system splash background is set in
+      `android/app/src/main/res/values/styles.xml`; that change has not been
+      through `./gradlew` or a device yet (see the device checklist).
 - [x] **The project builds from the command line** (`./gradlew assembleDebug
       bundleRelease lintDebug`, last checked 2026-10-06, no lint errors). See
       "Command-line build" in `README.md`.
@@ -241,6 +244,12 @@ Run it on a debug build (`npm run android:sync`, then `npx cap run android`),
 then again on the build **installed from the closed track**: that is the first
 time the app runs re-signed and split the way Play delivers it. A debug
 build's WebView can be inspected at chrome://inspect.
+
+**Icon and splash.** The launcher shows the black sun inside its mask (circle
+and rounded square both, if the launcher can switch); with themed icons on
+(Android 13+) it shows the monochrome sun. A cold start shows the black sun on
+the dark ground from the first frame to the game, with no white flash between
+the Android 12+ system splash and the window splash.
 
 **Ads and consent.** Every ad carries a "Test Ad" label. The banner appears
 after the consent check. To see the consent form outside the EEA/UK, pass
