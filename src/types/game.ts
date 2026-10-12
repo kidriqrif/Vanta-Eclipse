@@ -62,10 +62,10 @@ export interface Item {
   seen?: boolean;
 }
 
+/** A boss-card tier. Its colour is a theme token by name, in CardsCollection, not data. */
 export interface CardRarityDefinition {
   id: string;
   displayName: string;
-  tierColor: string;
   potency: number;
   dropWeight: number;
 }
@@ -97,10 +97,10 @@ export interface OwnedRelic {
   seen: boolean;
 }
 
+/** A gear rarity. Its colour is the theme token r0–r4 at the same index (src/index.css), not data. */
 export interface RarityDefinition {
   id: ItemRarity;
   displayName: string;
-  color: string;
   salvageYield: number;
 }
 

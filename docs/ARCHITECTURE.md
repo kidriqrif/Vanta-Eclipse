@@ -418,7 +418,8 @@ plus an icon in `OnboardingManager`; give it a `known` test so veterans skip it.
   tab and the nav). Only the active tab's `TabBody` scrolls, and the deck is
   CSS-contained so its redraws stay inside it. The native banner gets its own
   strip below the frame.
-- The look lives in `src/index.css`: theme tokens, rarity tokens `r0`–`r4`,
+- The look lives in `src/index.css`: theme tokens, rarity tokens `r0`–`r4`
+  (gear and boss cards, matched by tier name),
   hard shadows, and the `.hud-btn*` button classes with their sink-on-press.
   Minigames run inside a handheld frame (`src/components/minigames/MinigameHost.tsx`).
 - The layout is a single portrait column (max width `max-w-md`) that respects

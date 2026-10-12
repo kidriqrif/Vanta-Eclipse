@@ -247,11 +247,11 @@ export const AFFIXES: AffixDefinition[] = [
 
 /** Item rarities. The pip count (affixes) is rarity + 1, so the word and the pips agree. */
 export const RARITIES: RarityDefinition[] = [
-  { id: 0, displayName: 'Common', color: '#C8CDD8', salvageYield: 2 },
-  { id: 1, displayName: 'Rare', color: '#36D9FF', salvageYield: 5 },
-  { id: 2, displayName: 'Epic', color: '#A78BFA', salvageYield: 12 },
-  { id: 3, displayName: 'Legendary', color: '#FFC857', salvageYield: 30 },
-  { id: 4, displayName: 'Mythic', color: '#FF4268', salvageYield: 75 },
+  { id: 0, displayName: 'Common', salvageYield: 2 },
+  { id: 1, displayName: 'Rare', salvageYield: 5 },
+  { id: 2, displayName: 'Epic', salvageYield: 12 },
+  { id: 3, displayName: 'Legendary', salvageYield: 30 },
+  { id: 4, displayName: 'Mythic', salvageYield: 75 },
 ];
 
 /** Affix values are multiplied by this per rarity tier. */
@@ -275,11 +275,11 @@ export function getForgeCost(level: number): number {
 }
 
 export const CARD_RARITIES: CardRarityDefinition[] = [
-  { id: 'common', displayName: 'Common', tierColor: '#C8C8DA', potency: 1.0, dropWeight: 0.65 },
-  { id: 'uncommon', displayName: 'Uncommon', tierColor: '#3E82FF', potency: 1.3, dropWeight: 0.22 },
-  { id: 'rare', displayName: 'Rare', tierColor: '#3EDCFA', potency: 1.7, dropWeight: 0.09 },
-  { id: 'epic', displayName: 'Epic', tierColor: '#A85CFF', potency: 2.2, dropWeight: 0.035 },
-  { id: 'legendary', displayName: 'Legendary', tierColor: '#FFD23C', potency: 3.0, dropWeight: 0.005 },
+  { id: 'common', displayName: 'Common', potency: 1.0, dropWeight: 0.65 },
+  { id: 'uncommon', displayName: 'Uncommon', potency: 1.3, dropWeight: 0.22 },
+  { id: 'rare', displayName: 'Rare', potency: 1.7, dropWeight: 0.09 },
+  { id: 'epic', displayName: 'Epic', potency: 2.2, dropWeight: 0.035 },
+  { id: 'legendary', displayName: 'Legendary', potency: 3.0, dropWeight: 0.005 },
 ];
 
 export const RELICS: RelicDefinition[] = [

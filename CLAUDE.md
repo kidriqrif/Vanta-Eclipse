@@ -42,8 +42,9 @@ Keep it to these. Add to the right one instead of starting a new document.
 - **Player-facing numbers** go through `src/utils/numberFormat.ts`.
 - **Colours** are the theme tokens in `src/index.css` as Tailwind classes
   (`bg-panel`, `text-neon`, `border-line` ...), never hex in a component.
-  Item rarity uses the `r0`–`r4` tokens (`border-r3`, `bg-r3/15`); trail
-  colours are data.
+  Rarity uses the `r0`–`r4` tokens (`border-r3`, `bg-r3/15`), gear and boss
+  cards alike: a tier name is one colour everywhere (a card's Uncommon, which
+  gear lacks, is `toxic`). Trail colours are data.
 - **The look is a native game, not a web page:** flat fills, one-pixel borders
   and hard offset shadows (`shadow-hard`, `shadow-hard-lg`). No gradients,
   glows, blur or rounded pills. Buttons are sharp rectangles that sink when

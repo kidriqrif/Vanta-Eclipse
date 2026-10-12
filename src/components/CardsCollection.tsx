@@ -42,21 +42,29 @@ function selectBlock(s: GameState): Block {
 
 const pct = (v: number) => formatPercent(v, 1);
 
+/**
+ * A card tier's colour: the gear rarity token of the same name (src/index.css), so a Legendary card
+ * and Legendary gear match. Gear has no Uncommon; it takes the theme's green. Written out in full so
+ * Tailwind generates every class.
+ */
+const CARD_TONE: Record<string, { stripe: string; tag: string }> = {
+  common: { stripe: 'border-l-r0', tag: 'text-r0 border-r0' },
+  uncommon: { stripe: 'border-l-toxic', tag: 'text-toxic border-toxic' },
+  rare: { stripe: 'border-l-r1', tag: 'text-r1 border-r1' },
+  epic: { stripe: 'border-l-r2', tag: 'text-r2 border-r2' },
+  legendary: { stripe: 'border-l-r3', tag: 'text-r3 border-r3' },
+};
+
 const CardRow: React.FC<{ card: Card; block: Block; noun: string; onAbsorb: (card: Card) => void }> = React.memo(
   ({ card, block, noun, onAbsorb }) => {
     const rarity = CARD_RARITIES.find((r) => r.id === card.rarity);
-    const color = rarity?.tierColor;
+    const tone = CARD_TONE[card.rarity] ?? CARD_TONE.common;
     const rarityName = rarity?.displayName ?? card.rarity;
     return (
-      <div className="bg-panel border border-line border-l-4 p-2 flex items-center gap-2" style={color ? { borderLeftColor: color } : undefined}>
+      <div className={`bg-panel border border-line border-l-4 ${tone.stripe} p-2 flex items-center gap-2`}>
         <div className="flex-1 min-w-0 flex flex-col gap-0.5">
           <div className="flex items-center gap-1.5 min-w-0">
-            <span
-              className="shrink-0 text-[9px] font-mono-code font-black uppercase border px-1 leading-4"
-              style={color ? { color, borderColor: color } : undefined}
-            >
-              {rarityName}
-            </span>
+            <span className={`shrink-0 text-[9px] font-mono-code font-black uppercase border px-1 leading-4 ${tone.tag}`}>{rarityName}</span>
             <span className="text-[11px] font-tech font-bold text-ink truncate">{card.bossName}</span>
           </div>
           <span className="text-[10px] font-mono-code text-dim leading-tight">
