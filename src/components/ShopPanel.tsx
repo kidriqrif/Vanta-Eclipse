@@ -389,7 +389,7 @@ export const ShopPanel: React.FC = () => (
     <PanelHeader
       icon={<ShoppingBag size={16} className="text-neon" aria-hidden />}
       title="BAZAAR"
-      subtitle="Optional bonuses, the store, and tap trails."
+      subtitle="Bonuses, the store and tap trails."
     />
     <TabBody>
       <OffersSection />

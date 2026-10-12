@@ -78,10 +78,10 @@ const UpgradeRow: React.FC<{ def: UpgradeDefinition; want: Want }> = React.memo(
 
   return (
     <div
-      className={`h-[54px] flex items-stretch bg-panel border shadow-hard ${maxed ? 'border-line/60' : 'border-line'}`}
+      className={`shrink-0 h-11 flex items-stretch bg-panel border shadow-hard ${maxed ? 'border-line/60' : 'border-line'}`}
       title={effectText(def, level)}
     >
-      <div className={`w-[54px] shrink-0 border-r flex items-center justify-center ${copy?.tone ?? FALLBACK_TONE}`}>
+      <div className={`w-11 shrink-0 border-r flex items-center justify-center ${copy?.tone ?? FALLBACK_TONE}`}>
         <Icon size={20} aria-hidden />
       </div>
 
@@ -98,7 +98,8 @@ const UpgradeRow: React.FC<{ def: UpgradeDefinition; want: Want }> = React.memo(
             <span className="text-[11px] font-tech font-bold text-dim">MAXED</span>
           ) : (
             <span className={`shrink-0 text-[11px] font-mono-code font-bold ${canBuy ? 'text-neon' : 'text-crimson'}`}>
-              <span aria-hidden>◆ </span>
+              {/* ● is essence; ◆ is Void Crystals, so the two never differ by colour alone. */}
+              <span aria-hidden>● </span>
               {formatNumber(price)}
               {!canBuy && <span className="font-tech font-normal"> · need {formatNumber(shortBy)}</span>}
             </span>
@@ -152,7 +153,7 @@ export const UpgradeShop: React.FC = () => {
       <PanelHeader
         icon={<Zap size={16} className="text-neon" aria-hidden />}
         title="UPGRADES"
-        subtitle="Spend essence on upgrades. An Eclipse resets them."
+        subtitle="Spend essence. Eclipse resets them."
       />
 
       <TabBody>

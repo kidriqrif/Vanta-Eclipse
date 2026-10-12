@@ -36,7 +36,7 @@ const OwnedRelicCard: React.FC<{ def: RelicDefinition; active: boolean; isNew: b
             </span>
           )}
         </div>
-        <span className="text-[11px] font-mono-code font-bold text-neon leading-tight">{def.effectDescription}</span>
+        <span className="text-[11px] font-tech font-bold text-neon leading-tight">{def.effectDescription}</span>
         <span className="text-[10px] font-tech text-dim italic leading-tight">“{def.flavor}”</span>
       </div>
 
@@ -99,7 +99,7 @@ export const RelicsPanel: React.FC = () => {
         icon={<Sword size={16} className="text-gold" aria-hidden />}
         tone="gold"
         title="RELICS"
-        subtitle={awakened ? 'One relic attuned at a time. Swapping is free.' : 'Locked until the Frozen Ruins.'}
+        subtitle={awakened ? 'Attune one. Swap for free.' : 'Locked until the Frozen Ruins.'}
         right={
           awakened ? (
             <span className="text-[10px] font-mono-code font-bold text-dim border border-line px-1.5 py-1">

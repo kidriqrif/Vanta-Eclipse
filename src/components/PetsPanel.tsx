@@ -41,6 +41,12 @@ const OwnedPetCard: React.FC<{ def: PetDefinition; pet: OwnedPet; active: boolea
   const nextName = def.stageNames[Math.min(stage + 1, def.stageNames.length - 1)];
   const fromLevel = level * def.bonusPerLevel;
   const fromCards = Math.min(PET_ABSORB_CAP, pet.absorbed || 0);
+  // Whole phrases, so a narrow card wraps between them and never leaves "cards" or a "·" alone.
+  const breakdown = [
+    `${formatPercent(fromLevel)} from level`,
+    fromCards > 0 ? `${formatPercent(fromCards)} from cards` : null,
+    active ? null : 'applies only while active',
+  ].filter((p): p is string => p !== null);
 
   return (
     <div className={`bg-panel border p-2.5 flex flex-col gap-2 ${active ? 'border-neon' : 'border-line'}`}>
@@ -66,19 +72,25 @@ const OwnedPetCard: React.FC<{ def: PetDefinition; pet: OwnedPet; active: boolea
           </div>
           <span className="text-[11px] font-mono-code font-bold text-neon leading-tight">{bonusText(def, petBonusValue(def.id, pet))}</span>
           <span className="text-[10px] font-tech text-dim leading-tight">
-            {formatPercent(fromLevel)} from level
-            {fromCards > 0 && ` · ${formatPercent(fromCards)} from cards`}
-            {!active && ' · applies only while active'}
+            {breakdown.map((part, i) => (
+              <React.Fragment key={part}>
+                {i > 0 && ' '}
+                <span className="whitespace-nowrap">
+                  {part}
+                  {i < breakdown.length - 1 && ' ·'}
+                </span>
+              </React.Fragment>
+            ))}
           </span>
         </div>
 
-        <div className="shrink-0 w-[92px]">
+        <div className="shrink-0 w-[104px]">
           {active ? (
             <div className="min-h-[40px] border border-neon bg-neon/10 text-neon text-[10px] font-tech font-bold flex items-center justify-center gap-1">
               <Check size={12} aria-hidden /> ACTIVE
             </div>
           ) : (
-            <Button variant="primary" size="md" block onClick={() => dispatch({ type: 'SET_ACTIVE_PET', id: def.id })}>
+            <Button variant="primary" size="md" block className="whitespace-nowrap" onClick={() => dispatch({ type: 'SET_ACTIVE_PET', id: def.id })}>
               SET ACTIVE
             </Button>
           )}
@@ -158,7 +170,7 @@ export const PetsPanel: React.FC = () => {
       <PanelHeader
         icon={<Cpu size={16} className="text-neon" aria-hidden />}
         title="COMPANIONS"
-        subtitle={awakened ? 'Only the active companion’s bonus applies.' : 'Locked until the Frozen Ruins.'}
+        subtitle={awakened ? 'One at a time.' : 'Locked until the Frozen Ruins.'}
         right={
           awakened ? (
             <span className="text-[10px] font-mono-code font-bold text-dim border border-line px-1.5 py-1">

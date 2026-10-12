@@ -114,14 +114,14 @@ const GameCard: React.FC<{
         <p className="text-[10px] font-tech text-dim leading-snug">{def.description}</p>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
           {best !== undefined && (
-            <span className="text-[10px] font-mono-code font-bold text-gold flex items-center gap-1">
+            <span className="text-[10px] font-tech font-bold text-gold flex items-center gap-1">
               <Trophy size={10} aria-hidden />
-              Best: {formatNumber(best)} {def.scoreUnit}
+              Best: <span className="font-mono-code">{formatNumber(best)}</span> {def.scoreUnit}
             </span>
           )}
           {unlocked && (
-            <span className="text-[10px] font-mono-code text-dim">
-              Win: up to <span className="text-neon">◆ {formatNumber(Math.round(rewardRate * def.rewardSeconds))}</span>
+            <span className="text-[10px] font-tech text-dim">
+              Win: up to <span className="font-mono-code text-neon">● {formatNumber(Math.round(rewardRate * def.rewardSeconds))}</span>
             </span>
           )}
           {!unlocked && <span className="text-[10px] font-tech text-dim">Locked</span>}
@@ -238,7 +238,7 @@ export const ArcadeHub: React.FC = () => {
       <PanelHeader
         icon={<Gamepad2 size={16} className="text-neon" aria-hidden />}
         title="ARCADE"
-        subtitle="Spend a token on a short game. Wins pay essence."
+        subtitle="One token per short game."
         right={unlocked ? meter : undefined}
       />
 

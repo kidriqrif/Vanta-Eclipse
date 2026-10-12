@@ -160,7 +160,7 @@ export const CardsCollection: React.FC = () => {
       <PanelHeader
         icon={<Layers size={16} className="text-neon" aria-hidden />}
         title="BOSS CARDS"
-        subtitle="Every boss you defeat drops a card."
+        subtitle="One per boss win."
         right={
           <span className="text-[10px] font-mono-code font-bold text-dim border border-line px-1.5 py-1">
             {formatNumber(cards.length)} / {formatNumber(CARD_COLLECTION_CAP)}

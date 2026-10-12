@@ -229,7 +229,7 @@ export const EclipsePanel: React.FC = () => {
         icon={<Moon size={16} className="text-crimson" aria-hidden />}
         tone="crimson"
         title="ECLIPSE"
-        subtitle="Trade this run for permanent powers."
+        subtitle="Trade this run for powers."
         right={
           <span className="text-[11px] font-mono-code font-bold text-purple border border-purple/50 px-1.5 py-1">
             <span aria-hidden>◆ </span>
@@ -349,7 +349,7 @@ export const EclipsePanel: React.FC = () => {
                   type="button"
                   aria-pressed={active}
                   onClick={() => choose(f)}
-                  className={`min-h-[32px] px-0.5 text-[9px] font-mono-code font-bold uppercase transition-colors ${
+                  className={`min-h-[32px] px-0.5 text-[9px] font-tech font-bold uppercase transition-colors ${
                     active ? 'bg-neon text-void underline underline-offset-2' : 'text-dim hover:text-ink'
                   }`}
                 >

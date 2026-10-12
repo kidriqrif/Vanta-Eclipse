@@ -2,6 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { deflateSync, inflateSync } from 'node:zlib';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { ENEMIES } from '../src/data/definitions';
+import { WORLD_TWO_FIRST_LEVEL } from '../src/game/state';
 import { enemyHpFor } from '../src/game/stats';
 import { GUIDE_ALL_SEEN, dispatch, freshGame, openTab, patchState } from './helpers';
 
@@ -60,7 +61,8 @@ function midGame(now: number) {
     peakRunLevel: 68,
     eclipseCount: 2,
     unlockedWorlds: ['dark_forest', 'frozen_ruins'],
-    currencies: { essence: 486_250, void_crystals: 38, astral_shards: 120, void_scraps: 345 },
+    // Essence just spent: enough for the next few upgrades, not for dozens of them.
+    currencies: { essence: 4_860, void_crystals: 38, astral_shards: 120, void_scraps: 345 },
     upgrades: { void_claws: 34, eclipse_fangs: 6, dark_focus: 14, blood_moon: 6, essence_siphon: 15 },
     equipped: {
       weapon: item(101, 'weapon', 3, 62, { tap_flat: 96, crit_chance: 0.039, crit_damage: 0.31, boss: 0.18 }),
@@ -148,18 +150,27 @@ const QUEST_PATCH = `
 
 const FRESH_TAP_GUARD = '{ times: [], xs: [], ys: [], touch: [], lockedUntil: 0, strikes: 0, lastStrikeAt: 0 }';
 
-/** Puts the fight at `level` against a normal `defId` with `hpFrac` of its health left. */
+/**
+ * Puts the fight at `level` against a normal `defId` with `hpFrac` of its health left. A Dark
+ * Forest level is the next run, earlier in its climb: its peak is that level and the Frozen Ruins
+ * are not open again yet, as after any Eclipse.
+ */
 async function setFight(page: Page, mode: 'NORMAL' | 'FARM_MODE', level: number, defId: string, hpFrac = 1) {
   const maxHp = enemyHpFor(level, defId, false);
   const hp = Math.round(maxHp * hpFrac);
+  const laterRun = level < WORLD_TWO_FIRST_LEVEL ? `s.peakRunLevel = ${level}; s.unlockedWorlds = ['dark_forest'];` : '';
   await patchState(
     page,
     `s.combat = { ...s.combat, mode: '${mode}', level: ${level}, autoAcc: 0, bossTimeLeft: 30,
        enemy: { defId: '${defId}', level: ${level}, maxHp: ${maxHp}, hp: ${hp}, isBoss: false } };
      s.ui.tapGuard = ${FRESH_TAP_GUARD};
+     ${laterRun}
      return s;`,
   );
 }
+
+/** The seeded save as a state patch: the mid-game save, its quests and its Arcade. */
+const seedPatch = () => `Object.assign(s, ${JSON.stringify(midGame(Date.now()))}); ${QUEST_PATCH}`;
 
 /**
  * A fresh game with the mid-game save on top. `damageNumbers: false` is the real Settings
@@ -167,9 +178,18 @@ async function setFight(page: Page, mode: 'NORMAL' | 'FARM_MODE', level: number,
  */
 async function seed(page: Page, opts: { damageNumbers: boolean }) {
   await freshGame(page);
-  const save = JSON.stringify(midGame(Date.now()));
-  await patchState(page, `Object.assign(s, ${save}); ${QUEST_PATCH} s.settings.damageNumbers = ${opts.damageNumbers}; return s;`);
+  await patchState(page, `${seedPatch()} s.settings.damageNumbers = ${opts.damageNumbers}; return s;`);
 }
+
+/**
+ * Puts the save back as seeded, keeping the UI (the combo carries on, as it does into the next
+ * enemy). A fight that overshoots is retried from here, so nothing a discarded attempt earned
+ * (essence, a drop, a card, companion XP) shows in the shot.
+ */
+async function reseed(page: Page) {
+  await patchState(page, `${seedPatch()} return s;`);
+}
+
 
 function wanted(name: string) {
   return ONLY.length === 0 || ONLY.some((p) => name.startsWith(p));
@@ -446,10 +466,15 @@ function checkAndFreeze(page: Page, want: Want): Promise<{ overshot: boolean; fr
     if (frozen) {
       for (const anim of document.getAnimations()) {
         // The shake is finished so the arena lines up with the header; tap ripples are finished
-        // too, since on a phone the finger covers the spot it taps.
+        // too, since on a phone the finger covers the spot it taps. Transitions (the HP bar) land
+        // on the value the numbers show. The sprite's hit flash is caught late, when the enemy is
+        // back to its own colours but still jolted, not bleached white at the moment of impact.
         const name = (anim as CSSAnimation).animationName;
-        if (name === 'screenShake' || name === 'tapRipple') anim.finish();
-        else anim.pause();
+        if (anim instanceof CSSTransition || name === 'screenShake' || name === 'tapRipple') anim.finish();
+        else if (name === 'enemyHitShake' || name === 'enemyCritShake' || name === 'bossHitShake') {
+          anim.currentTime = Number(anim.effect?.getTiming().duration ?? 0) * 0.7;
+          anim.pause();
+        } else anim.pause();
       }
       // Hold the game clock too (the provider ticks through this same store object), so no
       // auto-attack lands between this check and the screenshot.
@@ -595,8 +620,11 @@ const SHOTS: Shot[] = [
     run: async (page) => {
       await seed(page, { damageNumbers: true });
       await page.waitForTimeout(300);
-      const reset = () => setFight(page, 'NORMAL', 66, 'rime_fiend');
-      const name = ENEMIES.rime_fiend.displayName;
+      const reset = async () => {
+        await reseed(page);
+        await setFight(page, 'NORMAL', 66, 'hollow_sentinel');
+      };
+      const name = ENEMIES.hollow_sentinel.displayName;
       await fightUntil(page, { reset, level: 66, boss: false, name, lo: 0.3, hi: 0.72, combo: 15, seed: 11 });
       await shot(page, '01-combat');
     },
@@ -607,8 +635,11 @@ const SHOTS: Shot[] = [
     run: async (page) => {
       await seed(page, { damageNumbers: true });
       await openTab(page, /cards/i);
+      // The cards themselves, not the rules above them (06 shows the companion they feed).
+      await scrollPanelTo(page.getByText('Elder Comet Drifter').locator('xpath=ancestor::div[contains(@class, "border-l-4")][1]'), 4);
       await page.waitForTimeout(300);
       const reset = async () => {
+        await reseed(page);
         await setFight(page, 'FARM_MODE', 69, 'hollow_sentinel');
         expect(await dispatch(page, { type: 'CHALLENGE_BOSS' })).toMatchObject({ ok: true });
       };
@@ -619,8 +650,9 @@ const SHOTS: Shot[] = [
     },
   },
   // The bag: a new Mythic and a new Epic on top of the 5-column grid, under the six equipped slots.
-  panel('03-armor', /armor/i, { level: 66, enemy: 'frost_shade', hp: 0.6 }),
-  panel('04-arcade', /arcade/i, { level: 64, enemy: 'hollow_sentinel', hp: 0.77 }),
+  // Every arena shows a different enemy; three are the next run, back in the Dark Forest.
+  panel('03-armor', /armor/i, { level: 44, enemy: 'thorn_fiend', hp: 0.6 }),
+  panel('04-arcade', /arcade/i, { level: 64, enemy: 'frost_shade', hp: 0.77 }),
   {
     // Memory Match mid-run: three pairs found, a fourth card turned.
     name: '05-memory',
@@ -633,12 +665,13 @@ const SHOTS: Shot[] = [
       await shot(page, '05-memory');
     },
   },
-  panel('06-beast', /beast/i, { level: 63, enemy: 'frost_shade', hp: 0.64 }),
-  panel('07-eclipse', /eclipse/i, { level: 67, enemy: 'hollow_sentinel', hp: 0.55 }, async (page) => {
+  panel('06-beast', /beast/i, { level: 47, enemy: 'shade_stalker', hp: 0.64 }),
+  // In the Frozen Ruins: the panel shows what this run's peak would pay.
+  panel('07-eclipse', /eclipse/i, { level: 67, enemy: 'rime_fiend', hp: 0.55 }, async (page) => {
     // The Ascendant Powers tree, not the reset summary above it.
     await scrollPanelTo(page.getByRole('heading', { name: /ascendant powers/i }));
   }),
-  panel('08-relics', /relics/i, { level: 62, enemy: 'rime_fiend', hp: 0.71 }),
+  panel('08-relics', /relics/i, { level: 42, enemy: 'gloom_wisp', hp: 0.71 }),
 ];
 
 test.describe('store screenshots', () => {

@@ -295,7 +295,7 @@ export const VoidReflexGame: React.FC<MinigameProps> = ({ onFinish }) => {
       </div>
 
       <div className="w-full flex flex-col items-center gap-1 text-center">
-        <p role="status" aria-live="polite" className={`min-h-[18px] text-xs font-display font-bold tracking-wide ${status.tone}`}>
+        <p role="status" aria-live="polite" className={`min-h-[18px] text-xs font-display font-bold uppercase tracking-wider ${status.tone}`}>
           {status.text}
         </p>
         <p className="text-[10px] font-tech text-dim">Tap the sigil that flares, the moment it flares. Tapping early is a miss.</p>

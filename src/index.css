@@ -355,13 +355,6 @@
   animation: eclipseFlash 2.4s ease-in-out forwards;
 }
 
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  scrollbar-width: none;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .anim-shake,
   .anim-enemy-idle,

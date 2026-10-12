@@ -540,6 +540,7 @@ export const GearPanel: React.FC = () => {
     flash(res.ok ? `Salvaged commons: +${formatNumber(res.value ?? 0)} scraps.` : 'No commons to salvage.');
   };
 
+  // A filter cell: the slot over its count, sized to share one row with the others, never scrolled.
   const chip = (id: string, label: string, count: number) => {
     const active = filter === id;
     return (
@@ -547,12 +548,14 @@ export const GearPanel: React.FC = () => {
         key={id}
         type="button"
         aria-pressed={active}
+        aria-label={`${label} (${formatNumber(count)})`}
         onClick={() => setFilter(id)}
-        className={`shrink-0 min-h-[32px] px-1.5 text-[10px] font-tech font-bold uppercase border transition-colors active:translate-y-0.5 ${
+        className={`min-w-0 min-h-[36px] px-0.5 flex flex-col items-center justify-center gap-0.5 border transition-colors active:translate-y-0.5 ${
           active ? 'bg-neon text-abyss border-neon' : 'bg-panel text-dim border-line hover:text-ink'
         }`}
       >
-        {label} ({formatNumber(count)})
+        <span className="max-w-full truncate text-[9px] font-tech font-bold uppercase leading-none">{label}</span>
+        <span className="text-[10px] font-mono-code font-bold leading-none">{formatNumber(count)}</span>
       </button>
     );
   };
@@ -564,7 +567,7 @@ export const GearPanel: React.FC = () => {
         title="ARMOR"
         subtitle={
           <span aria-live="polite" className={notice ? 'text-ink' : undefined}>
-            {notice ?? 'Gear stays through an Eclipse.'}
+            {notice ?? 'Kept through every Eclipse.'}
           </span>
         }
         right={
@@ -583,15 +586,16 @@ export const GearPanel: React.FC = () => {
           ))}
         </section>
 
-        <div className="flex items-center gap-1">
-          <div className="flex-1 min-w-0 flex items-center gap-1 overflow-x-auto no-scrollbar" role="group" aria-label="Filter storage">
+        {/* The seven filters share one row with SALVAGE; nothing scrolls sideways or hides behind it. */}
+        <div className="flex items-stretch gap-1">
+          <div className="flex-1 min-w-0 grid grid-cols-7 gap-1" role="group" aria-label="Filter storage">
             {chip('ALL', 'All', inventory.length)}
             {FORGE_SLOTS.map((s) => chip(s.id, s.displayName, slotCounts[s.id] || 0))}
           </div>
           <TwoTapButton
             variant="ghost"
             size="sm"
-            className="shrink-0 !px-1.5"
+            className="shrink-0 min-w-[60px] !px-1.5"
             disabled={commons === 0}
             label={
               <>

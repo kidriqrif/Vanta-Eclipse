@@ -388,7 +388,7 @@ export const JournalPanel: React.FC = () => {
       <PanelHeader
         icon={<BookOpen size={16} className="text-neon" aria-hidden />}
         title="CODEX"
-        subtitle="Goals and their rewards. Claim each one when it is done."
+        subtitle="Claim each goal’s reward."
         right={
           totalReady > 0 ? (
             <span className="px-1.5 py-1 border border-gold/60 text-[10px] font-tech font-bold text-gold">

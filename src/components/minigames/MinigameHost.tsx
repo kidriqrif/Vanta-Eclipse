@@ -143,10 +143,9 @@ export const MinigameHost: React.FC<{ gameId: string; runId: number; onClose: ()
                 {armed && !banner ? 'Token is not refunded' : 'VANTA ARCADE'}
               </span>
             </div>
-            {/* Power light: lit while a run is live. */}
-            <span className="w-[96px] flex justify-end" aria-hidden>
-              <span className={`w-3 h-3 border-2 border-abyss ${banner ? 'bg-faint' : 'bg-toxic'}`} />
-            </span>
+            {/* Power light: lit while a run is live. Only as wide as itself, so the longest game
+                name still fits between it and QUIT on a 360 px phone. */}
+            <span className={`shrink-0 mr-1 w-3 h-3 border-2 border-abyss ${banner ? 'bg-faint' : 'bg-toxic'}`} aria-hidden />
           </header>
 
           <div className="relative flex-1 min-h-0 m-2 bg-void border-4 border-abyss shadow-[inset_3px_3px_0_0_rgba(0,0,0,0.7)] flex flex-col overflow-hidden">
@@ -216,7 +215,7 @@ const ResultBanner: React.FC<{ banner: Banner; isRecord: boolean; onContinue: ()
             <div className="w-full bg-panel2 border border-line p-2 flex flex-col items-center gap-0.5">
               <span className="text-[9px] font-tech text-dim uppercase tracking-wider">Essence earned</span>
               <span className="text-base font-mono-code font-bold text-neon">
-                <span aria-hidden>◆ </span>+{formatNumber(banner.essence)} essence
+                <span aria-hidden>● </span>+{formatNumber(banner.essence)} essence
               </span>
               {!banner.won && <span className="text-[10px] font-tech text-dim">A loss still pays part of a win.</span>}
             </div>

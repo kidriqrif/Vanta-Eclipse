@@ -149,7 +149,7 @@ export const MemoryMatchGame: React.FC<MinigameProps> = ({ onFinish }) => {
           : { text: 'Turn two cards', tone: 'text-dim' };
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col items-center justify-between gap-3 p-3">
+    <div className="flex-1 min-h-0 flex flex-col items-center gap-3 p-3">
       <div className="w-full max-w-sm grid grid-cols-2 gap-2">
         <div className="bg-panel border border-line px-2 py-1 flex flex-col items-center">
           <span className="text-[9px] font-tech text-dim uppercase tracking-wider">Attempts</span>
@@ -167,65 +167,69 @@ export const MemoryMatchGame: React.FC<MinigameProps> = ({ onFinish }) => {
         </div>
       </div>
 
-      <div className="w-full max-w-sm grid grid-cols-4 gap-2">
-        {deck.map((face, i) => {
-          const isMatched = matched[i];
-          const isOpen = open.includes(i);
-          // A lost run turns the rest face up so the player sees where the pairs were.
-          const revealed = !isMatched && !isOpen && phase === 'done' && !won;
-          const faceUp = isMatched || isOpen || revealed;
-          const wrong = isOpen && open.length === 2;
-          const label = isMatched
-            ? `${face}, matched`
-            : isOpen
-              ? wrong
-                ? `${face}, not a pair`
-                : face
-              : revealed
-                ? `${face}, not found`
-                : 'face down';
-          return (
-            <button
-              key={i}
-              type="button"
-              onClick={() => flip(i)}
-              aria-label={`Card ${i + 1}, ${label}`}
-              aria-disabled={phase !== 'play' || isMatched || isOpen}
-              className={`relative aspect-square border-2 flex items-center justify-center overflow-hidden transition-transform duration-150 motion-reduce:transition-none ${
-                isMatched
-                  ? 'border-toxic bg-toxic/10'
-                  : wrong
-                    ? 'border-crimson bg-crimson/10'
-                    : isOpen
-                      ? 'border-neon-bright bg-active scale-105'
-                      : revealed
-                        ? 'border-line bg-panel2'
-                        : 'border-line bg-panel hover:border-neon'
-              }`}
-            >
-              <img
-                src={faceUp ? `/art/minigames/face_${face}.png` : '/art/minigames/card_back.png'}
-                alt=""
-                draggable={false}
-                className={`w-full h-full object-contain p-1.5 pointer-events-none ${revealed ? 'opacity-40' : ''}`}
-              />
-              {isMatched && (
-                <span aria-hidden className="absolute top-0.5 right-1 text-xs font-bold text-toxic">
-                  ✓
-                </span>
-              )}
-              {wrong && (
-                <span aria-hidden className="absolute top-0.5 right-1 text-xs font-bold text-crimson">
-                  ✕
-                </span>
-              )}
-            </button>
-          );
-        })}
+      {/* Three columns by four rows, as wide as the screen allows without running out of height
+          (cqw/cqh are this box's size), so the cards fill the console instead of floating in it. */}
+      <div className="flex-1 min-h-0 w-full flex items-center justify-center [container-type:size]">
+        <div className="w-[min(100cqw,calc(75cqh-2px))] max-w-sm grid grid-cols-3 gap-2">
+          {deck.map((face, i) => {
+            const isMatched = matched[i];
+            const isOpen = open.includes(i);
+            // A lost run turns the rest face up so the player sees where the pairs were.
+            const revealed = !isMatched && !isOpen && phase === 'done' && !won;
+            const faceUp = isMatched || isOpen || revealed;
+            const wrong = isOpen && open.length === 2;
+            const label = isMatched
+              ? `${face}, matched`
+              : isOpen
+                ? wrong
+                  ? `${face}, not a pair`
+                  : face
+                : revealed
+                  ? `${face}, not found`
+                  : 'face down';
+            return (
+              <button
+                key={i}
+                type="button"
+                onClick={() => flip(i)}
+                aria-label={`Card ${i + 1}, ${label}`}
+                aria-disabled={phase !== 'play' || isMatched || isOpen}
+                className={`relative aspect-square border-2 flex items-center justify-center overflow-hidden transition-transform duration-150 motion-reduce:transition-none ${
+                  isMatched
+                    ? 'border-toxic bg-toxic/10'
+                    : wrong
+                      ? 'border-crimson bg-crimson/10'
+                      : isOpen
+                        ? 'border-neon-bright bg-active scale-105'
+                        : revealed
+                          ? 'border-line bg-panel2'
+                          : 'border-line bg-panel hover:border-neon'
+                }`}
+              >
+                <img
+                  src={faceUp ? `/art/minigames/face_${face}.png` : '/art/minigames/card_back.png'}
+                  alt=""
+                  draggable={false}
+                  className={`w-full h-full object-contain p-1.5 pointer-events-none ${revealed ? 'opacity-40' : ''}`}
+                />
+                {isMatched && (
+                  <span aria-hidden className="absolute top-0.5 right-1 text-xs font-bold text-toxic">
+                    ✓
+                  </span>
+                )}
+                {wrong && (
+                  <span aria-hidden className="absolute top-0.5 right-1 text-xs font-bold text-crimson">
+                    ✕
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="w-full flex flex-col items-center gap-1 text-center">
-        <p role="status" aria-live="polite" className={`min-h-[18px] text-xs font-display font-bold tracking-wide ${status.tone}`}>
+        <p role="status" aria-live="polite" className={`min-h-[18px] text-xs font-display font-bold uppercase tracking-wider ${status.tone}`}>
           {status.text}
         </p>
         <p className="text-[10px] font-tech text-dim">
