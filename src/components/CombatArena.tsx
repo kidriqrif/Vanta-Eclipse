@@ -326,14 +326,16 @@ export const CombatArena: React.FC = () => {
             </div>
           </div>
 
-          {/* The target: a hard bracket frame around the enemy */}
+          {/* The target: a hard bracket frame around the enemy. On a short screen the square shrinks
+              (min-h-0, with the width following the height) rather than pushing its corners into
+              the chips above. */}
           <div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-1 pointer-events-none">
-            <div ref={spriteBoxRef} className="relative w-28 h-28 max-h-full aspect-square shrink flex items-center justify-center">
+            <div ref={spriteBoxRef} className="relative h-28 min-h-0 max-h-full aspect-square shrink flex items-center justify-center">
               <span className={`absolute left-0 top-0 w-4 h-4 border-l-2 border-t-2 ${frameTone}`} aria-hidden />
               <span className={`absolute right-0 top-0 w-4 h-4 border-r-2 border-t-2 ${frameTone}`} aria-hidden />
               <span className={`absolute left-0 bottom-0 w-4 h-4 border-l-2 border-b-2 ${frameTone}`} aria-hidden />
               <span className={`absolute right-0 bottom-0 w-4 h-4 border-r-2 border-b-2 ${frameTone}`} aria-hidden />
-              <div className="relative flex items-center justify-center" style={{ transform: `scale(${viewScale})` }}>
+              <div className="relative w-full h-full flex items-center justify-center" style={{ transform: `scale(${viewScale})` }}>
                 {texture && brokenTexture !== texture ? (
                   <img
                     ref={spriteImgRef}
@@ -341,7 +343,7 @@ export const CombatArena: React.FC = () => {
                     alt={enemyName}
                     draggable={false}
                     onError={() => setBrokenTexture(texture)}
-                    className={`w-20 h-20 object-contain pixelated ${spriteClass(isBoss, hit.kind)}`}
+                    className={`w-5/7 h-5/7 object-contain pixelated ${spriteClass(isBoss, hit.kind)}`}
                   />
                 ) : (
                   <span role="img" aria-label={enemyName}>

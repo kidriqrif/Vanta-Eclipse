@@ -3,7 +3,7 @@ import { deflateSync, inflateSync } from 'node:zlib';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { ENEMIES } from '../src/data/definitions';
 import { enemyHpFor } from '../src/game/stats';
-import { GUIDE_ALL_SEEN, arena, dispatch, freshGame, openTab, patchState } from './helpers';
+import { GUIDE_ALL_SEEN, dispatch, freshGame, openTab, patchState } from './helpers';
 
 /**
  * Not a test: captures the Google Play phone screenshots into production/screenshots/, in store
@@ -78,6 +78,20 @@ function midGame(now: number) {
       item(116, 'boots', 0, 65, { tap_flat: 104 }),
       item(115, 'armor', 2, 63, { boss: 0.3, tap_pct: 0.14, crit_chance: 0.025 }),
       item(114, 'ring', 0, 61, { crit_chance: 0.021 }),
+      // Older, mostly modest drops: what two Eclipses of play leave in the bag after salvaging.
+      item(80, 'boots', 2, 61, { tap_pct: 0.12, essence: 0.1, crit_chance: 0.018 }),
+      item(81, 'helmet', 0, 60, { tap_flat: 71 }),
+      item(82, 'weapon', 1, 59, { tap_flat: 88, crit_damage: 0.14 }),
+      item(83, 'ring', 3, 58, { essence: 0.18, crit_chance: 0.033, tap_pct: 0.12, boss: 0.2 }),
+      item(84, 'gloves', 0, 57, { crit_chance: 0.015 }),
+      item(85, 'armor', 1, 56, { boss: 0.12, essence: 0.08 }),
+      item(86, 'weapon', 2, 55, { tap_flat: 92, tap_pct: 0.1, boss: 0.15 }),
+      item(87, 'boots', 0, 54, { tap_flat: 60 }),
+      item(88, 'helmet', 1, 53, { crit_damage: 0.18, essence: 0.07 }),
+      item(89, 'ring', 0, 52, { essence: 0.06 }),
+      item(90, 'gloves', 2, 51, { tap_pct: 0.11, crit_chance: 0.02, tap_flat: 64 }),
+      item(91, 'armor', 0, 50, { boss: 0.09 }),
+      item(92, 'weapon', 1, 49, { tap_flat: 70, crit_chance: 0.014 }),
     ],
     cards: [
       card(210, 'elder_frost_shade', 'Elder Comet Drifter', 'epic', 60, 1088, 23, 60_000),
@@ -351,13 +365,16 @@ const COMBO_LAPSE_MS = 1700;
 /**
  * Checks the fight in the page and, when it looks right, freezes every CSS animation in the
  * same task, so the screenshot records exactly that frame: the newest damage number a crit at
- * full opacity, every crit off the sprite's body, every visible number clear of the others, of
- * the enemy's name and of the badges, the hit flash on the sprite, the combo badge and the HP
- * bar inside [lo, hi]. The screen shake is finished rather than frozen, so the arena stays lined
- * up with the header. `overshot` means a kill or too much damage, and the fight has to be put
- * back.
+ * full opacity, every crit off the sprite's body, every visible number clear of the others and
+ * of the arena's fixed parts (the stage track, the chips, the target frame's corners, the
+ * enemy's name and the HP row), the hit flash on the sprite, the combo badge and the HP bar
+ * inside [lo, hi]. The screen shake and the tap ripples are finished rather than frozen.
+ * `overshot` means a kill or too much damage, and the fight has to be put back.
+ *
+ * The fixed parts are found by the arena's layout, and a missing one is an error, not a pass:
+ * when CombatArena changes shape this throws instead of quietly letting numbers cover the UI.
  */
-function checkAndFreeze(page: Page, want: Want): Promise<{ overshot: boolean; frozen: boolean; combo: number }> {
+function checkAndFreeze(page: Page, want: Want): Promise<{ overshot: boolean; frozen: boolean; combo: number; why: string }> {
   return page.evaluate((w) => {
     const s = (window as unknown as { __vanta: { getState(): import('../src/game/state').GameState } }).__vanta.getState();
     const pct = s.combat.enemy.hp / s.combat.enemy.maxHp;
@@ -366,21 +383,29 @@ function checkAndFreeze(page: Page, want: Want): Promise<{ overshot: boolean; fr
     const newest = nums[nums.length - 1];
     const crit = !!newest && (newest.textContent ?? '').startsWith('CRIT');
     const spans = [...arenaEl.querySelectorAll('span')];
-    const byText = (t: string) => spans.find((el) => el.textContent === t);
-    // The enemy's name, the PET and RELIC chips and the combo badge must stay readable.
-    const fixed = [
-      byText(w.name),
-      byText('PET')?.parentElement,
-      byText('RELIC')?.parentElement,
-      spans.find((el) => /STRIKES/.test(el.textContent ?? ''))?.parentElement,
-    ];
-    const obstacles = fixed.filter((el): el is HTMLElement => !!el).map((el) => el.getBoundingClientRect());
+    // The arena's fixed parts, each of which must stay readable.
+    const stageTrack = arenaEl.querySelector('[aria-label^="Stage "]');
+    const chips = [...arenaEl.querySelectorAll('span.h-6')]; // companion, relic, combo (once it shows) and crit
+    const corners = [...arenaEl.querySelectorAll('span.w-4.h-4')]; // the target frame
+    const namePlate = spans.find((el) => el.textContent === w.name);
+    const hpRow = spans.find((el) => /^(boss )?hp$/i.test(el.textContent ?? ''))?.parentElement;
+    const comboShown = s.ui.combo.count >= 3;
+    const expectChips = 3 + (comboShown ? 1 : 0);
+    if (!stageTrack || chips.length !== expectChips || corners.length !== 4 || !hpRow) {
+      throw new Error(
+        `the arena no longer looks the way this guard expects (stage track ${!!stageTrack}, ${chips.length}/${expectChips} chips, ` +
+          `${corners.length}/4 frame corners, HP row ${!!hpRow}): update checkAndFreeze`,
+      );
+    }
+    const fixed = [stageTrack, ...chips, ...corners, namePlate, hpRow];
+    const obstacles = fixed.filter((el): el is Element => !!el).map((el) => el.getBoundingClientRect());
     const visible = nums.filter((n) => Number(getComputedStyle(n).opacity) > 0.12);
     const boxes = visible.map((n) => n.getBoundingClientRect());
     type Box = { left: number; right: number; top: number; bottom: number };
     const apart = (a: Box, b: Box) => a.right < b.left || b.right < a.left || a.bottom < b.top || b.bottom < a.top;
     const clear =
-      !!fixed[0] && boxes.every((a, i) => obstacles.every((o) => apart(a, o)) && boxes.every((b, j) => i === j || apart(a, b)));
+      !!namePlate &&
+      boxes.every((a, i) => obstacles.every((o) => apart(a, o)) && boxes.every((b, j) => i === j || apart(a, b)));
     // Crits are the numbers the shot is about, so their glyphs (the line box less the leading)
     // must also stay off the body of the sprite: the middle 30% of the enemy image, where the
     // bright core is. A tendril behind one is fine; the core makes it unreadable. That holds for
@@ -402,9 +427,28 @@ function checkAndFreeze(page: Page, want: Want): Promise<{ overshot: boolean; fr
     const toasts = document.querySelectorAll('.anim-toast').length;
     const overshot = s.combat.level !== w.level || s.combat.enemy.isBoss !== w.boss || pct < w.lo;
     const frozen = !overshot && pct <= w.hi && s.ui.combo.count >= w.combo && critsReadable && clear && toasts === 0;
+    // The first reason a frame was turned down, tallied by fightUntil for its error message.
+    const why = overshot
+      ? 'overshot'
+      : pct > w.hi
+        ? 'hp above range'
+        : s.ui.combo.count < w.combo
+          ? 'combo too low'
+          : !crit
+            ? 'newest number not a crit'
+            : !critsReadable
+              ? 'crit on the sprite'
+              : !clear
+                ? 'a number covers the UI or another number'
+                : toasts > 0
+                  ? 'toast showing'
+                  : 'ok';
     if (frozen) {
       for (const anim of document.getAnimations()) {
-        if ((anim as CSSAnimation).animationName === 'screenShake') anim.finish();
+        // The shake is finished so the arena lines up with the header; tap ripples are finished
+        // too, since on a phone the finger covers the spot it taps.
+        const name = (anim as CSSAnimation).animationName;
+        if (name === 'screenShake' || name === 'tapRipple') anim.finish();
         else anim.pause();
       }
       // Hold the game clock too (the provider ticks through this same store object), so no
@@ -413,31 +457,68 @@ function checkAndFreeze(page: Page, want: Want): Promise<{ overshot: boolean; fr
       const dispatch = store.dispatch;
       store.dispatch = (a) => (a.type === 'TICK' ? { ok: true } : dispatch(a));
     }
-    return { overshot, frozen, combo: s.ui.combo.count };
+    return { overshot, frozen, combo: s.ui.combo.count, why };
   }, want);
 }
 
+/** Half the width of a crit as it pops (scale 1.15), plus a little air. */
+const CRIT_HALF_WIDTH = 64;
+/** How far a number rises before it fades (floatUpFade), so older ones stay below the chips. */
+const NUMBER_RISE = 42;
+
 /**
- * Taps like a person (varied spots, about three taps a second, on the lower half of the enemy,
- * so a fresh crit sits between its body and its name and the numbers rise over it) until
- * checkAndFreeze holds a good frame. A kill or an overshoot calls `reset` to put the same fight
- * back; the combo carries on, as it does when the next enemy appears.
+ * Where a tap may land: beside the target frame, left or right, low enough that the numbers
+ * rising from it clear the chips above, and high enough to clear the HP row below. A crit is
+ * wider than the gap above or below the frame, so beside it is the only clean place to show one.
+ */
+async function tapZones(page: Page) {
+  return page.evaluate(
+    ({ half, rise }) => {
+      const arenaEl = document.querySelector('[data-testid="combat-arena"]')!;
+      const a = arenaEl.getBoundingClientRect();
+      const corners = [...arenaEl.querySelectorAll('span.w-4.h-4')].map((el) => el.getBoundingClientRect());
+      const frame = {
+        left: Math.min(...corners.map((c) => c.left)),
+        right: Math.max(...corners.map((c) => c.right)),
+        top: Math.min(...corners.map((c) => c.top)),
+        bottom: Math.max(...corners.map((c) => c.bottom)),
+      };
+      return {
+        left: [a.left + half, frame.left - half] as const,
+        right: [frame.right + half, a.right - half] as const,
+        y: [frame.top + rise + 18, frame.bottom + 8] as const,
+      };
+    },
+    { half: CRIT_HALF_WIDTH, rise: NUMBER_RISE },
+  );
+}
+
+/**
+ * Taps like a person (varied spots on either side of the enemy, about three taps a second; see
+ * tapZones) until checkAndFreeze holds a good frame. A kill or an overshoot calls `reset` to put
+ * the same fight back; the combo carries on, as it does when the next enemy appears.
  */
 async function fightUntil(page: Page, want: Want & { reset: () => Promise<void>; seed: number }) {
   const { reset, seed, ...check } = want;
-  const box = (await arena(page).boundingBox())!;
   const rand = lcg(seed);
+  const turnedDown: Record<string, number> = {};
   await reset();
+  const zones = await tapZones(page);
+  if (zones.left[1] <= zones.left[0] || zones.right[1] <= zones.right[0] || zones.y[1] <= zones.y[0]) {
+    throw new Error(`no room beside the target frame for a crit: ${JSON.stringify(zones)}`);
+  }
+  const within = ([lo, hi]: readonly [number, number]) => lo + rand() * (hi - lo);
   for (let i = 0; i < 400; i++) {
-    await page.touchscreen.tap(box.x + box.width * (0.3 + rand() * 0.4), box.y + box.height * (0.5 + rand() * 0.08));
+    await page.touchscreen.tap(within(rand() < 0.5 ? zones.left : zones.right), within(zones.y));
     await page.waitForTimeout(30);
     const r = await checkAndFreeze(page, check);
     if (r.frozen) return;
+    turnedDown[r.why] = (turnedDown[r.why] ?? 0) + 1;
     if (r.overshot) await reset();
     if (r.combo > COMBO_CEILING) await page.waitForTimeout(COMBO_LAPSE_MS);
     await page.waitForTimeout(220 + rand() * 200);
   }
-  throw new Error('the fight never reached the wanted state');
+  throw new Error(`the fight never reached the wanted state; frames turned down: ${JSON.stringify(turnedDown)}`);
 }
 
 // ------------------------------------------------------------------ the minigame
@@ -537,11 +618,8 @@ const SHOTS: Shot[] = [
       await shot(page, '02-boss');
     },
   },
-  panel('03-armor', /armor/i, { level: 66, enemy: 'frost_shade', hp: 0.6 }, async (page) => {
-    // A new Mythic drop compared with the equipped Legendary.
-    await page.getByRole('button', { name: /mythic weapon/i }).first().click();
-    await expect(page.getByRole('dialog')).toBeVisible();
-  }),
+  // The bag: a new Mythic and a new Epic on top of the 5-column grid, under the six equipped slots.
+  panel('03-armor', /armor/i, { level: 66, enemy: 'frost_shade', hp: 0.6 }),
   panel('04-arcade', /arcade/i, { level: 64, enemy: 'hollow_sentinel', hp: 0.77 }),
   {
     // Memory Match mid-run: three pairs found, a fourth card turned.
