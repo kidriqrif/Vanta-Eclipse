@@ -152,7 +152,7 @@ export const GUIDE: GuideStep[] = [
     title: 'AUTO-ATTACK ONLINE',
     lines: [
       'You now strike on your own, even while you browse the other tabs. Tapping still adds damage.',
-      `You also earn while away: ${pct(BASE_OFFLINE_EFFICIENCY)} of your rate for up to ${formatNumber(BASE_OFFLINE_CAP_HOURS)} hours. Each run, auto-attack starts at level ${formatNumber(AUTO_ATTACK_UNLOCK_LEVEL)}.`,
+      `You also earn while away: ${pct(BASE_OFFLINE_EFFICIENCY)} of your rate for up to ${formatNumber(BASE_OFFLINE_CAP_HOURS)} hours. Each run, auto-attack starts at level ${formatNumber(AUTO_ATTACK_UNLOCK_LEVEL)}, or at once with the Eternal Reflex power.`,
     ],
     due: isAutoAttackUnlocked,
   },
@@ -184,7 +184,7 @@ export const GUIDE: GuideStep[] = [
     title: 'THE ARCADE IS OPEN',
     lines: [
       `Short minigames that pay essence. Each costs a token; tokens refill 1 every ${formatNumber(TOKEN_REGEN_MS / 60_000)} minutes, up to ${formatNumber(TOKEN_CAP)}.`,
-      `A win pays the most, a loss still pays ${pct(LOSS_FLOOR)}. More games open at levels ${joinLevels(laterGames)}.`,
+      `A loss still pays ${pct(LOSS_FLOOR)} of what a win would. More games open at levels ${joinLevels(laterGames)}.`,
     ],
     tab: 'ARCADE',
     due: (s) => s.lifetimePeakLevel >= ARCADE_UNLOCK_LEVEL,
@@ -205,7 +205,7 @@ export const GUIDE: GuideStep[] = [
     id: 'ruins',
     title: 'A COMPANION JOINS YOU',
     lines: [
-      `Ember fights at your side and gains ${formatNumber(PET_XP_PER_KILL)} XP from every kill. It evolves at level ${formatNumber(evolveAt)}. Meet it in BEAST, under MORE.`,
+      `Ember travels with you and raises the essence you earn. It gains ${formatNumber(PET_XP_PER_KILL)} XP from every kill and evolves at level ${formatNumber(evolveAt)}. Meet it in BEAST, under MORE.`,
       `Feed it boss cards in CARDS to grow faster. Bosses here can also drop relics (${pct(RELIC_DROP_CHANCE)} each).`,
     ],
     tab: 'PETS',
@@ -324,7 +324,7 @@ export const TAB_HELP: Record<GuideTab, TabHelp> = {
     lines: [
       'Essence buys upgrades that make every hit stronger. Prices rise with each level.',
       'x1, x10 and x25 buy exactly that many; MAX buys as many as you can afford.',
-      'An Eclipse resets upgrades. That is how each new run starts stronger.',
+      'An Eclipse resets upgrades, but its Void Crystals buy permanent powers, so each new run climbs faster.',
     ],
   },
   GEAR: {
@@ -378,7 +378,7 @@ export const TAB_HELP: Record<GuideTab, TabHelp> = {
     title: 'HOW THE ARCADE WORKS',
     lines: [
       `Each game costs a token. Tokens refill 1 every ${formatNumber(TOKEN_REGEN_MS / 60_000)} minutes up to ${formatNumber(TOKEN_CAP)}, even while the game is closed.`,
-      `Payouts follow your current essence rate. A win pays the most; a loss still pays ${pct(LOSS_FLOOR)}.`,
+      `Payouts follow your current essence rate and how well you play. A loss still pays ${pct(LOSS_FLOOR)} of what a win would.`,
       'QUIT forfeits the run and its token.',
     ],
   },

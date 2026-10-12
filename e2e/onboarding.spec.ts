@@ -74,6 +74,51 @@ test.describe('onboarding guide', () => {
     await expect(more).not.toHaveAttribute('aria-label', /something new inside/i);
   });
 
+  test('a tab opened before it matters still wears NEW once it unlocks', async ({ page }) => {
+    await freshGame(page);
+    await patchState(page, `${seenExcept('tab:ARCADE')} return s;`);
+    const arcade = page.getByRole('navigation').getByRole('button', { name: /^arcade/i });
+    await arcade.click();
+    await page.getByRole('navigation').getByRole('button', { name: /^upgrades/i }).click();
+    expect((await getState(page)).tutorialsSeen['tab:ARCADE']).toBeFalsy();
+    await patchState(page, `s.lifetimePeakLevel = 25; s.peakRunLevel = 25; s.tutorialsSeen.arcade = true; return s;`);
+    await expect(arcade).toHaveAccessibleName(/new, not opened yet/i);
+  });
+
+  test('a tip waits while Settings is open, and shows once it closes', async ({ page }) => {
+    await freshGame(page);
+    await patchState(page, `${seenExcept()} return s;`);
+    await page.getByRole('button', { name: 'Settings' }).click();
+    await patchState(page, `delete s.tutorialsSeen.welcome; return s;`);
+    await page.waitForTimeout(800);
+    await expect(page.getByRole('dialog', { name: /welcome to vanta eclipse/i })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Close' }).click();
+    await expect(page.getByRole('dialog', { name: /welcome to vanta eclipse/i })).toBeVisible();
+  });
+
+  test('Escape on the MORE sheet closes only the sheet', async ({ page }) => {
+    await freshGame(page);
+    await patchState(page, `${seenExcept()} return s;`);
+    const nav = page.getByRole('navigation');
+    await nav.getByRole('button', { name: /^arcade/i }).click();
+    await nav.getByRole('button', { name: /more tabs/i }).click();
+    const sheet = page.getByRole('group', { name: /more tabs/i });
+    await expect(sheet).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(sheet).toHaveCount(0);
+    await expect(nav.getByRole('button', { name: /^arcade/i })).toHaveAttribute('aria-current', 'page');
+  });
+
+  test('the goal strip opens the story path even from another CODEX page', async ({ page }) => {
+    await freshGame(page);
+    await patchState(page, `${seenExcept()} return s;`);
+    await page.getByRole('navigation').getByRole('button', { name: /^codex/i }).click();
+    await page.getByRole('tab', { name: /daily/i }).click();
+    await expect(page.getByRole('tab', { name: /daily/i })).toHaveAttribute('aria-selected', 'true');
+    await page.getByRole('button', { name: /^goal: /i }).click();
+    await expect(page.getByRole('tab', { name: /chain/i })).toHaveAttribute('aria-selected', 'true');
+  });
+
   test('Escape closes a tip on the web, and Settings can read and replay the tips', async ({ page }) => {
     await freshGame(page);
     const tip = page.getByRole('dialog', { name: /welcome to vanta eclipse/i });

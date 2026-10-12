@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { GameProvider } from './context/GameProvider';
-import { tabVisitKey } from './game/guide';
-import { useDispatch, useGameStore } from './hooks/useGame';
+import { isTabNew, tabVisitKey } from './game/guide';
+import type { GameState } from './game/state';
+import { useDispatch, useGameState } from './hooks/useGame';
 import { useBackHandler } from './hooks/useBackHandler';
 import { useArcadeOverlayOpen } from './hooks/useArcadeOverlay';
 import { Header } from './components/Header';
@@ -13,7 +14,7 @@ import { PetsPanel } from './components/PetsPanel';
 import { RelicsPanel } from './components/RelicsPanel';
 import { EclipsePanel } from './components/EclipsePanel';
 import { ArcadeHub } from './components/ArcadeHub';
-import { JournalPanel } from './components/JournalPanel';
+import { JournalPanel, preferCodexSection } from './components/JournalPanel';
 import { ShopPanel } from './components/ShopPanel';
 import { NavigationTabs, type TabType } from './components/NavigationTabs';
 import { BannerSlot } from './components/BannerSlot';
@@ -45,21 +46,29 @@ const GameShell: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>(HOME_TAB);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [noAdsOpen, setNoAdsOpen] = useState(false);
+  /** Bumped to remount the open tab, so a link into it lands where it points even when it is already open. */
+  const [deckKey, setDeckKey] = useState(0);
   const openShop = useCallback(() => {
     setNoAdsOpen(false);
     setActiveTab('SHOP');
+  }, []);
+  // The goal strip opens CODEX on its CHAIN page, even when CODEX is already open on another page.
+  const openGoal = useCallback(() => {
+    preferCodexSection('CHAIN');
+    setActiveTab('JOURNAL');
+    setDeckKey((k) => k + 1);
   }, []);
 
   // Android back: from any other tab, back returns home; from home it minimizes the app.
   useBackHandler(activeTab !== HOME_TAB, () => setActiveTab(HOME_TAB));
 
-  // Opening a tab clears its NEW marker in the nav.
-  const store = useGameStore();
+  // Looking at a tab clears its NEW marker. A visit before the tab matters marks nothing, so a tab
+  // opened early still wears NEW when it unlocks.
   const dispatch = useDispatch();
+  const activeTabNew = useGameState(useCallback((s: GameState) => isTabNew(s, activeTab), [activeTab]));
   useEffect(() => {
-    const key = tabVisitKey(activeTab);
-    if (!store.getState().tutorialsSeen[key]) dispatch({ type: 'MARK_TUTORIAL_SEEN', id: key });
-  }, [activeTab, store, dispatch]);
+    if (activeTabNew) dispatch({ type: 'MARK_TUTORIAL_SEEN', id: tabVisitKey(activeTab) });
+  }, [activeTabNew, activeTab, dispatch]);
 
   // While a minigame covers the screen, nothing underneath can be focused or clicked, so keyboard
   // focus can never wander into the nav and switch tabs out from under a running game.
@@ -84,9 +93,9 @@ const GameShell: React.FC = () => {
           <Ticker />
           {/* Only the active tab's body scrolls; containment keeps its redraws inside the deck. */}
           <section aria-label="Tabs" className="min-h-0 flex flex-col bg-void [contain:layout_paint]">
-            <GuideBar tab={activeTab} onOpenTab={setActiveTab} />
+            <GuideBar tab={activeTab} onOpenGoal={openGoal} />
             <main className="flex-1 min-h-0 flex flex-col overflow-hidden">
-              <ActivePanel key={activeTab} />
+              <ActivePanel key={`${activeTab}:${deckKey}`} />
             </main>
             <NavigationTabs activeTab={activeTab} onSelectTab={setActiveTab} />
           </section>
@@ -100,7 +109,7 @@ const GameShell: React.FC = () => {
         <NoAdsModal isOpen={noAdsOpen} onClose={() => setNoAdsOpen(false)} onOpenShop={openShop} />
         <OfflineRewardsModal />
         <WorldUnlockModal />
-        <OnboardingManager onOpenTab={setActiveTab} />
+        <OnboardingManager onOpenTab={setActiveTab} paused={settingsOpen || noAdsOpen} />
         <EclipseOverlay />
       </div>
     </div>

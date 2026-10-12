@@ -181,22 +181,16 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({ activeTab, onSel
     setOpen(false);
   }, [activeTab]);
 
-  // Outside tap or Escape closes it. The tap still reaches what it landed on.
+  // An outside tap closes it, and the tap still reaches what it landed on. Escape needs nothing
+  // here: on the web it runs the back handler above, so one press closes only the sheet.
   useEffect(() => {
     if (!open) return;
     const onPointerDown = (e: PointerEvent) => {
       const el = wrapRef.current;
       if (el && e.target instanceof Node && !el.contains(e.target)) setOpen(false);
     };
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
     document.addEventListener('pointerdown', onPointerDown, true);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown, true);
-      document.removeEventListener('keydown', onKeyDown);
-    };
+    return () => document.removeEventListener('pointerdown', onPointerDown, true);
   }, [open]);
 
   const select = (id: TabType) => {

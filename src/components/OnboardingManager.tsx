@@ -27,6 +27,11 @@ import { Button, Modal } from './ui';
 const ARM_MS = 650;
 /** The quiet time after a tip before the next one may show, so tips never arrive as a wall. */
 export const GUIDE_GAP_MS = 6000;
+/** The Eclipse flash lets taps through; no tip starts until it has played. */
+const ECLIPSE_FLASH_MS = 2600;
+
+/** Monotonic milliseconds: a device clock set back can never strand a tip or stretch the rest. */
+const clock = () => performance.now();
 
 const ICONS: Record<string, LucideIcon> = {
   welcome: Swords,
@@ -47,65 +52,78 @@ const ICONS: Record<string, LucideIcon> = {
 };
 
 const selectPendingId = (s: GameState) => nextGuideStep(s)?.id ?? null;
+/** A game dialog is up (offline report, world unlock, a run): an open tip steps aside for it. */
+const selectDialogUp = (s: GameState) => s.ui.pendingOffline !== null || s.ui.worldUnlockModal !== null || s.ui.activeRun !== null;
+const selectEclipseAt = (s: GameState) => s.ui.eclipseAt;
 
 /**
  * The guide's tips, one at a time, each when the player first meets what it teaches (src/game/guide.ts).
- * A tip waits while another screen owns the game; once on screen it stays until acknowledged, and a
- * boss fight is held behind it. A tip about a tab offers to open it.
+ * A tip waits while another screen owns the game (and while `paused`, e.g. Settings is open). Once on
+ * screen it stays until acknowledged and a boss fight is held behind it; if a game dialog opens over
+ * it, the tip steps aside and comes back afterwards. A tip about a tab offers to open it.
  */
-export const OnboardingManager: React.FC<{ onOpenTab: (tab: GuideTab) => void }> = ({ onOpenTab }) => {
+export const OnboardingManager: React.FC<{ onOpenTab: (tab: GuideTab) => void; paused?: boolean }> = ({ onOpenTab, paused = false }) => {
   const dispatch = useDispatch();
   const pendingId = useGameState(selectPendingId);
   const stateBlocked = useGameState(isGuideBlocked);
+  const dialogState = useGameState(selectDialogUp);
+  const eclipseAt = useGameState(selectEclipseAt);
   const arcadeOpen = useArcadeOverlayOpen();
-  const blocked = stateBlocked || arcadeOpen;
+  const blocked = stateBlocked || arcadeOpen || paused;
+  const dialogUp = dialogState || arcadeOpen;
 
-  const [shown, setShown] = useState<{ id: string; at: number } | null>(null);
+  const [shownId, setShownId] = useState<string | null>(null);
   const [restUntil, setRestUntil] = useState(0);
   const [armed, setArmed] = useState(false);
-  const [, setWake] = useState(0);
+  const [wake, setWake] = useState(0);
 
-  // Start the next tip when one is due, nothing else owns the screen, and the rest is over.
-  const now = Date.now();
-  const resting = now < restUntil;
+  // An Eclipse starts a rest, so the next tip never opens under its flash.
   useEffect(() => {
-    if (shown || !pendingId || blocked) return;
-    if (resting) {
-      const t = setTimeout(() => setWake((n) => n + 1), restUntil - Date.now());
+    if (eclipseAt) setRestUntil((r) => Math.max(r, clock() + ECLIPSE_FLASH_MS));
+  }, [eclipseAt]);
+
+  // Start the next tip when one is due, nothing else owns the screen, and the rest is over. Every
+  // wake re-reads the clock: a timer may fire a hair early, and then it simply waits again.
+  useEffect(() => {
+    if (shownId || !pendingId || blocked) return;
+    const wait = restUntil - clock();
+    if (wait > 0) {
+      const t = setTimeout(() => setWake((n) => n + 1), Math.ceil(wait) + 1);
       return () => clearTimeout(t);
     }
-    setShown({ id: pendingId, at: Date.now() });
-  }, [shown, pendingId, blocked, resting, restUntil]);
+    setShownId(pendingId);
+  }, [shownId, pendingId, blocked, restUntil, wake]);
 
   // A tip marked seen some other way (a loaded save, a replay) closes instead of lingering.
-  const shownId = shown?.id ?? null;
   const shownSeen = useGameState(useCallback((s: GameState) => (shownId ? !!s.tutorialsSeen[shownId] : false), [shownId]));
   useEffect(() => {
-    if (shownSeen) setShown(null);
+    if (shownSeen) setShownId(null);
   }, [shownSeen]);
 
   // The reducer holds a boss fight while a tip is up.
-  const open = shown !== null;
+  const open = shownId !== null;
   useEffect(() => {
     dispatch({ type: 'SET_GUIDE_OPEN', open });
   }, [open, dispatch]);
   useEffect(() => () => void dispatch({ type: 'SET_GUIDE_OPEN', open: false }), [dispatch]);
 
+  // The dismiss guard re-arms every time the tip (re)appears, including after a dialog that covered it.
+  const visible = open && !dialogUp;
   useEffect(() => {
-    if (!shown) return;
     setArmed(false);
+    if (!visible) return;
     const t = setTimeout(() => setArmed(true), ARM_MS);
     return () => clearTimeout(t);
-  }, [shown]);
+  }, [visible, shownId]);
 
-  const step = shown ? GUIDE.find((g) => g.id === shown.id) : undefined;
-  if (!shown || !step) return null;
+  const step = shownId ? GUIDE.find((g) => g.id === shownId) : undefined;
+  if (!step || !visible) return null;
 
   const finish = (tab?: GuideTab) => {
-    if (Date.now() - shown.at < ARM_MS) return;
+    if (!armed) return;
     dispatch({ type: 'MARK_TUTORIAL_SEEN', id: step.id });
-    setShown(null);
-    setRestUntil(Date.now() + GUIDE_GAP_MS);
+    setShownId(null);
+    setRestUntil(clock() + GUIDE_GAP_MS);
     if (tab) onOpenTab(tab);
   };
   const Icon = ICONS[step.id] ?? Sparkles;

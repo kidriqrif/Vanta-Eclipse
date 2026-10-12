@@ -226,7 +226,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (Capacitor.isNativePlatform()) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !e.defaultPrevented) runBackHandler();
+      // A held key repeats; only the press counts, or one hold would unwind every screen.
+      if (e.key === 'Escape' && !e.repeat && !e.defaultPrevented) runBackHandler();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);

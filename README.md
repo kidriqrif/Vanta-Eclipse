@@ -78,7 +78,8 @@ viewport:
 - every arcade game paying exactly once, and a boss held while one is open;
 - a second browser tab taking over the save;
 - the onboarding guide: tips, opening the tab a tip names, the double-tap
-  guard, NEW markers, Escape, and reading and replaying tips in Settings.
+  guard, NEW markers, tips waiting behind Settings, Escape, the goal strip,
+  and reading and replaying tips in Settings.
 
 `e2e/store-shots.spec.ts` is skipped unless `CAPTURE=1` is set; then it writes
 the eight Play Store screenshots to `production/screenshots/` (1080×1920, no

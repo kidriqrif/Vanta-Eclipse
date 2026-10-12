@@ -139,6 +139,12 @@ describe('guide state in the reducer', () => {
     expect(nextGuideStep(h.state)?.id).toBe('welcome');
   });
 
+  it('marks a world reached before its flag existed, so a replay never celebrates it again', () => {
+    const h = harness(newGame((d) => { d.unlockedWorlds = ['dark_forest', 'frozen_ruins']; d.tutorialsSeen = { ruins: true }; }));
+    h.dispatch({ type: 'RESET_TUTORIALS' });
+    expect(h.state.tutorialsSeen).toEqual({ 'world:frozen_ruins': true });
+  });
+
   it('refuses an empty or oversized tutorial id', () => {
     const h = harness(newGame());
     expect(h.dispatch({ type: 'MARK_TUTORIAL_SEEN', id: '' }).ok).toBe(false);

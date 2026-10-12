@@ -481,7 +481,7 @@ const GuidePanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   return (
     <>
       <Section title="Tips so far" icon={<BookOpen size={13} className="text-neon" aria-hidden />}>
-        <Hint>Each tip appeared when you first met what it explains. Tap one to read it again.</Hint>
+        <Hint>The tips for everything you have reached so far. Tap one to read it.</Hint>
         <div>
           {GUIDE.filter((g) => reached.includes(g.id)).map((g) => (
             <GuideEntry key={g.id} title={g.title} lines={g.lines} />
@@ -497,7 +497,7 @@ const GuidePanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         </div>
       </Section>
       <Section title="Replay" icon={<RotateCcw size={13} className="text-neon" aria-hidden />}>
-        <Hint>Shows every tip and screen card again as you reach them. Your progress is not touched.</Hint>
+        <Hint>Every screen card opens again on your next visit, and each tip shows again where it still has something to teach you. Your progress is not touched.</Hint>
         <TwoTapButton
           size="md"
           block

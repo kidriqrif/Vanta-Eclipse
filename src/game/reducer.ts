@@ -812,8 +812,10 @@ function handle(d: D, a: Action, c: Ctx, base: GameState): ActionResult {
       return OK;
 
     case 'RESET_TUTORIALS':
-      // World celebrations stay remembered; everything the guide teaches can play again.
+      // World celebrations stay remembered; everything the guide teaches can play again. A world
+      // reached before its flag existed is marked now, so a replay never celebrates it twice.
       for (const k of Object.keys(d.tutorialsSeen)) if (!k.startsWith('world:')) delete d.tutorialsSeen[k];
+      for (const w of d.unlockedWorlds) if (w !== 'dark_forest') d.tutorialsSeen[`world:${w}`] = true;
       return OK;
   }
 }
