@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Button, type ButtonProps } from './Button';
 
+/** How long an armed two-tap control waits for the second tap. */
+export const TWO_TAP_ARM_MS = 3000;
+
 /**
  * The Two-Tap Arm pattern: the first tap arms the button
  * and states the consequence; a second tap within `armMs` commits. It disarms on its own.
@@ -13,7 +16,7 @@ export const TwoTapButton: React.FC<
     armMs?: number;
     armedVariant?: ButtonProps['variant'];
   }
-> = ({ label, armedLabel, onConfirm, armMs = 3000, variant = 'primary', armedVariant = 'danger', disabled, ...rest }) => {
+> = ({ label, armedLabel, onConfirm, armMs = TWO_TAP_ARM_MS, variant = 'primary', armedVariant = 'danger', disabled, ...rest }) => {
   const [armed, setArmed] = useState(false);
   useEffect(() => {
     if (!armed) return;

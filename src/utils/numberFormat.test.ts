@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { formatDuration, formatNumber, formatPercent } from './numberFormat';
+import {
+  formatDuration,
+  formatMs,
+  formatNumber,
+  formatPercent,
+  formatPercentTight,
+  formatScore,
+  formatTenths,
+} from './numberFormat';
 
 describe('formatNumber', () => {
   it('prints small numbers plainly', () => {
@@ -36,5 +44,26 @@ describe('formatPercent and formatDuration', () => {
     expect(formatDuration(59)).toBe('59s');
     expect(formatDuration(125)).toBe('2m 5s');
     expect(formatDuration(3 * 3600 + 60)).toBe('3h 1m');
+  });
+});
+
+describe('formatPercentTight, formatTenths, formatMs and formatScore', () => {
+  it('keeps a decimal only when the value needs one', () => {
+    expect(formatPercentTight(0.1)).toBe('+10%');
+    expect(formatPercentTight(0.005)).toBe('+0.5%');
+    expect(formatPercentTight(0.07)).toBe('+7%');
+  });
+
+  it('formats a countdown to the tenth', () => {
+    expect(formatTenths(29.64)).toBe('29.6s');
+    expect(formatTenths(0)).toBe('0.0s');
+    expect(formatTenths(-1)).toBe('0.0s');
+  });
+
+  it('switches milliseconds to seconds from one second up', () => {
+    expect(formatMs(286)).toBe('286ms');
+    expect(formatMs(1240)).toBe('1.2s');
+    expect(formatScore(1240, 'ms')).toBe('1.2s');
+    expect(formatScore(7, 'moves')).toBe('7 moves');
   });
 });

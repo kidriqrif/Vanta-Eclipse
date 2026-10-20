@@ -53,6 +53,28 @@ export function formatPercent(value: number, decimals: number = 1): string {
   return `${pct >= 0 ? '+' : ''}${pct.toFixed(decimals)}%`;
 }
 
+/** "+10%", "+0.5%": a decimal only when the value needs one. */
+export function formatPercentTight(value: number): string {
+  const hundredths = Math.round(value * 10000);
+  return formatPercent(value, hundredths % 100 === 0 ? 0 : 1);
+}
+
+/** A countdown to the tenth of a second: "29.6s". */
+export function formatTenths(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds < 0) return '0.0s';
+  return `${seconds.toFixed(1)}s`;
+}
+
+/** Milliseconds, switching to seconds from one second up: "286ms", "1.2s". */
+export function formatMs(ms: number): string {
+  return ms < 1000 ? `${formatNumber(ms)}ms` : `${formatNumber(ms / 1000)}s`;
+}
+
+/** A minigame record in its unit: "286ms", "1.2s", "7 moves". */
+export function formatScore(value: number, unit: string): string {
+  return unit === 'ms' ? formatMs(value) : `${formatNumber(value)} ${unit}`;
+}
+
 export function formatDuration(seconds: number): string {
   if (seconds < 60) return `${Math.floor(seconds)}s`;
   const m = Math.floor(seconds / 60);
