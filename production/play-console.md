@@ -7,7 +7,9 @@ own pages, which were fetched the same day (listed under Sources at the end).
 
 The build in question: package com.vantrexagames.vantaeclipse, versionName
 1.4.0, versionCode 5, targetSdk 36 (`android/app/build.gradle`,
-`android/variables.gradle`). It is on the closed testing track.
+`android/variables.gradle`). The closed testing track still carries an
+earlier build; 1.4.0 has not been uploaded yet (see
+`production/release-checklist.md`).
 
 **How to read the question wording.** Each question is marked:
 

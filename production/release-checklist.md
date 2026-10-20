@@ -38,7 +38,7 @@ These are what a long-lived release would normally have. None stops a launch.
 
 | Gap | Why it matters | Smallest fix |
 | --- | --- | --- |
-| **Two worlds of content.** Levels 51 and up are the Frozen Ruins forever, with 16 enemies in all. The roadmap in `design/game-design.md` names three more worlds. | Retention after the first few Eclipses. | Worlds are data: a new entry in `WORLDS` and `ENEMIES` in `src/data/definitions.ts` plus sprites. |
+| **Two worlds of content.** Levels 51 and up are the Frozen Ruins forever, with 14 enemies in all (6 regular, 8 bosses). The roadmap in `design/game-design.md` names three more worlds. | Retention after the first few Eclipses. | Worlds are data: a new entry in `WORLDS` and `ENEMIES` in `src/data/definitions.ts` plus sprites. |
 | **No crash or error reporting.** JavaScript errors inside the WebView never reach Play's Android vitals. | You are blind to bugs players hit. | A crash reporter (it changes the Data safety form and the privacy policy), or at minimum watch Android vitals for ANRs. |
 | **No cloud save.** The save is local; Android Auto Backup may restore it, and Export/Import in Settings is manual. | A lost or replaced phone can lose all progress. | Play Games Services Saved Games. |
 | **No server-side receipt validation; refunds are not revoked.** | A rooted device can edit its entitlements; a refunded Remove Ads stays. Acceptable for three cheap products. | A backend holding a Play service-account key. |
